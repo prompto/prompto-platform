@@ -7,5 +7,7 @@ install:
   - mvn install -f prompto-java/pom.xml -DskipTests=true 
   # - ls -all -R
   - cp -R prompto-java/Java-Runtime/src/main/resources/libraries Server/src/main/resources/libraries
+  - cp -R prompto-java/Java-Runtime/src/main/resources/libraries CodeServer/src/main/resources/libraries
+  - cp -R prompto-java/Java-Runtime/src/main/resources/libraries DataServer/src/main/resources/libraries
 # script:
 #   - mvn build -DskipTests=true 
