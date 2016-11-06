@@ -86,7 +86,7 @@
 				<directory>src/main/webapp</directory>
 			</resource>
 			<resource>
-				<directory>../../prompto-dev-center/web-site</directory>
+				<directory>../dev-center/web-site</directory>
 			</resource>
 		</resources>
 	</build>

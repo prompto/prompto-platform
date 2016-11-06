@@ -86,7 +86,7 @@
 				<directory>src/main/webapp</directory>
 			</resource>
 			<resource>
-				<directory>../../prompto-data-explorer/web-site</directory>
+				<directory>../data-explorer/web-site</directory>
 			</resource>
 		</resources>
 	</build>
