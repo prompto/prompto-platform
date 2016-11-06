@@ -5,5 +5,5 @@ jdk:
 install:
   - mvn install -f prompto-java/pom.xml -DskipTests=true 
 script:
-  - mvn -DskipTests=true 
+  - mvn install -DskipTests=true 
   - echo "ok"
