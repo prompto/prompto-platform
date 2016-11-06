@@ -1,5 +1,8 @@
-.metadata/*
-**/.p4ignore
-**/target/*
 .DS_Store
-Java-Core/java/classes
+**/.metadata/*
+**/.project
+**/.settings/*
+**/target/*
+**/classes/*
+.classpath
+travis.yml
