@@ -3,7 +3,7 @@ language: java
 jdk:
   - oraclejdk8
 install:
-  - mvn prompto-java/pom.xml -DskipTests=true 
+  - mvn install -f prompto-java/pom.xml -DskipTests=true 
 script:
   - mvn -DskipTests=true 
   - echo "ok"
