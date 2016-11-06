@@ -10,4 +10,4 @@ install:
   - cp -R prompto-java/Java-Runtime/src/main/resources/libraries CodeServer/src/main/resources/libraries
   - cp -R prompto-java/Java-Runtime/src/main/resources/libraries DataServer/src/main/resources/libraries
 script:
-  - mvn install -DskipTests=true 
+  - mvn install # -DskipTests=true 
