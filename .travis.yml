@@ -5,7 +5,7 @@ jdk:
 install:
   # need to install core and runtime jars in local repo	
   - mvn install -f prompto-java/pom.xml -DskipTests=true 
-  - ls -all
+  - ls -all -R
   - cp prompto-java/Java-Runtime/src/main/resources/libraries Server/src/main/resources/libraries
 # script:
 #   - mvn build -DskipTests=true 
