@@ -18,7 +18,7 @@ public class TestEditor extends BaseWebTest {
 	public static void startCodeServer() throws Throwable {
 		String[] args = {
 				"-http_port",
-				"8888",
+				"-1",
 				"-codeStoreFactory",
 				"prompto.store.solr.SOLRStoreFactory",
 				"-dataStoreFactory",
@@ -31,6 +31,7 @@ public class TestEditor extends BaseWebTest {
 				"target/test-classes/solr-test"
 		};
 		Application.main(args);
+		HTTP_PORT = AppServer.getHttpPort();
 	}
 	
 	@AfterClass
@@ -39,8 +40,13 @@ public class TestEditor extends BaseWebTest {
 	}
 	
 	
-	static final String ROOT_URL = "http://localhost:8888/";
-	static final String EDITOR_URL = ROOT_URL + "ide/index.html?dbId=$dbId$&name=$name$";
+	static int HTTP_PORT;
+
+	static final String editorURL(String dbId, String name) {
+		return "http://localhost:" + HTTP_PORT + "/ide/index.html?"
+				+ "dbId=" + dbId
+				+ "&name=" + name;
+	}
 	
 	@Test
 	public void testSelectMethod() throws Exception { 
@@ -59,7 +65,7 @@ public class TestEditor extends BaseWebTest {
 
 	private void loadSalesAppAndHideLibraries() throws Exception {
 		String dbId = getDbIdForModule("Sales");
-		String url = EDITOR_URL.replace("$dbId$", dbId).replace("$name$", "Sales");
+		String url = editorURL(dbId, "Sales");
 		webDriver.get(url);
 		// hide core declarations
 		WebElement we = waitElement(By.id("show-libs"));

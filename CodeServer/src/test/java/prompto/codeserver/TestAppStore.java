@@ -18,7 +18,7 @@ public class TestAppStore extends BaseWebTest {
 				"-testMode",
 				"true",
 				"-http_port",
-				"8888",
+				"-1",
 				"-codeStoreFactory",
 				"prompto.store.solr.SOLRStoreFactory",
 				"-dataStoreFactory",
@@ -31,6 +31,7 @@ public class TestAppStore extends BaseWebTest {
 				"target/test-classes/solr-test"
 		};
 		Application.main(args);
+		HTTP_PORT = AppServer.getHttpPort();
 	}
 	
 	@AfterClass
@@ -38,13 +39,12 @@ public class TestAppStore extends BaseWebTest {
 		AppServer.stop();
 	}
 	
-	
-	static final String ROOT_URL = "http://localhost:8888/";
-	static final String EDITOR_URL = ROOT_URL + "ide/index.html?dbId=$dbId$&name=$name$";
+	static int HTTP_PORT;
+	static final String ROOT_URL = "http://localhost:";
 	
 	@Test
 	public void testLoadAppStore() throws Exception {
-		webDriver.get(ROOT_URL);
+		webDriver.get(ROOT_URL + HTTP_PORT + "/");
 		webDriver.switchTo().frame("content-frame");
 		String dbId = getDbIdForModule("Inventory");
 		WebElement we = waitElement(By.id(dbId));

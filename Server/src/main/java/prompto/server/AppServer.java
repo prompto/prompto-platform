@@ -194,6 +194,14 @@ public class AppServer {
 		System.out.println("Web server successfully started on port " + httpPort);
 		return httpPort;
 	}
+	
+	public static int getHttpPort() {
+		for(Connector c : jettyServer.getConnectors()) {
+			if(c instanceof ServerConnector)
+				return ((ServerConnector)c).getLocalPort();
+		}
+		return 0;
+	}
 
 	static Handler prepareHandlers() throws Exception {
 		System.out.println("Preparing web handlers...");
