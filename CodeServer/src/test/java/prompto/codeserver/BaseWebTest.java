@@ -39,18 +39,16 @@ public abstract class BaseWebTest {
 	protected static WebDriver webDriver;
 	protected static Properties properties;
 	
-	@BeforeClass
-	public static void readProperties() throws IOException {
+	static void readProperties() throws IOException {
+		properties = new Properties();
 		try(InputStream input = Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream("selenium.properties")) {
-			properties = new Properties();
 			properties.load(input);
 		}
 	}
 	
-	@BeforeClass
 	@SuppressWarnings("unchecked")
-	public static void loadWebDriver() throws Exception {
+	static void loadWebDriver() throws Exception {
 		String className = properties.getProperty("web-driver-factory", HtmlUnitWebDriverFactory.class.getName());
 		Class<? extends WebDriverFactory> klass = (Class<? extends WebDriverFactory>)Class.forName(className);
 		webDriver = klass.newInstance().newDriver(properties);
@@ -58,13 +56,26 @@ public abstract class BaseWebTest {
 		webDriver.manage().window().setSize(new Dimension(1300, 900));
 	}
 	
-	@AfterClass
-	public static void closeWebDriver() {
+	static void closeWebDriver() {
 		if(webDriver!=null) {
 			webDriver.quit();
 			webDriver = null;
 		}
 	}
+
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		readProperties();
+		loadWebDriver();
+	}
+	
+	
+	@AfterClass
+	public static void aftreClass() {
+		closeWebDriver();
+	}
+	
+	
 	
 	protected void click(WebElement we, int waitMillis) throws InterruptedException {
 		// Actions actions = new Actions(webDriver);
