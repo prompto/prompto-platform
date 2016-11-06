@@ -2,7 +2,7 @@ sudo: true
 language: java
 jdk:
   - oraclejdk8
-before_script:
+before_install:
   - mvn prompto-java/pom.xml -DskipTests=true 
 script:
   - mvn -DskipTests=true 
