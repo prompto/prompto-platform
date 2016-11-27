@@ -124,7 +124,7 @@ public class RequestRouter {
 			generator.writeNullField("data");
 		else {
 			generator.writeFieldName("data");
-			value.toJson(context, generator, null, null, null);
+			value.toJson(context, generator, null, null, true, null);
 		}
 		generator.writeEndObject();
 		generator.flush();

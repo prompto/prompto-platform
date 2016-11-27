@@ -68,14 +68,14 @@ public class DataServlet extends HttpServlet {
 		else {
 			generator.writeFieldName("data");
 			if(value instanceof Cursor)
-				value.toJson(context, generator, null, null, null);
+				value.toJson(context, generator, null, null, true, null);
 			else {
 				generator.writeStartObject();
 				generator.writeFieldName("type");
 				generator.writeString(new ListType(value.getType()).getTypeName());
 				generator.writeFieldName("value");
 				generator.writeStartArray();
-				value.toJson(context, generator, null, null, null);
+				value.toJson(context, generator, null, null, true, null);
 				generator.writeEndArray();
 				generator.writeEndObject();
 			}
