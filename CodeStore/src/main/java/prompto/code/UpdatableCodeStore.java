@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import prompto.grammar.EqOp;
 import prompto.grammar.Identifier;
 import prompto.grammar.OrderByClause;
 import prompto.grammar.OrderByClauseList;
+import prompto.libraries.Libraries;
 import prompto.literal.TextLiteral;
 import prompto.parser.Dialect;
 import prompto.runtime.Context;
@@ -44,7 +46,6 @@ import prompto.type.CategoryType;
 import prompto.utils.CodeWriter;
 import prompto.utils.IdentifierList;
 import prompto.utils.ObjectUtils;
-import prompto.utils.ResourceUtils;
 import prompto.utils.StringUtils;
 
 
@@ -70,8 +71,10 @@ public class UpdatableCodeStore extends BaseCodeStore {
 	private ICodeStore bootstrapRuntime() {
 		System.out.println("Connecting to prompto runtime libraries...");
 		try {
+			
 			ICodeStore runtime = null;
-			for(String name : ResourceUtils.listResourcesAt("libraries"))
+			Collection<String> resources = Libraries.getRuntimeResources();
+			if(resources!=null) for(String name : resources)
 				runtime = new ResourceCodeStore(runtime, ModuleType.LIBRARY, "libraries/" + name, "1.0.0");
 			return runtime;
 		} catch(IOException e) {
