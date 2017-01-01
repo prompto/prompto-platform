@@ -1,6 +1,7 @@
 package prompto.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -214,13 +215,19 @@ public class AppServer {
 	}
 
 	static Handler prepareServiceHandler(String path) throws Exception {
-		URL url = ClassLoader.getSystemResource(".");
-		// ugly work around for unit tests
-		if(url.toExternalForm().contains("/test-classes/"))
-			url = new URL(url.toExternalForm().replace("/test-classes/", "/classes/"));
+		URL url = getRootURL();
 		return prepareServiceHandler(path, url.toExternalForm());
 	}
 	
+	private static URL getRootURL() throws IOException {
+		URL url = AppServer.class.getResource("/js/lib/require.js");
+		url = new URL(url.toExternalForm().replace("/js/lib/require.js", "/"));
+		// ugly work around for unit tests
+		if(url.toExternalForm().contains("/test-classes/"))
+			url = new URL(url.toExternalForm().replace("/test-classes/", "/classes/"));
+		return url;
+	}
+
 	public static Handler prepareServiceHandler(String path, String base) {
         WebAppContext handler = new WebAppContext();
         handler.setContextPath(path);
@@ -232,12 +239,8 @@ public class AppServer {
 	}
 
 	static ResourceHandler prepareResourceHandler(String path) throws Exception {
-		Resource resource = Resource.newClassPathResource(path);
-		// ugly work around for unit tests
-		if(resource!=null && resource.getURI().toString().contains("/test-classes/")) {
-			URL url = new URL(resource.getURI().toString().replace("/test-classes/", "/classes/"));
-			resource = Resource.newResource(url);
-		}
+		URL url = getRootURL();
+		Resource resource = Resource.newResource(url);
 		ResourceHandler rh = new ResourceHandler();
 		rh.setDirectoriesListed(false);
 		rh.setBaseResource(resource);
