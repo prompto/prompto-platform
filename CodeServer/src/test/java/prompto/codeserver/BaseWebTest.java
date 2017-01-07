@@ -71,7 +71,7 @@ public abstract class BaseWebTest {
 	
 	
 	@AfterClass
-	public static void aftreClass() {
+	public static void afterClass() {
 		closeWebDriver();
 	}
 	
