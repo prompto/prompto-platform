@@ -16,12 +16,7 @@ public class Application {
 		argsList.add("data-explorer");
 		argsList.add("-version");
 		argsList.add("1.0.0");
-		AppServer.main(argsList.toArray(new String[argsList.size()]), Application::aboutToStart);
+		AppServer.main(argsList.toArray(new String[argsList.size()]));
 	}
-	
-	static void aboutToStart() throws Exception {
-		
-		
-	}
-	
+
 }

@@ -90,7 +90,7 @@ public class RequestRouter {
 			Text text = new Text(result==null ? "success!" : result.toString());
 			return writeJsonResponse(text, output);
 		} finally {
-			context.terminated();
+			context.notifyTerminated();
 		}
 	}
 	
@@ -107,7 +107,7 @@ public class RequestRouter {
 			else
 				return writeJsonResponse(value, output);
 		} finally {
-			context.terminated();
+			context.notifyTerminated();
 		}
 	}
 

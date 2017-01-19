@@ -39,7 +39,7 @@ public class Application {
 		argsList.add(codeStoreType.name());
 		argsList.add("-dataStoreType");
 		argsList.add(dataStoreType.name());
-		AppServer.main(argsList.toArray(new String[argsList.size()]), Application::aboutToStart);
+		AppServer.main(argsList.toArray(new String[argsList.size()])/*, Application::aboutToStart*/); // TODO move to serverAboutToStartMethod
 	}
 	
 	static void aboutToStart() throws Exception {

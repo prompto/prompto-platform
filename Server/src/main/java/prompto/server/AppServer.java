@@ -28,19 +28,27 @@ import prompto.code.Version;
 import prompto.compiler.PromptoClassLoader;
 import prompto.declaration.AttributeDeclaration;
 import prompto.error.PromptoError;
+import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoDict;
 import prompto.memstore.MemStoreFactory;
 import prompto.runtime.Context;
+import prompto.runtime.Interpreter;
 import prompto.store.AttributeInfo;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.IStoreFactory.Type;
+import prompto.type.DictType;
 import prompto.type.IType;
 import prompto.type.ListType;
 import prompto.type.TextType;
 import prompto.utils.IdentifierList;
 import prompto.utils.TypeUtils;
+import prompto.value.Dictionary;
+import prompto.value.ExpressionValue;
+import prompto.value.IValue;
+import prompto.value.Text;
 
 public class AppServer {
 	
@@ -57,17 +65,10 @@ public class AppServer {
 	}
 	
 	public static void main(String[] args) throws Throwable {
-		main(args, null);
-	}
-	
-	public static interface ThrowingRunnable {
-		void run() throws Throwable;
-	}
-	
-	public static void main(String[] args, ThrowingRunnable serverInitialized ) throws Throwable {
 		Integer httpPort = null;
 		String[] resources = null;
 		String application = null;
+		String serverAboutToStart = null;
 		String codeStoreFactory = MemStoreFactory.class.getName();
 		String dataStoreFactory = MemStoreFactory.class.getName();
 		Version version = ICodeStore.LATEST_VERSION;
@@ -98,6 +99,8 @@ public class AppServer {
 				dataStoreFactory = args[++i];
 			} else if(arg.equalsIgnoreCase("-dataStoreType")) {
 				dataStoreType = Type.valueOf(args[++i]);
+			} else if(arg.equalsIgnoreCase("-serverAboutToStart")) {
+				serverAboutToStart = args[++i];
 			} 
 
 
@@ -117,11 +120,16 @@ public class AppServer {
 		synchronizeSchema(codeStore, dataStore);
 		// standard resource handlers
 		Handler handler = prepareHandlers();
-		// call pre-start code if any
-		if(serverInitialized!=null)
-			serverInitialized.run();
 		// initialize server accordingly
-		startServer(httpPort, handler);
+		IExpression argsValue = argsToArgValue(args);
+		startServer(httpPort, handler, serverAboutToStart, argsValue);
+	}
+
+	private static IExpression argsToArgValue(String[] args) {
+		PromptoDict<Text, IValue> dict = new PromptoDict<>(true);
+		for(int i=0;i<args.length; i+=2)
+			dict.put(new Text(args[i]),new Text(args[i + 1]));
+		return new ExpressionValue(new DictType(TextType.instance()), new Dictionary(TextType.instance(), dict));
 	}
 
 	private static IStore bootstrapDataStore(IStore store) {
@@ -178,24 +186,31 @@ public class AppServer {
 		return columns;
 	}
 
-	static int startServer(Integer httpPort, Handler handler) throws Throwable {
+	static int startServer(Integer httpPort, Handler handler, String serverAboutToStartMethod, IExpression argValue) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
 			jettyServer.setHandler(handler);
+			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start();
 			httpPort = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(httpPort);
 			jettyServer.setHandler(handler);
+			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start();
 		}
 		System.out.println("Web server successfully started on port " + httpPort);
 		return httpPort;
 	}
 	
+	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
+		if(serverAboutToStartMethod!=null)
+			Interpreter.interpretMethod(AppServer.globalContext, new Identifier(serverAboutToStartMethod), argValue);
+	}
+
 	public static int getHttpPort() {
 		for(Connector c : jettyServer.getConnectors()) {
 			if(c instanceof ServerConnector)
