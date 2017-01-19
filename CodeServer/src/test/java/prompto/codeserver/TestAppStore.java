@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -42,6 +43,7 @@ public class TestAppStore extends BaseWebTest {
 	static int HTTP_PORT;
 	static final String ROOT_URL = "http://localhost:";
 	
+	@Ignore("Needs refactoring!!!")
 	@Test
 	public void testLoadAppStore() throws Exception {
 		webDriver.get(ROOT_URL + HTTP_PORT + "/");
