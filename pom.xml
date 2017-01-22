@@ -8,7 +8,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>CodeStore</module>
 		<module>SOLRFields</module>
 		<module>SOLRStore</module>
 		<module>Server</module>

@@ -138,6 +138,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>Standalone</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>SOLRStore</artifactId>
 			<version>${project.version}</version>
 		</dependency>
