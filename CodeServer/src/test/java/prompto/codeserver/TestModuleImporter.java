@@ -8,13 +8,13 @@ import org.junit.Test;
 import prompto.code.ICodeStore;
 import prompto.code.Version;
 import prompto.memstore.MemStore;
-import prompto.server.AppServer;
+import prompto.runtime.Application;
 
 public class TestModuleImporter {
 
 	@Before
 	public void before() throws Exception {
-		AppServer.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true);
+		Application.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true);
 
 	}
 	

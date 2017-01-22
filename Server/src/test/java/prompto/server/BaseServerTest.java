@@ -10,6 +10,7 @@ import org.junit.Before;
 
 import prompto.code.Version;
 import prompto.memstore.MemStore;
+import prompto.runtime.Application;
 
 public abstract class BaseServerTest {
 	
@@ -18,7 +19,7 @@ public abstract class BaseServerTest {
 	@Before
 	public void __before__() throws Throwable {
 		// bootstrap
-		AppServer.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true);
+		Application.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true);
 		// adjust handler path for junit and cobertura context
 		Handler rh1 = AppServer.prepareResourceHandler("/");
 		Handler rh2 = AppServer.prepareResourceHandler("../classes/");

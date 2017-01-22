@@ -1,13 +1,8 @@
 package prompto.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.server.Connector;
@@ -22,168 +17,40 @@ import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
-import prompto.code.ICodeStore;
-import prompto.code.UpdatableCodeStore;
-import prompto.code.Version;
-import prompto.compiler.PromptoClassLoader;
-import prompto.declaration.AttributeDeclaration;
-import prompto.error.PromptoError;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
-import prompto.intrinsic.PromptoDict;
-import prompto.memstore.MemStoreFactory;
-import prompto.runtime.Context;
+import prompto.runtime.Application;
 import prompto.runtime.Interpreter;
-import prompto.store.AttributeInfo;
-import prompto.store.IDataStore;
-import prompto.store.IStore;
-import prompto.store.IStoreFactory;
-import prompto.store.IStoreFactory.Type;
-import prompto.type.DictType;
-import prompto.type.IType;
-import prompto.type.ListType;
-import prompto.type.TextType;
-import prompto.utils.IdentifierList;
-import prompto.utils.TypeUtils;
-import prompto.value.Dictionary;
-import prompto.value.ExpressionValue;
-import prompto.value.IValue;
-import prompto.value.Text;
 
 public class AppServer {
 	
 	static Server jettyServer;
-	static Context globalContext;
-	static PromptoClassLoader classLoader;
-	
-	public static Context getGlobalContext() {
-		return globalContext;
-	}
-	
-	public static PromptoClassLoader getClassLoader() {
-		return classLoader;
-	}
 	
 	public static void main(String[] args) throws Throwable {
 		Integer httpPort = null;
-		String[] resources = null;
-		String application = null;
 		String serverAboutToStart = null;
-		String codeStoreFactory = MemStoreFactory.class.getName();
-		String dataStoreFactory = MemStoreFactory.class.getName();
-		Version version = ICodeStore.LATEST_VERSION;
-		Type codeStoreType = Type.CODE;
-		Type dataStoreType = Type.DATA;
-		Boolean testMode = false;
-		
-		// parse parameters
-		for(int i=0; i<args.length; i++) {
-			String arg = args[i];
-			if(!arg.startsWith("-"))
-				continue;
-			if(arg.equalsIgnoreCase("-testMode")) {
-				testMode = Boolean.valueOf(args[++i]);
-			} else if(arg.equalsIgnoreCase("-http_port")) {
-				httpPort = Integer.parseInt(args[++i]);
-			} else if(arg.equalsIgnoreCase("-resources")) {
-				resources = args[++i].split(",");
-			} else if(arg.equalsIgnoreCase("-application")) {
-				application = args[++i];
-			} else if(arg.equalsIgnoreCase("-version")) {
-				version = Version.parse(args[++i]);
-			} else if(arg.equalsIgnoreCase("-codeStoreFactory")) {
-				codeStoreFactory = args[++i];
-			} else if(arg.equalsIgnoreCase("-codeStoreType")) {
-				codeStoreType = Type.valueOf(args[++i]);
-			} else if(arg.equalsIgnoreCase("-dataStoreFactory")) {
-				dataStoreFactory = args[++i];
-			} else if(arg.equalsIgnoreCase("-dataStoreType")) {
-				dataStoreType = Type.valueOf(args[++i]);
-			} else if(arg.equalsIgnoreCase("-serverAboutToStart")) {
-				serverAboutToStart = args[++i];
-			} 
 
+		Map<String, String> argsMap = Application.initialize(args);
 
-		}
-		if(httpPort==null || application==null) {
-			showHelp(httpPort, application, version);
+		if(argsMap.containsKey("http_port"))
+			httpPort = Integer.parseInt(argsMap.get("http_port"));
+		if(argsMap.containsKey("serverAboutToStart"))
+			serverAboutToStart = argsMap.get("serverAboutToStart");
+
+		if(httpPort==null) {
+			showHelp(httpPort);
 			System.exit(-1); // raise an error in whatever tool is used to launch this
 		}
-		// initialize code store
-		IStoreFactory factory = newStoreFactory(codeStoreFactory);
-		IStore store = factory.newStore(args, codeStoreType);
-		ICodeStore codeStore = bootstrapCodeStore(store, application, version, testMode, resources);
-		// initialize data store
-		factory = newStoreFactory(dataStoreFactory);
-		store = factory.newStore(args, dataStoreType);
-		IStore dataStore = bootstrapDataStore(store);
-		synchronizeSchema(codeStore, dataStore);
 		// standard resource handlers
 		Handler handler = prepareHandlers();
 		// initialize server accordingly
-		IExpression argsValue = argsToArgValue(args);
+		IExpression argsValue = Application.argsToArgValue(args);
 		startServer(httpPort, handler, serverAboutToStart, argsValue);
 	}
 
-	private static IExpression argsToArgValue(String[] args) {
-		PromptoDict<Text, IValue> dict = new PromptoDict<>(true);
-		for(int i=0;i<args.length; i+=2)
-			dict.put(new Text(args[i]),new Text(args[i + 1]));
-		return new ExpressionValue(new DictType(TextType.instance()), new Dictionary(TextType.instance(), dict));
-	}
-
-	private static IStore bootstrapDataStore(IStore store) {
-		IDataStore.setInstance(store);
-		return store;
-	}
-
-	private static IStoreFactory newStoreFactory(String factoryName) throws Throwable {
-		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
-		if(!(IStoreFactory.class.isAssignableFrom(klass)))
-			throw new RuntimeException("Not a store factory: " + factoryName);
-		return (IStoreFactory)klass.newInstance();
-	}
-
-	private static void showHelp(Integer httpPort, String application, Version version) {
+	private static void showHelp(Integer httpPort) {
 		if(httpPort==null)
 			System.out.println("Missing argument: -http_port");
-		if(application==null)
-			System.out.println("Missing argument: -application");
-		if(version.equals(ICodeStore.LATEST_VERSION))
-			System.out.println("Additional argument: -version (optional)");
-	}
-
-	public static ICodeStore bootstrapCodeStore(IStore store, String application, Version version, boolean testMode, String ...resourceNames) throws Exception {
-		System.out.println("Initializing class loader " + (testMode ? "in test mode" : "") + "...");
-		globalContext = Context.newGlobalContext();
-		File promptoDir = Files.createTempDirectory("prompto_").toFile();
-		classLoader = PromptoClassLoader.initialize(globalContext, promptoDir, testMode);
-		System.out.println("Class loader initialized.");
-		System.out.println("Bootstrapping prompto...");
-		ICodeStore codeStore = new UpdatableCodeStore(store, application, version.toString(), resourceNames);
-		ICodeStore.setInstance(codeStore);
-		System.out.println("Bootstrapping successful.");
-		return codeStore;
-	}
-
-	
-	private static void synchronizeSchema(ICodeStore codeStore, IStore dataStore) throws PromptoError {
-		System.out.println("Initializing schema...");
-		Map<String, AttributeDeclaration> columns = getMinimalDataColumns(dataStore);
-		codeStore.collectStorableAttributes(columns);
-		List<AttributeInfo> infos = columns.values().stream().map((c)->c.getAttributeInfo()).collect(Collectors.toList());
-		dataStore.createOrUpdateColumns(infos);
-		System.out.println("Schema successfully initialized.");
-	}
-
-	private static Map<String, AttributeDeclaration> getMinimalDataColumns(IStore dataStore) {
-		Map<String, AttributeDeclaration> columns = new HashMap<String, AttributeDeclaration>();
-		// attributes with reserved names, the below declarations will be used
-		IType dbIdIType = TypeUtils.typeToIType(dataStore.getDbIdClass());
-		columns.put(IStore.dbIdName, new AttributeDeclaration(new Identifier(IStore.dbIdName), dbIdIType));
-		columns.put("category", new AttributeDeclaration(new Identifier("category"), 
-				new ListType(TextType.instance()), new IdentifierList(new Identifier("key"))));
-		return columns;
 	}
 
 	static int startServer(Integer httpPort, Handler handler, String serverAboutToStartMethod, IExpression argValue) throws Throwable {
@@ -208,7 +75,7 @@ public class AppServer {
 	
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
 		if(serverAboutToStartMethod!=null)
-			Interpreter.interpretMethod(AppServer.globalContext, new Identifier(serverAboutToStartMethod), argValue);
+			Interpreter.interpretMethod(Application.getGlobalContext(), new Identifier(serverAboutToStartMethod), argValue);
 	}
 
 	public static int getHttpPort() {

@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import prompto.grammar.Identifier;
+import prompto.runtime.Application;
 import prompto.value.Document;
 
 @SuppressWarnings("serial")
@@ -35,7 +36,7 @@ public class PromptoServlet extends HttpServlet {
 			Identifier methodName = readMethod(req);
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
-			RequestRouter handler = new RequestRouter(AppServer.classLoader, AppServer.globalContext);
+			RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
 			String contentType = handler.runMethodOrTest(mode, methodName, jsonParams, null, resp.getOutputStream());
 			resp.getOutputStream().close();
 			resp.flushBuffer();
@@ -92,7 +93,7 @@ public class PromptoServlet extends HttpServlet {
 		Identifier methodName = readMethod(req);
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
-		RequestRouter handler = new RequestRouter(AppServer.classLoader, AppServer.globalContext);
+		RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
 		handler.runMethodOrTest(mode, methodName, jsonParams, parts, resp.getOutputStream());
 		resp.getOutputStream().close();
 		resp.flushBuffer();
