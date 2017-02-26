@@ -28,7 +28,7 @@ public class TestConnect extends BaseServerTest {
 	public void testStartAndStop() throws Throwable {
 		AppServer.stop();
 		assertFalse(AppServer.isStarted());
-		AppServer.start();
+		AppServer.start(null);
 		assertTrue(AppServer.isStarted());
 		AppServer.stop();
 		assertFalse(AppServer.isStarted());

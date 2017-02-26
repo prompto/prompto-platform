@@ -17,6 +17,8 @@ import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
+import prompto.debug.DebugRequestServer;
+import prompto.debug.LocalDebugger;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
 import prompto.runtime.Application;
@@ -28,10 +30,13 @@ public class AppServer {
 	
 	public static void main(String[] args) throws Throwable {
 		Integer httpPort = null;
+		Integer debugPort = null;
 		String serverAboutToStart = null;
 
 		Map<String, String> argsMap = Application.initialize(args);
 
+		if(argsMap.containsKey("debug_port"))
+			debugPort = Integer.parseInt(argsMap.get("debug_port"));
 		if(argsMap.containsKey("http_port"))
 			httpPort = Integer.parseInt(argsMap.get("http_port"));
 		if(argsMap.containsKey("serverAboutToStart"))
@@ -45,7 +50,12 @@ public class AppServer {
 		Handler handler = prepareHandlers();
 		// initialize server accordingly
 		IExpression argsValue = Application.argsToArgValue(args);
-		startServer(httpPort, handler, serverAboutToStart, argsValue);
+		if(debugPort!=null)
+			debugServer(debugPort, httpPort, handler, serverAboutToStart, argsValue);
+		else
+			startServer(httpPort, handler, serverAboutToStart, argsValue, ()->{
+				Application.getGlobalContext().notifyTerminated();
+			});
 	}
 
 	private static void showHelp(Integer httpPort) {
@@ -53,7 +63,23 @@ public class AppServer {
 			System.out.println("Missing argument: -http_port");
 	}
 
-	static int startServer(Integer httpPort, Handler handler, String serverAboutToStartMethod, IExpression argValue) throws Throwable {
+	static int debugServer(Integer debugPort, Integer httpPort, Handler handler, String serverAboutToStartMethod, IExpression argValue) throws Throwable {
+		DebugRequestServer server = startDebugging(debugPort);
+		return startServer(httpPort, handler, serverAboutToStartMethod, argValue, ()->{
+			Application.getGlobalContext().notifyTerminated();
+			server.stopListening();
+		});
+	}
+	
+	
+	private static DebugRequestServer startDebugging(Integer debugPort) throws Throwable {
+		LocalDebugger debugger = new LocalDebugger();
+		DebugRequestServer server = Application.startDebuggerThread(debugger, debugPort);
+		Application.getGlobalContext().setDebugger(debugger);
+		return server;
+	}
+
+	static int startServer(Integer httpPort, Handler handler, String serverAboutToStartMethod, IExpression argValue, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
@@ -61,21 +87,23 @@ public class AppServer {
 			jettyServer.setConnectors(new Connector[] { sc });
 			jettyServer.setHandler(handler);
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
-			AppServer.start();
+			AppServer.start(serverStopped);
 			httpPort = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(httpPort);
 			jettyServer.setHandler(handler);
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
-			AppServer.start();
+			AppServer.start(serverStopped);
 		}
 		System.out.println("Web server successfully started on port " + httpPort);
 		return httpPort;
 	}
 	
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
-		if(serverAboutToStartMethod!=null)
+		if(serverAboutToStartMethod!=null) {
+			System.out.println("Calling startUp method " + serverAboutToStartMethod);
 			Interpreter.interpretMethod(Application.getGlobalContext(), new Identifier(serverAboutToStartMethod), argValue);
+		}
 	}
 
 	public static int getHttpPort() {
@@ -133,7 +161,7 @@ public class AppServer {
 	static Thread serverThread = null;
 	static Throwable serverThrowable = null;
 	
-	public static void start() throws Throwable  {
+	public static void start(Runnable serverStopped) throws Throwable  {
 		if(jettyServer.isStarted())
 			throw new RuntimeException("Server is already started!");
 		serverThrowable = null;
@@ -157,6 +185,8 @@ public class AppServer {
 					System.out.println("Web server thread waiting for completion...");
 					jettyServer.join();
 					System.out.println("Web server thread complete.");
+					if(serverStopped!=null)
+						serverStopped.run();
 				} catch(Throwable t) {
 					serverThrowable = t;
 				} finally {
