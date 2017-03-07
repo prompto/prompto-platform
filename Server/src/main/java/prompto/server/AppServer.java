@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -13,10 +12,9 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.webapp.Configuration;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 import prompto.debug.DebugRequestServer;
 import prompto.debug.LocalDebugger;
@@ -141,12 +139,12 @@ public class AppServer {
 	}
 
 	public static Handler prepareServiceHandler(String path, String base) {
-        WebAppContext handler = new WebAppContext();
+		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
         handler.setResourceBase(base);
-        handler.setConfigurations(new Configuration[] {
-        		new AnnotationConfiguration(), new WebXmlConfiguration()
-        });
+        handler.addServlet(new ServletHolder(new BinaryServlet()), "/bin/*");
+        handler.addServlet(new ServletHolder(new DataServlet()), "/data/*");       
+        handler.addServlet(new ServletHolder(new PromptoServlet()), "/run/*");       
  		return handler;
 	}
 
