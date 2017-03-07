@@ -37,7 +37,7 @@ public abstract class BaseServerTest {
 		list.addHandler(ws);
 		list.addHandler(new DefaultHandler());
 		// start server
-		port = AppServer.startServer(port, list, null, null, null);
+		port = AppServer.startServer(port, null, null, ()->list, null);
 		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}
