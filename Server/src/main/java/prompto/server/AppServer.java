@@ -18,6 +18,7 @@ import org.eclipse.jetty.util.resource.Resource;
 
 import prompto.debug.DebugRequestServer;
 import prompto.debug.LocalDebugger;
+import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
 import prompto.runtime.Application;
@@ -32,7 +33,7 @@ public class AppServer {
 		Integer debugPort = null;
 		String serverAboutToStart = null;
 
-		Map<String, String> argsMap = Application.initialize(args);
+		Map<String, String> argsMap = initialize(args);
 
 		if(argsMap.containsKey("debug_port"))
 			debugPort = Integer.parseInt(argsMap.get("debug_port"));
@@ -55,6 +56,11 @@ public class AppServer {
 			});
 	}
 
+	public static Map<String, String> initialize(String[] args) throws Throwable  {
+		ServerIdentifierProcessor.register();
+		return Application.initialize(args);
+	}
+	
 	private static void showHelp(Integer httpPort) {
 		if(httpPort==null)
 			System.out.println("Missing argument: -http_port");
@@ -138,6 +144,10 @@ public class AppServer {
 		return url;
 	}
 
+	public static void installHandler(String path, IMethodDeclaration method) {
+		
+	}
+	
 	public static Handler prepareServiceHandler(String path, String base) {
 		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
