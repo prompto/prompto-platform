@@ -13,7 +13,7 @@ public class TestCustomHandler {
 
 	@Test
 	public void test() throws Throwable {
-		String[] args = { "-application", "test" };
+		String[] args = { "-application", "test", "-testMode", "true" };
 		AppServer.initialize(args);
 		try(InputStream input = Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream("prompto/customHandler.pec")) {
