@@ -7,4 +7,4 @@ define customHandler as method receiving Document doc doing:
 	print "received!"
 	
 define serverAboutToStart as method receiving Text{} args doing:
-	installServerHandler with "test/*" as path and customHandler as serverHandler
+	installServerHandler with "/test/*" as path and customHandler as serverHandler

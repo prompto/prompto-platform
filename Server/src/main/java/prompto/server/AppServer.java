@@ -84,17 +84,18 @@ public class AppServer {
 
 	static int startServer(Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
-		callServerAboutToStart(serverAboutToStartMethod, argValue);
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
 			jettyServer.setHandler(handler.get());
+			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 			httpPort = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(httpPort);
 			jettyServer.setHandler(handler.get());
+			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
 		System.out.println("Web server successfully started on port " + httpPort);
@@ -116,7 +117,7 @@ public class AppServer {
 		return 0;
 	}
 
-	static Handler prepareHandlers() {
+	static HandlerList prepareHandlers() {
 		try {
 			System.out.println("Preparing web handlers...");
 			Handler rh = prepareResourceHandler("/");
@@ -145,7 +146,9 @@ public class AppServer {
 	}
 
 	public static void installHandler(String path, IMethodDeclaration method) {
-		
+		// TODO check path (must start with '/') and method prototype
+		ServletContextHandler handler = jettyServer.getChildHandlerByClass(ServletContextHandler.class);
+        handler.addServlet(new ServletHolder(new UserServlet(method)), path);       
 	}
 	
 	public static Handler prepareServiceHandler(String path, String base) {
