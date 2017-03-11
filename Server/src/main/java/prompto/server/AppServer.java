@@ -17,7 +17,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 
 import prompto.debug.DebugRequestServer;
-import prompto.debug.LocalDebugger;
 import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
@@ -35,6 +34,7 @@ public class AppServer {
 
 		Map<String, String> argsMap = initialize(args);
 
+		String debugHost = argsMap.getOrDefault("debug_host", "localhost");
 		if(argsMap.containsKey("debug_port"))
 			debugPort = Integer.parseInt(argsMap.get("debug_port"));
 		if(argsMap.containsKey("http_port"))
@@ -49,7 +49,7 @@ public class AppServer {
 		// initialize server accordingly
 		IExpression argsValue = Application.argsToArgValue(args);
 		if(debugPort!=null)
-			debugServer(debugPort, httpPort, serverAboutToStart, argsValue, AppServer::prepareHandlers);
+			debugServer(debugHost, debugPort, httpPort, serverAboutToStart, argsValue, AppServer::prepareHandlers);
 		else
 			startServer(httpPort, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
 				Application.getGlobalContext().notifyTerminated();
@@ -66,8 +66,8 @@ public class AppServer {
 			System.out.println("Missing argument: -http_port");
 	}
 
-	static int debugServer(Integer debugPort, Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
-		DebugRequestServer server = startDebugging(debugPort);
+	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
+		DebugRequestServer server = Application.startDebugging(debugHost, debugPort);
 		return startServer(httpPort, serverAboutToStartMethod, argValue, handler, ()->{
 			Application.getGlobalContext().notifyTerminated();
 			server.stopListening();
@@ -75,13 +75,6 @@ public class AppServer {
 	}
 	
 	
-	private static DebugRequestServer startDebugging(Integer debugPort) throws Throwable {
-		LocalDebugger debugger = new LocalDebugger();
-		DebugRequestServer server = Application.startDebuggerThread(debugger, debugPort);
-		Application.getGlobalContext().setDebugger(debugger);
-		return server;
-	}
-
 	static int startServer(Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
 		if(httpPort==-1) {
