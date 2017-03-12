@@ -20,6 +20,7 @@ import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
+import prompto.libraries.ServerLibraries;
 import prompto.runtime.Application;
 import prompto.runtime.Interpreter;
 
@@ -58,7 +59,7 @@ public class AppServer {
 
 	public static Map<String, String> initialize(String[] args) throws Throwable  {
 		ServerIdentifierProcessor.register();
-		return Application.initialize(args);
+		return Application.initialize(args, ()->ServerLibraries.getRuntimeResources());
 	}
 	
 	private static void showHelp(Integer httpPort) {

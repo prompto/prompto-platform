@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import prompto.code.Version;
+import prompto.libraries.ServerLibraries;
 import prompto.runtime.Application;
 import prompto.store.Family;
 import prompto.store.IStore;
@@ -36,7 +37,7 @@ public class TestSOLRBootstrap {
 		store = (EmbeddedSOLRStore)new SOLRStoreFactory().newStore(args, Type.CODE);
 		((EmbeddedSOLRStore)store).startContainer();
 		((EmbeddedSOLRStore)store).startServerWithEmptyCore();
-		Application.bootstrapCodeStore(store, "test", Version.parse("1.0.0"), true);
+		Application.bootstrapCodeStore(store, ()->ServerLibraries.getRuntimeResources(), "test", Version.parse("1.0.0"), true);
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.DATETIME, store.getColumnTypeFamily("timeStamp"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("category"));
@@ -58,7 +59,7 @@ public class TestSOLRBootstrap {
 		store = (EmbeddedSOLRStore)new SOLRStoreFactory().newStore(args, Type.CODE);
 		store.startContainer();
 		store.startServerWithEmptyCore();
-		Application.bootstrapCodeStore(store, "test", Version.parse("1.0.0"), true);
+		Application.bootstrapCodeStore(store, ()->ServerLibraries.getRuntimeResources(), "test", Version.parse("1.0.0"), true);
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("name"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("version"));

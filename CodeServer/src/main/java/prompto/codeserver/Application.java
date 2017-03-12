@@ -1,5 +1,6 @@
 package prompto.codeserver;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,12 +49,12 @@ public class Application {
 	
 	static void createThesaurusAndImportSamples() throws Exception {
 		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new UpdatableCodeStore(dataStore, "dev-center", "1.0.0");
-		ModuleImporter importer = new ModuleImporter("thesaurus/");
+		ICodeStore codeStore = new UpdatableCodeStore(dataStore, null, "dev-center", "1.0.0");
+		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 		importer.importModule(codeStore);
-		Collection<String> samples = ResourceUtils.listResourcesAt("samples/");
-		for(String sample : samples) {
-			importer = new ModuleImporter("samples/" + sample);
+		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/");
+		for(URL sample : samples) {
+			importer = new ModuleImporter(sample);
 			importer.importModule(codeStore);
 		}
 		dataStore.flush();

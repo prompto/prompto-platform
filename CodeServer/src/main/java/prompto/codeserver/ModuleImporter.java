@@ -2,6 +2,8 @@ package prompto.codeserver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,15 +23,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ModuleImporter {
 
 	Module module;
-	String imageResource;
-	String codeResource;
+	URL imageResource;
+	URL codeResource;
 	
-	public ModuleImporter(String path) {
+	public ModuleImporter(String resourcePath) {
+		this(Thread.currentThread().getContextClassLoader().getResource(resourcePath));
+	}
+	
+	public ModuleImporter(URL url) {
 		try {
-			JsonNode descriptor = readDescriptor(path);
+			JsonNode descriptor = readDescriptor(url);
 			Module module = createModule(descriptor);
 			populateModule(module, descriptor);
-			populateResources(path, descriptor);
+			populateResources(url, descriptor);
 			// done
 			this.module = module;
 		} catch(Exception e) {
@@ -37,11 +43,11 @@ public class ModuleImporter {
 		}
 	}
 
-	private void populateResources(String path, JsonNode descriptor) {
+	private void populateResources(URL url, JsonNode descriptor) throws MalformedURLException {
 		if(descriptor.get("imageResource")!=null)
-			this.imageResource = path + descriptor.get("imageResource").asText();
+			this.imageResource = new URL(url, descriptor.get("imageResource").asText());
 		if(descriptor.get("codeResource")!=null)
-			this.codeResource = path + descriptor.get("codeResource").asText();
+			this.codeResource = new URL(url, descriptor.get("codeResource").asText());
 	}
 
 	private void populateModule(Module module, JsonNode descriptor) {
@@ -71,10 +77,11 @@ public class ModuleImporter {
 		return type.getModuleClass().newInstance();
 	}
 
-	private JsonNode readDescriptor(String path) throws JsonProcessingException, IOException {
-		String jsonPath = path + "module.json";
-		InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream(jsonPath);
-		return new ObjectMapper().readTree(input);
+	private JsonNode readDescriptor(URL path) throws JsonProcessingException, IOException {
+		URL json = new URL(path, "module.json");
+		try(InputStream input = json.openStream()) {
+			return new ObjectMapper().readTree(input);
+		}
 	}
 
 	private String readText(JsonNode descriptor, String fieldName) {
@@ -92,7 +99,7 @@ public class ModuleImporter {
 		if(existing!=null)
 			return;
 		if(imageResource!=null)
-			module.setImage(Image.fromResource(imageResource).getStorableData());
+			module.setImage(Image.fromURL(imageResource).getStorableData());
 		codeStore.storeModule(module);	
 		if(codeResource!=null)
 			storeAssociatedCode(codeStore);
