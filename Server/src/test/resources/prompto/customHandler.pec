@@ -1,10 +1,10 @@
-define serverHandler as abstract method receiving Document doc
+define serviceHandler as abstract method receiving Document doc
 
-define installServerHandler as native method receiving Text path and serverHandler doing:
-    Java: $server.installHandler(path, serverHandler);
+define installServiceHandler as native method receiving Text path and serviceHandler doing:
+    Java: $server.installHandler(path, serviceHandler);
 
 define customHandler as method receiving Document doc doing:
 	print "received!"
 	
 define serverAboutToStart as method receiving Text{} args doing:
-	installServerHandler with "/test/*" as path and customHandler as serverHandler
+	installServiceHandler with "/git/*" as path and customHandler as serviceHandler

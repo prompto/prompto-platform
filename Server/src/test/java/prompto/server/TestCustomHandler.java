@@ -42,7 +42,7 @@ public class TestCustomHandler {
 	@Test
 	public void testInterpret_GET() throws Throwable {
 		testInterpret((port)->{
-			URL url = new URL("http://localhost:" + port + "/ws/test/stuff");
+			URL url = new URL("http://localhost:" + port + "/ws/git/stuff");
 			try(InputStream data = url.openStream()) {}
 			assertTrue(Out.read().endsWith("received!"));
 		});
@@ -51,7 +51,7 @@ public class TestCustomHandler {
 	@Test
 	public void testInterpret_POST_JSON() throws Throwable {
 		testInterpret((port)->{
-			URL url = new URL("http://localhost:" + port + "/ws/test/stuff");
+			URL url = new URL("http://localhost:" + port + "/ws/git/stuff");
 			HttpURLConnection cnx = (HttpURLConnection)url.openConnection();
 			cnx.setRequestMethod("POST");
 			cnx.setDoInput(true);
@@ -82,7 +82,7 @@ public class TestCustomHandler {
 				Context context = Application.getGlobalContext();
 				decls.register(context);
 			}
-			int port = AppServer.startServer(-1, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
+			int port = AppServer.startServer(8080, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
 			consumer.accept(port);
 		} finally {
 			Out.restore();
