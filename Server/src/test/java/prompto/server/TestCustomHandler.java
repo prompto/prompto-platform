@@ -1,9 +1,15 @@
 package prompto.server;
 
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
+
+
 import org.junit.Test;
+
+
 
 import static org.junit.Assert.*;
 import prompto.declaration.DeclarationList;
@@ -28,8 +34,43 @@ public class TestCustomHandler {
 		}
 	}
 	
+	@FunctionalInterface
+	public interface Consumer<T> {
+	    void accept(T t) throws Exception;
+	}
+
 	@Test
-	public void testInterpret() throws Throwable {
+	public void testInterpret_GET() throws Throwable {
+		testInterpret((port)->{
+			URL url = new URL("http://localhost:" + port + "/ws/test/stuff");
+			try(InputStream data = url.openStream()) {}
+			assertTrue(Out.read().endsWith("received!"));
+		});
+	}	
+	
+	@Test
+	public void testInterpret_POST_JSON() throws Throwable {
+		testInterpret((port)->{
+			URL url = new URL("http://localhost:" + port + "/ws/test/stuff");
+			HttpURLConnection cnx = (HttpURLConnection)url.openConnection();
+			cnx.setRequestMethod("POST");
+			cnx.setDoInput(true);
+			cnx.setDoOutput(true);
+			cnx.addRequestProperty("Accept", "application/json");
+			cnx.addRequestProperty("Content-type", "application/json");
+			byte[] bytes = "{\"data\":123}".getBytes();
+			cnx.addRequestProperty("Content-Length", String.valueOf(bytes.length));
+			try(OutputStream output = cnx.getOutputStream()) {
+				output.write(bytes);
+			}
+			try(InputStream data = cnx.getInputStream()) {
+			}
+			assertTrue(Out.read().endsWith("received!"));			
+		});
+	}		
+
+	
+	public void testInterpret(Consumer<Integer> consumer) throws Throwable {
 		Out.init();
 		try {
 			String[] args = { "-application", "test", "-testMode", "true" };
@@ -42,9 +83,7 @@ public class TestCustomHandler {
 				decls.register(context);
 			}
 			int port = AppServer.startServer(-1, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
-			URL url = new URL("http://localhost:" + port + "/ws/test/stuff");
-			try(InputStream data = url.openStream()) {}
-			assertTrue(Out.read().endsWith("received!"));
+			consumer.accept(port);
 		} finally {
 			Out.restore();
 			AppServer.stop();

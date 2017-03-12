@@ -1,6 +1,7 @@
 package prompto.server;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -9,10 +10,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
+import prompto.intrinsic.PromptoDocument;
+import prompto.reader.JSONReader;
 import prompto.runtime.Application;
 import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
@@ -65,4 +72,50 @@ public class UserServlet extends HttpServlet {
 			resp.setStatus(500);
 		}
 	}
+	
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		try {
+			String contentType = req.getContentType();
+			if(contentType.startsWith("application/json"))
+				doPostJson(req, resp);
+			else if(contentType.startsWith("application/x-www-form-urlencoded"))
+				doPostUrlEncoded(req, resp);
+			else if(contentType.startsWith("multipart/form-data"))
+				doPostMultipart(req, resp);
+			else
+				resp.sendError(415);
+		} catch(Throwable t) {
+			t.printStackTrace();
+			resp.setStatus(500);
+		}
+	}
+
+	private void doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
+	}
+
+	private void doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
+	}
+
+	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		try {
+			Object object = JSONReader.read(req.getInputStream());
+			if(object instanceof PromptoDocument) {
+				Context context = Application.getGlobalContext();
+				Document document = new Document(context, (PromptoDocument<?,?>)object);
+				IExpression args = new ExpressionValue(DocumentType.instance(), document);
+				ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
+				MethodCall call = new MethodCall(new MethodSelector(method.getId()), assignments);
+				call.interpret(context);	
+			} else
+				resp.sendError(415);
+		} catch(Throwable t) {
+			t.printStackTrace();
+			resp.setStatus(500);
+		}		
+	}
+	
+	
 }
