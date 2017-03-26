@@ -13,6 +13,7 @@
 		<module>Server</module>
 		<module>CodeServer</module>
 		<module>DataServer</module>
+		<module>AwsClient</module>
 	</modules>
 
 	<name>Prompto Platform</name>
