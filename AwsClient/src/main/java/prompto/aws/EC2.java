@@ -2,34 +2,26 @@ package prompto.aws;
 
 import java.util.Base64;
 
-
-
-
-
-
-
-
 import prompto.intrinsic.PromptoConverter;
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
-
-
-
-
-
-
-
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;import com.amazonaws.services.ec2.model.Tag;
-import com.fasterxml.jackson.databind.JsonNode;import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.amazonaws.services.ec2.model.StartInstancesRequest;
+import com.amazonaws.services.ec2.model.StopInstancesRequest;
+import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -65,6 +57,35 @@ public class EC2 {
 		return runResult.getReservation().getInstances().get(0).getInstanceId();
 
 	}
+	
+	public void setInstanceName(String instanceId, String name) {
+		CreateTagsRequest tagsRequest = new CreateTagsRequest()
+			.withResources(instanceId)
+			.withTags(new Tag("Name", name));
+		ec2.createTags(tagsRequest);
+		
+	}
+	
+	public void startInstance(String instanceId) {
+		StartInstancesRequest startRequest = new StartInstancesRequest()
+			.withInstanceIds(instanceId);
+		ec2.startInstances(startRequest);
+	}
+	
+	
+	public void stopInstance(String instanceId) {
+		StopInstancesRequest stopRequest = new StopInstancesRequest()
+			.withInstanceIds(instanceId);
+		ec2.stopInstances(stopRequest);
+	}
+
+	
+	public void dropInstance(String instanceId) {
+		TerminateInstancesRequest dropRequest = new TerminateInstancesRequest()
+			.withInstanceIds(instanceId);
+		ec2.terminateInstances(dropRequest);
+	}
+
 	
 	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listInstances() {

@@ -21,7 +21,7 @@ and methods:
 		Java: this.stopInstance(instanceId);
 
 	define dropInstance as method receiving Text instanceId doing:
-		Java: this.stopInstance(instanceId);
+		Java: this.dropInstance(instanceId);
 		
 	define associateIPAddress as method receiving Text instanceId, Text addressId doing:
 		Java: this.associateIPAddress(instanceId, addressId);

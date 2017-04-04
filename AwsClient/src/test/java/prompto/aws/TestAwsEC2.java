@@ -25,7 +25,7 @@ public class TestAwsEC2 {
 	}
 
 	@Test
-	public void testEC2InstanceCanBeCreatedNamedAndDroped() throws Throwable {
+	public void testEC2InstanceCanBeCreatedNamedAndDropped() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
 		String[] args = new String[] { "-test", "\"ec2 instance can be created, named and dropped\"", "-resources", url.toString() };
 		Application.main(args);
