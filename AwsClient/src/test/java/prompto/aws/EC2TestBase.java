@@ -13,7 +13,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 
-public abstract class TestBase {
+public abstract class EC2TestBase {
 
 	AmazonEC2 ec2;
 	

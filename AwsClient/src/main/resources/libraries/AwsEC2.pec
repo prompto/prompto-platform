@@ -1,0 +1,52 @@
+define AwsEC2 as native category with bindings:
+	
+	define category bindings as:
+		Java: prompto.aws.EC2
+	
+and methods:
+	
+	define runInstance as method receiving Text imageId, Text instanceType, Text keyName, Text[] securityGroupNames and Text userData returning Text doing:
+		Java: return this.runInstance(imageId, instanceType, keyName, securityGroupNames, userData);
+		
+	define setInstanceName as method receiving Text instanceId and name doing:
+		Java: this.setInstanceName(instanceId, name);
+
+	define startInstance as method receiving Text instanceId doing:
+		Java: this.startInstance(instanceId);
+
+	define stopInstance as method receiving Text instanceId doing:
+		Java: this.stopInstance(instanceId);
+
+	define dropInstance as method receiving Text instanceId doing:
+		Java: this.stopInstance(instanceId);
+		
+	define listInstances as method returning Document[] doing:
+		Java: return this.describeInstances();
+		
+	define associateIPAddress as method receiving Text instanceId, Text addressId doing:
+		Java: this.associateIPAddress(instanceId, addressId);
+
+define newAwsEC2 as native method receiving Text ec2Region, login = Nothing and password = Nothing returning AwsEC2 doing:
+	Java: prompto.aws.EC2.newInstance(ec2Region, login, password);
+
+define "test ec2 client can be created" as test method doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+	keys = (readJson with text as text) as Document
+	login = keys.accessKey as Text
+	password = keys.secretKey as Text
+	ec2 = newAwsEC2 with "us-west-2" as ec2Region, login as login and password as password
+and verifying:
+	ec2 is not Nothing
+
+define "test ec2 instance can be created" as test method doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+	keys = (readJson with text as text) as Document
+	login = keys.accessKey as Text
+	password = keys.secretKey as Text
+	ec2 = newAwsEC2 with "us-west-2" as ec2Region, login as login and password as password
+	nodeId = ec2.runInstance with "ami-d2c924b2" as imageId, "t2.micro" as instanceType,
+		"prompto-admin" as keyName, ["default"] as securityGroupNames and "some data" as userData
+and verifying:
+	nodeId is not Nothing
+
+	

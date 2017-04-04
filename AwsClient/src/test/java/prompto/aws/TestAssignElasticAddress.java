@@ -1,15 +1,15 @@
 package prompto.aws;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.amazonaws.services.ec2.model.AllocateAddressRequest;
 import com.amazonaws.services.ec2.model.AllocateAddressResult;
 import com.amazonaws.services.ec2.model.AssociateAddressRequest;
 import com.amazonaws.services.ec2.model.AssociateAddressResult;
 
-@Ignore("Only run these manually!!!")
-public class TestAssignElasticAddress extends TestBase {
+@Category(AwsTest.class)
+public class TestAssignElasticAddress extends EC2TestBase {
 
 	@Test
 	public void testThatAssignElasticAddress() throws Exception {

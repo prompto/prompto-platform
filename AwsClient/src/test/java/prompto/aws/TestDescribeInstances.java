@@ -1,12 +1,12 @@
 package prompto.aws;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 
-@Ignore("Only run these manually!!!")
-public class TestDescribeInstances extends TestBase {
+@Category(AwsTest.class)
+public class TestDescribeInstances extends EC2TestBase {
 
 	@Test
 	public void testThatDescribeInstancesReturnsData() throws Exception {
