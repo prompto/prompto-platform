@@ -11,9 +11,16 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.ec2.model.AllocateAddressResult;
+import com.amazonaws.services.ec2.model.AssociateAddressRequest;
+import com.amazonaws.services.ec2.model.AssociateAddressResult;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
+import com.amazonaws.services.ec2.model.DescribeAddressesRequest;
+import com.amazonaws.services.ec2.model.DescribeAddressesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.StartInstancesRequest;
@@ -113,4 +120,57 @@ public class EC2 {
 			doc.put("Name", tag.getValue());
 	}
 
+	@SuppressWarnings("unchecked")
+	public PromptoList<PromptoDocument<String, Object>> listAddresses() {
+		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
+		DescribeAddressesResult result = ec2.describeAddresses();
+		result.getAddresses().forEach((a)->{
+			JsonNode json = new ObjectMapper().valueToTree(a);
+			Object prompto = PromptoConverter.nodeToPrompto(json);
+			assert (prompto instanceof PromptoDocument);
+			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
+			list.add(doc); 
+		});
+		return list;
+	}
+	
+	public String getAddressIdForIpAddress(String ipAddress) {
+		DescribeAddressesRequest req = new DescribeAddressesRequest()
+			.withPublicIps(ipAddress);
+		DescribeAddressesResult res = ec2.describeAddresses(req);
+		if(res.getAddresses().isEmpty())
+			return null;
+		else
+			return res.getAddresses().get(0).getAllocationId();
+	}
+	
+	public PromptoDocument<String, Object> createIpAddress() {
+		AllocateAddressResult newResult = ec2.allocateAddress();
+		PromptoDocument<String, Object> doc = new PromptoDocument<>();
+		doc.put("allocationId", newResult.getAllocationId());
+		doc.put("publicIp", newResult.getPublicIp());
+		doc.put("domain", newResult.getDomain());
+		return doc;
+	}
+	
+	public String associateIPAddress(String instanceId, String addressId) {
+		AssociateAddressRequest assocRequest = new AssociateAddressRequest()
+		.withAllocationId(addressId)
+		.withInstanceId(instanceId);
+		AssociateAddressResult assocResult = ec2.associateAddress(assocRequest);
+		return assocResult.getAssociationId();
+	}
+	
+	public void dissociateIPAddress(String associationId) {
+		DisassociateAddressRequest dissocRequest = new DisassociateAddressRequest()
+			.withAssociationId(associationId);
+		ec2.disassociateAddress(dissocRequest);
+	}
+	
+	public void dropIPAddress(String addressId) {
+		ReleaseAddressRequest dropRequest = new ReleaseAddressRequest()
+			.withAllocationId(addressId);
+		ec2.releaseAddress(dropRequest);
+	}
+	
 }

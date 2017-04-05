@@ -22,9 +22,24 @@ and methods:
 
 	define dropInstance as method receiving Text instanceId doing:
 		Java: this.dropInstance(instanceId);
-		
-	define associateIPAddress as method receiving Text instanceId, Text addressId doing:
-		Java: this.associateIPAddress(instanceId, addressId);
+	
+	define listAddresses as method returning Document[] doing:
+		Java: return this.listAddresses();
+
+	define createIpAddress as method returning Document doing:
+		Java: return this.createIpAddress();
+
+	define getAddressIdForIpAddress	as method receiving Text ipAddress returning Text doing:
+		Java: return this.getAddressIdForIpAddress(ipAddress);
+
+	define associateIPAddress as method receiving Text instanceId, Text addressId returning Text doing:
+		Java: return this.associateIPAddress(instanceId, addressId);
+
+	define dissociateIPAddress as method receiving Text addressId doing:
+		Java: this.dissociateIPAddress(addressId);
+
+	define dropIPAddress as method receiving Text addressId doing:
+		Java: this.dropIPAddress(addressId);
 
 define newAwsEC2 as native method receiving Text ec2Region, login = Nothing and password = Nothing returning AwsEC2 doing:
 	Java: prompto.aws.EC2.newInstance(ec2Region, login, password);
@@ -46,7 +61,6 @@ define "ec2 instances can be listed" as test method doing:
 	docs = ec2.listInstances
 	names = doc["Name"] for each doc in docs
 and verifying:
-	ec2 is not Nothing
 	"prompto-deployer-001" in names
 
 define "ec2 instance can be created, named and dropped" as test method doing:
@@ -58,3 +72,27 @@ define "ec2 instance can be created, named and dropped" as test method doing:
 and verifying:
 	nodeId is not Nothing
 	
+define "ec2 addresses can be listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials
+	docs = ec2.listAddresses
+	ips = doc["publicIp"] for each doc in docs
+and verifying:
+	"35.166.112.187" in ips
+
+define "ec2 address can be found by ip" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials
+	name = ec2.getAddressIdForIpAddress "35.166.112.187"
+and verifying:
+	"eipalloc-dc98c1bb" = name
+
+define "ec2 address can be created, associated, dissociated and dropped" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials
+	doc = ec2.createIpAddress
+	addressId = doc.allocationId
+	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId
+	ec2.dissociateIPAddress assocId
+	ec2.dropIPAddress addressId
+and verifying:
+	addressId is not Nothing
+	assocId is not Nothing
+
