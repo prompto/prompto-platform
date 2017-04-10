@@ -49,7 +49,7 @@ public abstract class BaseServerTest {
 	}
 
 	public static void bootstrapCodeStore() throws Exception {
-		Application.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true);
+		Application.bootstrapCodeStore(new MemStore(), "test", Version.parse("1.0.0"), true, null);
 	}
 
 	@After

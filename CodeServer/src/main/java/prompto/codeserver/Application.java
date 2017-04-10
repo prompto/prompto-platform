@@ -49,10 +49,10 @@ public class Application {
 	
 	static void createThesaurusAndImportSamples() throws Exception {
 		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new UpdatableCodeStore(dataStore, null, "dev-center", "1.0.0");
+		ICodeStore codeStore = new UpdatableCodeStore(dataStore, null, "dev-center", "1.0.0", null);
 		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 		importer.importModule(codeStore);
-		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/");
+		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
 		for(URL sample : samples) {
 			importer = new ModuleImporter(sample);
 			importer.importModule(codeStore);
