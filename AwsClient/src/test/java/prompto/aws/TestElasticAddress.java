@@ -44,5 +44,14 @@ public class TestElasticAddress extends EC2TestBase {
 		ReleaseAddressResult dropResult = ec2.releaseAddress(dropRequest);
 		System.out.println(dropResult.toString());
 	}
+	
+	@Test
+	public void testAssociateElasticAddress() throws Exception {
+		AssociateAddressRequest assocRequest = new AssociateAddressRequest()
+		.withAllocationId("eipalloc-dc98c1bb")
+		.withInstanceId("i-0acb2373bb25ce373");
+		AssociateAddressResult assocResult = ec2.associateAddress(assocRequest);
+		System.out.println(assocResult.toString());
+	}
 
 }

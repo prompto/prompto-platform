@@ -42,9 +42,11 @@ public class TestCustomHandler {
 	@Test
 	public void testInterpret_GET() throws Throwable {
 		testInterpret((port)->{
-			URL url = new URL("http://localhost:" + port + "/ws/git/stuff");
+			URL url = new URL("http://localhost:" + port + "/ws/ec2/stuff?data=abc&doto=i-efg");
 			try(InputStream data = url.openStream()) {}
-			assertTrue(Out.read().endsWith("received!"));
+			String out  = Out.read();
+			assertTrue(out.contains("abc"));
+			assertTrue(out.contains("i-efg"));
 		});
 	}	
 	
@@ -82,8 +84,10 @@ public class TestCustomHandler {
 				Context context = Application.getGlobalContext();
 				decls.register(context);
 			}
-			int port = AppServer.startServer(8080, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
+			int port = AppServer.startServer(-1, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
 			consumer.accept(port);
+		} catch(Throwable t) {
+			t.printStackTrace(System.err);
 		} finally {
 			Out.restore();
 			AppServer.stop();

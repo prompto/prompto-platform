@@ -3,8 +3,22 @@ define serviceHandler as abstract method receiving Document doc
 define installServiceHandler as native method receiving Text path and serviceHandler doing:
     Java: $server.installHandler(path, serviceHandler);
 
-define customHandler as method receiving Document doc doing:
+define gitHandler as method receiving Document doc doing:
 	print "received!"
 	
+define ec2Handler as method receiving Document doc doing:
+	print "" + doc.data + ", " + doc.doto
+
 define serverAboutToStart as method receiving Text{} args doing:
-	installServiceHandler with "/git/*" as path and customHandler as serviceHandler
+	installServiceHandler with "/git/*" as path and gitHandler as serviceHandler
+	installServiceHandler with "/ec2/*" as path and ec2Handler as serviceHandler
+	invoke: isRunningOnEC2
+
+define isRunningOnEC2 as method doing:
+	switch on error doing:
+		path = "file:/sys/devices/virtual/dmi/id/bios_version"
+		data = read all from Url with path as path
+		return "amazon" in data
+	when READ_WRITE:
+		return false
+	
