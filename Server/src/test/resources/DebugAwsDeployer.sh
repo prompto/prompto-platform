@@ -1,0 +1,2 @@
+cd /var/folders/7z/rdw_873x3_s5zr8pb81k9z7c0000gn/T/Prompto/Java/0.0.1-SNAPSHOT/
+java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address="8000" -jar Server-0.0.1-SNAPSHOT.jar -http_port 8080  -application AwsDeployer -serverAboutToStart main -addOns file:///var/folders/7z/rdw_873x3_s5zr8pb81k9z7c0000gn/T/Prompto/Java/0.0.1-SNAPSHOT/AwsClient-0.0.1-SNAPSHOT.jar  -resources file:///Users/ericvergnaud/Development/prompto/prompto-deploy/aws/AwsDeployer.pec
