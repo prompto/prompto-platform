@@ -1,5 +1,6 @@
 package prompto.store.mongo;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import prompto.store.IStoredIterable;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteOneModel;
@@ -159,10 +161,70 @@ public class MongoStore implements IStore {
 		else
 			return null;
 	}
+	
+	class StoredIterable implements IStoredIterable {
+
+		MongoCollection<Document> collection;
+		MongoQuery query;
+		Long totalCount = null;
+		Long count = null;
+		
+		StoredIterable(MongoCollection<Document> collection, MongoQuery query) {
+			this.collection = collection;
+			this.query = query;
+		}
+		
+		@Override
+		public Iterator<IStored> iterator() {
+			FindIterable<Document> find = collection.find();
+			if(query!=null) {
+				if(query.predicate!=null)
+					find = find.filter(query.predicate);
+			}
+			Iterator<Document> iter = find.iterator();
+
+			return new Iterator<IStored>() {
+				@Override
+				public boolean hasNext() {
+					return iter.hasNext();
+				}
+				
+				@Override
+				public IStored next() {
+					return new StoredDocument(MongoStore.this, iter.next());
+				}
+			};
+		}
+		
+		@Override
+		public long totalLength() {
+			if(totalCount==null) {
+				if(query==null || query.predicate==null)
+					totalCount = collection.count();
+				else
+					totalCount = collection.count(query.predicate);
+			}
+			return totalCount;
+		}
+		
+		@Override
+		public long length() {
+			if(count==null) {
+				if(query!=null && query.first!=null && query.last!=null) {
+					count = 1 + query.last - query.first;
+					if(count > totalLength())
+						count = totalLength();
+				} else
+					count = totalLength();
+			}
+			return count;
+		}
+	};
 
 	@Override
 	public IStoredIterable fetchMany(IQuery query) throws PromptoError {
-		throw new UnsupportedOperationException();
+		MongoCollection<Document> coll = db.getCollection("instances");
+		return new StoredIterable(coll, (MongoQuery)query);
 	}
 
 	@Override
@@ -181,6 +243,10 @@ public class MongoStore implements IStore {
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = fields.get(fieldName);
 		return readers.getOrDefault(info.getFamily(), (o)->o).apply(data);
+	}
+	
+	public void insertDocuments(Document ... docs) {
+		db.getCollection("instances").insertMany(Arrays.asList(docs));
 	}
 
 

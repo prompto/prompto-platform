@@ -1,15 +1,18 @@
 package prompto.store.mongo;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Filters;
 
 import prompto.store.AttributeInfo;
+import prompto.store.Family;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder;
 
@@ -32,15 +35,25 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	}
 	
 	static Bson verifyROUGHLY(AttributeInfo info, Object value) {
-		return Filters.eq(info.getName(), value);
+		if(info.getFamily()==Family.TEXT)
+			return Filters.regex(info.getName(), value.toString(), "i");
+		else
+			return Filters.eq(info.getName(), value);
 	}
 
 	static Bson verifyCONTAINS(AttributeInfo info, Object value) {
-		return Filters.eq(info.getName(), value);
+		if(info.getFamily()==Family.TEXT)
+			return Filters.regex(info.getName(), ".*" + value + ".*", "i");
+		else
+			return Filters.eq(info.getName(), value);
 	}
 
+	@SuppressWarnings("unchecked")
 	static Bson verifyCONTAINED(AttributeInfo info, Object value) {
-		return Filters.eq(info.getName(), value);
+		if(value instanceof Collection)
+			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(info.getName(), v)).collect(Collectors.toList()));
+		else
+			return Filters.eq(info.getName(), value);
 	}
 
 	static Bson verifyGREATER(AttributeInfo info, Object value) {
