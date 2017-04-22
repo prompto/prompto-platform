@@ -1,0 +1,109 @@
+package prompto.store.mongo;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+import java.util.function.BiFunction;
+
+import org.bson.conversions.Bson;
+
+import com.mongodb.client.model.Filters;
+
+import prompto.store.AttributeInfo;
+import prompto.store.IQuery;
+import prompto.store.IQueryBuilder;
+
+public class MongoQueryBuilder implements IQueryBuilder {
+
+	static Map<MatchOp, BiFunction<AttributeInfo, Object, Bson>> verifiers;
+	
+	static {
+		verifiers = new HashMap<>();
+		verifiers.put(MatchOp.EQUALS, MongoQueryBuilder::verifyEQUALS);
+		verifiers.put(MatchOp.ROUGHLY, MongoQueryBuilder::verifyROUGHLY);
+		verifiers.put(MatchOp.CONTAINS, MongoQueryBuilder::verifyCONTAINS);
+		verifiers.put(MatchOp.CONTAINED, MongoQueryBuilder::verifyCONTAINED);
+		verifiers.put(MatchOp.GREATER, MongoQueryBuilder::verifyGREATER);
+		verifiers.put(MatchOp.LESSER, MongoQueryBuilder::verifyLESSER);
+	}
+	
+	static Bson verifyEQUALS(AttributeInfo info, Object value) {
+		return Filters.eq(info.getName(), value);
+	}
+	
+	static Bson verifyROUGHLY(AttributeInfo info, Object value) {
+		return Filters.eq(info.getName(), value);
+	}
+
+	static Bson verifyCONTAINS(AttributeInfo info, Object value) {
+		return Filters.eq(info.getName(), value);
+	}
+
+	static Bson verifyCONTAINED(AttributeInfo info, Object value) {
+		return Filters.eq(info.getName(), value);
+	}
+
+	static Bson verifyGREATER(AttributeInfo info, Object value) {
+		return Filters.gt(info.getName(), value);
+	}
+	
+	
+	static Bson verifyLESSER(AttributeInfo info, Object value) {
+		return Filters.lt(info.getName(), value);
+	}
+
+	Stack<Bson> stack = new Stack<>();
+	Long first;
+	Long last;
+	
+	@Override
+	public <T> void verify(AttributeInfo info, MatchOp match, T fieldValue) {
+		Bson predicate = verifiers.get(match).apply(info, fieldValue);
+		stack.push(predicate);
+	}
+
+	@Override
+	public void and() {
+		Bson right = stack.pop();
+		Bson left = stack.pop();
+		stack.push(Filters.and(left, right));
+	}
+
+	@Override
+	public void or() {
+		Bson right = stack.pop();
+		Bson left = stack.pop();
+		stack.push(Filters.or(left, right));
+	}
+
+	@Override
+	public void not() {
+		Bson top = stack.pop();
+		stack.push(Filters.not(top));
+	}
+
+	@Override
+	public void setFirst(Long first) {
+		this.first = first;
+	}
+
+	@Override
+	public void setLast(Long last) {
+		this.last = last;
+	}
+
+	@Override
+	public void addOrderByClause(AttributeInfo attribute, boolean descending) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public IQuery build() {
+		Bson predicate = stack.empty() ? null : stack.pop();
+		if(!stack.empty())
+			throw new IllegalStateException("Unused query predicates!");
+		return new MongoQuery(predicate, first, last, null);
+	}
+
+}

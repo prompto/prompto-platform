@@ -1,0 +1,26 @@
+package prompto.store.mongo;
+
+import prompto.store.IStoreFactory;
+
+public class MongoStoreFactory implements IStoreFactory {
+
+	@Override
+	public MongoStore newStore(String[] args, Type type) throws Exception {
+		String server = null;
+		int port = 8983;
+		
+		final String argKey = "-mongo-" + type.name().toLowerCase() + "-";
+		for(int i=0;i<args.length;i++) {
+			String arg = args[i]; 
+			if(!arg.toLowerCase().startsWith(argKey))
+				continue;
+			arg = arg.substring(argKey.length());
+			if(arg.equalsIgnoreCase("server"))
+				server = args[++i];
+			else if(arg.equalsIgnoreCase("port"))
+				port = Integer.decode(args[++i]);
+		}
+		MongoStore store = new MongoStore(server, port);
+		return store;
+	}
+}

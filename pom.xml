@@ -10,6 +10,7 @@
 	<modules>
 		<module>SOLRFields</module>
 		<module>SOLRStore</module>
+		<module>MongoStore</module>
 		<module>Server</module>
 		<module>CodeServer</module>
 		<module>DataServer</module>
