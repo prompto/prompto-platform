@@ -126,6 +126,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>CodeStore</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>Server</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -146,6 +151,11 @@
 			<artifactId>selenium-java</artifactId>
 			<version>2.51.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>MongoStore</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>

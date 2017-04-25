@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.UpdatableCodeStore;
+import prompto.libraries.Libraries;
 import prompto.server.AppServer;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
@@ -31,7 +34,7 @@ public class Application {
 		}
 		List<String> argsList = new ArrayList<>(Arrays.asList(args));
 		argsList.add("-resources");
-		argsList.add("CodeStore.pec,DevCenter.pec");
+		argsList.add(getResourcesList());
 		argsList.add("-application");
 		argsList.add("dev-center");
 		argsList.add("-version");
@@ -43,6 +46,11 @@ public class Application {
 		AppServer.main(argsList.toArray(new String[argsList.size()])/*, Application::aboutToStart*/); // TODO move to serverAboutToStartMethod
 	}
 	
+	private static String getResourcesList() {
+		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, Application.class);
+		return urls.stream().map(URL::toExternalForm).collect(Collectors.joining(","));
+	}
+
 	static void aboutToStart() throws Exception {
 		createThesaurusAndImportSamples();
 	}

@@ -34,6 +34,7 @@ import prompto.store.IStoredIterable;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -57,13 +58,21 @@ public class MongoStore implements IStore {
 	Map<String, AttributeInfo> fields = new HashMap<>();
 	
 	public MongoStore(String host, int port) {
+		this(host, port, null, null);
+	}
+	
+	public MongoStore(String host, int port, String user, String password) {
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
 		                .codecRegistry(codecRegistry)
 		                .build();
-		client = new MongoClient(address, options);
+		if(user!=null && password!=null) {
+			MongoCredential cred = MongoCredential.createCredential(user, "admin", password.toCharArray());
+			client = new MongoClient(address, Collections.singletonList(cred), options);
+		} else
+			client = new MongoClient(address, options);
 	}
-	
+
 	public void setDatabase(String name) {
 		db = client.getDatabase(name);
 	}

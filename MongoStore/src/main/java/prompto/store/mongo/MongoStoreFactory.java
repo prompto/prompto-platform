@@ -6,8 +6,10 @@ public class MongoStoreFactory implements IStoreFactory {
 
 	@Override
 	public MongoStore newStore(String[] args, Type type) throws Exception {
+		String user = null;
+		String password = null;
 		String server = null;
-		int port = 8983;
+		int port = 27017;
 		
 		final String argKey = "-mongo-" + type.name().toLowerCase() + "-";
 		for(int i=0;i<args.length;i++) {
@@ -19,8 +21,13 @@ public class MongoStoreFactory implements IStoreFactory {
 				server = args[++i];
 			else if(arg.equalsIgnoreCase("port"))
 				port = Integer.decode(args[++i]);
+			else if(arg.equalsIgnoreCase("user"))
+				user = args[++i];
+			else if(arg.equalsIgnoreCase("password"))
+				password = args[++i];
 		}
-		MongoStore store = new MongoStore(server, port);
+		MongoStore store = new MongoStore(server, port, user, password);
+		store.setDatabase(type.name());
 		return store;
 	}
 }
