@@ -8,14 +8,13 @@ import java.util.UUID;
 
 import org.bson.Document;
 
-import com.mongodb.client.model.InsertOneModel;
-import com.mongodb.client.model.WriteModel;
-
 import prompto.error.PromptoError;
 import prompto.error.ReadWriteError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.store.IStorable;
-import prompto.store.IStore;
+
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.WriteModel;
 
 public class StorableDocument extends BaseDocument implements IStorable {
 
@@ -37,7 +36,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	@Override
 	public UUID getOrCreateDbId() {
 		ensureDocument(null);
-		Object dbIdField = document.get(IStore.dbIdName);
+		Object dbIdField = document.get("_id");
 		return (UUID)dbIdField;
 	}
 	
@@ -65,7 +64,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 			else
 				dbId = java.util.UUID.randomUUID();
 			document = new Document();
-			document.put(IStore.dbIdName, dbId);
+			document.put("_id", dbId);
 			if(categories!=null && !this.isUpdate)
 				document.put("category", categories); 
 				

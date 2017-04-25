@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.bson.Document;
 
 import prompto.error.PromptoError;
-import prompto.store.IStore;
 import prompto.store.IStored;
 
 public class StoredDocument extends BaseDocument implements IStored {
@@ -21,7 +20,7 @@ public class StoredDocument extends BaseDocument implements IStored {
 	
 	@Override
 	public UUID getDbId() {
-		Object dbId = document.get(IStore.dbIdName);
+		Object dbId = document.get("_id");
 		if(dbId==null)
 			return null;
 		else

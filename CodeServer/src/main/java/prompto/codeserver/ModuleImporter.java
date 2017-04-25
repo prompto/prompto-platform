@@ -95,7 +95,7 @@ public class ModuleImporter {
 	public void importModule(ICodeStore codeStore) throws Exception {
 		String name = module.getName();
 		Version version = Version.parse(module.getVersion());
-		WebSite existing = codeStore.fetchApplication(name, version);
+		Module existing = codeStore.fetchModule(module.getType(), name, version);
 		if(existing!=null)
 			return;
 		if(imageResource!=null)

@@ -43,6 +43,8 @@ public class Application {
 		argsList.add(codeStoreType.name());
 		argsList.add("-dataStoreType");
 		argsList.add(dataStoreType.name());
+		argsList.add("-serverAboutToStart");
+		argsList.add("createThesaurusAndImportSamples");
 		AppServer.main(argsList.toArray(new String[argsList.size()])/*, Application::aboutToStart*/); // TODO move to serverAboutToStartMethod
 	}
 	
@@ -51,13 +53,9 @@ public class Application {
 		return urls.stream().map(URL::toExternalForm).collect(Collectors.joining(","));
 	}
 
-	static void aboutToStart() throws Exception {
-		createThesaurusAndImportSamples();
-	}
-	
-	static void createThesaurusAndImportSamples() throws Exception {
+	public static void createThesaurusAndImportSamples() throws Exception {
 		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new UpdatableCodeStore(dataStore, null, "dev-center", "1.0.0", null);
+		ICodeStore codeStore = new UpdatableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", "1.0.0", null);
 		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 		importer.importModule(codeStore);
 		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);

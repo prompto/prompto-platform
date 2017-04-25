@@ -25,7 +25,7 @@ public abstract class BaseMongoTest {
 	@Before
 	public void __before__() throws IOException {
 		MongodStarter starter = MongodStarter.getDefaultInstance();
-		int mongoPort = Network.getFreeServerPort();
+		mongoPort = Network.getFreeServerPort();
 		IMongodConfig mongodConfig = new MongodConfigBuilder()
 			.version(Version.Main.PRODUCTION)
 			.net(new Net(mongoPort, Network.localhostIsIPv6()))

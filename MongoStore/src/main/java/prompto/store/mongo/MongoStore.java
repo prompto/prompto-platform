@@ -1,5 +1,6 @@
 package prompto.store.mongo;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
+import org.bson.types.Binary;
 
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
@@ -41,6 +43,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.WriteModel;
 
 public class MongoStore implements IStore {
@@ -77,11 +80,6 @@ public class MongoStore implements IStore {
 		db = client.getDatabase(database);
 	}
 
-	public void setDatabase(String name) {
-		
-	}
-
-
 	@Override
 	public Class<?> getDbIdClass() {
 		return UUID.class;
@@ -89,7 +87,7 @@ public class MongoStore implements IStore {
 
 	@Override
 	public Object convertToDbId(Object dbId) {
-		throw new UnsupportedOperationException();
+		return UUID.fromString(String.valueOf(dbId));
 	}
 
 	@Override
@@ -145,12 +143,27 @@ public class MongoStore implements IStore {
 
 	@Override
 	public PromptoBinary fetchBinary(Object dbId, String attr) throws PromptoError {
-		throw new UnsupportedOperationException();
+		Bson filter = Filters.eq("_id", dbId);
+		MongoCollection<Document> coll = db.getCollection("instances");
+		Iterator<Document> found = coll.find(filter)
+			.limit(1)
+			.projection(Projections.include(attr))
+			.iterator();
+		if(!found.hasNext())
+			return null;
+		Object data = found.next().get(attr);
+		if(data==null)
+			return null;
+		data = readFieldData(attr, data);
+		if(data instanceof PromptoBinary)
+			return (PromptoBinary)data;
+		else
+			return null; // TODO warning
 	}
 
 	@Override
 	public IStored fetchUnique(Object dbId) throws PromptoError {
-		Bson filter = Filters.eq(IStore.dbIdName, dbId);
+		Bson filter = Filters.eq("_id", dbId);
 		return fetchOne(filter);
 	}
 
@@ -251,6 +264,12 @@ public class MongoStore implements IStore {
 		readers.put(Family.DATE, (o)->PromptoDate.fromJavaTime((Long)o));
 		readers.put(Family.TIME, (o)->PromptoTime.fromMillisOfDay((Long)o));
 		readers.put(Family.DATETIME, (o)->PromptoDateTime.parse(((Document)o).getString("text")));
+		readers.put(Family.IMAGE, (o)->{ try {
+			BinaryData bin = new BinaryData(((Binary)o).getData());
+			return new PromptoBinary(bin.getMimeType(), bin.getData());
+		} catch(IOException e) {
+			throw new RuntimeException(e);
+		}});
 	}
 	
 	public Object readFieldData(String fieldName, Object data) {

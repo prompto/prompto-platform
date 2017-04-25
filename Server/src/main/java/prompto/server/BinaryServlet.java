@@ -31,6 +31,7 @@ public class BinaryServlet extends HttpServlet {
 			resp.setContentType(binary.getMimeType());
 			resp.getOutputStream().write(binary.getBytes());
 		} catch(Throwable t) {
+			t.printStackTrace(System.err);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}

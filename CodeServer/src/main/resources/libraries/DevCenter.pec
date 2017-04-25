@@ -1,3 +1,6 @@
+define createThesaurusAndImportSamples as native method doing:
+	Java: prompto.codeserver.Application.createThesaurusAndImportSamples();
+
 define getDataExplorerURL as method doing:
 	return "http://localhost:8081/index.html"
 

@@ -45,6 +45,7 @@ public class DataServlet extends HttpServlet {
 			String mimeType = writeJsonResponse(context, value, resp.getOutputStream());
 			resp.setContentType(mimeType);
 		} catch(Throwable t) {
+			t.printStackTrace(System.err);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
