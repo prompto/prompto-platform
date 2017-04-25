@@ -18,20 +18,20 @@ import de.flapdoodle.embed.process.runtime.Network;
 
 public abstract class BaseMongoTest {
 	
+	int mongoPort;
 	MongodExecutable mongo;
 	MongoStore store;
 	
 	@Before
 	public void __before__() throws IOException {
 		MongodStarter starter = MongodStarter.getDefaultInstance();
-		int port = Network.getFreeServerPort();
+		int mongoPort = Network.getFreeServerPort();
 		IMongodConfig mongodConfig = new MongodConfigBuilder()
 			.version(Version.Main.PRODUCTION)
-			.net(new Net(port, Network.localhostIsIPv6()))
+			.net(new Net(mongoPort, Network.localhostIsIPv6()))
 			.build();	
 		mongo = starter.prepare(mongodConfig);
 		mongo.start();
-		store = new MongoStore("localhost", port);
 	}
 	
 	@After
@@ -41,7 +41,7 @@ public abstract class BaseMongoTest {
 	}
 	
 	protected void createStore(String name) {
-		store.setDatabase(name);
+		store = new MongoStore("localhost", mongoPort, name);
 	}
 
 

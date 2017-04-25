@@ -26,8 +26,7 @@ public class MongoStoreFactory implements IStoreFactory {
 			else if(arg.equalsIgnoreCase("password"))
 				password = args[++i];
 		}
-		MongoStore store = new MongoStore(server, port, user, password);
-		store.setDatabase(type.name());
+		MongoStore store = new MongoStore(server, port, type.name(), user, password);
 		return store;
 	}
 }
