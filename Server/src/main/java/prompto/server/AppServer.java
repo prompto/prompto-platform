@@ -1,14 +1,17 @@
 package prompto.server;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -32,6 +35,7 @@ public class AppServer {
 		Integer httpPort = null;
 		Integer debugPort = null;
 		String serverAboutToStart = null;
+		String webSite = null;
 
 		Map<String, String> argsMap = initialize(args);
 
@@ -42,6 +46,8 @@ public class AppServer {
 			httpPort = Integer.parseInt(argsMap.get("http_port"));
 		if(argsMap.containsKey("serverAboutToStart"))
 			serverAboutToStart = argsMap.get("serverAboutToStart");
+		if(argsMap.containsKey("web-site"))
+			webSite = argsMap.get("web-site");
 
 		if(httpPort==null) {
 			showHelp(httpPort);
@@ -50,9 +56,9 @@ public class AppServer {
 		// initialize server accordingly
 		IExpression argsValue = Application.argsToArgValue(args);
 		if(debugPort!=null)
-			debugServer(debugHost, debugPort, httpPort, serverAboutToStart, argsValue, AppServer::prepareHandlers);
+			debugServer(debugHost, debugPort, httpPort, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
 		else
-			startServer(httpPort, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
+			startServer(httpPort, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
 				Application.getGlobalContext().notifyTerminated();
 			});
 	}
@@ -67,28 +73,28 @@ public class AppServer {
 			System.out.println("Missing argument: -http_port");
 	}
 
-	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
+	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
 		DebugRequestServer server = Application.startDebugging(debugHost, debugPort);
-		return startServer(httpPort, serverAboutToStartMethod, argValue, handler, ()->{
+		return startServer(httpPort, webSite, serverAboutToStartMethod, argValue, handler, ()->{
 			Application.getGlobalContext().notifyTerminated();
 			server.stopListening();
 		});
 	}
 	
 	
-	static int startServer(Integer httpPort, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(Integer httpPort, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
-			jettyServer.setHandler(handler.get());
+			jettyServer.setHandler(handler.apply(webSite));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 			httpPort = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(httpPort);
-			jettyServer.setHandler(handler.get());
+			jettyServer.setHandler(handler.apply(webSite));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
@@ -111,15 +117,17 @@ public class AppServer {
 		return 0;
 	}
 
-	static HandlerList prepareHandlers() {
+	static HandlerList prepareHandlers(String webSite) {
 		try {
 			System.out.println("Preparing web handlers...");
-			Handler rh = prepareResourceHandler("/");
-			Handler ws = prepareServiceHandler("/ws/");
-			HandlerList handlers = new HandlerList();
-			handlers.setHandlers(new Handler[] { rh, ws, new DefaultHandler() });
+			HandlerList list = new HandlerList();
+			Handler hh = prepareResourceHandler("/", webSite);
+			if(hh!=null)
+				list.addHandler(hh);
+			list.addHandler(prepareServiceHandler("/ws/"));
+			list.addHandler(new DefaultHandler());
 			System.out.println("Web handlers successfully prepared.");
-			return handlers;
+			return list;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -139,6 +147,16 @@ public class AppServer {
 		return url;
 	}
 
+	private static File getWebSiteFile(String webSite) throws IOException {
+		if(webSite==null)
+			return null;
+		File file = new File(webSite);
+		if(!file.exists())
+			throw new FileNotFoundException(webSite);
+		return file.getCanonicalFile();
+	}
+
+
 	public static void installHandler(String path, IMethodDeclaration method) {
 		// TODO check path (must start with '/') and method prototype
 		ServletContextHandler handler = jettyServer.getChildHandlerByClass(ServletContextHandler.class);
@@ -155,13 +173,16 @@ public class AppServer {
  		return handler;
 	}
 
-	static ResourceHandler prepareResourceHandler(String path) throws Exception {
-		URL url = getRootURL();
-		Resource resource = Resource.newResource(url);
+	static Handler prepareResourceHandler(String path, String webSite) throws Exception {
+		File file = getWebSiteFile(webSite);
+		Resource resource = Resource.newResource(file);
 		ResourceHandler rh = new ResourceHandler();
-		rh.setDirectoriesListed(false);
 		rh.setBaseResource(resource);
-		return rh;
+		rh.setDirectoriesListed(false);
+		rh.setWelcomeFiles(new String[] {"index.html"});
+		ContextHandler ch = new ContextHandler(path);
+		ch.setHandler(rh);
+		return ch;
 	}
 
 	static boolean startComplete = false;

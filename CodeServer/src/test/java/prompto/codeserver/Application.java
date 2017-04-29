@@ -20,18 +20,6 @@ import prompto.utils.ResourceUtils;
 public class Application {
 
 	public static void main(String[] args) throws Throwable {
-		Type codeStoreType = Type.ROOT;
-		Type dataStoreType = Type.CODE;
-		// parse parameters
-		for(int i=0; i<args.length; i++) {
-			if(!args[i].startsWith("-"))
-				continue;
-			if(args[i].equalsIgnoreCase("-codeStoreType")) {
-				codeStoreType = Type.valueOf(args[++i]);
-			} else if(args[i].equalsIgnoreCase("-dataStoreType")) {
-				dataStoreType = Type.valueOf(args[++i]);
-			} 
-		}
 		List<String> argsList = new ArrayList<>(Arrays.asList(args));
 		argsList.add("-resources");
 		argsList.add(getResourcesList());
@@ -40,16 +28,18 @@ public class Application {
 		argsList.add("-version");
 		argsList.add("1.0.0");
 		argsList.add("-codeStoreType");
-		argsList.add(codeStoreType.name());
+		argsList.add(Type.ROOT.name());
 		argsList.add("-dataStoreType");
-		argsList.add(dataStoreType.name());
+		argsList.add(Type.CODE.name());
 		argsList.add("-serverAboutToStart");
 		argsList.add("createThesaurusAndImportSamples");
-		AppServer.main(argsList.toArray(new String[argsList.size()])/*, Application::aboutToStart*/); // TODO move to serverAboutToStartMethod
+		argsList.add("-web-site");
+		argsList.add("../dev-center/web-site/");
+		AppServer.main(argsList.toArray(new String[argsList.size()])); 
 	}
 	
 	private static String getResourcesList() {
-		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, Application.class);
+		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, ModuleImporter.class);
 		return urls.stream().map(URL::toExternalForm).collect(Collectors.joining(","));
 	}
 
