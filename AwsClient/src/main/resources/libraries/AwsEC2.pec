@@ -59,7 +59,7 @@ and verifying:
 define "ec2 instances can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
 	docs = ec2.listInstances
-	names = doc["Name"] for each doc in docs
+	names = doc["Name"] as Text for each doc in docs
 and verifying:
 	"prompto-deployer-001" in names
 
@@ -75,7 +75,7 @@ and verifying:
 define "ec2 addresses can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
 	docs = ec2.listAddresses
-	ips = doc["publicIp"] for each doc in docs
+	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
 	"35.166.112.187" in ips
 
@@ -88,7 +88,7 @@ and verifying:
 define "ec2 address can be created, associated, dissociated and dropped" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
 	doc = ec2.createIpAddress
-	addressId = doc.allocationId
+	addressId = doc.allocationId as Text
 	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId
 	ec2.dissociateIPAddress assocId
 	ec2.dropIPAddress addressId
