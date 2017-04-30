@@ -17,7 +17,7 @@ public class Application {
 		argsList.add("-version");
 		argsList.add("1.0.0");
 		argsList.add("-web-site");
-		argsList.add("../data-explorer/web-site/");
+		argsList.add("../../data-explorer/web-site/");
 		AppServer.main(argsList.toArray(new String[argsList.size()]));
 	}
 

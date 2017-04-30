@@ -34,7 +34,7 @@ public class Application {
 		argsList.add("-serverAboutToStart");
 		argsList.add("createThesaurusAndImportSamples");
 		argsList.add("-web-site");
-		argsList.add("../dev-center/web-site/");
+		argsList.add("../../dev-center/web-site/");
 		AppServer.main(argsList.toArray(new String[argsList.size()])); 
 	}
 	
