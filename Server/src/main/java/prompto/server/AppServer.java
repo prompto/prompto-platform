@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -18,6 +20,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceCollection;
 
 import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
@@ -174,8 +177,7 @@ public class AppServer {
 	}
 
 	static Handler prepareResourceHandler(String path, String webSite) throws Exception {
-		File file = getWebSiteFile(webSite);
-		Resource resource = Resource.newResource(file);
+		Resource resource = getResource(webSite);
 		ResourceHandler rh = new ResourceHandler();
 		rh.setBaseResource(resource);
 		rh.setDirectoriesListed(false);
@@ -183,6 +185,19 @@ public class AppServer {
 		ContextHandler ch = new ContextHandler(path);
 		ch.setHandler(rh);
 		return ch;
+	}
+
+	private static Resource getResource(String webSite) throws IOException {
+		List<Resource> list = new ArrayList<>();
+		if(webSite!=null) {
+			File file = getWebSiteFile(webSite);
+			Resource resource = Resource.newResource(file);
+			list.add(resource);
+		}
+		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		Resource resource = Resource.newResource(new File(rootPath));
+		list.add(resource);
+		return new ResourceCollection(list.toArray(new Resource[list.size()]));
 	}
 
 	static boolean startComplete = false;

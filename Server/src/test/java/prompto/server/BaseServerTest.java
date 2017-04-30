@@ -37,9 +37,7 @@ public abstract class BaseServerTest {
 	}
 
 	private static Handler getResourceHandler() throws Exception {
-		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		System.out.println("Loading resources from: " + rootPath);
-		return AppServer.prepareResourceHandler("/", rootPath);
+		return AppServer.prepareResourceHandler("/", null);
 	}
 
 	private static Handler getServiceHandler() {
