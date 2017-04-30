@@ -124,9 +124,7 @@ public class AppServer {
 		try {
 			System.out.println("Preparing web handlers...");
 			HandlerList list = new HandlerList();
-			Handler hh = prepareResourceHandler("/", webSite);
-			if(hh!=null)
-				list.addHandler(hh);
+			list.addHandler(prepareResourceHandler("/", webSite));
 			list.addHandler(prepareServiceHandler("/ws/"));
 			list.addHandler(new DefaultHandler());
 			System.out.println("Web handlers successfully prepared.");
@@ -154,6 +152,7 @@ public class AppServer {
 		if(webSite==null)
 			return null;
 		File file = new File(webSite);
+		System.out.println("Serving web site at: " + file.getCanonicalPath());
 		if(!file.exists())
 			throw new FileNotFoundException(webSite);
 		return file.getCanonicalFile();
