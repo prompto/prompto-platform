@@ -26,17 +26,26 @@ public abstract class BaseServerTest {
 	
 	public static Handler prepareHandler(String webSite) {
 		try {
-			// a bit tricky for WebAppContext
-			String thisPath = BaseServerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			System.out.println(thisPath);
-			Handler ws = AppServer.prepareServiceHandler("/ws", thisPath);
 			HandlerList list = new HandlerList();
-			list.addHandler(ws);
+			list.addHandler(getResourceHandler());
+			list.addHandler(getServiceHandler());
 			list.addHandler(new DefaultHandler());
 			return list;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static Handler getResourceHandler() throws Exception {
+		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		System.out.println("Loading resources from: " + rootPath);
+		return AppServer.prepareResourceHandler("/", rootPath);
+	}
+
+	private static Handler getServiceHandler() {
+		String thisPath = BaseServerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		System.out.println("Loading classes from: " + thisPath);
+		return AppServer.prepareServiceHandler("/ws", thisPath);
 	}
 
 	public static void bootstrapCodeStore() throws Exception {
