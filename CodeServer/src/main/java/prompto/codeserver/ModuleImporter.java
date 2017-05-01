@@ -12,7 +12,7 @@ import prompto.code.WebSite;
 import prompto.code.ICodeStore;
 import prompto.code.ICodeStore.ModuleType;
 import prompto.code.Module;
-import prompto.code.ResourceCodeStore;
+import prompto.code.ImmutableCodeStore;
 import prompto.code.Version;
 import prompto.value.Image;
 
@@ -106,7 +106,7 @@ public class ModuleImporter {
 	}
 
 	private void storeAssociatedCode(ICodeStore codeStore) throws Exception {
-		ResourceCodeStore rcs = new ResourceCodeStore(null, module.getType(), codeResource, module.getVersion());
+		ImmutableCodeStore rcs = new ImmutableCodeStore(null, module.getType(), codeResource, module.getVersion());
 		codeStore.storeDeclarations(rcs.getDeclarations(), rcs.getModuleDialect(), Version.parse(module.getVersion()), module.getDbId());
 	}
 

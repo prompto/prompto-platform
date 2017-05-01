@@ -176,27 +176,34 @@ public class AppServer {
 	}
 
 	static Handler prepareResourceHandler(String path, String webSite) throws Exception {
-		Resource resource = getResource(webSite);
-		ResourceHandler rh = new ResourceHandler();
-		rh.setBaseResource(resource);
-		rh.setDirectoriesListed(false);
-		rh.setWelcomeFiles(new String[] {"index.html"});
+		Handler handler = webSite!=null ? getWebSiteResourceHandler(webSite) : getCodeStoreResourceHandler();
 		ContextHandler ch = new ContextHandler(path);
-		ch.setHandler(rh);
+		ch.setHandler(handler);
 		return ch;
 	}
 
-	private static Resource getResource(String webSite) throws IOException {
-		List<Resource> list = new ArrayList<>();
-		if(webSite!=null) {
-			File file = getWebSiteFile(webSite);
-			Resource resource = Resource.newResource(file);
-			list.add(resource);
-		}
+	private static ResourceHandler getCodeStoreResourceHandler() {
 		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		Resource resource = Resource.newResource(new File(rootPath));
+		ResourceHandler rh = new CodeStoreResourceHandler();
+		rh.setBaseResource(resource);
+		rh.setDirectoriesListed(false);
+		return rh;
+	}
+
+	private static ResourceHandler getWebSiteResourceHandler(String webSite) throws Exception {
+		List<Resource> list = new ArrayList<>();
+		File file = getWebSiteFile(webSite);
+		Resource resource = Resource.newResource(file);
 		list.add(resource);
-		return new ResourceCollection(list.toArray(new Resource[list.size()]));
+		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		resource = Resource.newResource(new File(rootPath));
+		list.add(resource);
+		resource = new ResourceCollection(list.toArray(new Resource[list.size()]));
+		ResourceHandler rh = new ResourceHandler();
+		rh.setBaseResource(resource);
+		rh.setDirectoriesListed(false);
+		return rh;
 	}
 
 	static boolean startComplete = false;

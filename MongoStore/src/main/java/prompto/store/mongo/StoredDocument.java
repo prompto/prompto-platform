@@ -26,6 +26,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 		else
 			return UUID.fromString(dbId.toString());
 	}
+	
+	@Override
+	public boolean hasData(String name) {
+		return document.containsKey(name);
+	}
 
 	@Override
 	public Object getData(String fieldName) throws PromptoError {

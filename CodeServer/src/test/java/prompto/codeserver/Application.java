@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
-import prompto.code.UpdatableCodeStore;
+import prompto.code.QueryableCodeStore;
 import prompto.libraries.Libraries;
 import prompto.server.AppServer;
 import prompto.store.IDataStore;
@@ -45,7 +45,7 @@ public class Application {
 
 	public static void createThesaurusAndImportSamples() throws Exception {
 		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new UpdatableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", "1.0.0", null);
+		ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", "1.0.0", null);
 		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 		importer.importModule(codeStore);
 		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
