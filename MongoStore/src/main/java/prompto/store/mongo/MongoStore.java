@@ -23,6 +23,7 @@ import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoList;
 import prompto.intrinsic.PromptoTime;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
@@ -272,11 +273,23 @@ public class MongoStore implements IStore {
 		}});
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = fields.get(fieldName);
-		return readers.getOrDefault(info.getFamily(), (o)->o).apply(data);
+		if(info.isCollection() && data instanceof Collection)
+			return readCollectionData(info, (Collection<Object>)data);
+		else
+			return readers.getOrDefault(info.getFamily(), (o)->o).apply(data);
 	}
 	
+	private Object readCollectionData(AttributeInfo info, Collection<Object> data) {
+		Function<Object, Object> reader = readers.getOrDefault(info.getFamily(), (o)->o);
+		List<Object> list = data.stream()
+				.map(reader::apply)
+				.collect(Collectors.toList());
+		return new PromptoList<Object>(list, false);
+	}
+
 	public void insertDocuments(Document ... docs) {
 		db.getCollection("instances").insertMany(Arrays.asList(docs));
 	}
