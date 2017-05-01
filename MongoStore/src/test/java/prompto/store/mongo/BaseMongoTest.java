@@ -20,7 +20,7 @@ public abstract class BaseMongoTest {
 	
 	int mongoPort;
 	MongodExecutable mongo;
-	MongoStore store;
+	protected MongoStore store;
 	
 	@Before
 	public void __before__() throws IOException {

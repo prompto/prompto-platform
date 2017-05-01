@@ -93,7 +93,8 @@ public class MongoStore implements IStore {
 
 	@Override
 	public Family getColumnTypeFamily(String name) throws PromptoError {
-		throw new UnsupportedOperationException();
+		AttributeInfo info = fields.get(name);
+		return info==null ? null : info.getFamily();
 	}
 
 	@Override
