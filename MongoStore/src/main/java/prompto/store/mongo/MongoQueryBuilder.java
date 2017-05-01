@@ -31,39 +31,48 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	}
 	
 	static Bson verifyEQUALS(AttributeInfo info, Object value) {
-		return Filters.eq(info.getName(), value);
+		return Filters.eq(getAttributeName(info), value);
 	}
 	
 	static Bson verifyROUGHLY(AttributeInfo info, Object value) {
 		if(info.getFamily()==Family.TEXT)
 			return Filters.regex(info.getName(), value.toString(), "i");
 		else
-			return Filters.eq(info.getName(), value);
+			return Filters.eq(getAttributeName(info), value);
 	}
 
 	static Bson verifyCONTAINS(AttributeInfo info, Object value) {
 		if(info.getFamily()==Family.TEXT)
-			return Filters.regex(info.getName(), ".*" + value + ".*", "i");
+			return Filters.regex(getAttributeName(info), ".*" + value + ".*", "i");
 		else
-			return Filters.eq(info.getName(), value);
+			return Filters.eq(getAttributeName(info), value);
 	}
 
 	@SuppressWarnings("unchecked")
 	static Bson verifyCONTAINED(AttributeInfo info, Object value) {
 		if(value instanceof Collection)
-			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(info.getName(), v)).collect(Collectors.toList()));
+			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(getAttributeName(info), v)).collect(Collectors.toList()));
 		else
-			return Filters.eq(info.getName(), value);
+			return Filters.eq(getAttributeName(info), value);
 	}
 
 	static Bson verifyGREATER(AttributeInfo info, Object value) {
-		return Filters.gt(info.getName(), value);
+		return Filters.gt(getAttributeName(info), value);
 	}
 	
 	
 	static Bson verifyLESSER(AttributeInfo info, Object value) {
-		return Filters.lt(info.getName(), value);
+		return Filters.lt(getAttributeName(info), value);
 	}
+	
+	
+
+	private static String getAttributeName(AttributeInfo info) {
+		String name = info.getName();
+		return "dbId".equals(name) ? "_id" : name;
+	}
+
+
 
 	Stack<Bson> stack = new Stack<>();
 	Long first;
