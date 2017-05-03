@@ -68,6 +68,8 @@ public class TestInstance extends BaseMongoTest {
 		createField("category", Family.TEXT, true);
 		IDataStore.setInstance(store);
 		context = Context.newGlobalContext();
+		AttributeDeclaration a = new AttributeDeclaration(new Identifier("dbId"), AnyType.instance());
+		context.registerDeclaration(a);
 	}
 	
 	@Test
@@ -83,6 +85,29 @@ public class TestInstance extends BaseMongoTest {
 		assertNotNull(stored);
 		assertEquals(fieldValue, stored.getData(fieldName));
 	}
+	
+	@Test
+	public void testUpdateTextField() throws Exception {
+		String fieldName = "msg";
+		String fieldValue = "hello";
+		createField(fieldName, Family.TEXT, false);
+		IInstance instance = createInstanceWith1Attribute(fieldName, TextType.instance());
+		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		store.store(instance.getStorable());
+		store.flush();
+		IStored stored = fetchOne(fieldName, new TextLiteral(fieldValue));
+		CategoryType type = new CategoryType(new Identifier("Test"));
+		type.setMutable(true);
+		instance = type.newInstance(context, stored);
+		fieldValue = "after";
+		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		store.store(instance.getStorable());
+		store.flush();
+		stored = fetchOne(fieldName, new TextLiteral(fieldValue));
+		assertNotNull(stored);
+		assertEquals(fieldValue, stored.getData(fieldName));
+	}
+
 
 	@Test
 	public void testStoreIntegerField() throws Exception {

@@ -2,18 +2,20 @@ package prompto.store.mongo;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import prompto.error.PromptoError;
 import prompto.error.ReadWriteError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.store.IStorable;
 
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 
 public class StorableDocument extends BaseDocument implements IStorable {
@@ -87,10 +89,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 		ensureDocument(null);
 		if(value instanceof PromptoBinary)
 			value = toBytes((PromptoBinary)value);
-		if(isUpdate)
-			document.put(name, Collections.singletonMap("set", value));
-		else
-			document.put(name, value);
+		document.put(name, value);
 	}
 
 	private byte[] toBytes(PromptoBinary binary) throws PromptoError {
@@ -102,9 +101,10 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	}
 
 	public WriteModel<Document> toWriteModel() {
-		if(this.isUpdate)
-			throw new UnsupportedOperationException();
-		else
+		if(this.isUpdate) {
+			Bson filter = Filters.eq("_id", document.get("_id"));
+			return new UpdateOneModel<>(filter, new Document("$set", document));
+		} else
 			return new InsertOneModel<Document>(document);
 	}
 

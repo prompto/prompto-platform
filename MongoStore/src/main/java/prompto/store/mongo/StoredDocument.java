@@ -23,6 +23,8 @@ public class StoredDocument extends BaseDocument implements IStored {
 		Object dbId = document.get("_id");
 		if(dbId==null)
 			return null;
+		else if(dbId instanceof UUID)
+			return (UUID)dbId;
 		else
 			return UUID.fromString(dbId.toString());
 	}
