@@ -1,6 +1,8 @@
 package prompto.store.mongo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +35,6 @@ import prompto.store.Family;
 import prompto.store.IDataStore;
 import prompto.store.IQuery;
 import prompto.store.IStorable;
-import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
 import prompto.type.AnyType;
@@ -290,9 +291,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	private IInstance createInstanceWith2Attributes(String name1, IType type1, String name2, IType type2) throws Exception {
-		AttributeDeclaration a = new AttributeDeclaration(new Identifier(IStore.dbIdName), AnyType.instance());
-		context.registerDeclaration(a);
-		a = new AttributeDeclaration(new Identifier(name1), type1);
+		AttributeDeclaration a = new AttributeDeclaration(new Identifier(name1), type1);
 		a.setStorable(true);
 		context.registerDeclaration(a);
 		a = new AttributeDeclaration(new Identifier(name2), type2);
