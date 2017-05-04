@@ -32,7 +32,7 @@ public class Application {
 		argsList.add("-dataStoreType");
 		argsList.add(Type.CODE.name());
 		argsList.add("-serverAboutToStart");
-		argsList.add("createThesaurusAndImportSamples");
+		argsList.add("serverAboutToStart");
 		argsList.add("-web-site");
 		argsList.add("../../prompto-dev-center/web-site/");
 		AppServer.main(argsList.toArray(new String[argsList.size()])); 
