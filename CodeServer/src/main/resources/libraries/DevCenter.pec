@@ -36,15 +36,21 @@ define lastOpened as storable DateTime attribute
 define CodingSession as storable category with attributes user, module and lastOpened
 define RecentSession as storable CodingSession
 
+define Stuff as storable category with attributes name, version and module
+
 define storable as storable Boolean attribute
-define Declaration as storable category with attributes name, version, dialect, storable, body and module
+define Declaration as storable Stuff with attributes dialect, storable and body 
 define AttributeDeclaration as storable Declaration
 define CategoryDeclaration as storable Declaration
 define EnumeratedDeclaration as storable Declaration
 define MethodDeclaration as storable Declaration with attribute prototype
 define TestDeclaration as storable Declaration
 
-define declaration as Declaration attribute
+define mimeType as storable Text attribute
+define Resource as storable Stuff with attributes path and mimeType
+define TextResource as storable Resource with attribute body
+define data as storable Blob attribute
+define BinaryResource as storable Resource with attribute data
 
 define EditStatus as enumerated Text with symbols:
 	CLEAN with "CLEAN" as value
@@ -53,8 +59,9 @@ define EditStatus as enumerated Text with symbols:
 	DIRTY with "DIRTY" as value
 
 define editStatus as EditStatus attribute with key index
+define stuff as Stuff attribute
 
-define EditedDeclaration as category with attributes editStatus and declaration
+define EditedStuff as category with attributes editStatus and stuff
 
 define getRecentModules as method receiving Integer count doing:
 	user = getHttpUser
@@ -109,10 +116,29 @@ define getModuleDeclarations as method receiving dbId doing:
 	return fetch all Declaration where module = module
 
 
-define storeDeclarations as method receiving EditedDeclaration[] edited doing:
-	deleted = d1.declaration for each d1 in edited filtered with d where d.editStatus = DELETED
-	created = d2.declaration for each d2 in edited filtered with d where d.editStatus = CREATED
-	updated = d3.declaration for each d3 in edited filtered with d where d.editStatus = DIRTY
+define getModuleResources as method receiving name and version doing:
+	user = getHttpUser
+	if user is nothing:
+		raise NULL_REFERENCE
+	module = fetch one Module where name = name and version = version
+	if module is nothing:
+		raise NULL_REFERENCE
+	return fetch all Resource where module = module
+
+
+define getModuleResources as method receiving dbId doing:
+	user = getHttpUser
+	if user is nothing:
+		raise NULL_REFERENCE
+	module = fetch one Module where dbId = dbId
+	if module is nothing:
+		raise NULL_REFERENCE
+	return fetch all Resource where module = module
+
+define storeEdited as method receiving EditedStuff[] edited doing:
+	deleted = d1.stuff for each d1 in edited filtered with d where d.editStatus = DELETED
+	created = d2.stuff for each d2 in edited filtered with d where d.editStatus = CREATED
+	updated = d3.stuff for each d3 in edited filtered with d where d.editStatus = DIRTY
 	delete deleted and store created, updated 
 	flush
 
