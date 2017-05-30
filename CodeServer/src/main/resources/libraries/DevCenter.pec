@@ -47,7 +47,7 @@ define MethodDeclaration as storable Declaration with attribute prototype
 define TestDeclaration as storable Declaration
 
 define mimeType as storable Text attribute
-define Resource as storable Stuff with attributes path and mimeType
+define Resource as storable Stuff with attribute mimeType
 define TextResource as storable Resource with attribute body
 define data as storable Blob attribute
 define BinaryResource as storable Resource with attribute data
