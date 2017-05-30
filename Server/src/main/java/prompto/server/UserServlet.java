@@ -2,10 +2,9 @@ package prompto.server;
 
 import java.io.IOException;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,8 +27,7 @@ import prompto.value.Text;
 
 
 @SuppressWarnings("serial")
-@MultipartConfig
-public class UserServlet extends HttpServlet {
+public class UserServlet extends HttpServletWithHolder {
 
 	IMethodDeclaration method;
 	
@@ -40,6 +38,7 @@ public class UserServlet extends HttpServlet {
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
+		setMultipartConfig(new MultipartConfigElement(System.getProperty("java.io.tmpdir")));
 	}
 	
 	@Override

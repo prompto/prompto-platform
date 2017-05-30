@@ -6,10 +6,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
@@ -19,12 +18,12 @@ import prompto.runtime.Application;
 import prompto.value.Document;
 
 @SuppressWarnings("serial")
-@MultipartConfig
-public class PromptoServlet extends HttpServlet {
+public class PromptoServlet extends HttpServletWithHolder {
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
+		setMultipartConfig(new MultipartConfigElement(System.getProperty("java.io.tmpdir")));
 	}
 	
 	@Override

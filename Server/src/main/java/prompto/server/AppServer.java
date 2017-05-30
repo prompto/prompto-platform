@@ -18,7 +18,6 @@ import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 
@@ -162,16 +161,16 @@ public class AppServer {
 	public static void installHandler(String path, IMethodDeclaration method) {
 		// TODO check path (must start with '/') and method prototype
 		ServletContextHandler handler = jettyServer.getChildHandlerByClass(ServletContextHandler.class);
-        handler.addServlet(new ServletHolder(new UserServlet(method)), path);       
+        handler.addServlet(new UserServlet(method).getHolder(), path);       
 	}
 	
 	public static Handler prepareServiceHandler(String path, String base) {
 		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
         handler.setResourceBase(base);
-        handler.addServlet(new ServletHolder(new BinaryServlet()), "/bin/*");
-        handler.addServlet(new ServletHolder(new DataServlet()), "/data/*");       
-        handler.addServlet(new ServletHolder(new PromptoServlet()), "/run/*");       
+        handler.addServlet(new BinaryServlet().getHolder(), "/bin/*");
+        handler.addServlet(new DataServlet().getHolder(), "/data/*");       
+        handler.addServlet(new PromptoServlet().getHolder(), "/run/*");       
  		return handler;
 	}
 
