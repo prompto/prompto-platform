@@ -37,7 +37,7 @@ public class StoredDocument extends BaseDocument implements IStored {
 	@Override
 	public Object getData(String fieldName) throws PromptoError {
 		Object data = document.get(fieldName);
-		return store.readFieldData(fieldName, data);
+		return data==null ? null : store.readFieldData(fieldName, data);
 	}
 
 }
