@@ -266,12 +266,17 @@ public class MongoStore implements IStore {
 		readers.put(Family.DATE, (o)->PromptoDate.fromJavaTime((Long)o));
 		readers.put(Family.TIME, (o)->PromptoTime.fromMillisOfDay((Long)o));
 		readers.put(Family.DATETIME, (o)->PromptoDateTime.parse(((Document)o).getString("text")));
-		readers.put(Family.IMAGE, (o)->{ try {
+		readers.put(Family.BLOB, MongoStore::binaryToPromptoBinary);
+		readers.put(Family.IMAGE, MongoStore::binaryToPromptoBinary);
+	}
+	
+	static Object binaryToPromptoBinary(Object o) {
+		try {
 			BinaryData bin = new BinaryData(((Binary)o).getData());
 			return new PromptoBinary(bin.getMimeType(), bin.getData());
 		} catch(IOException e) {
 			throw new RuntimeException(e);
-		}});
+		}		
 	}
 	
 	@SuppressWarnings("unchecked")
