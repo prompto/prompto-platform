@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.solr.common.SolrInputDocument;
@@ -224,11 +224,11 @@ public class TestInstance extends BaseSOLRTest {
 		parent.setMember(context, new Identifier(childName), child);
 		dumpDbIds("parent", parent);
 		dumpDbIds("child", child);
-		List<IStorable> storables = new ArrayList<IStorable>();
-		parent.collectStorables(storables);
+		Map<Object, IStorable> storables = new HashMap<>();
+		parent.collectStorables(s->storables.put(s.getOrCreateDbId(), s));
 		dumpDbIds("parent", parent);
 		dumpDbIds("child", child);
-		store.store(null, storables);
+		store.store(null, storables.values());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new TextLiteral(fieldValue));
 		assertNotNull(stored);
