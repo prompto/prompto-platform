@@ -121,7 +121,7 @@ public class MongoStore implements IStore {
 		Stream<WriteModel<Document>> upserts = null;
 		if(deletables!=null)
 			deletes = deletables.stream()
-				.map((d)->new DeleteOneModel<>(Filters.eq(IStore.dbIdName, (Object)d)));
+				.map((d)->new DeleteOneModel<>(Filters.eq("_id", (Object)d)));
 		if(storables!=null)
 			upserts = storables.stream()
 				.map((s)->((StorableDocument)s).toWriteModel());
