@@ -105,7 +105,7 @@ public class TestQuery extends BaseMongoTest {
 	public void testDeleteOne() throws Exception {
 		Document doc = new Document();
 		UUID uuid = UUID.randomUUID();
-		doc.put(IStore.dbIdName, uuid);
+		doc.put("_id", uuid);
 		doc.put("name", "John");
 		store.insertDocuments(doc);
 		store.flush();
