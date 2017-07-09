@@ -11,13 +11,16 @@ import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
 import prompto.libraries.Libraries;
+import prompto.memstore.MemStoreFactory;
 import prompto.server.AppServer;
+import prompto.server.DataServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
+import prompto.store.IStoreFactory;
 import prompto.store.IStoreFactory.Type;
 import prompto.utils.ResourceUtils;
 
-public class Application {
+public class CodeServer {
 
 	public static void main(String[] args) throws Throwable {
 		List<String> argsList = new ArrayList<>(Arrays.asList(args));
@@ -33,11 +36,25 @@ public class Application {
 		argsList.add(Type.CODE.name());
 		argsList.add("-serverAboutToStart");
 		argsList.add("serverAboutToStart");
-		argsList.add("-web-site");
-		argsList.add("../../prompto-dev-center/web-site/");
 		AppServer.main(argsList.toArray(new String[argsList.size()])); 
+		redirectDataServlet(args);
 	}
 	
+	private static void redirectDataServlet(String[] args) throws Throwable {
+		String storeFactory = getDataStoreFactory(args);
+		IStoreFactory factory = prompto.runtime.Application.newStoreFactory(storeFactory);
+		DataServlet.store = factory.newStore(args, Type.DATA);
+	}
+
+	private static String getDataStoreFactory(String[] args) {
+		// TODO use specific args, for now simply use same as data store
+		for(int i=0; i<args.length; i++) {
+			if("-dataStoreFactory".equals(args[i]))
+				return args[i+1];
+		}
+		return MemStoreFactory.class.getName();
+	}
+
 	private static String getResourcesList() {
 		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, ModuleImporter.class);
 		return urls.stream().map(URL::toExternalForm).collect(Collectors.joining(","));

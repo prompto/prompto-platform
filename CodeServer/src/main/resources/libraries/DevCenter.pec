@@ -1,19 +1,9 @@
-define port as Integer attribute 
-
-define DataPort as singleton with attribute port
-
 define createThesaurusAndImportSamples as native method doing:
-	Java: prompto.codeserver.Application.createThesaurusAndImportSamples();
+	Java: prompto.codeserver.CodeServer.createThesaurusAndImportSamples();
 
 define serverAboutToStart as method receiving Text{} params doing:
 	createThesaurusAndImportSamples
-	with DataPort, do:
-		port = parseInteger with params["data_port"] as text
 	
-define getDataPort as method doing:
-	with DataPort, do:
-		return port
-
 // don't directly connect Modules to keep them lightweight
 // also eliminates any (accidental) cyclical dependency
 define Dependency as storable category with attributes name and version

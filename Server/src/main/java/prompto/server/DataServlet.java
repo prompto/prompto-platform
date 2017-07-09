@@ -15,6 +15,8 @@ import prompto.literal.IntegerLiteral;
 import prompto.parser.ECleverParser;
 import prompto.runtime.Application;
 import prompto.runtime.Context;
+import prompto.store.IDataStore;
+import prompto.store.IStore;
 import prompto.type.ListType;
 import prompto.value.Cursor;
 import prompto.value.IValue;
@@ -25,9 +27,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 @SuppressWarnings("serial")
 public class DataServlet extends HttpServletWithHolder {
 
+	public static IStore store;
+	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
+		store = IDataStore.getInstance();
 	}
 
 	@Override
@@ -40,7 +45,7 @@ public class DataServlet extends HttpServletWithHolder {
 			IFetchExpression fetch = parser.parse_fetch_store_expression();
 			adjustQueryRange(fetch, first, last);
 			Context context = Application.getGlobalContext();
-			IValue value = fetch.interpret(context);
+			IValue value = fetch.fetch(context, store);
 			String mimeType = writeJsonResponse(context, value, resp.getOutputStream());
 			resp.setContentType(mimeType);
 		} catch(Throwable t) {

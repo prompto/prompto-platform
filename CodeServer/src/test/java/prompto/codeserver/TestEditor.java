@@ -30,7 +30,7 @@ public class TestEditor extends BaseWebTest {
 				"-solr-code-root",
 				"target/test-classes/solr-test"
 		};
-		Application.main(args);
+		CodeServer.main(args);
 		HTTP_PORT = AppServer.getHttpPort();
 	}
 	
