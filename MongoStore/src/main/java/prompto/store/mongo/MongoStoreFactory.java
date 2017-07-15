@@ -17,7 +17,7 @@ public class MongoStoreFactory implements IStoreFactory {
 			if(!arg.toLowerCase().startsWith(argKey))
 				continue;
 			arg = arg.substring(argKey.length());
-			if(arg.equalsIgnoreCase("server"))
+			if(arg.equalsIgnoreCase("host"))
 				server = args[++i];
 			else if(arg.equalsIgnoreCase("port"))
 				port = Integer.decode(args[++i]);

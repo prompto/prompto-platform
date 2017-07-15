@@ -36,7 +36,7 @@ public class SOLRStoreFactory implements IStoreFactory {
 				root = args[++i];
 			else if(arg.equalsIgnoreCase("protocol"))
 				protocol = args[++i];
-			else if(arg.equalsIgnoreCase("server"))
+			else if(arg.equalsIgnoreCase("host"))
 				server = args[++i];
 			else if(arg.equalsIgnoreCase("port"))
 				port = Integer.decode(args[++i]);
