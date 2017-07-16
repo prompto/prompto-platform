@@ -84,7 +84,7 @@ public class TestCustomHandler {
 				Context context = Application.getGlobalContext();
 				decls.register(context);
 			}
-			int port = AppServer.startServer(-1, null, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
+			int port = AppServer.startServer(-1, null, null, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);

@@ -32,12 +32,14 @@ import prompto.runtime.Interpreter;
 public class AppServer {
 	
 	static Server jettyServer;
+	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
 	
 	public static void main(String[] args) throws Throwable {
 		Integer httpPort = null;
 		Integer debugPort = null;
 		String serverAboutToStart = null;
 		String webSite = null;
+		String origin = null;
 
 		Map<String, String> argsMap = initialize(args);
 
@@ -50,7 +52,9 @@ public class AppServer {
 			serverAboutToStart = argsMap.get("serverAboutToStart");
 		if(argsMap.containsKey("web-site"))
 			webSite = argsMap.get("web-site");
-
+		if(argsMap.containsKey("origin"))
+			origin = argsMap.get("origin");
+		
 		if(httpPort==null) {
 			showHelp(httpPort);
 			System.exit(-1); // raise an error in whatever tool is used to launch this
@@ -58,9 +62,9 @@ public class AppServer {
 		// initialize server accordingly
 		IExpression argsValue = Application.argsToArgValue(args);
 		if(debugPort!=null)
-			debugServer(debugHost, debugPort, httpPort, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
+			debugServer(debugHost, debugPort, httpPort, origin, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
 		else
-			startServer(httpPort, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
+			startServer(httpPort, webSite, origin, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
 				Application.getGlobalContext().notifyTerminated();
 			});
 	}
@@ -75,17 +79,18 @@ public class AppServer {
 			System.out.println("Missing argument: -http_port");
 	}
 
-	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
+	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String origin, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
 		DebugRequestServer server = Application.startDebugging(debugHost, debugPort);
-		return startServer(httpPort, webSite, serverAboutToStartMethod, argValue, handler, ()->{
+		return startServer(httpPort, origin, webSite, serverAboutToStartMethod, argValue, handler, ()->{
 			Application.getGlobalContext().notifyTerminated();
 			server.stopListening();
 		});
 	}
 	
 	
-	static int startServer(Integer httpPort, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(Integer httpPort, String webSite, String origin, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
+		PromptoServlet.ALLOWED_ORIGIN = origin;
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
@@ -100,7 +105,7 @@ public class AppServer {
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
-		System.out.println("Web server successfully started on port " + httpPort);
+		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + httpPort);
 		return httpPort;
 	}
 	
@@ -123,8 +128,8 @@ public class AppServer {
 		try {
 			System.out.println("Preparing web handlers...");
 			HandlerList list = new HandlerList();
-			list.addHandler(prepareResourceHandler("/", webSite));
-			list.addHandler(prepareServiceHandler("/ws/"));
+			list.addHandler(newResourceHandler("/", webSite));
+			list.addHandler(newServiceHandler("/ws/"));
 			list.addHandler(new DefaultHandler());
 			System.out.println("Web handlers successfully prepared.");
 			return list;
@@ -133,9 +138,9 @@ public class AppServer {
 		}
 	}
 
-	static Handler prepareServiceHandler(String path) throws Exception {
+	static Handler newServiceHandler(String path) throws Exception {
 		URL url = getRootURL();
-		return prepareServiceHandler(path, url.toExternalForm());
+		return newServiceHandler(path, url.toExternalForm());
 	}
 	
 	private static URL getRootURL() throws IOException {
@@ -164,24 +169,24 @@ public class AppServer {
         handler.addServlet(new UserServlet(method).getHolder(), path);       
 	}
 	
-	public static Handler prepareServiceHandler(String path, String base) {
+	public static Handler newServiceHandler(String path, String base) {
 		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
         handler.setResourceBase(base);
         handler.addServlet(new BinaryServlet().getHolder(), "/bin/*");
         handler.addServlet(new DataServlet().getHolder(), "/data/*");       
         handler.addServlet(new PromptoServlet().getHolder(), "/run/*");       
- 		return handler;
+		return handler;
 	}
 
-	static Handler prepareResourceHandler(String path, String webSite) throws Exception {
-		Handler handler = webSite!=null ? getWebSiteResourceHandler(webSite) : getCodeStoreResourceHandler();
+	static Handler newResourceHandler(String path, String webSite) throws Exception {
+		Handler handler = webSite!=null ? newWebSiteResourceHandler(webSite) : newCodeStoreResourceHandler();
 		ContextHandler ch = new ContextHandler(path);
 		ch.setHandler(handler);
 		return ch;
 	}
 
-	private static ResourceHandler getCodeStoreResourceHandler() {
+	private static ResourceHandler newCodeStoreResourceHandler() {
 		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		Resource resource = Resource.newResource(new File(rootPath));
 		ResourceHandler rh = new CodeStoreResourceHandler();
@@ -190,7 +195,7 @@ public class AppServer {
 		return rh;
 	}
 
-	private static ResourceHandler getWebSiteResourceHandler(String webSite) throws Exception {
+	private static ResourceHandler newWebSiteResourceHandler(String webSite) throws Exception {
 		List<Resource> list = new ArrayList<>();
 		File file = getWebSiteFile(webSite);
 		Resource resource = Resource.newResource(file);

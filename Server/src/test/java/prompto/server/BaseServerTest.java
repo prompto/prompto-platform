@@ -19,7 +19,7 @@ public abstract class BaseServerTest {
 	@Before
 	public void __before__() throws Throwable {
 		bootstrapCodeStore();
-		port = AppServer.startServer(port, null, null, null, BaseServerTest::prepareHandler, null);
+		port = AppServer.startServer(port, null, null, null, null, BaseServerTest::prepareHandler, null);
 		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}
@@ -37,13 +37,13 @@ public abstract class BaseServerTest {
 	}
 
 	private static Handler getResourceHandler() throws Exception {
-		return AppServer.prepareResourceHandler("/", null);
+		return AppServer.newResourceHandler("/", null);
 	}
 
 	private static Handler getServiceHandler() {
 		String thisPath = BaseServerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		System.out.println("Loading classes from: " + thisPath);
-		return AppServer.prepareServiceHandler("/ws", thisPath);
+		return AppServer.newServiceHandler("/ws", thisPath);
 	}
 
 	public static void bootstrapCodeStore() throws Exception {

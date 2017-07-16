@@ -34,7 +34,7 @@ public class RequestRouter {
 		this.context = context.newLocalContext();
 	}
 
-	public String runMethodOrTest(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, OutputStream output) throws Exception {
+	public String route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, OutputStream output) throws Exception {
 		boolean isTest = methodName.toString().startsWith("\"") && methodName.toString().endsWith("\"");
 		switch(mode) {
 		case INTERPRET:
@@ -59,8 +59,8 @@ public class RequestRouter {
 		try {
 			Executor.executeTest(classLoader, testName.toString());
 			bytes.flush();
-			Text text = new Text(new String(bytes.toByteArray()));
-			return writeJsonResponse(text, output);
+			String[] lines = new String(bytes.toByteArray()).split("\n");
+			return writeJsonResponse(lines, output);
 		} finally {
 			System.setOut(oldOut);
 		}
@@ -73,8 +73,8 @@ public class RequestRouter {
 		try {
 			Interpreter.interpretTest(context, testName, true);
 			bytes.flush();
-			Text text = new Text(new String(bytes.toByteArray()));
-			return writeJsonResponse(text, output);
+			String[] lines = new String(bytes.toByteArray()).split("\n");
+			return writeJsonResponse(lines, output);
 		} finally {
 			System.setOut(oldOut);
 		}
@@ -129,7 +129,21 @@ public class RequestRouter {
 		generator.writeEndObject();
 		generator.flush();
 		generator.close();
-		return "application/json";
+		return "text/json";
+	}
+	
+	private String writeJsonResponse(String[] lines, OutputStream output) throws IOException, PromptoError {
+		JsonGenerator generator = new JsonFactory().createGenerator(output);
+		generator.writeStartObject();
+		generator.writeNullField("error");
+		generator.writeArrayFieldStart("data");
+		for(String line : lines)
+			generator.writeString(line);
+		generator.writeEndArray();
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
+		return "text/json";
 	}
 
 }

@@ -9,9 +9,13 @@ import java.util.Map;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.grammar.Identifier;
 import prompto.runtime.Application;
@@ -20,10 +24,25 @@ import prompto.value.Document;
 @SuppressWarnings("serial")
 public class PromptoServlet extends HttpServletWithHolder {
 
+	static String ALLOWED_ORIGIN = null;
+	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
+	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 		setMultipartConfig(new MultipartConfigElement(System.getProperty("java.io.tmpdir")));
+	}
+	
+	@Override
+	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String origin = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
+		REGISTERED_ORIGIN.set(origin);
+		if(ALLOWED_ORIGIN!=null) {
+			resp.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
+		}
+		super.service(req, resp);
 	}
 	
 	@Override
@@ -36,26 +55,30 @@ public class PromptoServlet extends HttpServletWithHolder {
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
 			RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
-			String contentType = handler.runMethodOrTest(mode, methodName, jsonParams, null, resp.getOutputStream());
+			handler.route(mode, methodName, jsonParams, null, resp.getOutputStream());
+			resp.setContentType("text/json");
+			resp.setStatus(HttpServletResponse.SC_OK);
 			resp.getOutputStream().close();
 			resp.flushBuffer();
-			resp.setContentType(contentType);
-			resp.setStatus(HttpServletResponse.SC_OK);
-			// resp.addHeader("Access-Control-Allow-Origin", true);
 		} catch(Throwable t) {
 			t.printStackTrace();
-			resp.setStatus(500);
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			writeJSONError(t.getMessage(), resp.getOutputStream());
 		}
 	}
 	
-	private ExecutionMode readMode(HttpServletRequest req) {
-		String[] parts = req.getPathInfo().substring(1).split("/");
-		if(parts.length>1)
-			return ExecutionMode.valueOf(parts[0].toUpperCase());
-		else
-			return ExecutionMode.INTERPRET;
+	
+	private void writeJSONError(String message, ServletOutputStream output) throws IOException {
+		JsonGenerator generator = new JsonFactory().createGenerator(output);
+		generator.writeStartObject();
+		generator.writeStringField("error", message);
+		generator.writeNullField("data");
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
 	}
 
+	
 	private void readSession(HttpServletRequest req) {
 		Document doc = (Document)req.getSession(true).getAttribute("__prompto_http_session__");
 		if(doc==null) {
@@ -85,21 +108,22 @@ public class PromptoServlet extends HttpServletWithHolder {
 				resp.sendError(415);
 		} catch(Throwable t) {
 			t.printStackTrace();
-			resp.setStatus(500);
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			writeJSONError(t.getMessage(), resp.getOutputStream());
 		}
 	}
 
 	private void doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		authenticate(req);
 		readSession(req);
-		ExecutionMode mode = readMode(req);
 		Identifier methodName = readMethod(req);
+		ExecutionMode mode = readMode(req);
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
 		RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
 		resp.setContentType("application/json");
 		resp.setStatus(200);
-		handler.runMethodOrTest(mode, methodName, jsonParams, parts, resp.getOutputStream());
+		handler.route(mode, methodName, jsonParams, parts, resp.getOutputStream());
 		resp.flushBuffer();
 		resp.getOutputStream().close();
 	}
@@ -107,6 +131,14 @@ public class PromptoServlet extends HttpServletWithHolder {
 	private Identifier readMethod(HttpServletRequest req) {
 		String[] parts = req.getPathInfo().split("/");
 		return new Identifier(parts[parts.length-1]);
+	}
+
+	private ExecutionMode readMode(HttpServletRequest req) {
+		String mode = req.getParameter("mode");
+		if(mode!=null)
+			return ExecutionMode.valueOf(mode.toUpperCase());
+		else
+			return ExecutionMode.INTERPRET;
 	}
 
 	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
