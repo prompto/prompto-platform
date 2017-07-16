@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
@@ -170,8 +172,11 @@ public class ModuleProcess {
 	}
 
 	private void addClassPathArgs(List<String> cmds) {
+		String classPaths = Stream.of(System.getProperty("java.class.path").toString().split(":"))
+				.filter((s)->!s.contains("CodeServer"))
+				.collect(Collectors.joining(":"));
 		cmds.add("-cp");
-		cmds.add(System.getProperty("java.class.path").toString());
+		cmds.add(classPaths);
 	}
 
 	// see: https://stackoverflow.com/questions/13495449/how-to-split-a-command-line-like-string
