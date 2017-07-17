@@ -29,7 +29,7 @@ public class TestResourceStore extends BaseServerTest {
 		ICodeStore store = ICodeStore.getInstance();
 		Resource resource = newResource("stuff.html");
 		store.storeResource(resource, null);
-		assertNotNull(store.fetchSpecificResource(resource.getPath(), Version.parse(resource.getVersion())));
+		assertNotNull(store.fetchSpecificResource(resource.getName(), Version.parse(resource.getVersion())));
 		URL url = new URL("http://localhost:" + port + "/stuff.html");
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
@@ -37,9 +37,9 @@ public class TestResourceStore extends BaseServerTest {
 		input.close();
 	}
 
-	private Resource newResource(String path) {
+	private Resource newResource(String name) {
 		TextResource resource = new TextResource();
-		resource.setPath(path);
+		resource.setName(name);
 		resource.setMimeType("text/html");
 		resource.setVersion("1.0.0");
 		resource.setBody("<html><body>Hello</body></html>");

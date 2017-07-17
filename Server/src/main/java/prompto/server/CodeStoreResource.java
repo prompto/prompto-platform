@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -40,7 +42,10 @@ public class CodeStoreResource extends Resource {
 
 	@Override
 	public long lastModified() {
-		return wrapped.getLastModified().toInstant().toEpochMilli();
+		OffsetDateTime lastModified = wrapped.getLastModified();
+		if(lastModified==null)
+			lastModified = OffsetDateTime.now(ZoneOffset.UTC);
+		return lastModified.toInstant().toEpochMilli();
 	}
 
 	@Override
@@ -60,7 +65,7 @@ public class CodeStoreResource extends Resource {
 
 	@Override
 	public String getName() {
-		return "/" + wrapped.getPath();
+		return "/" + wrapped.getName();
 	}
 
 	@Override
