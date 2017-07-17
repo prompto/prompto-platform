@@ -282,6 +282,8 @@ public class MongoStore implements IStore {
 	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = fields.get(fieldName);
+		if(info==null)
+			throw new RuntimeException("Missing AttributeInfo for " + fieldName);
 		if(info.isCollection() && data instanceof Collection)
 			return readCollectionData(info, (Collection<Object>)data);
 		else
