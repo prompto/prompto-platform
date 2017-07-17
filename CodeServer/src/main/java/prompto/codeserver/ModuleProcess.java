@@ -2,6 +2,7 @@ package prompto.codeserver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -89,6 +90,7 @@ public class ModuleProcess {
 		}
 		
 		Process waitForServerReadiness() throws InterruptedException, IOException {
+			System.out.println("Starting: " + builder.command().toString());
 			Process process = builder.start();
 			InputStream input = process.getInputStream();
 			Thread reader = new Thread(()->{
@@ -126,6 +128,7 @@ public class ModuleProcess {
 		this.port = findAvailablePort();
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
+			.redirectError(Redirect.INHERIT)
 			.directory(Files.createTempDirectory("prompto-" + module + "-").toFile());
 		this.process = OutStream.waitForServerReadiness(builder);
 	}
