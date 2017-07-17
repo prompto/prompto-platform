@@ -19,9 +19,14 @@ public class CodeStoreResourceHandler extends ResourceHandler {
 	}
 
 	private Resource getStoredResource(String path) {
-		ICodeStore store = ICodeStore.getInstance();
-		prompto.code.Resource res = store.fetchLatestResource(path);
-		return res==null ? null : new CodeStoreResource(res);
+		try {
+			ICodeStore store = ICodeStore.getInstance();
+			prompto.code.Resource res = store.fetchLatestResource(path);
+			return res==null ? null : new CodeStoreResource(res);
+		} catch(Throwable t) {
+			t.printStackTrace();
+			return null;
+		}
 	}
 
 	
