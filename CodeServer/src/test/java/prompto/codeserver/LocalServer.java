@@ -16,10 +16,10 @@ public abstract class LocalServer {
 		CodeServer.main(args);
 	}
 
-	static final String REPO = "/Users/ericvergnaud/Development/prompto";
+	static final String REPO = "/Users/ericvergnaud/Development/prompto/mongo";
 	private static void startMongo() throws Exception {
 		System.out.println("Starting local Mongo @" + REPO);
-		Storage storage = new Storage(REPO,null,0);
+		Storage storage = new Storage(REPO, null, 16_000_000);
 		IMongodConfig mongodConfig = new MongodConfigBuilder()
 			.replication(storage)
 			.version(Version.Main.PRODUCTION)
