@@ -45,7 +45,6 @@ define TestDeclaration as storable Declaration
 
 define Resource as storable Stuff with attribute mimeType
 define TextResource as storable Resource with attribute body
-define data as storable Blob attribute
 define BinaryResource as storable Resource with attribute data
 
 define EditStatus as enumerated Text with symbols:
