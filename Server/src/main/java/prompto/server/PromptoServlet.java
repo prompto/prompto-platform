@@ -24,7 +24,6 @@ import prompto.value.Document;
 @SuppressWarnings("serial")
 public class PromptoServlet extends HttpServletWithHolder {
 
-	static String ALLOWED_ORIGIN = null;
 	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
 	
 	@Override
@@ -37,8 +36,8 @@ public class PromptoServlet extends HttpServletWithHolder {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String origin = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
 		REGISTERED_ORIGIN.set(origin);
-		if(ALLOWED_ORIGIN!=null) {
-			resp.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+		if(AppServer.ALLOWED_ORIGIN!=null) {
+			resp.setHeader("Access-Control-Allow-Origin", AppServer.ALLOWED_ORIGIN);
 			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
 		}
@@ -52,10 +51,11 @@ public class PromptoServlet extends HttpServletWithHolder {
 			readSession(req);
 			ExecutionMode mode = readMode(req);
 			Identifier methodName = readMethod(req);
+			boolean main = readMain(req);
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
 			RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
-			handler.route(mode, methodName, jsonParams, null, resp.getOutputStream());
+			handler.route(mode, methodName, jsonParams, null, main, resp.getOutputStream());
 			resp.setContentType("text/json");
 			resp.setStatus(HttpServletResponse.SC_OK);
 			resp.getOutputStream().close();
@@ -118,19 +118,21 @@ public class PromptoServlet extends HttpServletWithHolder {
 		readSession(req);
 		Identifier methodName = readMethod(req);
 		ExecutionMode mode = readMode(req);
+		boolean main = readMain(req);
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
 		RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
 		resp.setContentType("application/json");
 		resp.setStatus(200);
-		handler.route(mode, methodName, jsonParams, parts, resp.getOutputStream());
+		handler.route(mode, methodName, jsonParams, parts, main, resp.getOutputStream());
 		resp.flushBuffer();
 		resp.getOutputStream().close();
 	}
 
 	private Identifier readMethod(HttpServletRequest req) {
-		String[] parts = req.getPathInfo().split("/");
-		return new Identifier(parts[parts.length-1]);
+		String method = req.getPathInfo();
+		System.out.println(method);
+		return new Identifier(method.substring(1));
 	}
 
 	private ExecutionMode readMode(HttpServletRequest req) {
@@ -140,6 +142,16 @@ public class PromptoServlet extends HttpServletWithHolder {
 		else
 			return ExecutionMode.INTERPRET;
 	}
+	
+	private boolean readMain(HttpServletRequest req) {
+		String main = req.getParameter("main");
+		if(main!=null)
+			return Boolean.valueOf(main);
+		else
+			return false;
+	}
+
+
 
 	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.sendError(415);

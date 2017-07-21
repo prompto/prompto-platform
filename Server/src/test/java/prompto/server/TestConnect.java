@@ -12,6 +12,7 @@ import org.junit.Test;
 import prompto.error.PromptoError;
 import prompto.remoting.Parameter;
 import prompto.remoting.ParameterList;
+import prompto.runtime.Application;
 import prompto.runtime.Context;
 import prompto.type.IType;
 import prompto.type.TextType;
@@ -32,6 +33,28 @@ public class TestConnect extends BaseServerTest {
 		assertTrue(AppServer.isStarted());
 		AppServer.stop();
 		assertFalse(AppServer.isStarted());
+	}
+	
+	@Test
+	public void testControlExit() throws Throwable {
+		URL url = new URL("http://localhost:" + port + "/ws/control/exit");
+		URLConnection cnx = url.openConnection();
+		InputStream input = cnx.getInputStream();
+		input.close();
+		assertFalse(AppServer.isStarted());
+		Thread.sleep(1000);
+	}
+	
+	@Test
+	public void testControlClearContext() throws Throwable {
+		// force contex loading
+		Application.getGlobalContext().findAttribute("name");
+		assertFalse(Application.getGlobalContext().isEmpty());
+		URL url = new URL("http://localhost:" + port + "/ws/control/clear-context");
+		URLConnection cnx = url.openConnection();
+		InputStream input = cnx.getInputStream();
+		input.close();
+		assertTrue(Application.getGlobalContext().isEmpty());
 	}
 
 	@Test

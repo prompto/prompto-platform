@@ -32,6 +32,7 @@ import prompto.runtime.Interpreter;
 public class AppServer {
 	
 	static Server jettyServer;
+	public static String ALLOWED_ORIGIN = null;
 	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
 	
 	public static void main(String[] args) throws Throwable {
@@ -90,7 +91,7 @@ public class AppServer {
 	
 	static int startServer(Integer httpPort, String webSite, String origin, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
-		PromptoServlet.ALLOWED_ORIGIN = origin;
+		ALLOWED_ORIGIN = origin;
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
@@ -173,6 +174,7 @@ public class AppServer {
 		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
         handler.setResourceBase(base);
+        handler.addServlet(new ControlServlet().getHolder(), "/control/*");
         handler.addServlet(new BinaryServlet().getHolder(), "/bin/*");
         handler.addServlet(new DataServlet().getHolder(), "/data/*");       
         handler.addServlet(new PromptoServlet().getHolder(), "/run/*");       

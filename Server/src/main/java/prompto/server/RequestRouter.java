@@ -12,6 +12,7 @@ import prompto.error.PromptoError;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoDict;
 import prompto.remoting.ParameterList;
 import prompto.runtime.Context;
 import prompto.runtime.Executor;
@@ -34,19 +35,19 @@ public class RequestRouter {
 		this.context = context.newLocalContext();
 	}
 
-	public String route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, OutputStream output) throws Exception {
+	public String route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
 		boolean isTest = methodName.toString().startsWith("\"") && methodName.toString().endsWith("\"");
 		switch(mode) {
 		case INTERPRET:
 			if(isTest)
 				return interpretTest(methodName, output);
 			else
-				return interpretMethod(methodName, jsonParams, parts, output);
+				return interpretMethod(methodName, jsonParams, parts, main,output);
 		case EXECUTE:
 			if(isTest)
 				return executeTest(methodName, output);
 			else
-				return executeMethod(methodName, jsonParams, parts, output);
+				return executeMethod(methodName, jsonParams, parts, main, output);
 		default:
 			throw new InvalidParameterException(mode.name());
 		}
@@ -80,11 +81,15 @@ public class RequestRouter {
 		}
 	}
 
-	public String executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, OutputStream output) throws Exception {
+	public String executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			Class<?>[] argTypes = params.toJavaTypes(context, classLoader);
 			Object[] args = params.toJavaValues(context);
+			if(params.isEmpty() && main) {
+				argTypes = new Class<?>[] { PromptoDict.class };
+				args = new Object[] { null };
+			}
 			Object result = Executor.executeGlobalMethod(classLoader, methodName, argTypes, args);
 			// TODO JSON output
 			Text text = new Text(result==null ? "success!" : result.toString());
@@ -94,12 +99,11 @@ public class RequestRouter {
 		}
 	}
 	
-	public String interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, OutputStream output) throws Exception {
+	public String interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			ArgumentAssignmentList assignments = params.toAssignments(context);
-			MethodCall methodCall = new MethodCall(new MethodSelector(methodName),assignments);
-			IValue value = methodCall.interpret(context);
+			IValue value = interpretMethod(context, methodName, assignments, main);
 			if(value==null)
 				value = new Text("Success!");
 			if(value instanceof BinaryValue)
@@ -108,6 +112,16 @@ public class RequestRouter {
 				return writeJsonResponse(value, output);
 		} finally {
 			context.notifyTerminated();
+		}
+	}
+
+	private IValue interpretMethod(Context context2, Identifier methodName, ArgumentAssignmentList assignments, boolean main) {
+		if(assignments.isEmpty() && main) {
+			Interpreter.interpretMainNoArgs(context, methodName);
+			return null;
+		} else {
+			MethodCall methodCall = new MethodCall(new MethodSelector(methodName), assignments);
+			return methodCall.interpret(context);
 		}
 	}
 
