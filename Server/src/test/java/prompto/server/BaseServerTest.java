@@ -19,7 +19,7 @@ public abstract class BaseServerTest {
 	@Before
 	public void __before__() throws Throwable {
 		bootstrapCodeStore();
-		port = AppServer.startServer(port, null, null, null, null, BaseServerTest::prepareHandler, null);
+		port = AppServer.startServer(port, null, null, null, ()->prepareHandler(null), null);
 		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}

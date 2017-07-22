@@ -5,10 +5,21 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
+import javax.security.auth.spi.LoginModule;
+
+import org.eclipse.jetty.jaas.JAASLoginService;
+import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.DefaultIdentityService;
+import org.eclipse.jetty.security.IdentityService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -20,6 +31,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
+import org.eclipse.jetty.util.security.Constraint;
 
 import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
@@ -28,6 +40,7 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Application;
 import prompto.runtime.Interpreter;
+import prompto.security.PasswordIsUserNameLoginModule;
 
 public class AppServer {
 	
@@ -61,11 +74,12 @@ public class AppServer {
 			System.exit(-1); // raise an error in whatever tool is used to launch this
 		}
 		// initialize server accordingly
+		final String fws = webSite==null ? null : new String(webSite);
 		IExpression argsValue = Application.argsToArgValue(args);
 		if(debugPort!=null)
-			debugServer(debugHost, debugPort, httpPort, origin, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
+			debugServer(debugHost, debugPort, httpPort, origin, serverAboutToStart, argsValue, ()->prepareWebHandlers(fws));
 		else
-			startServer(httpPort, webSite, origin, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
+			startServer(httpPort, origin, serverAboutToStart, argsValue, ()->prepareWebHandlers(fws), ()->{
 				Application.getGlobalContext().notifyTerminated();
 			});
 	}
@@ -80,29 +94,29 @@ public class AppServer {
 			System.out.println("Missing argument: -http_port");
 	}
 
-	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String origin, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
+	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String origin, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
 		DebugRequestServer server = Application.startDebugging(debugHost, debugPort);
-		return startServer(httpPort, origin, webSite, serverAboutToStartMethod, argValue, handler, ()->{
+		return startServer(httpPort, origin, serverAboutToStartMethod, argValue, handler, ()->{
 			Application.getGlobalContext().notifyTerminated();
 			server.stopListening();
 		});
 	}
 	
 	
-	static int startServer(Integer httpPort, String webSite, String origin, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(Integer httpPort, String origin, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
 		System.out.println("Starting web server on port " + httpPort + "...");
 		ALLOWED_ORIGIN = origin;
 		if(httpPort==-1) {
 			jettyServer = new Server(httpPort);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
-			jettyServer.setHandler(handler.apply(webSite));
+			jettyServer.setHandler(prepareSecurityHandler(handler));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 			httpPort = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(httpPort);
-			jettyServer.setHandler(handler.apply(webSite));
+			jettyServer.setHandler(prepareSecurityHandler(handler));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
@@ -125,7 +139,59 @@ public class AppServer {
 		return 0;
 	}
 
-	static HandlerList prepareHandlers(String webSite) {
+	static Handler prepareSecurityHandler(Supplier<Handler> handler) {
+		try {
+			System.out.println("Preparing security handler...");
+			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
+			security.setLoginService(prepareLoginService()); // where to check credentials
+			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
+			security.setConstraintMappings(prepareContraintMappings()); // when to require security
+			security.setHandler(handler.get());
+			System.out.println("Security handler successfully prepared.");
+			return security;
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static Authenticator prepareAuthenticator() {
+		return new BasicAuthenticator();
+	}
+
+	private static List<ConstraintMapping> prepareContraintMappings() {
+		  ConstraintMapping mapping = new ConstraintMapping();
+	      mapping.setPathSpec("/*"); // for now protect all paths
+	      mapping.setConstraint(prepareConstraint());
+	      return Collections.singletonList(mapping);
+	}
+
+	private static Constraint prepareConstraint() {
+		Constraint constraint = new Constraint();
+	    constraint.setName("authenticate");
+	    constraint.setAuthenticate(true);
+	    constraint.setRoles(new String[] { "**" }); // roles not handled by JAAS, se 
+		return constraint;
+	}
+
+	private static LoginService prepareLoginService() {
+		String loginModuleName = prepareLoginModule();
+		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
+		loginService.setIdentityService(prepareIdentityService());
+		loginService.setLoginModuleName(loginModuleName);
+		jettyServer.addBean(loginService);
+		return loginService;
+	}
+
+	private static String prepareLoginModule() {
+		LoginModule module = new PasswordIsUserNameLoginModule();
+		return module.getClass().getName();
+	}
+
+	private static IdentityService prepareIdentityService() {
+		return new DefaultIdentityService();
+	}
+
+	static Handler prepareWebHandlers(String webSite) {
 		try {
 			System.out.println("Preparing web handlers...");
 			HandlerList list = new HandlerList();
