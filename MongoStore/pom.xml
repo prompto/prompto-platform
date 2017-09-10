@@ -11,10 +11,6 @@
 
 	<artifactId>MongoStore</artifactId>
 
-	<properties>
-		<mongo-version>3.4.2</mongo-version>
-	</properties>
-
 	<build>
 		<plugins>
 			<plugin>

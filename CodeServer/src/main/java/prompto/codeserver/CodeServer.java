@@ -10,49 +10,45 @@ import java.util.stream.Collectors;
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
+import prompto.code.Version;
+import prompto.config.IServerConfiguration;
+import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
-import prompto.memstore.MemStoreFactory;
 import prompto.server.AppServer;
 import prompto.server.DataServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
-import prompto.store.IStoreFactory.Type;
 import prompto.utils.ResourceUtils;
 
 public class CodeServer {
 
 	public static void main(String[] args) throws Throwable {
 		List<String> argsList = new ArrayList<>(Arrays.asList(args));
-		argsList.add("-resources");
+		argsList.add("-resourceURLs");
 		argsList.add(getResourcesList());
-		argsList.add("-application");
+		argsList.add("-applicationName");
 		argsList.add("dev-center");
-		argsList.add("-version");
+		argsList.add("-applicationVersion");
 		argsList.add("1.0.0");
-		argsList.add("-codeStoreType");
-		argsList.add(Type.ROOT.name());
-		argsList.add("-dataStoreType");
-		argsList.add(Type.CODE.name());
+		argsList.add("-codeStore-dbName");
+		argsList.add("ROOT");
+		argsList.add("-dataStore-dbName");
+		argsList.add("CODE");
 		argsList.add("-serverAboutToStart");
 		argsList.add("serverAboutToStart");
-		AppServer.main(argsList.toArray(new String[argsList.size()])); 
-		redirectDataServlet(args);
+		args = argsList.toArray(new String[argsList.size()]);
+		AppServer.main(args, CodeServer::redirectDataServlet); 
 	}
 	
-	private static void redirectDataServlet(String[] args) throws Throwable {
-		String storeFactory = getDataStoreFactory(args);
-		IStoreFactory factory = prompto.runtime.Application.newStoreFactory(storeFactory);
-		DataServlet.store = factory.newStore(args, Type.DATA);
-	}
-
-	private static String getDataStoreFactory(String[] args) {
-		// TODO use specific args, for now simply use same as data store
-		for(int i=0; i<args.length; i++) {
-			if("-dataStoreFactory".equals(args[i]))
-				return args[i+1];
+	private static void redirectDataServlet(IServerConfiguration config) {
+		try {
+			IStoreConfiguration code = config.getDataStoreConfiguration(); // points to CODE
+			IStoreFactory factory = prompto.runtime.Application.newStoreFactory(code.getFactory());
+			DataServlet.store = factory.newStore(code.withDbName("DATA"));
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
 		}
-		return MemStoreFactory.class.getName();
 	}
 
 	private static String getResourcesList() {
@@ -62,7 +58,7 @@ public class CodeServer {
 
 	public static void createThesaurusAndImportSamples() throws Exception {
 		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", "1.0.0", null);
+		ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", Version.parse("1.0.0"), null);
 		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 		importer.importModule(codeStore);
 		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);

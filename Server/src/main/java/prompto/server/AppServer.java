@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.jetty.server.Connector;
@@ -21,6 +22,11 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 
+import prompto.config.IConfigurationReader;
+import prompto.config.IDebugConfiguration;
+import prompto.config.IHttpConfiguration;
+import prompto.config.IServerConfiguration;
+import prompto.config.ServerConfiguration;
 import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
@@ -28,6 +34,7 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Application;
 import prompto.runtime.Interpreter;
+import prompto.utils.CmdLineParser;
 
 public class AppServer {
 	
@@ -36,78 +43,71 @@ public class AppServer {
 	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
 	
 	public static void main(String[] args) throws Throwable {
-		Integer httpPort = null;
-		Integer debugPort = null;
-		String serverAboutToStart = null;
-		String webSite = null;
-		String origin = null;
-
-		Map<String, String> argsMap = initialize(args);
-
-		String debugHost = argsMap.getOrDefault("debug_host", "localhost");
-		if(argsMap.containsKey("debug_port"))
-			debugPort = Integer.parseInt(argsMap.get("debug_port"));
-		if(argsMap.containsKey("http_port"))
-			httpPort = Integer.parseInt(argsMap.get("http_port"));
-		if(argsMap.containsKey("serverAboutToStart"))
-			serverAboutToStart = argsMap.get("serverAboutToStart");
-		if(argsMap.containsKey("web-site"))
-			webSite = argsMap.get("web-site");
-		if(argsMap.containsKey("origin"))
-			origin = argsMap.get("origin");
-		
-		if(httpPort==null) {
-			showHelp(httpPort);
-			System.exit(-1); // raise an error in whatever tool is used to launch this
-		}
-		// initialize server accordingly
-		IExpression argsValue = Application.argsToArgValue(args);
-		if(debugPort!=null)
-			debugServer(debugHost, debugPort, httpPort, origin, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
-		else
-			startServer(httpPort, webSite, origin, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{
-				Application.getGlobalContext().notifyTerminated();
-			});
-	}
-
-	public static Map<String, String> initialize(String[] args) throws Throwable  {
-		ServerIdentifierProcessor.register();
-		return Application.initialize(args, ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
+		main(args, null);
 	}
 	
-	private static void showHelp(Integer httpPort) {
-		if(httpPort==null)
-			System.out.println("Missing argument: -http_port");
+	public static void main(String[] args, Consumer<IServerConfiguration> afterStart) throws Throwable {
+		IServerConfiguration config = loadConfiguration(args);
+		initialize(config);
+		run(config);
+		if(afterStart!=null)
+			afterStart.accept(config);
 	}
 
-	static int debugServer(String debugHost, Integer debugPort, Integer httpPort, String origin, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
-		DebugRequestServer server = Application.startDebugging(debugHost, debugPort);
-		return startServer(httpPort, origin, webSite, serverAboutToStartMethod, argValue, handler, ()->{
+	public static void initialize(IServerConfiguration config) throws Throwable {
+		ServerIdentifierProcessor.register();
+		Application.initialize(config);
+	}
+
+	private static IServerConfiguration loadConfiguration(String[] args) throws Exception {
+		Map<String, String> argsMap = CmdLineParser.parse(args);
+		IConfigurationReader reader = Application.readerFromArgs(argsMap);
+		IServerConfiguration config = new ServerConfiguration(reader, argsMap);
+		config.setRuntimeLibsSupplier(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
+		return config;
+	}
+
+	private static void run(IServerConfiguration config) throws Throwable {
+		String serverAboutToStart = config.getServerAboutToStartMethod();
+		IExpression argsValue = Application.argsToArgValue(config.getArguments());
+		String webSite = config.getWebSiteRoot();
+		IHttpConfiguration http = config.getHttpConfiguration();
+		IDebugConfiguration debug = config.getDebugConfiguration();
+		if(debug!=null)
+			debugServer(debug, http, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
+		else
+			startServer(http, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers, ()->{ Application.getGlobalContext().notifyTerminated(); });
+	}
+
+	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler) throws Throwable {
+		DebugRequestServer server = Application.startDebugging(debug.getHost(), debug.getPort());
+		return startServer(http, webSite, serverAboutToStartMethod, argValue, handler, ()->{
 			Application.getGlobalContext().notifyTerminated();
 			server.stopListening();
 		});
 	}
 	
 	
-	static int startServer(Integer httpPort, String webSite, String origin, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
-		System.out.println("Starting web server on port " + httpPort + "...");
-		ALLOWED_ORIGIN = origin;
-		if(httpPort==-1) {
-			jettyServer = new Server(httpPort);
+	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<String, Handler> handler, Runnable serverStopped) throws Throwable {
+		int port = http.getPort();
+		System.out.println("Starting web server on port " + port + "...");
+		ALLOWED_ORIGIN = http.getOrigin();
+		if(port==-1) {
+			jettyServer = new Server(port);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
 			jettyServer.setHandler(handler.apply(webSite));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
-			httpPort = sc.getLocalPort();
+			port = sc.getLocalPort();
 		} else {
-			jettyServer = new Server(httpPort);
+			jettyServer = new Server(port);
 			jettyServer.setHandler(handler.apply(webSite));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
-		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + httpPort);
-		return httpPort;
+		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + port);
+		return port;
 	}
 	
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
@@ -264,7 +264,7 @@ public class AppServer {
 	}
 
 	public static void stop() throws Exception {
-		if(!jettyServer.isStarted())
+		if(jettyServer==null || !jettyServer.isStarted())
 			throw new RuntimeException("Server is not started!");
 		System.out.println("Stopping web server...");
 		jettyServer.stop();

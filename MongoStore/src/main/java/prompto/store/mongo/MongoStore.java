@@ -65,14 +65,14 @@ public class MongoStore implements IStore {
 		this(host, port, database, null, null);
 	}
 	
-	public MongoStore(String host, int port, String database, String user, String password) {
+	public MongoStore(String host, int port, String database, String user, char[] password) {
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
 		                .codecRegistry(codecRegistry)
 		                .build();
 		if(user!=null && password!=null) {
 			System.out.println("Connecting user " + user + " to " + database);
-			MongoCredential cred = MongoCredential.createCredential(user, "admin", password.toCharArray());
+			MongoCredential cred = MongoCredential.createCredential(user, "admin", password);
 			client = new MongoClient(address, Collections.singletonList(cred), options);
 		} else {
 			System.out.println("Connecting anonymously to " + database);

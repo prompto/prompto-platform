@@ -5,25 +5,35 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import org.junit.Test;
-
-
-
 import static org.junit.Assert.*;
+import prompto.code.Version;
+import prompto.config.IDebugConfiguration;
+import prompto.config.IHttpConfiguration;
+import prompto.config.IServerConfiguration;
+import prompto.config.IStoreConfiguration;
 import prompto.declaration.DeclarationList;
+import prompto.expression.IExpression;
+import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
 import prompto.runtime.Application;
 import prompto.runtime.Context;
+import prompto.type.DictType;
+import prompto.type.TextType;
 import prompto.utils.Out;
+import prompto.value.ExpressionValue;
+import prompto.value.NullValue;
 
 public class TestCustomHandler {
 
 	@Test
 	public void testParseAndCheck() throws Throwable {
-		String[] args = { "-application", "test", "-testMode", "true" };
-		AppServer.initialize(args);
+		IServerConfiguration config = newServerConfiguration();
+		AppServer.initialize(config);
 		try(InputStream input = Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream("prompto/customHandler.pec")) {
 			ECleverParser parser = new ECleverParser(input);
@@ -34,6 +44,29 @@ public class TestCustomHandler {
 		}
 	}
 	
+	private IServerConfiguration newServerConfiguration() {
+		return new IServerConfiguration() {
+			@Override public void setRuntimeLibsSupplier(Supplier<Collection<URL>> supplier) { }
+			@Override public Supplier<Collection<URL>> getRuntimeLibsSupplier() { return ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class); }
+			@Override public IStoreConfiguration getCodeStoreConfiguration() { return null; }
+			@Override public IStoreConfiguration getDataStoreConfiguration() { return null; }
+			@Override public IDebugConfiguration getDebugConfiguration() { return null; }
+			@Override public Map<String, String> getArguments() { return null; }
+			@Override public String getApplicationName() { return "test"; }
+			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
+			@Override public boolean isTestMode() { return true; }
+			@Override public URL[] getAddOnURLs() { return null; }
+			@Override public URL[] getResourceURLs() { return null; }
+			@Override public boolean isLoadRuntime() { return true; }
+			@Override public IHttpConfiguration getHttpConfiguration() { return new IHttpConfiguration() {
+				@Override public int getPort() { return -1; }
+				@Override public String getOrigin() { return null; }
+			}; }
+			@Override public String getServerAboutToStartMethod() { return null; }
+			@Override public String getWebSiteRoot() { return null; }
+		};
+	}
+
 	@FunctionalInterface
 	public interface Consumer<T> {
 	    void accept(T t) throws Exception;
@@ -75,8 +108,8 @@ public class TestCustomHandler {
 	public void testInterpret(Consumer<Integer> consumer) throws Throwable {
 		Out.init();
 		try {
-			String[] args = { "-application", "test", "-testMode", "true" };
-			AppServer.initialize(args);
+			IServerConfiguration config = newServerConfiguration();
+			AppServer.initialize(config);
 			try(InputStream input = Thread.currentThread().getContextClassLoader()
 					.getResourceAsStream("prompto/customHandler.pec")) {
 				ECleverParser parser = new ECleverParser(input);
@@ -84,7 +117,8 @@ public class TestCustomHandler {
 				Context context = Application.getGlobalContext();
 				decls.register(context);
 			}
-			int port = AppServer.startServer(-1, null, null, "serverAboutToStart", Application.argsToArgValue(args), BaseServerTest::prepareHandler, null);
+			IExpression args = new ExpressionValue(new DictType(TextType.instance()), NullValue.instance());
+			int port = AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, BaseServerTest::prepareHandler, null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);

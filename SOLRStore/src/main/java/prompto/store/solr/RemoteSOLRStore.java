@@ -24,8 +24,6 @@ import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 import prompto.error.InternalError;
 import prompto.error.PromptoError;
 import prompto.store.IStore;
-import prompto.store.IStoreFactory.Type;
-import prompto.utils.StringUtils;
 
 
 public class RemoteSOLRStore extends BaseSOLRStore {
@@ -34,10 +32,6 @@ public class RemoteSOLRStore extends BaseSOLRStore {
 	String coreName;
 	int commitDelay = 15000; // ms
 	
-	public RemoteSOLRStore(String protocol, String host, int port, Type type) {
-		this(protocol, host, port, StringUtils.capitalizeFirst(type.name()) + "Store");
-	}
-
 	public RemoteSOLRStore(String protocol, String host, int port, String coreName) {
 		String baseURL =  protocol + "://" + host + ":" + port + "/solr/";
 		this.client = new HttpSolrClient(baseURL);

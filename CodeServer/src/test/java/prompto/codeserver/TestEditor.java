@@ -17,18 +17,22 @@ public class TestEditor extends BaseWebTest {
 	@BeforeClass
 	public static void startCodeServer() throws Throwable {
 		String[] args = {
-				"-http_port",
+				"-testMode",
+				"true",
+				"-http-port",
 				"-1",
-				"-codeStoreFactory",
+				"-codeStore-factory",
 				"prompto.store.solr.SOLRStoreFactory",
-				"-dataStoreFactory",
-				"prompto.store.solr.SOLRStoreFactory",
-				"-solr-root-embedded",
-				"-solr-root-root",
+				"-codeStore-root",
 				"target/test-classes/solr-test",
-				"-solr-code-embedded",
-				"-solr-code-root",
-				"target/test-classes/solr-test"
+				"-codeStore-dbName",
+				"CODE",
+				"-dataStore-factory",
+				"prompto.store.solr.SOLRStoreFactory",
+				"-dataStore-root",
+				"target/test-classes/solr-test",
+				"-codeStore-dbName",
+				"DATA"
 		};
 		CodeServer.main(args);
 		HTTP_PORT = AppServer.getHttpPort();

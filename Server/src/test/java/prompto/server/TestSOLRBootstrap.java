@@ -3,24 +3,60 @@ package prompto.server;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import prompto.code.Version;
+import prompto.config.IDebugConfiguration;
+import prompto.config.IRuntimeConfiguration;
+import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.runtime.Application;
 import prompto.store.Family;
 import prompto.store.IStore;
-import prompto.store.IStoreFactory.Type;
 import prompto.store.solr.EmbeddedSOLRStore;
-import prompto.store.solr.SOLRStoreFactory;
 
 public class TestSOLRBootstrap {
 	
 	EmbeddedSOLRStore store;
 	
+	@Before
+	public void before() throws Exception {
+		store = newEmbeddedStore();
+		((EmbeddedSOLRStore)store).startContainer();
+		((EmbeddedSOLRStore)store).startServerWithEmptyCore();
+		Application.bootstrapCodeStore(store, newRuntimeConfig());
+	}
+	
+	private IRuntimeConfiguration newRuntimeConfig() {
+		return new IRuntimeConfiguration() {
+			@Override public void setRuntimeLibsSupplier(Supplier<Collection<URL>> supplier) { }
+			@Override public boolean isTestMode() { return true; }
+			@Override public boolean isLoadRuntime() { return false; }
+			@Override public Supplier<Collection<URL>> getRuntimeLibsSupplier() { return ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class); }
+			@Override public URL[] getResourceURLs() { return null; }
+			@Override public IDebugConfiguration getDebugConfiguration() { return null; }
+			@Override public IStoreConfiguration getDataStoreConfiguration() { return null; }
+			@Override public IStoreConfiguration getCodeStoreConfiguration() { return null; }
+			@Override public Map<String, String> getArguments() { return null; }
+			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
+			@Override public String getApplicationName() { return "test"; }
+			@Override public URL[] getAddOnURLs() { return null; }
+		};
+	}
+
+	private EmbeddedSOLRStore newEmbeddedStore() {
+		return new EmbeddedSOLRStore(new File("target/test-classes/solr-test"), "CODE");
+	}
+
 	@After
 	public void after() throws IOException {
 		store.shutdownServer();
@@ -30,15 +66,6 @@ public class TestSOLRBootstrap {
 
 	@Test
 	public void testCodeStoreColumns() throws Throwable {
-		String[] args = {
-				"-solr-code-embedded",
-				"-solr-code-root",
-				"target/test-classes/solr-test"
-		};
-		store = (EmbeddedSOLRStore)new SOLRStoreFactory().newStore(args, Type.CODE);
-		((EmbeddedSOLRStore)store).startContainer();
-		((EmbeddedSOLRStore)store).startServerWithEmptyCore();
-		Application.bootstrapCodeStore(store, ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class), "test", Version.parse("1.0.0"), true, null);
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.DATETIME, store.getColumnTypeFamily("timeStamp"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("category"));
@@ -52,15 +79,6 @@ public class TestSOLRBootstrap {
 	
 	@Test
 	public void testCodeStoreIsolation() throws Throwable {
-		String[] args = {
-				"-solr-code-embedded",
-				"-solr-code-root",
-				"target/test-classes/solr-test"
-		};
-		store = (EmbeddedSOLRStore)new SOLRStoreFactory().newStore(args, Type.CODE);
-		store.startContainer();
-		store.startServerWithEmptyCore();
-		Application.bootstrapCodeStore(store, ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class), "test", Version.parse("1.0.0"), true, null);
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("name"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("version"));

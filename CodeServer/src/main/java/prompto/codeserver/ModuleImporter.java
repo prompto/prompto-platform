@@ -52,7 +52,7 @@ public class ModuleImporter {
 
 	private void populateModule(Module module, JsonNode descriptor) {
 		module.setName(readText(descriptor, "name"));
-		module.setVersion(readText(descriptor, "version"));
+		module.setVersion(Version.parse(readText(descriptor, "version")));
 		module.setDescription(readText(descriptor, "description"));
 		if(module instanceof WebSite)
 			((WebSite)module).setEntryPoint(readText(descriptor, "entryPoint"));
@@ -93,9 +93,7 @@ public class ModuleImporter {
 	}
 
 	public void importModule(ICodeStore codeStore) throws Exception {
-		String name = module.getName();
-		Version version = Version.parse(module.getVersion());
-		Module existing = codeStore.fetchModule(module.getType(), name, version);
+		Module existing = codeStore.fetchModule(module.getType(), module.getName(), module.getVersion());
 		if(existing!=null)
 			return;
 		if(imageResource!=null)
@@ -107,7 +105,7 @@ public class ModuleImporter {
 
 	private void storeAssociatedCode(ICodeStore codeStore) throws Exception {
 		ImmutableCodeStore rcs = new ImmutableCodeStore(null, module.getType(), codeResource, module.getVersion());
-		codeStore.storeDeclarations(rcs.getDeclarations(), rcs.getModuleDialect(), Version.parse(module.getVersion()), module.getDbId());
+		codeStore.storeDeclarations(rcs.getDeclarations(), rcs.getModuleDialect(), module.getVersion(), module.getDbId());
 	}
 
 }
