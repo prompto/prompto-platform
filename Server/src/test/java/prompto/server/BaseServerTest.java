@@ -30,7 +30,7 @@ public abstract class BaseServerTest {
 	public void __before__() throws Throwable {
 		IServerConfiguration config = newServerConfig(port);
 		bootstrapCodeStore(config);
-		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, BaseServerTest::prepareHandler, null);
+		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, ()->prepareHandler(null), null);
 		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}
