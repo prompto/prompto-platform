@@ -15,7 +15,7 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IRuntimeConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.store.Family;
 import prompto.store.IStore;
 import prompto.store.mongo.BaseMongoTest;
@@ -25,7 +25,7 @@ public class TestMongoBootstrap extends BaseMongoTest {
 	@Before
 	public void before() throws Exception {
 		createStore("CODE");
-		Application.bootstrapCodeStore(store, newRuntimeConfig());
+		Standalone.bootstrapCodeStore(store, newRuntimeConfig());
 	}
 	
 	private IRuntimeConfiguration newRuntimeConfig() {
@@ -63,6 +63,6 @@ public class TestMongoBootstrap extends BaseMongoTest {
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("name"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("version"));
-		assertNull(Application.getGlobalContext().findAttribute("prototype"));
+		assertNull(Standalone.getGlobalContext().findAttribute("prototype"));
 	}
 }

@@ -18,7 +18,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.grammar.Identifier;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.value.Document;
 
 @SuppressWarnings("serial")
@@ -36,8 +36,8 @@ public class PromptoServlet extends HttpServletWithHolder {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String origin = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
 		REGISTERED_ORIGIN.set(origin);
-		if(AppServer.ALLOWED_ORIGIN!=null) {
-			resp.setHeader("Access-Control-Allow-Origin", AppServer.ALLOWED_ORIGIN);
+		if(AppServer.HTTP_ALLOWED_ORIGIN!=null) {
+			resp.setHeader("Access-Control-Allow-Origin", AppServer.HTTP_ALLOWED_ORIGIN);
 			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
 		}
@@ -54,7 +54,7 @@ public class PromptoServlet extends HttpServletWithHolder {
 			boolean main = readMain(req);
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
-			RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
+			RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
 			handler.route(mode, methodName, jsonParams, null, main, resp.getOutputStream());
 			resp.setContentType("text/json");
 			resp.setStatus(HttpServletResponse.SC_OK);
@@ -121,7 +121,7 @@ public class PromptoServlet extends HttpServletWithHolder {
 		boolean main = readMain(req);
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
-		RequestRouter handler = new RequestRouter(Application.getClassLoader(), Application.getGlobalContext());
+		RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
 		resp.setContentType("application/json");
 		resp.setStatus(200);
 		handler.route(mode, methodName, jsonParams, parts, main, resp.getOutputStream());

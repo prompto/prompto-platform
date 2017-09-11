@@ -14,7 +14,7 @@ import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
 import prompto.intrinsic.PromptoDocument;
 import prompto.reader.JSONReader;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.statement.MethodCall;
@@ -44,7 +44,7 @@ public class UserServlet extends HttpServletWithHolder {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
-			Context context = Application.getGlobalContext();
+			Context context = Standalone.getGlobalContext();
 			Document document = new Document();
 			req.getParameterMap().forEach((n, l)->{
 				Text name = new Text(n);
@@ -97,7 +97,7 @@ public class UserServlet extends HttpServletWithHolder {
 		try {
 			Object object = JSONReader.read(req.getInputStream());
 			if(object instanceof PromptoDocument) {
-				Context context = Application.getGlobalContext();
+				Context context = Standalone.getGlobalContext();
 				Document document = new Document(context, (PromptoDocument<?,?>)object);
 				IExpression args = new ExpressionValue(DocumentType.instance(), document);
 				ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);

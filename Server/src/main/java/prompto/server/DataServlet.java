@@ -13,7 +13,7 @@ import prompto.expression.FetchManyExpression;
 import prompto.expression.IFetchExpression;
 import prompto.literal.IntegerLiteral;
 import prompto.parser.ECleverParser;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.runtime.Context;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
@@ -44,7 +44,7 @@ public class DataServlet extends HttpServletWithHolder {
 			ECleverParser parser = new ECleverParser(query);
 			IFetchExpression fetch = parser.parse_fetch_store_expression();
 			adjustQueryRange(fetch, first, last);
-			Context context = Application.getGlobalContext();
+			Context context = Standalone.getGlobalContext();
 			IValue value = fetch.fetch(context, store);
 			String mimeType = writeJsonResponse(context, value, resp.getOutputStream());
 			resp.setContentType(mimeType);

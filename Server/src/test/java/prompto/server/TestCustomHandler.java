@@ -4,12 +4,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 import prompto.code.Version;
 import prompto.config.IDebugConfiguration;
@@ -20,7 +20,7 @@ import prompto.declaration.DeclarationList;
 import prompto.expression.IExpression;
 import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.runtime.Context;
 import prompto.type.DictType;
 import prompto.type.TextType;
@@ -38,7 +38,7 @@ public class TestCustomHandler {
 				.getResourceAsStream("prompto/customHandler.pec")) {
 			ECleverParser parser = new ECleverParser(input);
 			DeclarationList decls = parser.parse_declaration_list();
-			Context context = Application.getGlobalContext();
+			Context context = Standalone.getGlobalContext();
 			decls.register(context);
 			decls.check(context);
 		}
@@ -59,8 +59,9 @@ public class TestCustomHandler {
 			@Override public URL[] getResourceURLs() { return null; }
 			@Override public boolean isLoadRuntime() { return true; }
 			@Override public IHttpConfiguration getHttpConfiguration() { return new IHttpConfiguration() {
+				@Override public String getProtocol() { return "http"; }
 				@Override public int getPort() { return -1; }
-				@Override public String getOrigin() { return null; }
+				@Override public String getAllowedOrigin() { return null; }
 			}; }
 			@Override public String getServerAboutToStartMethod() { return null; }
 			@Override public String getWebSiteRoot() { return null; }
@@ -114,7 +115,7 @@ public class TestCustomHandler {
 					.getResourceAsStream("prompto/customHandler.pec")) {
 				ECleverParser parser = new ECleverParser(input);
 				DeclarationList decls = parser.parse_declaration_list();
-				Context context = Application.getGlobalContext();
+				Context context = Standalone.getGlobalContext();
 				decls.register(context);
 			}
 			IExpression args = new ExpressionValue(new DictType(TextType.instance()), NullValue.instance());

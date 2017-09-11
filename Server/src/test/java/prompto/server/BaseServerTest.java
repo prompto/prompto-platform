@@ -20,7 +20,7 @@ import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 
 public abstract class BaseServerTest {
 	
@@ -51,8 +51,9 @@ public abstract class BaseServerTest {
 			@Override public URL[] getAddOnURLs() { return null; }
 			@Override public IHttpConfiguration getHttpConfiguration() {
 				return new IHttpConfiguration() {
+					@Override public String getProtocol() { return "http"; }
 					@Override public int getPort() { return port; }
-					@Override public String getOrigin() { return null; }
+					@Override public String getAllowedOrigin() { return null; }
 				};
 			}
 			@Override public String getServerAboutToStartMethod() { return null; }
@@ -83,7 +84,7 @@ public abstract class BaseServerTest {
 	}
 
 	public static void bootstrapCodeStore(IServerConfiguration config) throws Exception {
-		Application.bootstrapCodeStore(new MemStore(), config);
+		Standalone.bootstrapCodeStore(new MemStore(), config);
 	}
 
 	@After

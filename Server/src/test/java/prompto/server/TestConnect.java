@@ -13,7 +13,7 @@ import org.junit.Test;
 import prompto.error.PromptoError;
 import prompto.remoting.Parameter;
 import prompto.remoting.ParameterList;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.runtime.Context;
 import prompto.type.IType;
 import prompto.type.TextType;
@@ -50,13 +50,13 @@ public class TestConnect extends BaseServerTest {
 	@Test
 	public void testControlClearContext() throws Throwable {
 		// force contex loading
-		Application.getGlobalContext().findAttribute("name");
-		assertFalse(Application.getGlobalContext().isEmpty());
+		Standalone.getGlobalContext().findAttribute("name");
+		assertFalse(Standalone.getGlobalContext().isEmpty());
 		URL url = new URL("http://localhost:" + port + "/ws/control/clear-context");
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
 		input.close();
-		assertTrue(Application.getGlobalContext().isEmpty());
+		assertTrue(Standalone.getGlobalContext().isEmpty());
 	}
 
 	@Test

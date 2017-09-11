@@ -8,7 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 
 @SuppressWarnings("serial")
 public class ControlServlet extends HttpServletWithHolder {
@@ -20,8 +20,8 @@ public class ControlServlet extends HttpServletWithHolder {
 	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		if(AppServer.ALLOWED_ORIGIN!=null) {
-			resp.setHeader("Access-Control-Allow-Origin", AppServer.ALLOWED_ORIGIN);
+		if(AppServer.HTTP_ALLOWED_ORIGIN!=null) {
+			resp.setHeader("Access-Control-Allow-Origin", AppServer.HTTP_ALLOWED_ORIGIN);
 			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
 		}
@@ -53,7 +53,7 @@ public class ControlServlet extends HttpServletWithHolder {
 	}
 
 	private void clearContext(PrintWriter writer) {
-		Application.clearGlobalContext();
+		Standalone.clearGlobalContext();
 	}
 
 	private void exitServer(PrintWriter writer) {

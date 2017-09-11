@@ -47,17 +47,19 @@ import prompto.declaration.IMethodDeclaration;
 import prompto.expression.IExpression;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 import prompto.runtime.Interpreter;
 import prompto.utils.CmdLineParser;
 import prompto.security.PasswordIsUserNameLoginModule;
 
 public class AppServer {
 	
-	static Server jettyServer;
-	public static String ALLOWED_ORIGIN = null;
 	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
+
+	public static String HTTP_ALLOWED_ORIGIN = null;
 	
+	private static Server jettyServer;
+
 	public static void main(String[] args) throws Throwable {
 		main(args, null);
 	}
@@ -72,12 +74,12 @@ public class AppServer {
 
 	public static void initialize(IServerConfiguration config) throws Throwable {
 		ServerIdentifierProcessor.register();
-		Application.initialize(config);
+		Standalone.initialize(config);
 	}
 
 	private static IServerConfiguration loadConfiguration(String[] args) throws Exception {
 		Map<String, String> argsMap = CmdLineParser.parse(args);
-		IConfigurationReader reader = Application.readerFromArgs(argsMap);
+		IConfigurationReader reader = Standalone.readerFromArgs(argsMap);
 		IServerConfiguration config = new ServerConfiguration(reader, argsMap);
 		config.setRuntimeLibsSupplier(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
 		return config;
@@ -90,19 +92,19 @@ public class AppServer {
 			throw new RuntimeException();
 		}
 		String serverAboutToStart = config.getServerAboutToStartMethod();
-		IExpression argsValue = Application.argsToArgValue(config.getArguments());
+		IExpression argsValue = Standalone.argsToArgValue(config.getArguments());
 		String webSite = config.getWebSiteRoot();
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug!=null)
-			debugServer(debug, http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(config.getWebSiteRoot()));
+			debugServer(debug, http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(webSite));
 		else
-			startServer(http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(config.getWebSiteRoot()), ()->{ Application.getGlobalContext().notifyTerminated(); });
+			startServer(http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(webSite), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
 	}
 
 	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
-		DebugRequestServer server = Application.startDebugging(debug.getHost(), debug.getPort());
+		DebugRequestServer server = Standalone.startDebugging(debug.getHost(), debug.getPort());
 		return startServer(http, webSite, serverAboutToStartMethod, argValue, handler, ()->{
-			Application.getGlobalContext().notifyTerminated();
+			Standalone.getGlobalContext().notifyTerminated();
 			server.stopListening();
 		});
 	}
@@ -111,18 +113,18 @@ public class AppServer {
 	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
 		int port = http.getPort();
 		System.out.println("Starting web server on port " + port + "...");
-		ALLOWED_ORIGIN = http.getOrigin();
+		HTTP_ALLOWED_ORIGIN = http.getAllowedOrigin();
 		if(port==-1) {
 			jettyServer = new Server(port);
 			ServerConnector sc = new ServerConnector(jettyServer);
 			jettyServer.setConnectors(new Connector[] { sc });
-			jettyServer.setHandler(prepareSecurityHandler(handler));
+			jettyServer.setHandler(prepareSecurityHandler(http, handler));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 			port = sc.getLocalPort();
 		} else {
 			jettyServer = new Server(port);
-			jettyServer.setHandler(prepareSecurityHandler(handler));
+			jettyServer.setHandler(prepareSecurityHandler(http, handler));
 			callServerAboutToStart(serverAboutToStartMethod, argValue);
 			AppServer.start(serverStopped);
 		}
@@ -133,7 +135,7 @@ public class AppServer {
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
 		if(serverAboutToStartMethod!=null) {
 			System.out.println("Calling startUp method " + serverAboutToStartMethod);
-			Interpreter.interpretMethod(Application.getGlobalContext(), new Identifier(serverAboutToStartMethod), argValue);
+			Interpreter.interpretMethod(Standalone.getGlobalContext(), new Identifier(serverAboutToStartMethod), argValue);
 		}
 	}
 
@@ -145,8 +147,11 @@ public class AppServer {
 		return 0;
 	}
 
-	static Handler prepareSecurityHandler(Supplier<Handler> handler) {
-		try {
+	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
+		if("http".equals(config.getProtocol().toLowerCase())) {
+			System.out.println("Not using security handler!");
+			return handler.get();
+		} else try {
 			System.out.println("Preparing security handler...");
 			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 			security.setLoginService(prepareLoginService()); // where to check credentials

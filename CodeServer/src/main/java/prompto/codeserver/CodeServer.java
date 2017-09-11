@@ -44,7 +44,7 @@ public class CodeServer {
 	private static void redirectDataServlet(IServerConfiguration config) {
 		try {
 			IStoreConfiguration code = config.getDataStoreConfiguration(); // points to CODE
-			IStoreFactory factory = prompto.runtime.Application.newStoreFactory(code.getFactory());
+			IStoreFactory factory = prompto.runtime.Standalone.newStoreFactory(code.getFactory());
 			DataServlet.store = factory.newStore(code.withDbName("DATA"));
 		} catch(Throwable t) {
 			throw new RuntimeException(t);

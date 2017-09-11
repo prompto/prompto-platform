@@ -17,13 +17,13 @@ import prompto.config.IRuntimeConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
-import prompto.runtime.Application;
+import prompto.runtime.Standalone;
 
 public class TestModuleImporter {
 
 	@Before
 	public void before() throws Exception {
-		Application.bootstrapCodeStore(new MemStore(), newRuntimeConfig());
+		Standalone.bootstrapCodeStore(new MemStore(), newRuntimeConfig());
 
 	}
 	

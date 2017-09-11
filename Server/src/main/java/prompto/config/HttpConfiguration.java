@@ -9,12 +9,17 @@ public class HttpConfiguration implements IHttpConfiguration {
 	}
 
 	@Override
+	public String getProtocol() {
+		return reader.getStringOrDefault("protocol", "http");
+	}
+	
+	@Override
 	public int getPort() {
 		return reader.getIntegerOrDefault("port", -1);
 	}
 
 	@Override
-	public String getOrigin() {
+	public String getAllowedOrigin() {
 		return reader.getString("origin");
 	}
 }
