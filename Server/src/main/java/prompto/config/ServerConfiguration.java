@@ -10,7 +10,7 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 
 	@Override
 	public IHttpConfiguration getHttpConfiguration() {
-		IConfigurationReader child = reader.getObject("debug");
+		IConfigurationReader child = reader.getObject("http");
 		return child==null ? null : new HttpConfiguration(child);
 	}
 

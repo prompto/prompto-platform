@@ -68,10 +68,14 @@ public class AppServer {
 	}
 
 	private static void run(IServerConfiguration config) throws Throwable {
+		IHttpConfiguration http = config.getHttpConfiguration();
+		if(http==null) {
+			System.err.println("Missing http configuration!");
+			throw new RuntimeException();
+		}
 		String serverAboutToStart = config.getServerAboutToStartMethod();
 		IExpression argsValue = Application.argsToArgValue(config.getArguments());
 		String webSite = config.getWebSiteRoot();
-		IHttpConfiguration http = config.getHttpConfiguration();
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug!=null)
 			debugServer(debug, http, webSite, serverAboutToStart, argsValue, AppServer::prepareHandlers);
