@@ -30,13 +30,11 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-
 public class EC2 {
 	
-	public static EC2 newInstance(String ec2Region, String login, String password) {
+	public static EC2 newInstance(String awsRegion, String login, String password) {
 		AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard()
-				.withRegion(ec2Region);
+				.withRegion(awsRegion);
 		if(login!=null && password!=null) {
 			AWSCredentials credentials = new BasicAWSCredentials(login, password);
 			builder = builder.withCredentials(new AWSStaticCredentialsProvider(credentials));

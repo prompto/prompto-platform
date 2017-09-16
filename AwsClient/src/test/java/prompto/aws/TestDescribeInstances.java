@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Category(AwsTest.class)
-public class TestDescribeInstances extends EC2TestBase {
+public class TestDescribeInstances extends AWSTestBase {
 
 	@Test
 	public void testThatDescribeInstancesReturnsData() throws Exception {

@@ -1,0 +1,37 @@
+define AwsKMS as native category with bindings:
+	
+	define category bindings as:
+		Java: prompto.aws.KMS
+	
+and methods:
+	
+	define encrypt as method receiving Text keyArn, Text textToEncrypt returning Text doing:
+		Java: return this.encrypt(keyArn, textToEncrypt);
+		
+	define decrypt as method receiving Text textToDecrypt returning Text doing:
+		Java: return this.decrypt(textToDecrypt);
+
+
+define newAwsKMS as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
+	Java: prompto.aws.KMS.newInstance(awsRegion, login, password);
+
+define newAwsKMSWithLocalCredentials as method receiving Text awsRegion returning AwsKMS doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+	keys = (readJson with text as text) as Document
+	login = keys.accessKey as Text
+	password = keys.secretKey as Text
+	return newAwsKMS with awsRegion as awsRegion, login as login and password as password
+
+define "kms client can be created" as test method doing:
+	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+and verifying:
+	kms is not Nothing
+
+	
+define "kms can encrypt and decrypt" as test method doing:
+	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+	plain = "some password"
+	encrypted = kms.encrypt("arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5", plain)
+	decrypted = kms.decrypt(encrypted)
+and verifying:
+	plain = encrypted

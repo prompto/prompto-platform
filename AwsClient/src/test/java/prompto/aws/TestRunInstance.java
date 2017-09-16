@@ -18,7 +18,7 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 
 @Category(AwsTest.class)
-public class TestRunInstance extends EC2TestBase {
+public class TestRunInstance extends AWSTestBase {
 
 	@Test
 	public void testThatRunInstanceSucceeds() throws Exception {

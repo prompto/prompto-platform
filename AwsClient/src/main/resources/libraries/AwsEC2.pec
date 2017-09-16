@@ -41,30 +41,30 @@ and methods:
 	define dropIPAddress as method receiving Text addressId doing:
 		Java: this.dropIPAddress(addressId);
 
-define newAwsEC2 as native method receiving Text ec2Region, login = Nothing and password = Nothing returning AwsEC2 doing:
-	Java: prompto.aws.EC2.newInstance(ec2Region, login, password);
+define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
+	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
 
-define newAwsEC2WithLocalCredentials as method receiving Text ec2Region returning AwsEC2 doing:
+define newAwsEC2WithLocalCredentials as method receiving Text awsRegion returning AwsEC2 doing:
 	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
 	keys = (readJson with text as text) as Document
 	login = keys.accessKey as Text
 	password = keys.secretKey as Text
-	return newAwsEC2 with ec2Region as ec2Region, login as login and password as password
+	return newAwsEC2 with awsRegion as awsRegion, login as login and password as password
 
 define "ec2 client can be created" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 and verifying:
 	ec2 is not Nothing
 
 define "ec2 instances can be listed" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	docs = ec2.listInstances
 	names = doc["Name"] as Text for each doc in docs
 and verifying:
 	"prompto-deployer-001" in names
 
 define "ec2 instance can be created, named and dropped" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	nodeId = ec2.runInstance with "ami-d2c924b2" as imageId, "t2.micro" as instanceType,
 		"prompto-admin" as keyName, ["default"] as securityGroupNames and "some data" as userData
 	ec2.setInstanceName with nodeId as instanceId and "TEST-INSTANCE" as name
@@ -73,20 +73,20 @@ and verifying:
 	nodeId is not Nothing
 	
 define "ec2 addresses can be listed" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	docs = ec2.listAddresses
 	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
 	"35.166.112.187" in ips
 
 define "ec2 address can be found by ip" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	name = ec2.getAddressIdForIpAddress "35.166.112.187"
 and verifying:
 	"eipalloc-dc98c1bb" = name
 
 define "ec2 address can be created, associated, dissociated and dropped" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as ec2Region
+	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	doc = ec2.createIpAddress
 	addressId = doc.allocationId as Text
 	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId

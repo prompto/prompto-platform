@@ -12,10 +12,13 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
 
-public abstract class EC2TestBase {
+public abstract class AWSTestBase {
 
 	AmazonEC2 ec2;
+	AWSKMS kms;
 	
 	@Before
 	public void before() throws Exception {
@@ -31,6 +34,11 @@ public abstract class EC2TestBase {
 				.withRegion(Regions.US_WEST_2)
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
+		kms = AWSKMSClientBuilder.standard()
+				.withRegion(Regions.US_WEST_2)
+				.withCredentials(new AWSStaticCredentialsProvider(credentials))
+				.build();
+				
 	}
 	
 
