@@ -38,7 +38,6 @@ public abstract class BaseServerTest {
 		IServerConfiguration config = getServerConfig(port);
 		bootstrapCodeStore(config);
 		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, ()->prepareHandler(null), null);
-		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}
 	

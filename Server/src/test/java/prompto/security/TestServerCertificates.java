@@ -44,7 +44,10 @@ public class TestServerCertificates {
 
 	@Test
 	public void testLoadCertificates() throws Throwable {
-		Server server = createServer();
+		Server server = new Server();
+		ServerConnector connector = createConnector(server);
+		server.setConnectors(new Connector[] { connector });
+		server.setHandler(createHandler());
 		Thread thread = new Thread(() -> {
 			try {
 				server.start();
@@ -53,8 +56,10 @@ public class TestServerCertificates {
 			}
 		});
 		thread.start();
-		try (InputStream input = new URL(
-				"https://localhost:8443/").openStream()) {
+		while(!server.isStarted())
+			Thread.sleep(10);
+		URL url = new URL("https://localhost:" + connector.getLocalPort() + "/");
+		try (InputStream input = url.openStream()) {
 			try(Reader reader = new InputStreamReader(input)) {
 				try(BufferedReader buffered = new BufferedReader(reader)) {
 					assertEquals("Hello", buffered.readLine());
@@ -69,15 +74,10 @@ public class TestServerCertificates {
 		}
 	}
 
-	private Server createServer() {
+	private ServerConnector createConnector(Server server) {
 		SslConnectionFactory ssl = createSSLFactory();
 		HttpConnectionFactory https = createHttpsFactory();
-		Server server = new Server();
-		ServerConnector connector = new ServerConnector(server, ssl, https);
-		connector.setPort(8443);
-		server.setConnectors(new Connector[] { connector });
-		server.setHandler(createHandler());
-		return server;
+		return new ServerConnector(server, ssl, https);
 	}
 
 	private Handler createHandler() {
