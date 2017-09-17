@@ -8,13 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-import java.security.cert.X509Certificate;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,38 +32,14 @@ import org.junit.Test;
 
 public class TestServerCertificates {
 
-	SSLSocketFactory ssl;
-
 	@Before
 	public void before() throws Exception {
-		ssl = HttpsURLConnection.getDefaultSSLSocketFactory();
-		installTrustAll();
-	}
-
-	private void installTrustAll() throws Exception {
-		// Create a trust manager that does not validate certificate chains
-		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return new X509Certificate[0];
-			}
-
-			public void checkClientTrusted(
-					java.security.cert.X509Certificate[] certs, String authType) {
-			}
-
-			public void checkServerTrusted(
-					java.security.cert.X509Certificate[] certs, String authType) {
-			}
-		} };
-		// Install the all-trusting trust manager
-		SSLContext sc = SSLContext.getInstance("SSL");
-		sc.init(null, trustAllCerts, new java.security.SecureRandom());
-		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		MockTrustManager.install();
 	}
 
 	@After
 	public void after() {
-		HttpsURLConnection.setDefaultSSLSocketFactory(ssl);
+		MockTrustManager.restore();
 	}
 
 	@Test
@@ -137,7 +107,6 @@ public class TestServerCertificates {
 		URL url = Thread.currentThread().getContextClassLoader()
 				.getResource("security/keystore_test.jks");
 		Resource resource = URLResource.newResource(url);
-		factory.setKeyManagerPassword("password");
 		factory.setKeyStoreResource(resource);
 		factory.setKeyStorePassword("password");
 		url = Thread.currentThread().getContextClassLoader()

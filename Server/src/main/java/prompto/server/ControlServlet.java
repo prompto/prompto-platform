@@ -42,6 +42,9 @@ public class ControlServlet extends HttpServletWithHolder {
 				case "/clear-context":
 					clearContext(writer);
 					break;
+				case "/version":
+					version(writer);
+					break;
 				default:
 					System.err.println("Invalid verb: " + verb);
 					resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -50,6 +53,11 @@ public class ControlServlet extends HttpServletWithHolder {
 			t.printStackTrace(System.err);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	private void version(PrintWriter writer) {
+		writer.write("1.0.0");
+		writer.flush();
 	}
 
 	private void clearContext(PrintWriter writer) {

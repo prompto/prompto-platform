@@ -14,6 +14,8 @@ import static org.junit.Assert.*;
 import prompto.code.Version;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
+import prompto.config.IKeyStoreConfiguration;
+import prompto.config.ILoginConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.declaration.DeclarationList;
@@ -62,6 +64,9 @@ public class TestCustomHandler {
 				@Override public String getProtocol() { return "http"; }
 				@Override public int getPort() { return -1; }
 				@Override public String getAllowedOrigin() { return null; }
+				@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
+				@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
+				@Override public ILoginConfiguration getLoginConfiguration() { return null; }
 			}; }
 			@Override public String getServerAboutToStartMethod() { return null; }
 			@Override public String getWebSiteRoot() { return null; }

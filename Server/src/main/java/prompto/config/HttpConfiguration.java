@@ -22,4 +22,21 @@ public class HttpConfiguration implements IHttpConfiguration {
 	public String getAllowedOrigin() {
 		return reader.getString("origin");
 	}
+
+	@Override
+	public IKeyStoreConfiguration getKeyStoreConfiguration() {
+		IConfigurationReader child = reader.getObject("keyStore");
+		return new KeyStoreConfiguration(child);
+	}
+	
+	@Override
+	public IKeyStoreConfiguration getTrustStoreConfiguration() {
+		IConfigurationReader child = reader.getObject("trustStore");
+		return new KeyStoreConfiguration(child);
+	}
+	
+	@Override
+	public ILoginConfiguration getLoginConfiguration() {
+		return null;
+	}
 }

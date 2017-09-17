@@ -9,11 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-
 import java.util.function.Supplier;
 
 import javax.security.auth.spi.LoginModule;
-
 
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
@@ -25,8 +23,12 @@ import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -35,11 +37,15 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.util.security.Constraint;
-
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
+import prompto.config.IKeyStoreConfiguration;
+import prompto.config.IKeyStoreConfigurator;
+import prompto.config.ILoginConfiguration;
+import prompto.config.IPasswordFactory;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
 import prompto.debug.DebugRequestServer;
@@ -114,24 +120,58 @@ public class AppServer {
 		int port = http.getPort();
 		System.out.println("Starting web server on port " + port + "...");
 		HTTP_ALLOWED_ORIGIN = http.getAllowedOrigin();
-		if(port==-1) {
-			jettyServer = new Server(port);
-			ServerConnector sc = new ServerConnector(jettyServer);
-			jettyServer.setConnectors(new Connector[] { sc });
-			jettyServer.setHandler(prepareSecurityHandler(http, handler));
-			callServerAboutToStart(serverAboutToStartMethod, argValue);
-			AppServer.start(serverStopped);
-			port = sc.getLocalPort();
-		} else {
-			jettyServer = new Server(port);
-			jettyServer.setHandler(prepareSecurityHandler(http, handler));
-			callServerAboutToStart(serverAboutToStartMethod, argValue);
-			AppServer.start(serverStopped);
-		}
+		jettyServer = new Server(port);
+		ServerConnector sc = prepareConnector(http);
+		if(http.getPort()!=-1)
+			sc.setPort(http.getPort());
+		jettyServer.setConnectors(new Connector[] { sc });
+		jettyServer.setHandler(prepareSecurityHandler(http, handler));
+		callServerAboutToStart(serverAboutToStartMethod, argValue);
+		AppServer.start(serverStopped);
+		port = sc.getLocalPort();
 		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + port);
 		return port;
 	}
 	
+	private static ServerConnector prepareConnector(IHttpConfiguration http) {
+		if("http".equalsIgnoreCase(http.getProtocol()))
+			return prepareHttpConnector(http);
+		else 
+			return prepareHttpsConnector(http);
+	}
+	
+	private static ServerConnector prepareHttpConnector(IHttpConfiguration http) {
+		return new ServerConnector(jettyServer);
+	}
+
+	private static ServerConnector prepareHttpsConnector(IHttpConfiguration http) {
+		SslConnectionFactory ssl = createSSLFactory(http);
+		HttpConnectionFactory https = createHttpsFactory();
+		return new ServerConnector(jettyServer, ssl, https);
+	}
+
+	
+	private static SslConnectionFactory createSSLFactory(IHttpConfiguration http) {
+		SslContextFactory factory = new SslContextFactory();
+		IKeyStoreConfiguration config = http.getKeyStoreConfiguration();
+		IKeyStoreConfigurator keyStore = config.getConfigurator();
+		keyStore.configure(factory);
+		IPasswordFactory password = config.getPasswordFactory();
+		factory.setKeyStorePassword(password.getPlainPassword());
+		config = http.getTrustStoreConfiguration();
+		keyStore = config.getConfigurator();
+		keyStore.configure(factory);
+		password = config.getPasswordFactory();
+		factory.setTrustStorePassword(password.getPlainPassword());
+		return new SslConnectionFactory(factory, "http/1.1");
+	}
+
+	private static HttpConnectionFactory createHttpsFactory() {
+		HttpConfiguration https = new HttpConfiguration();
+		https.addCustomizer(new SecureRequestCustomizer());
+		return new HttpConnectionFactory(https);
+	}
+
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
 		if(serverAboutToStartMethod!=null) {
 			System.out.println("Calling startUp method " + serverAboutToStartMethod);
@@ -148,7 +188,8 @@ public class AppServer {
 	}
 
 	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
-		if("http".equals(config.getProtocol().toLowerCase())) {
+		ILoginConfiguration login = config.getLoginConfiguration();
+		if(login==null) {
 			System.out.println("Not using security handler!");
 			return handler.get();
 		} else try {

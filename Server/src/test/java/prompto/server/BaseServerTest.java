@@ -10,12 +10,18 @@ import java.util.function.Supplier;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.URLResource;
 import org.junit.After;
 import org.junit.Before;
 
 import prompto.code.Version;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
+import prompto.config.IKeyStoreConfiguration;
+import prompto.config.IKeyStoreConfigurator;
+import prompto.config.ILoginConfiguration;
+import prompto.config.IPasswordFactory;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
@@ -25,6 +31,7 @@ import prompto.runtime.Standalone;
 public abstract class BaseServerTest {
 	
 	int port = -1;
+	boolean ssl = false;
 	
 	@Before
 	public void __before__() throws Throwable {
@@ -49,15 +56,66 @@ public abstract class BaseServerTest {
 			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
 			@Override public String getApplicationName() { return "test"; }
 			@Override public URL[] getAddOnURLs() { return null; }
-			@Override public IHttpConfiguration getHttpConfiguration() {
-				return new IHttpConfiguration() {
-					@Override public String getProtocol() { return "http"; }
-					@Override public int getPort() { return port; }
-					@Override public String getAllowedOrigin() { return null; }
-				};
-			}
+			@Override public IHttpConfiguration getHttpConfiguration() { return ssl ? newHttpsConfiguration() : newHttpConfiguration(); }
 			@Override public String getServerAboutToStartMethod() { return null; }
 			@Override public String getWebSiteRoot() { return null; }
+		};
+	}
+
+	protected IHttpConfiguration newHttpsConfiguration() {
+		return new IHttpConfiguration() {
+			@Override public String getProtocol() { return "https"; }
+			@Override public int getPort() { return port; }
+			@Override public String getAllowedOrigin() { return null; }
+			@Override public ILoginConfiguration getLoginConfiguration() { return null; }
+			@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { 
+				return new IKeyStoreConfiguration() {
+
+					@Override
+					public IKeyStoreConfigurator getConfigurator() {
+						return (factory) -> {
+									URL url = Thread.currentThread().getContextClassLoader().getResource("security/keystore_test.jks");
+									Resource resource = URLResource.newResource(url);
+									factory.setKeyStoreResource(resource);
+								};
+					}
+
+					@Override
+					public IPasswordFactory getPasswordFactory() {
+						return () -> "password";
+					}
+					
+				}; }
+			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { 
+				return new IKeyStoreConfiguration() {
+
+					@Override
+					public IKeyStoreConfigurator getConfigurator() {
+						return (factory) ->  {
+							URL url = Thread.currentThread().getContextClassLoader().getResource("security/truststore_test.jks");
+							Resource resource = URLResource.newResource(url);
+							factory.setTrustStoreResource(resource);
+						};
+					}
+
+					@Override
+					public IPasswordFactory getPasswordFactory() {
+						return () -> "password";
+					}
+					
+				};
+			}
+		};
+	}
+
+	protected IHttpConfiguration newHttpConfiguration() {
+		return new IHttpConfiguration() {
+			@Override public String getProtocol() { return "http"; }
+			@Override public int getPort() { return port; }
+			@Override public String getAllowedOrigin() { return null; }
+			@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
+			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
+			@Override public ILoginConfiguration getLoginConfiguration() { return null; }
 		};
 	}
 
