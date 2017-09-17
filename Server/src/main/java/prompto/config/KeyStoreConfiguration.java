@@ -1,5 +1,7 @@
 package prompto.config;
 
+import prompto.security.IPasswordFactory;
+
 
 public class KeyStoreConfiguration implements IKeyStoreConfiguration {
 

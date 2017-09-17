@@ -21,12 +21,12 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreConfigurator;
 import prompto.config.ILoginConfiguration;
-import prompto.config.IPasswordFactory;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
+import prompto.security.IPasswordFactory;
 
 public abstract class BaseServerTest {
 	
@@ -35,14 +35,14 @@ public abstract class BaseServerTest {
 	
 	@Before
 	public void __before__() throws Throwable {
-		IServerConfiguration config = newServerConfig(port);
+		IServerConfiguration config = getServerConfig(port);
 		bootstrapCodeStore(config);
 		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, ()->prepareHandler(null), null);
 		Thread.sleep(100);
 		assertTrue(AppServer.isStarted());
 	}
 	
-	private IServerConfiguration newServerConfig(int port) {
+	protected IServerConfiguration getServerConfig(int port) {
 		return new IServerConfiguration() {
 			@Override public void setRuntimeLibsSupplier(Supplier<Collection<URL>> supplier) { }
 			@Override public boolean isTestMode() { return true; }
@@ -56,13 +56,13 @@ public abstract class BaseServerTest {
 			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
 			@Override public String getApplicationName() { return "test"; }
 			@Override public URL[] getAddOnURLs() { return null; }
-			@Override public IHttpConfiguration getHttpConfiguration() { return ssl ? newHttpsConfiguration() : newHttpConfiguration(); }
+			@Override public IHttpConfiguration getHttpConfiguration() { return ssl ? getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration(); }
 			@Override public String getServerAboutToStartMethod() { return null; }
 			@Override public String getWebSiteRoot() { return null; }
 		};
 	}
 
-	protected IHttpConfiguration newHttpsConfiguration() {
+	protected IHttpConfiguration getHttpsConfiguration() {
 		return new IHttpConfiguration() {
 			@Override public String getProtocol() { return "https"; }
 			@Override public int getPort() { return port; }
@@ -108,7 +108,7 @@ public abstract class BaseServerTest {
 		};
 	}
 
-	protected IHttpConfiguration newHttpConfiguration() {
+	protected IHttpConfiguration getHttpConfiguration() {
 		return new IHttpConfiguration() {
 			@Override public String getProtocol() { return "http"; }
 			@Override public int getPort() { return port; }

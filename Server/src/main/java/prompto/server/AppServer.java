@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import javax.security.auth.spi.LoginModule;
-
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -45,7 +43,6 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreConfigurator;
 import prompto.config.ILoginConfiguration;
-import prompto.config.IPasswordFactory;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
 import prompto.debug.DebugRequestServer;
@@ -55,8 +52,9 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Standalone;
 import prompto.runtime.Interpreter;
+import prompto.security.IPasswordFactory;
+import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
-import prompto.security.PasswordIsUserNameLoginModule;
 
 public class AppServer {
 	
@@ -195,7 +193,7 @@ public class AppServer {
 		} else try {
 			System.out.println("Preparing security handler...");
 			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
-			security.setLoginService(prepareLoginService()); // where to check credentials
+			security.setLoginService(prepareLoginService(login)); // where to check credentials
 			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
 			security.setConstraintMappings(prepareContraintMappings()); // when to require security
 			security.setHandler(handler.get());
@@ -225,8 +223,8 @@ public class AppServer {
 		return constraint;
 	}
 
-	private static LoginService prepareLoginService() {
-		String loginModuleName = prepareLoginModule();
+	private static LoginService prepareLoginService(ILoginConfiguration login) throws Exception {
+		String loginModuleName = prepareLoginModule(login);
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
 		loginService.setLoginModuleName(loginModuleName);
@@ -234,9 +232,10 @@ public class AppServer {
 		return loginService;
 	}
 
-	private static String prepareLoginModule() {
-		LoginModule module = new PasswordIsUserNameLoginModule();
-		return module.getClass().getName();
+	private static String prepareLoginModule(ILoginConfiguration config) throws Exception {
+		String moduleName = config.getModuleName();
+		LoginModuleBase.install(moduleName, config);
+		return moduleName;
 	}
 
 	private static IdentityService prepareIdentityService() {

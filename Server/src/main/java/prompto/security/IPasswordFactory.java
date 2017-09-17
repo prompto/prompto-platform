@@ -1,4 +1,4 @@
-package prompto.config;
+package prompto.security;
 
 @FunctionalInterface
 public interface IPasswordFactory {

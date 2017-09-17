@@ -4,20 +4,16 @@ import java.security.Provider;
 import java.util.Collections;
 
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import javax.security.auth.login.Configuration;
 
 import org.eclipse.jetty.jaas.spi.AbstractLoginModule;
-import org.eclipse.jetty.jaas.spi.UserInfo;
-import org.eclipse.jetty.util.security.Credential;
 
-public class PasswordIsUserNameLoginModule extends AbstractLoginModule {
+import prompto.config.ILoginConfiguration;
 
-	static {
-		install();
-	}
-	
-	private static void install() {
+public abstract class LoginModuleBase extends AbstractLoginModule {
+
+	public static void install(final String loginModuleClassName, final ILoginConfiguration config) {
 		Configuration current = Configuration.getConfiguration();
 		Configuration wrapper = new Configuration() {
 
@@ -41,8 +37,8 @@ public class PasswordIsUserNameLoginModule extends AbstractLoginModule {
 				AppConfigurationEntry[] entries = current.getAppConfigurationEntry(name);
 				if(entries!=null)
 					return entries;
-				if(name.equals(PasswordIsUserNameLoginModule.class.getName())) {
-					AppConfigurationEntry entry  = new AppConfigurationEntry(name, LoginModuleControlFlag.REQUIRED, Collections.emptyMap());
+				if(name.equals(loginModuleClassName)) {
+					AppConfigurationEntry entry  = new AppConfigurationEntry(name, LoginModuleControlFlag.REQUIRED, Collections.singletonMap("config", config));
 					return new AppConfigurationEntry[] { entry };
 				} else
 					return null;
@@ -51,28 +47,6 @@ public class PasswordIsUserNameLoginModule extends AbstractLoginModule {
 		Configuration.setConfiguration(wrapper);
 	}
 
-
-
-	@Override
-	public UserInfo getUserInfo(String username) throws Exception {
-		return new UserInfo(username, new PasswordIsUserNameCredential(username), Collections.singletonList("*"));
-	}
-	
-	@SuppressWarnings("serial")
-	static class PasswordIsUserNameCredential extends Credential {
-
-		String username;
-		
-		public PasswordIsUserNameCredential(String username) {
-			this.username = username;
-		}
-
-		@Override
-		public boolean check(Object credentials) {
-			return username.equals(credentials);
-		}
-		
-	}
 
 
 	
