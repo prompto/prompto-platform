@@ -70,6 +70,10 @@ public class AppServer {
 	
 	public static void main(String[] args, Consumer<IServerConfiguration> afterStart) throws Throwable {
 		IServerConfiguration config = loadConfiguration(args);
+		main(config, afterStart);
+	}
+
+	public static void main(IServerConfiguration config, Consumer<IServerConfiguration> afterStart) throws Throwable {
 		initialize(config);
 		run(config);
 		if(afterStart!=null)
@@ -81,7 +85,7 @@ public class AppServer {
 		Standalone.initialize(config);
 	}
 
-	private static IServerConfiguration loadConfiguration(String[] args) throws Exception {
+	public static IServerConfiguration loadConfiguration(String[] args) throws Exception {
 		Map<String, String> argsMap = CmdLineParser.parse(args);
 		IConfigurationReader reader = Standalone.readerFromArgs(argsMap);
 		IServerConfiguration config = new ServerConfiguration(reader, argsMap);
