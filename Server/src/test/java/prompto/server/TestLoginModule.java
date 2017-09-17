@@ -15,6 +15,7 @@ import org.junit.Test;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.ILoginConfiguration;
+import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.memstore.MemStore;
 import prompto.security.StoredHashedPasswordLoginModule;
@@ -54,7 +55,7 @@ public class TestLoginModule extends BaseServerTest {
 							@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 							@Override public String getUser() { return null; }
 							@Override public Integer getPort() { return null; }
-							@Override public char[] getPassword() { return null; }
+							@Override public ISecretKeyConfiguration getSecretKeyConfiguration() { return null; }
 							@Override public String getHost() { return null; }
 							@Override
 							public String getFactory() {
