@@ -97,7 +97,7 @@ public class TestLoginModule extends BaseServerTest {
 		IStorable storable = store.newStorable(Arrays.asList("User"), null);
 		storable.setData("login", "john");
 		storable.setData("method", "MD5");
-		storable.setData("digest", StoredHashedPasswordLoginModule.digestMD5(password));
+		storable.setData("digest", StoredHashedPasswordLoginModule.digest_MD5(password));
 		store.store(storable);
 	}
 

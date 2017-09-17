@@ -2,6 +2,7 @@ package prompto.security;
 
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
@@ -9,7 +10,6 @@ import java.util.function.Function;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 
-import org.apache.xerces.impl.dv.util.Base64;
 import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
 
@@ -54,13 +54,13 @@ public class StoredHashedPasswordLoginModule extends LoginModuleBase {
 	}
 	
 	
-	static final Map<String, Function<Object, String>> methods = Collections.singletonMap("MD5", StoredHashedPasswordLoginModule::digestMD5);
+	static final Map<String, Function<Object, String>> methods = Collections.singletonMap("MD5", StoredHashedPasswordLoginModule::digest_MD5);
 	
-	public static String digestMD5(Object credentials) {
+	public static String digest_MD5(Object credentials) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
 			md.update(credentials.toString().getBytes());
-			return Base64.encode(md.digest());
+			return Base64.getEncoder().encodeToString(md.digest());
 		} catch(Throwable t) {
 			t.printStackTrace();
 			return null;
