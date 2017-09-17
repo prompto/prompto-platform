@@ -52,7 +52,7 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Standalone;
 import prompto.runtime.Interpreter;
-import prompto.security.IPasswordFactory;
+import prompto.security.ISecretKeyFactory;
 import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
 
@@ -154,13 +154,13 @@ public class AppServer {
 		IKeyStoreConfiguration config = http.getKeyStoreConfiguration();
 		IKeyStoreConfigurator keyStore = config.getConfigurator();
 		keyStore.configure(factory);
-		IPasswordFactory password = config.getPasswordFactory();
-		factory.setKeyStorePassword(password.getPlainPassword());
+		ISecretKeyFactory password = config.getPasswordFactory();
+		factory.setKeyStorePassword(password.getAsPlainText());
 		config = http.getTrustStoreConfiguration();
 		keyStore = config.getConfigurator();
 		keyStore.configure(factory);
 		password = config.getPasswordFactory();
-		factory.setTrustStorePassword(password.getPlainPassword());
+		factory.setTrustStorePassword(password.getAsPlainText());
 		return new SslConnectionFactory(factory, "http/1.1");
 	}
 

@@ -26,7 +26,7 @@ import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
-import prompto.security.IPasswordFactory;
+import prompto.security.ISecretKeyFactory;
 
 public abstract class BaseServerTest {
 	
@@ -80,7 +80,7 @@ public abstract class BaseServerTest {
 					}
 
 					@Override
-					public IPasswordFactory getPasswordFactory() {
+					public ISecretKeyFactory getPasswordFactory() {
 						return () -> "password";
 					}
 					
@@ -98,7 +98,7 @@ public abstract class BaseServerTest {
 					}
 
 					@Override
-					public IPasswordFactory getPasswordFactory() {
+					public ISecretKeyFactory getPasswordFactory() {
 						return () -> "password";
 					}
 					

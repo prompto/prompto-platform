@@ -1,6 +1,6 @@
 package prompto.config;
 
-import prompto.security.IPasswordFactory;
+import prompto.security.ISecretKeyFactory;
 
 
 public class KeyStoreConfiguration implements IKeyStoreConfiguration {
@@ -18,7 +18,7 @@ public class KeyStoreConfiguration implements IKeyStoreConfiguration {
 	}
 
 	@Override
-	public IPasswordFactory getPasswordFactory() {
+	public ISecretKeyFactory getPasswordFactory() {
 		// TODO Auto-generated method stub
 		return null;
 	}

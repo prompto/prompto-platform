@@ -2,6 +2,8 @@ package prompto.aws;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.Base64;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -14,15 +16,21 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.DecryptResult;
+import com.amazonaws.services.kms.model.EncryptRequest;
+import com.amazonaws.services.kms.model.EncryptResult;
 
 public abstract class AWSTestBase {
 
+	public static String MASTER_KEY_ARN = "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5";
+
 	AmazonEC2 ec2;
 	AWSKMS kms;
+	Properties props = new Properties();
 	
 	@Before
 	public void before() throws Exception {
-		Properties props = new Properties();
 		try (InputStream input = new FileInputStream(
 				"/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.properties")) {
 			props.load(input);
@@ -41,5 +49,20 @@ public abstract class AWSTestBase {
 				
 	}
 	
+	protected String encrypt(String plainKey) {
+		ByteBuffer keyBytes = ByteBuffer.wrap(plainKey.getBytes());
+		EncryptRequest req = new EncryptRequest().withKeyId(MASTER_KEY_ARN).withPlaintext(keyBytes);
+		EncryptResult res = kms.encrypt(req);
+		ByteBuffer encryptedBytes = res.getCiphertextBlob();
+		return Base64.getEncoder().encodeToString(encryptedBytes.array());
+	}
+	
+	protected String decrypt(String encryptedKey) {
+		ByteBuffer encryptedBytes = ByteBuffer.wrap(Base64.getDecoder().decode(encryptedKey));
+		DecryptRequest req2 = new DecryptRequest().withCiphertextBlob(encryptedBytes);
+		DecryptResult res2 = kms.decrypt(req2);
+		ByteBuffer keyBytes = res2.getPlaintext();
+		return new String(keyBytes.array());
+	}
 
 }

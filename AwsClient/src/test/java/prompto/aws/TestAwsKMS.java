@@ -1,38 +1,40 @@
 package prompto.aws;
 
-import static org.junit.Assert.*;
-
-import java.nio.ByteBuffer;
-import java.util.Base64;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.amazonaws.services.kms.model.DecryptRequest;
-import com.amazonaws.services.kms.model.DecryptResult;
-import com.amazonaws.services.kms.model.EncryptRequest;
-import com.amazonaws.services.kms.model.EncryptResult;
+import prompto.config.ISecretKeyConfiguration;
+import prompto.security.AwsKMSSecretKeyFactory;
+import prompto.security.IAwsKMSSecretKeyConfiguration;
+import prompto.security.ISecretKeyFactory;
 
 @Category(AwsTest.class)
 public class TestAwsKMS extends AWSTestBase {
-	
-	public static String MASTER_KEY_ARN = "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5";
-	
+		
 	@Test
 	public void roundtrip() {
 		String plainKey = "password";
-		ByteBuffer keyBytes = ByteBuffer.wrap(plainKey.getBytes());
-		EncryptRequest req = new EncryptRequest().withKeyId(MASTER_KEY_ARN).withPlaintext(keyBytes);
-		EncryptResult res = kms.encrypt(req);
-		ByteBuffer encryptedBytes = res.getCiphertextBlob();
-		String encryptedKey = Base64.getEncoder().encodeToString(encryptedBytes.array());
+		String encryptedKey = encrypt(plainKey);
 		System.out.println("Encrypted: " + encryptedKey);
-		encryptedBytes = ByteBuffer.wrap(Base64.getDecoder().decode(encryptedKey));
-		DecryptRequest req2 = new DecryptRequest().withCiphertextBlob(encryptedBytes);
-		DecryptResult res2 = kms.decrypt(req2);
-		keyBytes = res2.getPlaintext();
-		String decryptedKey = new String(keyBytes.array());
+		String decryptedKey = decrypt(encryptedKey);
 		assertEquals(plainKey, decryptedKey);
+	}
+
+	@Test
+	public void testThatAwsKMSPasswordFactoryReturnsPlainPassword() throws Throwable {
+		String encrypted = encrypt("password");
+		ISecretKeyConfiguration config = new IAwsKMSSecretKeyConfiguration() {
+
+			@Override public String getFactory() { return AwsKMSSecretKeyFactory.class.getName(); }
+			@Override public String getSecretKey() { return encrypted; }
+			@Override public String getAwsRegion() { return null; }
+			@Override public String getAwsAccesKey() { return props.getProperty("accessKey"); }
+			@Override public String getAwsSecretKey() { return props.getProperty("secretKey"); }
+			
+		};
+		assertEquals("password", ISecretKeyFactory.plainPasswordFromConfig(config));
 	}
 
 }

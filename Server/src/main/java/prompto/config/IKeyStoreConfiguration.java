@@ -1,11 +1,11 @@
 package prompto.config;
 
-import prompto.security.IPasswordFactory;
+import prompto.security.ISecretKeyFactory;
 
 
 public interface IKeyStoreConfiguration {
 
 	IKeyStoreConfigurator getConfigurator();
-	IPasswordFactory getPasswordFactory();
+	ISecretKeyFactory getPasswordFactory();
 
 }
