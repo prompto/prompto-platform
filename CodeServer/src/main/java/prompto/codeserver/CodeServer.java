@@ -28,7 +28,7 @@ public class CodeServer {
 			@Override public URL[] getResourceURLs() { return CodeServer.getResourceURLs(); }
 			@Override public String getServerAboutToStartMethod() { return "serverAboutToStart";  }
 		};
-		AppServer.main(args, CodeServer::redirectDataServlet); 
+		AppServer.main(config, CodeServer::redirectDataServlet); 
 	}
 	
 	private static void redirectDataServlet(IServerConfiguration config) {
@@ -46,17 +46,21 @@ public class CodeServer {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
-	public static void createThesaurusAndImportSamples() throws Exception {
-		IStore dataStore = IDataStore.getInstance();
-		ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", Version.parse("1.0.0"), null);
-		ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
-		importer.importModule(codeStore);
-		Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
-		for(URL sample : samples) {
-			importer = new ModuleImporter(sample);
+	public static void createThesaurusAndImportSamples() {
+		try {
+			IStore dataStore = IDataStore.getInstance();
+			ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", Version.parse("1.0.0"), null);
+			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 			importer.importModule(codeStore);
+			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
+			for(URL sample : samples) {
+				importer = new ModuleImporter(sample);
+				importer.importModule(codeStore);
+			}
+			dataStore.flush();
+		} catch(Throwable t) {
+			t.printStackTrace();
 		}
-		dataStore.flush();
 	}
 
 
