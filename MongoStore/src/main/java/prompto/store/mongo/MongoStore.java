@@ -54,7 +54,8 @@ public class MongoStore implements IStore {
 		    CodecRegistries.fromCodecs(
 		    		new PromptoDateCodec(),
 		    		new PromptoTimeCodec(),
-		    		new PromptoDateTimeCodec())
+		    		new PromptoDateTimeCodec(),
+		    		new PromptoVersionCodec())
 		);
 		 
 	MongoClient client;
