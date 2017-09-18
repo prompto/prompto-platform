@@ -17,8 +17,8 @@ public class MongoStoreFactory implements IStoreFactory {
 	@Override
 	public MongoStore newStore(IStoreConfiguration config) throws Exception {
 		IMongoStoreConfiguration mongo = (IMongoStoreConfiguration)config;
-		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
-		char[] password = secret==null ? null : secret.getSecretKey();
+		ISecretKeyConfiguration secret = mongo.getSecretKeyConfiguration();
+		char[] password = secret==null ? null : secret.getSecret();
 		return new MongoStore(mongo.getHost(), mongo.getPort(), mongo.getDbName(), mongo.getUser(), password);
 	}
 }

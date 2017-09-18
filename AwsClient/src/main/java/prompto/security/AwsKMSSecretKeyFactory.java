@@ -25,7 +25,7 @@ public class AwsKMSSecretKeyFactory implements ISecretKeyFactory {
 	public String getAsPlainText() {
 		String awsRegion = config.getAwsRegion();
 		KMS kms = KMS.newInstance(awsRegion, null, null);
-		return kms.decrypt(new String(config.getSecretKey()));
+		return kms.decrypt(new String(config.getSecret()));
 	}
 
 
