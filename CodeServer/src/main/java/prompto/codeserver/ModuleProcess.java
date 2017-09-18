@@ -21,10 +21,13 @@ import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStored;
+import prompto.utils.Logger;
 import prompto.value.IValue;
 
+/* represents the process used to run a Module on the server */
 public class ModuleProcess {
 	
+	static Logger logger = new Logger();
 	static Map<Object, ModuleProcess> modules = new HashMap<>();
 	
 	static {
@@ -32,7 +35,7 @@ public class ModuleProcess {
 	}
 	
 	static void shutDownAll() {
-		System.out.println("Shutting down module servers...");
+		logger.info(()->"Shutting down module servers...");
 		synchronized(modules) {
 			List<ModuleProcess> values = new ArrayList<>(modules.values());
 			modules.clear();
@@ -90,7 +93,7 @@ public class ModuleProcess {
 		}
 		
 		Process waitForServerReadiness() throws InterruptedException, IOException {
-			System.out.println("Starting: " + builder.command().toString());
+			logger.info(()->"Starting: " + builder.command().toString());
 			Process process = builder.start();
 			InputStream input = process.getInputStream();
 			Thread reader = new Thread(()->{

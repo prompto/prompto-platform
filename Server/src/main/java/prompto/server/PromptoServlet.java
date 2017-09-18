@@ -19,11 +19,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.grammar.Identifier;
 import prompto.runtime.Standalone;
+import prompto.utils.Logger;
 import prompto.value.Document;
 
 @SuppressWarnings("serial")
 public class PromptoServlet extends HttpServletWithHolder {
 
+	static final Logger logger = new Logger();
+	
 	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
 	
 	@Override
@@ -131,7 +134,7 @@ public class PromptoServlet extends HttpServletWithHolder {
 
 	private Identifier readMethod(HttpServletRequest req) {
 		String method = req.getPathInfo();
-		System.out.println(method);
+		logger.info(()-> "Executing Prompto method: " + method);
 		return new Identifier(method.substring(1));
 	}
 

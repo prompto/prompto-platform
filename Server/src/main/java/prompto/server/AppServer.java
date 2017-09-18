@@ -55,8 +55,11 @@ import prompto.runtime.Interpreter;
 import prompto.security.ISecretKeyFactory;
 import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
+import prompto.utils.Logger;
 
 public class AppServer {
+	
+	static final Logger logger = new Logger();
 	
 	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
 
@@ -96,7 +99,7 @@ public class AppServer {
 	private static void run(IServerConfiguration config) throws Throwable {
 		IHttpConfiguration http = config.getHttpConfiguration();
 		if(http==null) {
-			System.err.println("Missing http configuration!");
+			logger.error(()->"Missing http configuration!");
 			throw new RuntimeException();
 		}
 		String serverAboutToStart = config.getServerAboutToStartMethod();
@@ -119,10 +122,9 @@ public class AppServer {
 	
 	
 	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
-		int port = http.getPort();
-		System.out.println("Starting web server on port " + port + "...");
+		logger.info(()->"Starting web server on port " + http.getPort() + "...");
 		HTTP_ALLOWED_ORIGIN = http.getAllowedOrigin();
-		jettyServer = new Server(port);
+		jettyServer = new Server(http.getPort());
 		ServerConnector sc = prepareConnector(http);
 		if(http.getPort()!=-1)
 			sc.setPort(http.getPort());
@@ -130,8 +132,8 @@ public class AppServer {
 		jettyServer.setHandler(prepareSecurityHandler(http, handler));
 		callServerAboutToStart(serverAboutToStartMethod, argValue);
 		AppServer.start(serverStopped);
-		port = sc.getLocalPort();
-		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + port);
+		final int port = sc.getLocalPort();
+		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
 		return port;
 	}
 	
@@ -176,7 +178,7 @@ public class AppServer {
 
 	public static void callServerAboutToStart(String serverAboutToStartMethod, IExpression argValue) {
 		if(serverAboutToStartMethod!=null) {
-			System.out.println("Calling startUp method " + serverAboutToStartMethod);
+			logger.info(()->"Calling startUp method " + serverAboutToStartMethod);
 			Interpreter.interpretMethod(Standalone.getGlobalContext(), new Identifier(serverAboutToStartMethod), argValue);
 		}
 	}
@@ -192,16 +194,16 @@ public class AppServer {
 	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
 		ILoginConfiguration login = config.getLoginConfiguration();
 		if(login==null) {
-			System.out.println("Not using security handler!");
+			logger.info(()->"Not using security handler!");
 			return handler.get();
 		} else try {
-			System.out.println("Preparing security handler...");
+			logger.info(()->"Preparing security handler...");
 			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
 			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
 			security.setConstraintMappings(prepareContraintMappings()); // when to require security
 			security.setHandler(handler.get());
-			System.out.println("Security handler successfully prepared.");
+			logger.info(()->"Security handler successfully prepared.");
 			return security;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
@@ -248,12 +250,12 @@ public class AppServer {
 
 	static Handler prepareWebHandlers(String webSite) {
 		try {
-			System.out.println("Preparing web handlers...");
+			logger.info(()->"Preparing web handlers...");
 			HandlerList list = new HandlerList();
 			list.addHandler(newResourceHandler("/", webSite));
 			list.addHandler(newServiceHandler("/ws/"));
 			list.addHandler(new DefaultHandler());
-			System.out.println("Web handlers successfully prepared.");
+			logger.info(()->"Web handlers successfully prepared.");
 			return list;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
@@ -278,7 +280,7 @@ public class AppServer {
 		if(webSite==null)
 			return null;
 		File file = new File(webSite);
-		System.out.println("Serving web site at: " + file.getCanonicalPath());
+		logger.info(()->"Serving web site at: " + file.getAbsolutePath());
 		if(!file.exists())
 			throw new FileNotFoundException(webSite);
 		return file.getCanonicalFile();
@@ -346,21 +348,21 @@ public class AppServer {
 		serverThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("Web server about to start...");
+				logger.info(()->"Web server about to start...");
 				try {
 					try {
 						jettyServer.start();
-						System.out.println("Web server started...");
+						logger.info(()->"Web server started...");
 					} finally {
-						System.out.println("Signaling start completion...");
+						logger.info(()->"Signaling start completion...");
 						synchronized (sync) {
 							startComplete = true;
 							sync.notify();
 						}
 					}
-					System.out.println("Web server thread waiting for completion...");
+					logger.info(()->"Web server thread waiting for completion...");
 					jettyServer.join();
-					System.out.println("Web server thread complete.");
+					logger.info(()->"Web server thread complete.");
 					if(serverStopped!=null)
 						serverStopped.run();
 				} catch(Throwable t) {
@@ -371,12 +373,12 @@ public class AppServer {
 			}
 		}, "HTTP Server");
 		serverThread.start();
-		System.out.println("Waiting for start completion signal...");
+		logger.info(()->"Waiting for start completion signal...");
 		synchronized (sync) {
 			while(!startComplete)
 				sync.wait();
 		}
-		System.out.println("Start completion signalled...");
+		logger.info(()->"Start completion signalled...");
 		if(serverThrowable!=null) {
 			Throwable t = serverThrowable;
 			serverThrowable = null;
@@ -387,11 +389,11 @@ public class AppServer {
 	public static void stop() throws Exception {
 		if(jettyServer==null || !jettyServer.isStarted())
 			throw new RuntimeException("Server is not started!");
-		System.out.println("Stopping web server...");
+		logger.info(()->"Stopping web server...");
 		jettyServer.stop();
-		System.out.println("Web server stopped, waiting for completion...");
+		logger.info(()->"Web server stopped, waiting for completion...");
 		jettyServer.join();
-		System.out.println("Web server stop complete.");
+		logger.info(()->"Web server stop complete.");
 	}
 
 	public static boolean isStarted() {

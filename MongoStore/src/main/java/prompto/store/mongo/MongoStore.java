@@ -34,6 +34,7 @@ import prompto.store.IStorable.IDbIdListener;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
+import prompto.utils.Logger;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -48,6 +49,8 @@ import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.WriteModel;
 
 public class MongoStore implements IStore {
+	
+	static final Logger logger = new Logger();
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 		    MongoClient.getDefaultCodecRegistry(),
@@ -72,11 +75,11 @@ public class MongoStore implements IStore {
 		                .codecRegistry(codecRegistry)
 		                .build();
 		if(user!=null && password!=null) {
-			System.out.println("Connecting user " + user + " to " + database);
+			logger.info(()->"Connecting user " + user + " to " + database);
 			MongoCredential cred = MongoCredential.createCredential(user, "admin", password);
 			client = new MongoClient(address, Collections.singletonList(cred), options);
 		} else {
-			System.out.println("Connecting anonymously to " + database);
+			logger.info(()->"Connecting anonymously to " + database);
 			client = new MongoClient(address, options);
 		}
 		db = client.getDatabase(database);
