@@ -20,6 +20,10 @@ import prompto.utils.ResourceUtils;
 public class CodeServer {
 
 	public static void main(String[] args) throws Throwable {
+		main(args, false);
+	}
+	
+	public static void main(String[] args, boolean testMode) throws Throwable {
 		IServerConfiguration config = AppServer.loadConfiguration(args);
 		config = new IServerConfiguration.Sourced(config) {
 			
@@ -27,6 +31,7 @@ public class CodeServer {
 			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
 			@Override public URL[] getResourceURLs() { return CodeServer.getResourceURLs(); }
 			@Override public String getServerAboutToStartMethod() { return "serverAboutToStart";  }
+			@Override public boolean isTestMode() { return testMode; }
 		};
 		AppServer.main(config, CodeServer::redirectDataServlet); 
 	}

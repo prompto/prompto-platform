@@ -12,6 +12,6 @@ dataStore:
   dbName: CODE
 
 http:
-  port: 8080
+  port: 0
 web-site: ../../prompto-dev-center/web-site/
   

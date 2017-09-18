@@ -9,9 +9,8 @@ import org.junit.Test;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import prompto.server.AppServer;
 import prompto.store.mongo.BaseMongoTest;
-import prompto.utils.ManualTests;
 
-public class TestYaml {
+public class TestYamlLocal {
 
 	@Test
 	public void testThatCodeServerRunsWithYamlLocal() throws Throwable {
@@ -19,19 +18,11 @@ public class TestYaml {
 		try {
 			URL url = Thread.currentThread().getContextClassLoader().getResource("local.yml");
 			String[] args = new String[] { "yamlConfigFile", url.getFile() };
-			CodeServer.main(args);
+			CodeServer.main(args, true);
 			assertTrue(AppServer.isStarted());
 		} finally {
 			BaseMongoTest.stopMongo(mongo);
 		}
 	}
 	
-	@ManualTests
-	@Test
-	public void testThatCodeServerRunsWithYamlHome() throws Throwable {
-		URL url = Thread.currentThread().getContextClassLoader().getResource("home.yml");
-		String[] args = new String[] { "yamlConfigFile", url.getFile() };
-		CodeServer.main(args);
-		assertTrue(AppServer.isStarted());
-	}
 }
