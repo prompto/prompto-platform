@@ -23,6 +23,12 @@ public class TestAwsKMS extends AWSTestBase {
 	}
 
 	@Test
+	public void testThatAliasesCanBeRead() throws Throwable {
+		String arn = arnFromAlias(MASTER_KEY_ALIAS);
+		assertEquals(MASTER_KEY_ARN, arn);
+	}
+	
+	@Test
 	public void testThatAwsKMSPasswordFactoryReturnsPlainPassword() throws Throwable {
 		String encrypted = encrypt("password");
 		ISecretKeyConfiguration config = new IAwsKMSSecretKeyConfiguration() {

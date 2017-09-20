@@ -8,10 +8,12 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.AliasListEntry;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
 import com.amazonaws.services.kms.model.EncryptRequest;
 import com.amazonaws.services.kms.model.EncryptResult;
+import com.amazonaws.services.kms.model.ListAliasesResult;
 
 public class KMS {
 	
@@ -29,6 +31,20 @@ public class KMS {
 
 	public KMS(AWSKMS kms) {
 		this.kms = kms;
+	}
+	
+	public String keyARNFromAlias(String alias) {
+		final String fullAlias = "alias/" + alias;
+		ListAliasesResult res = kms.listAliases();
+		AliasListEntry entry = res.getAliases().stream()
+				.filter(a->fullAlias.equals(a.getAliasName()))
+				.findFirst()
+				.orElse(null);
+		if(entry==null)
+			return null;
+		String prefix = entry.getAliasArn();
+		prefix = prefix.substring(0, prefix.indexOf(":" + fullAlias));
+		return prefix + ":key/" + entry.getTargetKeyId(); 
 	}
 	
 	public String encrypt(String masterKeyARN, String dataToEncrypt) {

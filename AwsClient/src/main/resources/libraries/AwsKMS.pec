@@ -5,8 +5,11 @@ define AwsKMS as native category with bindings:
 	
 and methods:
 	
-	define encrypt as method receiving Text keyArn, Text textToEncrypt returning Text doing:
-		Java: return this.encrypt(keyArn, textToEncrypt);
+	define keyARNFromAlias as method receiving Text alias returning Text doing:
+		Java: return this.keyARNFromAlias(alias);
+
+	define encrypt as method receiving Text keyARN, Text textToEncrypt returning Text doing:
+		Java: return this.encrypt(keyARN, textToEncrypt);
 		
 	define decrypt as method receiving Text textToDecrypt returning Text doing:
 		Java: return this.decrypt(textToDecrypt);
@@ -30,8 +33,16 @@ and verifying:
 	
 define "kms can encrypt and decrypt" as test method doing:
 	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
-	plain = "some password"
-	encrypted = kms.encrypt("arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5", plain)
-	decrypted = kms.decrypt(encrypted)
+	plain = "some secret"
+	encrypted = kms.encrypt with "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5" as keyARN and plain as textToEncrypt)
+	decrypted = kms.decrypt with encrypted as textToDecrypt
 and verifying:
-	plain = encrypted
+	encrypted = plain
+
+
+define "kms can get keyARN from alias" as test method doing:
+	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+	keyARN = kms.keyARNFromAlias with "prompto/seed" as alias
+and verifying:
+	keyARN = "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5"
+	
