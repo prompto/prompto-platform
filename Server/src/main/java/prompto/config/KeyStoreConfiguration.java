@@ -1,6 +1,5 @@
 package prompto.config;
 
-import prompto.security.ISecretKeyFactory;
 
 
 public class KeyStoreConfiguration implements IKeyStoreConfiguration {
@@ -10,18 +9,13 @@ public class KeyStoreConfiguration implements IKeyStoreConfiguration {
 	public KeyStoreConfiguration(IConfigurationReader reader) {
 		this.reader = reader;
 	}
-
+	
+	public IKeyStoreFactoryConfiguration getKeyStoreFactoryConfiguration() {
+		return reader.readKeyStoreFactoryConfiguration("provider");
+	};
+	
 	@Override
-	public IKeyStoreConfigurator getConfigurator() {
-		// TODO Auto-generated method stub
-		return null;
+	public ISecretKeyConfiguration getSecretKeyConfiguration() {
+		return reader.readSecretKeyConfiguration("secretKey");
 	}
-
-	@Override
-	public ISecretKeyFactory getPasswordFactory() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 }

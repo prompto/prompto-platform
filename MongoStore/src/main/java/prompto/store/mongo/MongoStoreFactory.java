@@ -1,7 +1,6 @@
 package prompto.store.mongo;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.mongo.IMongoStoreConfiguration;
 import prompto.config.mongo.MongoStoreConfiguration;
@@ -16,9 +15,6 @@ public class MongoStoreFactory implements IStoreFactory {
 	
 	@Override
 	public MongoStore newStore(IStoreConfiguration config) throws Exception {
-		IMongoStoreConfiguration mongo = (IMongoStoreConfiguration)config;
-		ISecretKeyConfiguration secret = mongo.getSecretKeyConfiguration();
-		char[] password = secret==null ? null : secret.getSecret();
-		return new MongoStore(mongo.getHost(), mongo.getPort(), mongo.getDbName(), mongo.getUser(), password);
+		return new MongoStore((IMongoStoreConfiguration)config);
 	}
 }

@@ -10,6 +10,11 @@ public class MongoStoreConfiguration extends StoreConfiguration implements IMong
 		super(reader);
 	}
 	
+	@Override
+	public String getReplicaSetURI() {
+		return reader.getString("replicaSetURI");
+	}
+	
 	public Integer getPort() {
 		return reader.getIntegerOrDefault("port", 27017);
 	};
@@ -20,6 +25,16 @@ public class MongoStoreConfiguration extends StoreConfiguration implements IMong
 			@Override
 			public String getDbName() {
 				return dbName;
+			}
+		};
+	}
+	
+	@Override
+	public IMongoStoreConfiguration withReplicaSetURI(String uri) {
+		return new MongoStoreConfiguration(reader) {
+			@Override
+			public String getReplicaSetURI() {
+				return uri;
 			}
 		};
 	}

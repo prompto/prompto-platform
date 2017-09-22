@@ -3,6 +3,7 @@ package prompto.server;
 import static org.junit.Assert.*;
 
 import java.net.URL;
+import java.security.KeyStore;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -16,17 +17,19 @@ import org.junit.After;
 import org.junit.Before;
 
 import prompto.code.Version;
+import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
-import prompto.config.IKeyStoreConfigurator;
+import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ILoginConfiguration;
+import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
-import prompto.security.ISecretKeyFactory;
+import prompto.security.IKeyStoreFactory;
 
 public abstract class BaseServerTest {
 	
@@ -71,38 +74,80 @@ public abstract class BaseServerTest {
 				return new IKeyStoreConfiguration() {
 
 					@Override
-					public IKeyStoreConfigurator getConfigurator() {
-						return (factory) -> {
-									URL url = Thread.currentThread().getContextClassLoader().getResource("security/keystore_test.jks");
-									Resource resource = URLResource.newResource(url);
-									factory.setKeyStoreResource(resource);
-								};
-					}
+					public IKeyStoreFactoryConfiguration getKeyStoreFactoryConfiguration() {
+						return new IKeyStoreFactoryConfiguration() {
 
-					@Override
-					public ISecretKeyFactory getPasswordFactory() {
-						return () -> "password";
+							@Override
+							public IKeyStoreFactory getKeyStoreFactory() {
+								return new IKeyStoreFactory() {
+									
+									@Override
+									public KeyStore newInstance(IKeyStoreFactoryConfiguration config) {
+										try {
+											URL url = Thread.currentThread().getContextClassLoader().getResource("security/keystore_test.jks");
+											Resource resource = URLResource.newResource(url);
+											KeyStore ks = KeyStore.getInstance("JKS");
+											ks.load(resource.getInputStream(), null);
+											return ks;
+										} catch(Exception e) {
+											throw new RuntimeException(e);
+										}
+									}
+									
+									@Override public IKeyStoreFactoryConfiguration newConfiguration(IConfigurationReader reader) { return null; }
+								};
+							}
+						};
 					}
 					
-				}; }
+					@Override
+					public ISecretKeyConfiguration getSecretKeyConfiguration() {
+						return new ISecretKeyConfiguration() {
+							@Override public String getFactory() { return null; }
+							@Override public char[] getSecret() { return "password".toCharArray(); }
+						};
+					}
+					
+				}; 
+				}
 			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { 
 				return new IKeyStoreConfiguration() {
 
 					@Override
-					public IKeyStoreConfigurator getConfigurator() {
-						return (factory) ->  {
-							URL url = Thread.currentThread().getContextClassLoader().getResource("security/truststore_test.jks");
-							Resource resource = URLResource.newResource(url);
-							factory.setTrustStoreResource(resource);
+					public IKeyStoreFactoryConfiguration getKeyStoreFactoryConfiguration() {
+						return new IKeyStoreFactoryConfiguration() {
+
+							@Override
+							public IKeyStoreFactory getKeyStoreFactory() {
+								return new IKeyStoreFactory() {
+									
+									@Override
+									public KeyStore newInstance(IKeyStoreFactoryConfiguration config) {
+										try {
+											URL url = Thread.currentThread().getContextClassLoader().getResource("security/truststore_test.jks");
+											Resource resource = URLResource.newResource(url);
+											KeyStore ks = KeyStore.getInstance("JKS");
+											ks.load(resource.getInputStream(), null);
+											return ks;
+										} catch(Exception e) {
+											throw new RuntimeException(e);
+										}
+									}
+									
+									@Override public IKeyStoreFactoryConfiguration newConfiguration(IConfigurationReader reader) { return null; }
+								};
+							}
 						};
 					}
-
-					@Override
-					public ISecretKeyFactory getPasswordFactory() {
-						return () -> "password";
-					}
 					
-				};
+					@Override
+					public ISecretKeyConfiguration getSecretKeyConfiguration() {
+						return new ISecretKeyConfiguration() {
+							@Override public String getFactory() { return null; }
+							@Override public char[] getSecret() { return "password".toCharArray(); }
+						};
+					}
+				}; 
 			}
 		};
 	}

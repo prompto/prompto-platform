@@ -19,6 +19,8 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 
+import prompto.config.ISecretKeyConfiguration;
+import prompto.config.mongo.IMongoStoreConfiguration;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
@@ -38,6 +40,7 @@ import prompto.utils.Logger;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
@@ -51,6 +54,7 @@ import com.mongodb.client.model.WriteModel;
 public class MongoStore implements IStore {
 	
 	static final Logger logger = new Logger();
+	static final String AUTH_DB_NAME = "admin";
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 		    MongoClient.getDefaultCodecRegistry(),
@@ -65,21 +69,55 @@ public class MongoStore implements IStore {
 	MongoDatabase db;
 	Map<String, AttributeInfo> fields = new HashMap<>();
 	
+	
+	public MongoStore(IMongoStoreConfiguration config) {
+		char[] password = passwordFromConfig(config);
+		String uri = config.getReplicaSetURI();
+		if(uri==null) {
+			connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
+		} else {
+			connectWithURI(config, password);
+		}
+	}
+	
+	private char[] passwordFromConfig(IMongoStoreConfiguration config) {
+		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
+		return secret==null ? null : secret.getSecret();
+	}
+
+	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
+		MongoClientURI mcu = new MongoClientURI(config.getReplicaSetURI()) {
+			public MongoCredential getCredentials() {
+				if(password==null)
+					return null;
+				else
+					return MongoCredential.createCredential(config.getUser(), AUTH_DB_NAME, password);
+			};
+		};
+		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + mcu.getDatabase() + "' database");
+		client = new MongoClient(mcu);
+		db = client.getDatabase(mcu.getDatabase());
+	}
+	
 	public MongoStore(String host, int port, String database) {
-		this(host, port, database, null, null);
+		connectWithParams(host, port, database, null, null);
 	}
 	
 	public MongoStore(String host, int port, String database, String user, char[] password) {
+		connectWithParams(host, port, database, user, password);
+	}
+	
+	private void connectWithParams(String host, int port, String database, String user, char[] password) {
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
 		                .codecRegistry(codecRegistry)
 		                .build();
 		if(user!=null && password!=null) {
-			logger.info(()->"Connecting user " + user + " to " + database);
-			MongoCredential cred = MongoCredential.createCredential(user, "admin", password);
+			logger.info(()->"Connecting user '" + user + "' to '" + database + "' database");
+			MongoCredential cred = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
 			client = new MongoClient(address, Collections.singletonList(cred), options);
 		} else {
-			logger.info(()->"Connecting anonymously to " + database);
+			logger.info(()->"Connecting anonymously to '" + database + "' database");
 			client = new MongoClient(address, options);
 		}
 		db = client.getDatabase(database);
