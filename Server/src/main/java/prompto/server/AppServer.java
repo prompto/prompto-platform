@@ -54,6 +54,7 @@ import prompto.libraries.Libraries;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
+import prompto.security.ISecretKeyFactory;
 import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
@@ -138,7 +139,7 @@ public class AppServer {
 		return port;
 	}
 	
-	private static ServerConnector prepareConnector(IHttpConfiguration http) {
+	private static ServerConnector prepareConnector(IHttpConfiguration http) throws Exception {
 		if("http".equalsIgnoreCase(http.getProtocol()))
 			return prepareHttpConnector(http);
 		else 
@@ -149,27 +150,27 @@ public class AppServer {
 		return new ServerConnector(jettyServer);
 	}
 
-	private static ServerConnector prepareHttpsConnector(IHttpConfiguration http) {
+	private static ServerConnector prepareHttpsConnector(IHttpConfiguration http) throws Exception {
 		SslConnectionFactory ssl = createSSLFactory(http);
 		HttpConnectionFactory https = createHttpsFactory();
 		return new ServerConnector(jettyServer, ssl, https);
 	}
 
 	
-	private static SslConnectionFactory createSSLFactory(IHttpConfiguration http) {
+	private static SslConnectionFactory createSSLFactory(IHttpConfiguration http) throws Exception {
 		SslContextFactory context = new SslContextFactory();
 		IKeyStoreConfiguration ksc = http.getKeyStoreConfiguration();
 		IKeyStoreFactoryConfiguration ksfc = ksc.getKeyStoreFactoryConfiguration();
 		IKeyStoreFactory factory = ksfc.getKeyStoreFactory();
 		context.setKeyStore(factory.newInstance(ksfc));
 		ISecretKeyConfiguration secret = ksc.getSecretKeyConfiguration();
-		context.setKeyStorePassword(new String(secret.getSecret()));
+		context.setKeyStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
 		ksc = http.getTrustStoreConfiguration();
 		ksfc = ksc.getKeyStoreFactoryConfiguration();
 		factory = ksfc.getKeyStoreFactory();
 		context.setTrustStore(factory.newInstance(ksfc));
 		secret = ksc.getSecretKeyConfiguration();
-		context.setTrustStorePassword(new String(secret.getSecret()));
+		context.setTrustStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
 		return new SslConnectionFactory(context, "http/1.1");
 	}
 

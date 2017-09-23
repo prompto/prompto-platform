@@ -14,7 +14,7 @@ import prompto.utils.ManualTests;
 public class TestConfig {
 
 	@Test
-	public void tectCanConnectUsingReplicaSetURI() {
+	public void tectCanConnectUsingReplicaSetURI() throws Exception {
 		
 		IMongoStoreConfiguration config = new IMongoStoreConfiguration() {
 

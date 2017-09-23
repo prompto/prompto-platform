@@ -1,14 +1,14 @@
 package prompto.security;
 
-import static org.junit.Assert.*;
-
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.URL;
+import java.security.KeyStore;
+import java.util.function.Supplier;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,15 +23,31 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.URLResource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import prompto.utils.Instance;
+import prompto.utils.ManualTests;
+
+@Category(ManualTests.class)
 public class TestServerCertificates {
 
+	static String CERTS_DIR = "/Users/ericvergnaud/Prompto/certificates/JavaCertificates/";
+	static Instance<String> password = new Instance<>();
+	static Supplier<String> PASSWORD = () -> { 
+		if(password.get()==null) try {
+			System.out.println("Enter keystore password:");
+			String entered = new BufferedReader(new InputStreamReader(System.in)).readLine();
+			password.set(entered);
+		} catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+		return password.get();
+	};
+	
 	@Before
 	public void before() throws Exception {
 		MockTrustManager.install();
@@ -43,7 +59,16 @@ public class TestServerCertificates {
 	}
 
 	@Test
-	public void testLoadCertificates() throws Throwable {
+	public void testLoadCertificate() throws Throwable {
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		KeyStore ks = loadKeyStore(CERTS_DIR + "keystore.jks");
+		kmf.init(ks, PASSWORD.get().toCharArray());
+
+	}
+	
+	
+	@Test
+	public void testRealCertificates() throws Throwable {
 		Server server = new Server();
 		ServerConnector connector = createConnector(server);
 		server.setConnectors(new Connector[] { connector });
@@ -58,26 +83,15 @@ public class TestServerCertificates {
 		thread.start();
 		while(!server.isStarted())
 			Thread.sleep(10);
-		URL url = new URL("https://localhost:" + connector.getLocalPort() + "/");
-		try (InputStream input = url.openStream()) {
-			try(Reader reader = new InputStreamReader(input)) {
-				try(BufferedReader buffered = new BufferedReader(reader)) {
-					assertEquals("Hello", buffered.readLine());
-				}
-			}
-		} catch (Throwable t) {
-			t.printStackTrace();
-			fail();
-		} finally {
-			server.stop();
-			thread.join();
-		}
+		server.join();
 	}
 
-	private ServerConnector createConnector(Server server) {
+	private ServerConnector createConnector(Server server) throws Exception {
 		SslConnectionFactory ssl = createSSLFactory();
 		HttpConnectionFactory https = createHttpsFactory();
-		return new ServerConnector(server, ssl, https);
+		ServerConnector sc = new ServerConnector(server, ssl, https);
+		sc.setPort(443);
+		return sc;
 	}
 
 	private Handler createHandler() {
@@ -102,19 +116,24 @@ public class TestServerCertificates {
 		return new HttpConnectionFactory(https);
 	}
 
-	private SslConnectionFactory createSSLFactory() {
+	private SslConnectionFactory createSSLFactory() throws Exception {
 		SslContextFactory factory = new SslContextFactory();
-		URL url = Thread.currentThread().getContextClassLoader()
-				.getResource("security/keystore_test.jks");
-		Resource resource = URLResource.newResource(url);
-		factory.setKeyStoreResource(resource);
-		factory.setKeyStorePassword("password");
-		url = Thread.currentThread().getContextClassLoader()
-				.getResource("security/truststore_test.jks");
-		resource = URLResource.newResource(url);
-		factory.setTrustStoreResource(resource);
-		factory.setTrustStorePassword("password");
+		factory.setKeyManagerPassword(PASSWORD.get());
+		KeyStore ks = loadKeyStore(CERTS_DIR + "keystore.jks");
+		factory.setKeyStore(ks);
+		factory.setKeyStorePassword(PASSWORD.get()); 
+		ks = loadKeyStore(CERTS_DIR + "truststore.jks");
+		factory.setTrustStore(ks);
+		factory.setTrustStorePassword(PASSWORD.get()); 
 		return new SslConnectionFactory(factory, "http/1.1");
+	}
+
+	private KeyStore loadKeyStore(String filePath) throws Exception {
+		try(InputStream input = new FileInputStream(filePath)) {
+			KeyStore ks = KeyStore.getInstance("JKS");
+			ks.load(input, null);
+			return ks;
+		}
 	}
 
 }

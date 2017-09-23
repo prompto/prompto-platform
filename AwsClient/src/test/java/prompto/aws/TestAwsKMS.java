@@ -30,7 +30,8 @@ public class TestAwsKMS extends AWSTestBase {
 	
 	@Test
 	public void testThatAwsKMSPasswordFactoryReturnsPlainPassword() throws Throwable {
-		String encrypted = encrypt("password");
+		String encrypted = encrypt("admin");
+		System.out.println("Encrypted: " + encrypted);
 		ISecretKeyConfiguration config = new IAwsKMSSecretKeyConfiguration() {
 
 			@Override public String getFactory() { return AwsKMSSecretKeyFactory.class.getName(); }
@@ -40,7 +41,7 @@ public class TestAwsKMS extends AWSTestBase {
 			@Override public String getAwsSecretKey() { return props.getProperty("secretKey"); }
 			
 		};
-		assertEquals("password", ISecretKeyFactory.plainPasswordFromConfig(config));
+		assertEquals("admin", ISecretKeyFactory.plainPasswordFromConfig(config));
 	}
 
 }

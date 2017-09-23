@@ -27,6 +27,7 @@ import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoList;
 import prompto.intrinsic.PromptoTime;
+import prompto.security.ISecretKeyFactory;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import prompto.store.IQuery;
@@ -70,7 +71,7 @@ public class MongoStore implements IStore {
 	Map<String, AttributeInfo> fields = new HashMap<>();
 	
 	
-	public MongoStore(IMongoStoreConfiguration config) {
+	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
 		String uri = config.getReplicaSetURI();
 		if(uri==null) {
@@ -80,9 +81,9 @@ public class MongoStore implements IStore {
 		}
 	}
 	
-	private char[] passwordFromConfig(IMongoStoreConfiguration config) {
+	private char[] passwordFromConfig(IMongoStoreConfiguration config) throws Exception {
 		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
-		return secret==null ? null : secret.getSecret();
+		return secret==null ? null : ISecretKeyFactory.plainPasswordFromConfig(secret).toCharArray();
 	}
 
 	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
@@ -93,6 +94,12 @@ public class MongoStore implements IStore {
 				else
 					return MongoCredential.createCredential(config.getUser(), AUTH_DB_NAME, password);
 			};
+			@Override
+			public MongoClientOptions getOptions() {
+				return MongoClientOptions.builder(super.getOptions())
+		                .codecRegistry(codecRegistry)
+		                .build();
+			}
 		};
 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + mcu.getDatabase() + "' database");
 		client = new MongoClient(mcu);

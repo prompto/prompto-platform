@@ -4,8 +4,11 @@ import prompto.aws.KMS;
 import prompto.config.IConfigurationReader;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.security.ISecretKeyFactory;
+import prompto.utils.Logger;
 
 public class AwsKMSSecretKeyFactory implements ISecretKeyFactory {
+
+	private static Logger logger = new Logger();
 
 	IAwsKMSSecretKeyConfiguration config;
 	
@@ -24,8 +27,12 @@ public class AwsKMSSecretKeyFactory implements ISecretKeyFactory {
 	@Override
 	public String getAsPlainText() {
 		String awsRegion = config.getAwsRegion();
+		logger.info(()->"AWS KMS: decrypting secret " + new String(config.getSecret()) + " in region " + awsRegion);
 		KMS kms = KMS.newInstance(awsRegion, null, null);
-		return kms.decrypt(new String(config.getSecret()));
+		String plainText = kms.decrypt(new String(config.getSecret()));
+		if("true".equals(System.getenv("DEBUG_AWS_KMS")))
+			logger.info(()->"AWS KMS: decrypted secret " + new String(config.getSecret()) + " to " + plainText);
+		return plainText;
 	}
 
 
