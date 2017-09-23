@@ -25,7 +25,7 @@ import com.amazonaws.services.kms.model.ListAliasesResult;
 
 public abstract class AWSTestBase {
 
-	public static String MASTER_KEY_ARN = "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5";
+	public static String MASTER_KEY_ARN = "arn:aws:kms:us-east-1:838901125615:key/fd4e13e3-72c3-41ee-90de-4531f5c4c93a";
 	public static String MASTER_KEY_ALIAS = "prompto/seed";
 			
 	AmazonEC2 ec2;
@@ -42,11 +42,11 @@ public abstract class AWSTestBase {
 				props.getProperty("accessKey"), 
 				props.getProperty("secretKey"));
 		ec2 = AmazonEC2ClientBuilder.standard()
-				.withRegion(Regions.US_WEST_2)
+				.withRegion(Regions.US_EAST_1)
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
 		kms = AWSKMSClientBuilder.standard()
-				.withRegion(Regions.US_WEST_2)
+				.withRegion(Regions.US_EAST_1)
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
 				
