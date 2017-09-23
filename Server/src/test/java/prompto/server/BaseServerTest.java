@@ -30,6 +30,7 @@ import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
+import prompto.security.PlainSecretKeyFactory;
 
 public abstract class BaseServerTest {
 	
@@ -103,7 +104,7 @@ public abstract class BaseServerTest {
 					@Override
 					public ISecretKeyConfiguration getSecretKeyConfiguration() {
 						return new ISecretKeyConfiguration() {
-							@Override public String getFactory() { return null; }
+							@Override public String getFactory() { return PlainSecretKeyFactory.class.getName(); }
 							@Override public char[] getSecret() { return "password".toCharArray(); }
 						};
 					}
@@ -143,7 +144,7 @@ public abstract class BaseServerTest {
 					@Override
 					public ISecretKeyConfiguration getSecretKeyConfiguration() {
 						return new ISecretKeyConfiguration() {
-							@Override public String getFactory() { return null; }
+							@Override public String getFactory() { return PlainSecretKeyFactory.class.getName(); }
 							@Override public char[] getSecret() { return "password".toCharArray(); }
 						};
 					}

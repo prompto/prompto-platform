@@ -20,7 +20,8 @@ public class MockTrustManager implements X509TrustManager {
 		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());	}
 	
 	public static void restore() {
-		HttpsURLConnection.setDefaultSSLSocketFactory(saved);
+		if(saved!=null)
+			HttpsURLConnection.setDefaultSSLSocketFactory(saved);
 	}
 	
 	public X509Certificate[] getAcceptedIssuers() {

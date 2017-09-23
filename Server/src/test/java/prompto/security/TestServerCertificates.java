@@ -90,7 +90,7 @@ public class TestServerCertificates {
 		SslConnectionFactory ssl = createSSLFactory();
 		HttpConnectionFactory https = createHttpsFactory();
 		ServerConnector sc = new ServerConnector(server, ssl, https);
-		sc.setPort(443);
+		sc.setPort(8443);
 		return sc;
 	}
 
@@ -118,7 +118,6 @@ public class TestServerCertificates {
 
 	private SslConnectionFactory createSSLFactory() throws Exception {
 		SslContextFactory factory = new SslContextFactory();
-		factory.setKeyManagerPassword(PASSWORD.get());
 		KeyStore ks = loadKeyStore(CERTS_DIR + "keystore.jks");
 		factory.setKeyStore(ks);
 		factory.setKeyStorePassword(PASSWORD.get()); 
