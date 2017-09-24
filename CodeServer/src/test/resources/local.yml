@@ -13,5 +13,5 @@ dataStore:
 
 http:
   port: 0
-web-site: ../../prompto-dev-center/web-site/
+webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   

@@ -21,7 +21,7 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 
 	@Override
 	public String getWebSiteRoot() {
-		return reader.getString("webSite");
+		return reader.getString("webSiteRoot");
 	}
 
 }
