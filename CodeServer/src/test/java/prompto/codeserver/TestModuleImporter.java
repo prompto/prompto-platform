@@ -11,10 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.code.ICodeStore;
-import prompto.code.Version;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IRuntimeConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
@@ -36,7 +36,7 @@ public class TestModuleImporter {
 			@Override public IDebugConfiguration getDebugConfiguration() { return null; }
 			@Override public Map<String, String> getArguments() { return null; }
 			@Override public String getApplicationName() { return "test"; }
-			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
+			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
 			@Override public boolean isTestMode() { return true; }
 			@Override public URL[] getAddOnURLs() { return null; }
 			@Override public URL[] getResourceURLs() { return null; }

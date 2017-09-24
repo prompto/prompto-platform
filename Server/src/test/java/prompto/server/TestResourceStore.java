@@ -11,7 +11,7 @@ import org.junit.Test;
 import prompto.code.ICodeStore;
 import prompto.code.Resource;
 import prompto.code.TextResource;
-import prompto.code.Version;
+import prompto.intrinsic.PromptoVersion;
 
 public class TestResourceStore extends BaseServerTest {
 
@@ -29,7 +29,7 @@ public class TestResourceStore extends BaseServerTest {
 		ICodeStore store = ICodeStore.getInstance();
 		Resource resource = newResource("stuff.html");
 		store.storeResource(resource, null);
-		assertNotNull(store.fetchSpecificResource(resource.getName(), Version.parse(resource.getVersion())));
+		assertNotNull(store.fetchSpecificResource(resource.getName(), resource.getVersion()));
 		URL url = new URL("http://localhost:" + port + "/stuff.html");
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
@@ -41,7 +41,7 @@ public class TestResourceStore extends BaseServerTest {
 		TextResource resource = new TextResource();
 		resource.setName(name);
 		resource.setMimeType("text/html");
-		resource.setVersion("1.0.0");
+		resource.setVersion(PromptoVersion.parse("1.0.0"));
 		resource.setBody("<html><body>Hello</body></html>");
 		return resource;
 	}

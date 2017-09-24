@@ -7,39 +7,39 @@ import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 
-import prompto.code.Version;
+import prompto.intrinsic.PromptoVersion;
 
-public class PromptoVersionCodec implements CollectibleCodec<Version> {
+public class PromptoVersionCodec implements CollectibleCodec<PromptoVersion> {
 
 	@Override
-	public void encode(BsonWriter writer, Version value, EncoderContext encoderContext) {
+	public void encode(BsonWriter writer, PromptoVersion value, EncoderContext encoderContext) {
 		int val = value.asInt();
 		writer.writeInt32(val);
 	}
 
 	@Override
-	public Class<Version> getEncoderClass() {
-		return Version.class;
+	public Class<PromptoVersion> getEncoderClass() {
+		return PromptoVersion.class;
 	}
 
 	@Override
-	public Version decode(BsonReader reader, DecoderContext decoderContext) {
+	public PromptoVersion decode(BsonReader reader, DecoderContext decoderContext) {
 		int val = reader.readInt32();
-		return Version.parse(val);
+		return PromptoVersion.parse(val);
 	}
 
 	@Override
-	public Version generateIdIfAbsentFromDocument(Version document) {
+	public PromptoVersion generateIdIfAbsentFromDocument(PromptoVersion document) {
 		return null;
 	}
 
 	@Override
-	public boolean documentHasId(Version document) {
+	public boolean documentHasId(PromptoVersion document) {
 		return false;
 	}
 
 	@Override
-	public BsonValue getDocumentId(Version document) {
+	public BsonValue getDocumentId(PromptoVersion document) {
 		return null;
 	}
 

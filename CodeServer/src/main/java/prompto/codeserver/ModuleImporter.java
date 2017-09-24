@@ -13,7 +13,7 @@ import prompto.code.ICodeStore;
 import prompto.code.ICodeStore.ModuleType;
 import prompto.code.Module;
 import prompto.code.ImmutableCodeStore;
-import prompto.code.Version;
+import prompto.intrinsic.PromptoVersion;
 import prompto.value.Image;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -52,7 +52,7 @@ public class ModuleImporter {
 
 	private void populateModule(Module module, JsonNode descriptor) {
 		module.setName(readText(descriptor, "name"));
-		module.setVersion(Version.parse(readText(descriptor, "version")));
+		module.setVersion(PromptoVersion.parse(readText(descriptor, "version")));
 		module.setDescription(readText(descriptor, "description"));
 		if(module instanceof WebSite)
 			((WebSite)module).setEntryPoint(readText(descriptor, "entryPoint"));
@@ -66,7 +66,7 @@ public class ModuleImporter {
 		for(JsonNode node : descriptor) {
 			Dependency item = new Dependency();
 			item.setName(readText(node, "name"));
-			item.setVersion(readText(node, "version"));
+			item.setVersion(PromptoVersion.parse(readText(node, "version")));
 			items.add(item);
 		}
 		return items;

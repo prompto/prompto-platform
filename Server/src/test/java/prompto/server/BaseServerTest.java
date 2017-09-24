@@ -16,7 +16,6 @@ import org.eclipse.jetty.util.resource.URLResource;
 import org.junit.After;
 import org.junit.Before;
 
-import prompto.code.Version;
 import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
@@ -26,6 +25,7 @@ import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
@@ -56,7 +56,7 @@ public abstract class BaseServerTest {
 			@Override public IStoreConfiguration getDataStoreConfiguration() { return null; }
 			@Override public IStoreConfiguration getCodeStoreConfiguration() { return null; }
 			@Override public Map<String, String> getArguments() { return null; }
-			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
+			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
 			@Override public String getApplicationName() { return "test"; }
 			@Override public URL[] getAddOnURLs() { return null; }
 			@Override public IHttpConfiguration getHttpConfiguration() { return ssl ? getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration(); }

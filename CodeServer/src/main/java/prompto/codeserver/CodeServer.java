@@ -6,9 +6,9 @@ import java.util.Collection;
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
-import prompto.code.Version;
 import prompto.config.IServerConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.server.AppServer;
 import prompto.server.DataServlet;
@@ -28,7 +28,7 @@ public class CodeServer {
 		config = new IServerConfiguration.Sourced(config) {
 			
 			@Override public String getApplicationName() { return "dev-center"; }
-			@Override public Version getApplicationVersion() { return Version.parse("1.0.0"); }
+			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
 			@Override public URL[] getResourceURLs() { return CodeServer.getResourceURLs(); }
 			@Override public String getServerAboutToStartMethod() { return "serverAboutToStart";  }
 			@Override public boolean isTestMode() { return testMode; }
@@ -54,7 +54,7 @@ public class CodeServer {
 	public static void createThesaurusAndImportSamples() {
 		try {
 			IStore dataStore = IDataStore.getInstance();
-			ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", Version.parse("1.0.0"), null);
+			ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", PromptoVersion.parse("1.0.0"), null);
 			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
 			importer.importModule(codeStore);
 			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);

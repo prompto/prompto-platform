@@ -148,7 +148,7 @@ define createModule as method receiving Text type, name, description = nothing, 
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
-	module = Module with name as name, "1.0.0.0" as version, description as description, image as image and deps as dependencies
+	module = Module with name as name, 'v0.0.1' as version, description as description, image as image and deps as dependencies
 	switch on type:
 		when "library":
 			module = Library from module
@@ -182,13 +182,13 @@ define createModule as method receiving Text type, name, description = nothing, 
 define createStartMethod as method receiving module and name doing:
 	body = "define " + name + " as method receiving Text{} options doing:\n"
 	body = body + "\tprint \"Hello " + module.name + "\"\n" 
-	decl = MethodDeclaration with name as name, "0.0.0.1" as version, "E" as dialect, "Text{}" as prototype, body as body and module as module
+	decl = MethodDeclaration with name as name, 'v0.0.1' as version, "E" as dialect, "Text{}" as prototype, body as body and module as module
 	return decl 
 
 
 define createHomePage as method receiving module and name doing:
 	body = "<!DOCTYPE html>\n<html>\n\t<head>\n\t</head>\n\t<body>\n\t\tHello!\n\t</body>\n</html>"
-	page = TextResource with name as name, "0.0.0.1" as version, "text/html" as mimeType, body as body and module as module
+	page = TextResource with name as name, 'v0.0.1' as version, "text/html" as mimeType, body as body and module as module
 	return page
 
 
