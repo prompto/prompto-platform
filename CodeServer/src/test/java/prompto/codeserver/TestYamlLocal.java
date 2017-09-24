@@ -5,11 +5,14 @@ import static org.junit.Assert.*;
 import java.net.URL;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import prompto.server.AppServer;
 import prompto.store.mongo.BaseMongoTest;
+import prompto.utils.ManualTests;
 
+@Category(ManualTests.class)
 public class TestYamlLocal {
 
 	@Test
