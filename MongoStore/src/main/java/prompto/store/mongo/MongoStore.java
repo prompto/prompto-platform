@@ -27,6 +27,7 @@ import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoList;
 import prompto.intrinsic.PromptoTime;
+import prompto.intrinsic.PromptoVersion;
 import prompto.security.ISecretKeyFactory;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
@@ -101,9 +102,9 @@ public class MongoStore implements IStore {
 		                .build();
 			}
 		};
-		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + mcu.getDatabase() + "' database");
+		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + config.getDbName() + "' database");
 		client = new MongoClient(mcu);
-		db = client.getDatabase(mcu.getDatabase());
+		db = client.getDatabase(config.getDbName());
 	}
 	
 	public MongoStore(String host, int port, String database) {
@@ -317,6 +318,7 @@ public class MongoStore implements IStore {
 		readers.put(Family.DATETIME, (o)->PromptoDateTime.parse(((Document)o).getString("text")));
 		readers.put(Family.BLOB, MongoStore::binaryToPromptoBinary);
 		readers.put(Family.IMAGE, MongoStore::binaryToPromptoBinary);
+		readers.put(Family.VERSION, (o)->PromptoVersion.parse((int)o));
 	}
 	
 	static Object binaryToPromptoBinary(Object o) {
