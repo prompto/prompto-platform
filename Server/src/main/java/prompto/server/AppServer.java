@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
@@ -58,6 +59,7 @@ import prompto.security.ISecretKeyFactory;
 import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
+import prompto.utils.ObjectUtils;
 
 public class AppServer {
 	
@@ -205,7 +207,7 @@ public class AppServer {
 			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
 			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
-			security.setConstraintMappings(prepareContraintMappings()); // when to require security
+			security.setConstraintMappings(prepareConstraintMappings()); // when to require security
 			security.setHandler(handler.get());
 			logger.info(()->"Security handler successfully prepared.");
 			return security;
@@ -218,7 +220,7 @@ public class AppServer {
 		return new BasicAuthenticator();
 	}
 
-	private static List<ConstraintMapping> prepareContraintMappings() {
+	private static List<ConstraintMapping> prepareConstraintMappings() {
 		  ConstraintMapping mapping = new ConstraintMapping();
 	      mapping.setPathSpec("/*"); // for now protect all paths
 	      mapping.setConstraint(prepareConstraint());
@@ -309,34 +311,55 @@ public class AppServer {
 	}
 
 	static Handler newResourceHandler(String path, String webSite) throws Exception {
-		Handler handler = webSite!=null ? newWebSiteResourceHandler(webSite) : newCodeStoreResourceHandler();
+		Handler handler = webSite!=null ? getWebSiteResourceHandler(webSite) : getCodeStoreResourceHandler();
 		ContextHandler ch = new ContextHandler(path);
 		ch.setHandler(handler);
 		return ch;
 	}
 
-	private static ResourceHandler newCodeStoreResourceHandler() {
-		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		Resource resource = Resource.newResource(new File(rootPath));
+	private static ResourceHandler getCodeStoreResourceHandler() throws Exception {
 		ResourceHandler rh = new CodeStoreResourceHandler();
-		rh.setBaseResource(resource);
+		rh.setBaseResource(getBuiltInsResource());
 		rh.setDirectoriesListed(false);
 		return rh;
 	}
 
-	private static ResourceHandler newWebSiteResourceHandler(String webSite) throws Exception {
+	private static ResourceHandler getWebSiteResourceHandler(String webSite) throws Exception {
 		List<Resource> list = new ArrayList<>();
 		File file = getWebSiteFile(webSite);
 		Resource resource = Resource.newResource(file);
 		list.add(resource);
-		String rootPath = AppServer.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		resource = Resource.newResource(new File(rootPath));
-		list.add(resource);
+		list.add(getBuiltInsResource());
 		resource = new ResourceCollection(list.toArray(new Resource[list.size()]));
 		ResourceHandler rh = new ResourceHandler();
 		rh.setBaseResource(resource);
 		rh.setDirectoriesListed(false);
 		return rh;
+	}
+	
+	private static Resource getBuiltInsResource() throws Exception {
+		List<Resource> resources = ObjectUtils.getClassesInCallStack().stream()
+				.map(AppServer::getClassResource)
+				.collect(Collectors.toList());
+		if(resources.isEmpty()) {
+			logger.error(()->"Weird!!!");
+			throw new RuntimeException();
+		} else if(resources.size()==1)
+			return resources.get(0);
+		else
+			return new ResourceCollection(resources.toArray(new Resource[resources.size()]));
+	}
+	
+	private static Resource getClassResource(Class<?> klass) {
+		try {
+			URL root = klass.getProtectionDomain().getCodeSource().getLocation();
+			if(root.toExternalForm().endsWith(".jar"))
+				root = new URL("jar:" + root.toExternalForm() + "!/");
+			return Resource.newResource(root);
+		} catch(Exception e) {
+			logger.error(()->"Unable to load resources from " + klass.getName(), e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	static boolean startComplete = false;
