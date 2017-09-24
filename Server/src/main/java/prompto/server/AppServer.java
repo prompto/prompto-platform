@@ -339,11 +339,11 @@ public class AppServer {
 	
 	private static Resource getBuiltInsResource() throws Exception {
 		List<Resource> resources = ObjectUtils.getClassesInCallStack().stream()
+				.filter(c->c.getName().startsWith("org.prompto"))
 				.map(AppServer::getClassResource)
 				.collect(Collectors.toList());
 		if(resources.isEmpty()) {
-			logger.error(()->"Weird!!!");
-			throw new RuntimeException();
+			return getClassResource(AppServer.class); // happens with JUnit
 		} else if(resources.size()==1)
 			return resources.get(0);
 		else

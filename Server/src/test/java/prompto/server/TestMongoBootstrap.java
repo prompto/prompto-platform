@@ -52,7 +52,7 @@ public class TestMongoBootstrap extends BaseMongoTest {
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("category"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("name"));
 		assertEquals(Family.BOOLEAN, store.getColumnTypeFamily("storable"));
-		assertEquals(Family.TEXT, store.getColumnTypeFamily("version"));
+		assertEquals(Family.VERSION, store.getColumnTypeFamily("version"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("prototype"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("dialect"));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("body"));
@@ -62,7 +62,7 @@ public class TestMongoBootstrap extends BaseMongoTest {
 	public void testCodeStoreIsolation() throws Throwable {
 		assertEquals(Family.UUID, store.getColumnTypeFamily(IStore.dbIdName));
 		assertEquals(Family.TEXT, store.getColumnTypeFamily("name"));
-		assertEquals(Family.TEXT, store.getColumnTypeFamily("version"));
+		assertEquals(Family.VERSION, store.getColumnTypeFamily("version"));
 		assertNull(Standalone.getGlobalContext().findAttribute("prototype"));
 	}
 }
