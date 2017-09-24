@@ -27,8 +27,11 @@ public class BinaryServlet extends HttpServletWithHolder {
 			IStore store = IDataStore.getInstance();
 			Object dbId = store.convertToDbId(dbIdString);
 			PromptoBinary binary = store.fetchBinary(dbId, attr);
-			resp.setContentType(binary.getMimeType());
-			resp.getOutputStream().write(binary.getBytes());
+			if(binary!=null) {
+				resp.setContentType(binary.getMimeType());
+				resp.getOutputStream().write(binary.getBytes());
+			} else
+				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
