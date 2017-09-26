@@ -26,23 +26,23 @@ define newAwsKMSWithLocalCredentials as method receiving Text awsRegion returnin
 	return newAwsKMS with awsRegion as awsRegion, login as login and password as password
 
 define "kms client can be created" as test method doing:
-	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 and verifying:
 	kms is not Nothing
 
 	
 define "kms can encrypt and decrypt" as test method doing:
-	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 	plain = "some secret"
-	encrypted = kms.encrypt with "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5" as keyARN and plain as textToEncrypt)
+	encrypted = kms.encrypt with "arn:arn:aws:kms:us-east-1:838901125615:key/fd4e13e3-72c3-41ee-90de-4531f5c4c93a" as keyARN and plain as textToEncrypt
 	decrypted = kms.decrypt with encrypted as textToDecrypt
 and verifying:
 	encrypted = plain
 
 
 define "kms can get keyARN from alias" as test method doing:
-	kms = newAwsKMSWithLocalCredentials with "us-west-2" as awsRegion
+	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 	keyARN = kms.keyARNFromAlias with "prompto/seed" as alias
 and verifying:
-	keyARN = "arn:aws:kms:us-west-2:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5"
+	keyARN = "arn:aws:kms:us-east-1:838901125615:key/8a9e7c55-0803-46cf-8c62-bd9c4c6097e5"
 	
