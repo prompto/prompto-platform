@@ -3,6 +3,7 @@ package prompto.server;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -333,13 +334,14 @@ public class AppServer {
 		resource = new ResourceCollection(list.toArray(new Resource[list.size()]));
 		ResourceHandler rh = new ResourceHandler();
 		rh.setBaseResource(resource);
+		rh.setWelcomeFiles(new String[] { "index.html" });
 		rh.setDirectoriesListed(false);
 		return rh;
 	}
 	
 	private static Resource getBuiltInsResource() throws Exception {
 		List<Resource> resources = ObjectUtils.getClassesInCallStack().stream()
-				.filter(c->c.getName().startsWith("org.prompto"))
+				.filter(c->c.getName().startsWith("prompto"))
 				.map(AppServer::getClassResource)
 				.collect(Collectors.toList());
 		if(resources.isEmpty()) {
@@ -352,14 +354,20 @@ public class AppServer {
 	
 	private static Resource getClassResource(Class<?> klass) {
 		try {
-			URL root = klass.getProtectionDomain().getCodeSource().getLocation();
-			if(root.toExternalForm().endsWith(".jar"))
-				root = new URL("jar:" + root.toExternalForm() + "!/");
+			URL root = getClassResourceURL(klass);
+			logger.info(()->"Adding resource root: " + root.toExternalForm());
 			return Resource.newResource(root);
 		} catch(Exception e) {
 			logger.error(()->"Unable to load resources from " + klass.getName(), e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static URL getClassResourceURL(Class<?> klass) throws MalformedURLException {
+		URL root = klass.getProtectionDomain().getCodeSource().getLocation();
+		if(root.toExternalForm().endsWith(".jar"))
+			root = new URL("jar:" + root.toExternalForm() + "!/");
+		return root;
 	}
 
 	static boolean startComplete = false;
