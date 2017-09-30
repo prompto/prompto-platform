@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -106,6 +107,7 @@ public class TestConfig {
 		assertNotNull(names);
 	}
 	
+	@Ignore
 	@Test
 	public void testCanReadYamlReplicaSetConfig() throws Exception {
 		try(InputStream input = new FileInputStream("/Users/ericvergnaud/Development/prompto/prompto-deploy/aws/deploy-prompto-seed.yml")) {
