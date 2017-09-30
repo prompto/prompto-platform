@@ -1,8 +1,10 @@
 package prompto.config;
 
+import prompto.security.ILoginModuleFactory;
+
+
 public interface ILoginConfiguration {
 
-	String getModuleName();
-	IStoreConfiguration getStoreConfiguration();
+	ILoginModuleFactory getLoginModuleFactory();
 
 }

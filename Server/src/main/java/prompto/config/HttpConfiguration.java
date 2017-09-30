@@ -42,6 +42,7 @@ public class HttpConfiguration implements IHttpConfiguration {
 	
 	@Override
 	public ILoginConfiguration getLoginConfiguration() {
-		return null;
+		IConfigurationReader child = reader.getObject("login");
+		return child==null ? null : new LoginConfiguration(child);
 	}
 }

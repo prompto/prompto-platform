@@ -18,8 +18,11 @@ import prompto.config.IKeyStoreConfiguration;
 import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.config.IStoredLoginConfiguration;
 import prompto.memstore.MemStore;
+import prompto.security.ILoginModuleFactory;
 import prompto.security.StoredPasswordDigestLoginModule;
+import prompto.security.StoredPasswordDigestLoginModuleFactory;
 import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
@@ -47,12 +50,17 @@ public class TestLoginModule extends BaseServerTest {
 			@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
 			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
 			@Override public ILoginConfiguration getLoginConfiguration() { 
-				return new ILoginConfiguration() {
+				return new IStoredLoginConfiguration() {
+
 					@Override
-					public String getModuleName() {
-						return StoredPasswordDigestLoginModule.class.getName();
+					public ILoginModuleFactory getLoginModuleFactory() {
+						ILoginModuleFactory factory = new StoredPasswordDigestLoginModuleFactory();
+						factory.setLoginConfiguration(this);
+						return factory;
 					}
-					@Override public IStoreConfiguration getStoreConfiguration() { 
+					
+					@Override
+					public IStoreConfiguration getStoreConfiguration() {
 						return new IStoreConfiguration() {
 							@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 							@Override public String getUser() { return null; }
@@ -102,7 +110,8 @@ public class TestLoginModule extends BaseServerTest {
 		storable.setData("login", "john");
 		storable.setData("salt", salt);
 		storable.setData("method", "PBKDF2");
-		storable.setData("digest", StoredPasswordDigestLoginModule.digest_PBKDF2(password, salt));
+		String digest = StoredPasswordDigestLoginModule.digest_PBKDF2(password, salt);
+		storable.setData("digest", digest);
 		store.store(storable);
 	}
 

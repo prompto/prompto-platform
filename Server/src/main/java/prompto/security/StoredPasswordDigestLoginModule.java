@@ -17,8 +17,8 @@ import javax.security.auth.callback.CallbackHandler;
 import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
 
-import prompto.config.ILoginConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.config.IStoredLoginConfiguration;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import prompto.store.IQueryBuilder;
@@ -47,16 +47,13 @@ public class StoredPasswordDigestLoginModule extends LoginModuleBase {
 			Family.TEXT, false, null);
 
 	@Override
-	public void initialize(Subject subject, CallbackHandler callbackHandler,
-			Map<String, ?> sharedState, Map<String, ?> options) {
+	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
 		super.initialize(subject, callbackHandler, sharedState, options);
-		ILoginConfiguration config = (ILoginConfiguration) options
-				.get("config");
+		IStoredLoginConfiguration config = (IStoredLoginConfiguration) options.get("config");
 		IStoreConfiguration storeConfig = config.getStoreConfiguration();
 		try {
 			store = IStoreFactory.newStoreFromConfig(storeConfig);
-			store.createOrUpdateColumns(Arrays.asList(LOGIN, SALT, METHOD,
-					DIGEST, QUESTIONS, QUESTION, ANSWER));
+			store.createOrUpdateColumns(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
@@ -68,9 +65,7 @@ public class StoredPasswordDigestLoginModule extends LoginModuleBase {
 				username), Collections.singletonList("*"));
 	}
 
-	static final Map<String, BiFunction<String, String, String>> methods = Collections
-			.singletonMap("PBKDF2",
-					StoredPasswordDigestLoginModule::digest_PBKDF2);
+	static final Map<String, BiFunction<String, String, String>> methods = Collections.singletonMap("PBKDF2", StoredPasswordDigestLoginModule::digest_PBKDF2);
 
 	public static String digest_PBKDF2(String credentials, String saltString) {
 		try {
@@ -78,10 +73,8 @@ public class StoredPasswordDigestLoginModule extends LoginModuleBase {
 			final int keyLength = 512;
 			final char[] password = credentials.toCharArray();
 			final byte[] salt = Base64.getDecoder().decode(saltString);
-			PBEKeySpec spec = new PBEKeySpec(password, salt, iterations,
-					keyLength);
-			SecretKeyFactory skf = SecretKeyFactory
-					.getInstance("PBKDF2WithHmacSHA1");
+			PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLength);
+			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 			byte[] hash = skf.generateSecret(spec).getEncoded();
 			return Base64.getEncoder().encodeToString(hash);
 		} catch (Throwable t) {
@@ -130,8 +123,7 @@ public class StoredPasswordDigestLoginModule extends LoginModuleBase {
 		}
 
 		private boolean isNullCredentials(Object credentials) {
-			return (credentials == null || (credentials instanceof String && credentials
-					.toString().isEmpty()));
+			return (credentials == null || (credentials instanceof String && credentials.toString().isEmpty()));
 		}
 
 	}

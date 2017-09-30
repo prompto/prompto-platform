@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -59,7 +58,6 @@ import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
-import prompto.security.LoginModuleBase;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 import prompto.utils.ObjectUtils;
@@ -257,18 +255,12 @@ public class AppServer {
 	}
 
 	private static LoginService prepareLoginService(ILoginConfiguration login) throws Exception {
-		String loginModuleName = prepareLoginModule(login);
+		String loginModuleName = login.getLoginModuleFactory().installLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
 		loginService.setLoginModuleName(loginModuleName);
 		jettyServer.addBean(loginService);
 		return loginService;
-	}
-
-	private static String prepareLoginModule(ILoginConfiguration config) throws Exception {
-		String moduleName = config.getModuleName();
-		LoginModuleBase.install(moduleName, config);
-		return moduleName;
 	}
 
 	private static IdentityService prepareIdentityService() {
