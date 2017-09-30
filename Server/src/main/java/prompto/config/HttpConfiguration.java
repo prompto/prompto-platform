@@ -17,6 +17,11 @@ public class HttpConfiguration implements IHttpConfiguration {
 	public int getPort() {
 		return reader.getIntegerOrDefault("port", -1);
 	}
+	
+	@Override
+	public Integer getRedirectFrom() {
+		return reader.getIntegerOrDefault("redirectFrom", -1);
+	}
 
 	@Override
 	public String getAllowedOrigin() {

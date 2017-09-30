@@ -13,6 +13,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.ConstraintMapping;
@@ -25,6 +29,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -33,6 +38,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.handler.SecuredRedirectHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
@@ -133,7 +139,11 @@ public class AppServer {
 		ServerConnector sc = prepareConnector(http);
 		if(http.getPort()!=-1)
 			sc.setPort(http.getPort());
-		jettyServer.setConnectors(new Connector[] { sc });
+		ServerConnector sc2 = prepareRedirectConnector(http);
+		if(sc2==null)
+			jettyServer.setConnectors(new Connector[] { sc });
+		else
+			jettyServer.setConnectors(new Connector[] { sc, sc2 });
 		jettyServer.setHandler(prepareSecurityHandler(http, handler));
 		callServerAboutToStart(serverAboutToStartMethod, argValue);
 		AppServer.start(serverStopped);
@@ -142,6 +152,20 @@ public class AppServer {
 		return port;
 	}
 	
+	private static ServerConnector prepareRedirectConnector(IHttpConfiguration http) {
+		if(http.getRedirectFrom()==null)
+			return null;
+		else {
+			logger.info(()->"Preparing redirection from port " + http.getRedirectFrom() + " to port " + http.getPort());
+			HttpConfiguration config = new HttpConfiguration();
+			config.setSecurePort(http.getPort());
+			config.setSecureScheme("https");
+			ServerConnector sc = new ServerConnector(jettyServer, new HttpConnectionFactory(config));
+			sc.setPort(http.getRedirectFrom());
+			return sc;
+		}
+	}
+
 	private static ServerConnector prepareConnector(IHttpConfiguration http) throws Exception {
 		if("http".equalsIgnoreCase(http.getProtocol()))
 			return prepareHttpConnector(http);
@@ -254,11 +278,12 @@ public class AppServer {
 	private static IdentityService prepareIdentityService() {
 		return new DefaultIdentityService();
 	}
-
+	
 	static Handler prepareWebHandlers(String webSite) {
 		try {
 			logger.info(()->"Preparing web handlers...");
 			HandlerList list = new HandlerList();
+			list.addHandler(new SecuredRedirectHandler());
 			list.addHandler(newResourceHandler("/", webSite));
 			list.addHandler(newServiceHandler("/ws/"));
 			list.addHandler(new DefaultHandler());

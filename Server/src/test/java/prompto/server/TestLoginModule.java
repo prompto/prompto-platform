@@ -41,6 +41,7 @@ public class TestLoginModule extends BaseServerTest {
 		return new IHttpConfiguration() {
 			@Override public String getProtocol() { return "http"; }
 			@Override public int getPort() { return port; }
+			@Override public Integer getRedirectFrom() { return null; }
 			@Override public String getAllowedOrigin() { return null; }
 			@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
 			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
