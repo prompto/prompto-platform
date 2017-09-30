@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import org.apache.xerces.impl.dv.util.Base64;
@@ -18,7 +19,7 @@ import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.memstore.MemStore;
-import prompto.security.StoredHashedPasswordLoginModule;
+import prompto.security.StoredPasswordDigestLoginModule;
 import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
@@ -49,7 +50,7 @@ public class TestLoginModule extends BaseServerTest {
 				return new ILoginConfiguration() {
 					@Override
 					public String getModuleName() {
-						return StoredHashedPasswordLoginModule.class.getName();
+						return StoredPasswordDigestLoginModule.class.getName();
 					}
 					@Override public IStoreConfiguration getStoreConfiguration() { 
 						return new IStoreConfiguration() {
@@ -83,23 +84,25 @@ public class TestLoginModule extends BaseServerTest {
 
 	@Test
 	public void testThatKnownUserIsAllowedWhenUsingCorrectPassword() throws Exception {
-		createUserHashingPasswordWithMD5("john", "password");
+		createUserDigestingPasswordWithPBKDF2("john", "password");
 		int code = loadResource("john", "password");
 		assertEquals(200, code);
 	}
 
 	@Test
 	public void testThatKnownUserIsRejectedWhenUsingIncorrectPassword() throws Exception {
-		createUserHashingPasswordWithMD5("john", "password");
+		createUserDigestingPasswordWithPBKDF2("john", "password");
 		int code = loadResource("john", "wrong");
 		assertEquals(401, code);
 	}
 
-	private void createUserHashingPasswordWithMD5(String login, String password) {
+	private void createUserDigestingPasswordWithPBKDF2(String login, String password) throws NoSuchAlgorithmException {
+		String salt = StoredPasswordDigestLoginModule.newSalt();
 		IStorable storable = store.newStorable(Arrays.asList("User"), null);
 		storable.setData("login", "john");
-		storable.setData("method", "MD5");
-		storable.setData("digest", StoredHashedPasswordLoginModule.digest_MD5(password));
+		storable.setData("salt", salt);
+		storable.setData("method", "PBKDF2");
+		storable.setData("digest", StoredPasswordDigestLoginModule.digest_PBKDF2(password, salt));
 		store.store(storable);
 	}
 
