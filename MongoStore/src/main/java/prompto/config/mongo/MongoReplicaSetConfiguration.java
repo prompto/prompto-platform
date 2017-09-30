@@ -1,7 +1,7 @@
 package prompto.config.mongo;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import prompto.config.HostConfiguration;
 import prompto.config.IConfigurationReader;
@@ -27,7 +27,7 @@ public class MongoReplicaSetConfiguration implements IMongoReplicaSetConfigurati
 	
 	@Override
 	public Iterable<IHostConfiguration> getNodes() {
-		List<IConfigurationReader> nodes = reader.getArray("nodes");
+		Collection<IConfigurationReader> nodes = reader.getObjectsArray("nodes");
 		if(nodes==null || nodes.isEmpty())
 			return null;
 		return new Iterable<IHostConfiguration>() {

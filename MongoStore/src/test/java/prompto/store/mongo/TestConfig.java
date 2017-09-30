@@ -1,20 +1,28 @@
 package prompto.store.mongo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.mongodb.client.MongoIterable;
-
+import prompto.config.IConfigurationReader;
 import prompto.config.IHostConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.config.YamlConfigurationReader;
 import prompto.config.mongo.IMongoReplicaSetConfiguration;
 import prompto.config.mongo.IMongoStoreConfiguration;
+import prompto.config.mongo.MongoStoreConfiguration;
 import prompto.utils.ManualTests;
+
+import com.mongodb.client.MongoIterable;
 
 @Category(ManualTests.class)
 public class TestConfig {
@@ -97,4 +105,27 @@ public class TestConfig {
 		MongoIterable<String> names = store.client.getDatabase("admin").listCollectionNames();
 		assertNotNull(names);
 	}
+	
+	@Test
+	public void testCanReadYamlReplicaSetConfig() throws Exception {
+		try(InputStream input = new FileInputStream("/Users/ericvergnaud/Development/prompto/prompto-deploy/aws/deploy-prompto-seed.yml")) {
+			IConfigurationReader reader = new YamlConfigurationReader(input);
+			reader = reader.getObject("codeStore");
+			MongoStoreConfiguration config = new MongoStoreConfiguration(reader);
+			IMongoReplicaSetConfiguration rs = config.getReplicaSetConfiguration();
+			assertNotNull(rs);
+			assertEquals("Seed-shard-0", rs.getName());
+			Iterable<IHostConfiguration> nodes = rs.getNodes();
+			assertNotNull(nodes);
+			AtomicInteger count = new AtomicInteger();
+			nodes.forEach(n->{
+				assertEquals(27017, n.getPort().intValue());
+				assertTrue(n.getHost().startsWith("Seed-shard-"));
+				assertTrue(n.getHost().endsWith("-cp8j5.mongodb.net"));
+				count.incrementAndGet();
+			});
+			assertEquals(3, count.get());
+		}
+	}
+
 }
