@@ -19,6 +19,13 @@ public class MongoStoreConfiguration extends StoreConfiguration implements IMong
 		return reader.getIntegerOrDefault("port", 27017);
 	};
 	
+	
+	@Override
+	public IMongoReplicaSetConfiguration getReplicaSetConfiguration() {
+		IConfigurationReader child = reader.getObject("replicaSet");
+		return child==null ? null : new MongoReplicaSetConfiguration(child);
+	}
+	
 	@Override
 	public IStoreConfiguration withDbName(String dbName) {
 		return new MongoStoreConfiguration(reader) {
@@ -35,6 +42,16 @@ public class MongoStoreConfiguration extends StoreConfiguration implements IMong
 			@Override
 			public String getReplicaSetURI() {
 				return uri;
+			}
+		};
+	}
+
+	@Override
+	public IMongoStoreConfiguration withReplicaSetConfiguration(IMongoReplicaSetConfiguration config) {
+		return new MongoStoreConfiguration(reader) {
+			@Override
+			public IMongoReplicaSetConfiguration getReplicaSetConfiguration() {
+				return config;
 			}
 		};
 	}

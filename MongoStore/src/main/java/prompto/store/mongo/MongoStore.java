@@ -20,6 +20,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 
 import prompto.config.ISecretKeyConfiguration;
+import prompto.config.mongo.IMongoReplicaSetConfiguration;
 import prompto.config.mongo.IMongoStoreConfiguration;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
@@ -74,17 +75,41 @@ public class MongoStore implements IStore {
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
-		String uri = config.getReplicaSetURI();
-		if(uri==null) {
-			connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
-		} else {
+		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
+		String replicaUri = config.getReplicaSetURI();
+		if(replicaConfig!=null)
+			connectWithReplicaSetConfig(config, password);
+		else if(replicaUri!=null) 
 			connectWithURI(config, password);
-		}
+		else
+			connectWithParams(config, password);
 	}
 	
 	private char[] passwordFromConfig(IMongoStoreConfiguration config) throws Exception {
 		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
 		return secret==null ? null : ISecretKeyFactory.plainPasswordFromConfig(secret).toCharArray();
+	}
+
+	private void connectWithReplicaSetConfig(IMongoStoreConfiguration config, char[] password) {
+		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
+		StringBuilder sb = new StringBuilder();
+		sb.append("mongodb://");
+		replicaConfig.getNodes().forEach(h->{
+			sb.append(h.getHost());
+			sb.append(':');
+			sb.append(h.getPort());
+			sb.append(',');
+		});
+		sb.setLength(sb.length()-1);
+		sb.append('/');
+		sb.append(config.getDbName());
+		sb.append("?ssl=");
+		sb.append(replicaConfig.isSSL());
+		sb.append("&authSource=admin&replicaSet=");
+		sb.append(replicaConfig.getName());
+		String uri = sb.toString();
+		connectWithURI(config.withReplicaSetURI(uri), password);
+		
 	}
 
 	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
@@ -115,6 +140,10 @@ public class MongoStore implements IStore {
 		connectWithParams(host, port, database, user, password);
 	}
 	
+	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
+		connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
+	}
+
 	private void connectWithParams(String host, int port, String database, String user, char[] password) {
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
