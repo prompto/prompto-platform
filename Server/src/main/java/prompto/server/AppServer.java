@@ -180,6 +180,7 @@ public class AppServer {
 	
 	private static SslConnectionFactory createSSLFactory(IHttpConfiguration http) throws Exception {
 		SslContextFactory context = new SslContextFactory();
+		context.setSslSessionTimeout(180000);
 		IKeyStoreConfiguration ksc = http.getKeyStoreConfiguration();
 		IKeyStoreFactoryConfiguration ksfc = ksc.getKeyStoreFactoryConfiguration();
 		IKeyStoreFactory factory = ksfc.getKeyStoreFactory();

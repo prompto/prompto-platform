@@ -34,7 +34,7 @@ import prompto.security.PlainSecretKeyFactory;
 
 public abstract class BaseServerTest {
 	
-	int port = -1;
+	protected int port = -1;
 	boolean ssl = false;
 	
 	@Before
