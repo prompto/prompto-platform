@@ -125,7 +125,7 @@ public class TestCustomHandler {
 				decls.register(context);
 			}
 			IExpression args = new ExpressionValue(new DictType(TextType.instance()), NullValue.instance());
-			int port = AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, ()->BaseServerTest.prepareHandler(null), null);
+			int port = AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, (secure)->BaseServerTest.prepareHandler(null, secure), null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);

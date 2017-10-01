@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.SecuredRedirectHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.URLResource;
 import org.junit.After;
@@ -41,7 +42,7 @@ public abstract class BaseServerTest {
 	public void __before__() throws Throwable {
 		IServerConfiguration config = getServerConfig(port);
 		bootstrapCodeStore(config);
-		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, ()->prepareHandler(null), null);
+		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, (secure)->prepareHandler(null, secure), null);
 		assertTrue(AppServer.isStarted());
 	}
 	
@@ -166,9 +167,11 @@ public abstract class BaseServerTest {
 		};
 	}
 
-	public static Handler prepareHandler(String webSite) {
+	public static Handler prepareHandler(String webSite, boolean secure) {
 		try {
 			HandlerList list = new HandlerList();
+			if(secure)
+				list.addHandler(new SecuredRedirectHandler());
 			list.addHandler(getResourceHandler());
 			list.addHandler(getServiceHandler());
 			list.addHandler(new DefaultHandler());

@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
@@ -112,12 +112,12 @@ public class AppServer {
 		String webSite = config.getWebSiteRoot();
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug!=null)
-			debugServer(debug, http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(webSite));
+			debugServer(debug, http, webSite, serverAboutToStart, argsValue, (secure)->prepareWebHandlers(webSite, secure));
 		else
-			startServer(http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(webSite), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
+			startServer(http, webSite, serverAboutToStart, argsValue, (secure)->prepareWebHandlers(webSite, secure), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
 	}
 
-	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
+	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<Boolean, Handler> handler) throws Throwable {
 		DebugRequestServer server = Standalone.startDebugging(debug.getHost(), debug.getPort());
 		return startServer(http, webSite, serverAboutToStartMethod, argValue, handler, ()->{
 			Standalone.getGlobalContext().notifyTerminated();
@@ -126,13 +126,11 @@ public class AppServer {
 	}
 	
 	
-	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<Boolean, Handler> handler, Runnable serverStopped) throws Throwable {
 		logger.info(()->"Starting web server on port " + http.getPort() + "...");
 		HTTP_ALLOWED_ORIGIN = http.getAllowedOrigin();
 		jettyServer = new Server(http.getPort());
-		ServerConnector sc = prepareConnector(http);
-		if(http.getPort()!=-1)
-			sc.setPort(http.getPort());
+		ServerConnector sc = prepareMainConnector(http);
 		ServerConnector sc2 = prepareRedirectConnector(http);
 		if(sc2==null)
 			jettyServer.setConnectors(new Connector[] { sc });
@@ -160,11 +158,13 @@ public class AppServer {
 		}
 	}
 
-	private static ServerConnector prepareConnector(IHttpConfiguration http) throws Exception {
-		if("http".equalsIgnoreCase(http.getProtocol()))
-			return prepareHttpConnector(http);
-		else 
-			return prepareHttpsConnector(http);
+	private static ServerConnector prepareMainConnector(IHttpConfiguration http) throws Exception {
+		ServerConnector sc = "http".equalsIgnoreCase(http.getProtocol()) ?
+				prepareHttpConnector(http) :
+				prepareHttpsConnector(http);
+		if(http.getPort()!=-1)
+			sc.setPort(http.getPort());
+		return sc;
 	}
 	
 	private static ServerConnector prepareHttpConnector(IHttpConfiguration http) {
@@ -217,18 +217,18 @@ public class AppServer {
 		return 0;
 	}
 
-	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
+	static Handler prepareSecurityHandler(IHttpConfiguration config, Function<Boolean, Handler> handler) {
 		ILoginConfiguration login = config.getLoginConfiguration();
 		if(login==null) {
 			logger.info(()->"Not using security handler!");
-			return handler.get();
+			return handler.apply("https".equals(config.getProtocol()));
 		} else try {
 			logger.info(()->"Preparing security handler...");
 			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
 			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
 			security.setConstraintMappings(prepareConstraintMappings()); // when to require security
-			security.setHandler(handler.get());
+			security.setHandler(handler.apply("https".equals(config.getProtocol())));
 			logger.info(()->"Security handler successfully prepared.");
 			return security;
 		} catch(Exception e) {
@@ -268,11 +268,12 @@ public class AppServer {
 		return new DefaultIdentityService();
 	}
 	
-	static Handler prepareWebHandlers(String webSite) {
+	static Handler prepareWebHandlers(String webSite, boolean withSecuredRedirect) {
 		try {
 			logger.info(()->"Preparing web handlers...");
 			HandlerList list = new HandlerList();
-			list.addHandler(new SecuredRedirectHandler());
+			if(withSecuredRedirect)
+				list.addHandler(new SecuredRedirectHandler());
 			list.addHandler(newResourceHandler("/", webSite));
 			list.addHandler(newServiceHandler("/ws/"));
 			list.addHandler(new DefaultHandler());

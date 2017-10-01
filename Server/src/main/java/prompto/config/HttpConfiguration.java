@@ -20,7 +20,7 @@ public class HttpConfiguration implements IHttpConfiguration {
 	
 	@Override
 	public Integer getRedirectFrom() {
-		return reader.getIntegerOrDefault("redirectFrom", -1);
+		return reader.getInteger("redirectFrom");
 	}
 
 	@Override
