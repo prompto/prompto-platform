@@ -25,7 +25,7 @@ public class HttpConfiguration implements IHttpConfiguration {
 
 	@Override
 	public String getAllowedOrigin() {
-		return reader.getString("origin");
+		return reader.getString("allowedOrigin");
 	}
 
 	@Override
