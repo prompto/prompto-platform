@@ -243,14 +243,14 @@ public class ModuleProcess {
 		YamlEntry entry = (YamlEntry)document.getEntry("dataStore");
 		YamlMapping store = (YamlMapping)entry.getValue();
 		entry = store.getEntry("dbName");
-		entry.setValue(new YamlScalar("DATA"));
+		entry.setValue("DATA");
 	}
 
 	private void writeCodeStoreYamlEntries(YamlDocument document) throws YamlException {
 		YamlEntry entry = (YamlEntry)document.getEntry("codeStore");
 		YamlMapping store = (YamlMapping)entry.getValue();
 		entry = store.getEntry("dbName");
-		entry.setValue(new YamlScalar("CODE"));
+		entry.setValue("CODE");
 	}
 
 	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {
