@@ -1,7 +1,12 @@
 package prompto.codeserver;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.ServerSocket;
 import java.nio.file.Files;
@@ -21,8 +26,18 @@ import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStored;
+import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 import prompto.value.IValue;
+
+import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.document.YamlDocument;
+import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
+import com.esotericsoftware.yamlbeans.document.YamlEntry;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 /* represents the process used to run a Module on the server */
 public class ModuleProcess {
@@ -66,7 +81,7 @@ public class ModuleProcess {
 		}
 	}
 
-	private static ModuleProcess createModuleProcess(Object dbId) throws IOException, InterruptedException {
+	private static ModuleProcess createModuleProcess(Object dbId) throws Exception {
 		IStored stored = IDataStore.instance.get().fetchUnique(dbId);
 		if(stored==null)
 			return null;
@@ -127,7 +142,7 @@ public class ModuleProcess {
 	int port;
 	Process process;
 
-	public void start() throws IOException, InterruptedException {
+	public void start() throws Exception {
 		this.port = findAvailablePort();
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
@@ -152,29 +167,87 @@ public class ModuleProcess {
 		}
 	}
 
-	private String[] buildCommandLineArgs() {
+	private String[] buildCommandLineArgs() throws Exception {
 		List<String> cmds = new ArrayList<String>();
 		cmds.add("java");
 		// cmds.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888");
 		addClassPathArgs(cmds);
 		cmds.add(AppServer.class.getName());
-		addRelevantCmdLineArgs(cmds);
 		addPromptoArgs(cmds);
 		return cmds.toArray(new String[cmds.size()]);
 	}
 
-	private void addPromptoArgs(List<String> cmds) {
-		cmds.add("-http_port");
+	private void addPromptoArgs(List<String> args) throws Exception {
+		if(isYamlConfig())
+			addPromptoYamlConfigArgs(args);
+		else
+			addPromptoCommandLineArgs(args);
+	}
+	
+	
+	private void addPromptoCommandLineArgs(List<String> cmds) {
+		addRelevantCmdLineArgs(cmds);
+		addSpecificCmdLineArgs(cmds);
+	}
+
+	private void addSpecificCmdLineArgs(List<String> cmds) {
+		cmds.add("-http-port");
 		cmds.add(String.valueOf(port));
-		cmds.add("-application");
+		cmds.add("-applicationName");
 		cmds.add(module.toString());
-		cmds.add("-version");
+		cmds.add("-applicationVersion");
 		cmds.add(version.toString());
 		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
 		if(origin!=null) {
-			cmds.add("-origin");
+			cmds.add("-http-allowedOrigin");
 			cmds.add(origin);
 		}
+	}
+
+	private boolean isYamlConfig() {
+		String cmdLine = System.getProperty("sun.java.command").toString();
+		return cmdLine.contains("-yamlConfigFile");
+	}
+
+	private void addPromptoYamlConfigArgs(List<String> cmds) throws Exception {
+		File currentFile = locateYamlConfigFile();
+		try(Reader reader = new FileReader(currentFile)) {
+			YamlDocument currentYaml = new YamlDocumentReader(reader).read();
+			writeSpecificYamlEntries(currentYaml);
+			File targetFile = createTempYamlFile();
+			cmds.add("-yamlConfigFile");
+			cmds.add(targetFile.getAbsolutePath());
+			try(Writer writer = new FileWriter(targetFile)) {
+				YamlConfig config = new YamlConfig();
+				config.writeConfig.setWriteClassname(WriteClassName.NEVER);
+				config.writeConfig.setAutoAnchor(false);
+				YamlWriter targetYaml = new YamlWriter(writer, config);
+				targetYaml.write(currentYaml);
+			}
+		}
+	}
+
+	
+	private void writeSpecificYamlEntries(YamlDocument document) throws YamlException {
+		document.setEntry("applicationName", module.toString());
+		document.setEntry("applicationVersion", version.toString());
+		YamlEntry entry = (YamlEntry)document.getEntry("http");
+		YamlMapping http = (YamlMapping)entry.getValue();
+		http.setEntry("port", port);
+		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
+		if(origin!=null)
+			http.setEntry("allowedOrigin", origin);
+	}
+
+	private File createTempYamlFile() throws IOException {
+		return File.createTempFile("config-", ".yml");
+	}
+
+	private File locateYamlConfigFile() throws Exception {
+		String cmdLine = System.getProperty("sun.java.command").toString();
+		Map<String, String> args = CmdLineParser.parse(cmdLine);
+		String yamlFilePath = args.get("-yamlConfigFile");
+		return new File(yamlFilePath);
 	}
 
 	private void addClassPathArgs(List<String> cmds) {
@@ -202,8 +275,8 @@ public class ModuleProcess {
 		}
 	}
 
-	private static Set<String> relevantArgFullNames = new HashSet<>(Arrays.asList("-codeStoreFactory", "-dataStoreFactory", "-addOns"));
-	private static List<String> relevantArgStartNames = Arrays.asList("-mongo-", "-solr-");
+	private static Set<String> relevantArgFullNames = new HashSet<>(Arrays.asList("-addOnURLs"));
+	private static List<String> relevantArgStartNames = Arrays.asList("-codeStore-", "-dataStore-");
 	
 	private boolean isRelevantCmdLineArg(String key) {
 		if(relevantArgFullNames.contains(key))
