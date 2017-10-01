@@ -3,11 +3,9 @@ language: java
 jdk:
   - oraclejdk8
 install:
+  # need to install yamlbeans in local repo 
+  - mvn install -f prompto-java/yamlbeans/pom.xml -DskipTests=true -B -V -q
   # need to install core and runtime jars in local repo	
   - mvn install -f prompto-java/pom.xml -DskipTests=true -B -V -q
-  # - ls -all -R
-  # - cp -R prompto-java/Java-Runtime/src/main/resources/libraries Server/src/main/resources/libraries
-  # - cp -R prompto-java/Java-Runtime/src/main/resources/libraries CodeServer/src/main/resources/libraries
-  # - cp -R prompto-java/Java-Runtime/src/main/resources/libraries DataServer/src/main/resources/libraries
 script:
   - mvn install -B -V -q # -DskipTests=true 
