@@ -5,7 +5,7 @@ localMongoStore: &localMongoStore
 
 codeStore: 
   <<: *localMongoStore
-  dbName: ROOT
+  dbName: TOOLS
   
 dataStore: 
   <<: *localMongoStore

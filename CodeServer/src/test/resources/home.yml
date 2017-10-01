@@ -9,7 +9,7 @@ mongoStore: &homeMongoStore
     
 codeStore: 
   <<: *homeMongoStore
-  dbName: ROOT
+  dbName: TOOLS
   
 dataStore: 
   <<: *homeMongoStore
