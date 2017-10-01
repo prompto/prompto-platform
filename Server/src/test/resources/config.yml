@@ -1,7 +1,7 @@
 http:
   protocol: https
   port: 443
-  origin: somewhere
+  allowedOrigin: somewhere
   keyStore:
     provider:
       factory: prompto.security.FileKeyStoreFactory
