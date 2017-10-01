@@ -26,7 +26,6 @@ import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStored;
-import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 import prompto.value.IValue;
 
@@ -38,6 +37,7 @@ import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 import com.esotericsoftware.yamlbeans.document.YamlEntry;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.esotericsoftware.yamlbeans.document.YamlScalar;
 
 /* represents the process used to run a Module on the server */
 public class ModuleProcess {
@@ -217,6 +217,7 @@ public class ModuleProcess {
 			File targetFile = createTempYamlFile();
 			cmds.add("-yamlConfigFile");
 			cmds.add(targetFile.getAbsolutePath());
+			logger.info(()->"Writing yaml config to " + targetFile.getAbsolutePath());
 			try(Writer writer = new FileWriter(targetFile)) {
 				YamlConfig config = new YamlConfig();
 				config.writeConfig.setWriteClassname(WriteClassName.NEVER);
@@ -231,6 +232,28 @@ public class ModuleProcess {
 	private void writeSpecificYamlEntries(YamlDocument document) throws YamlException {
 		document.setEntry("applicationName", module.toString());
 		document.setEntry("applicationVersion", version.toString());
+		document.deleteEntry("webSiteRoot");
+		writeCodeStoreYamlEntries(document);
+		writeDataStoreYamlEntries(document);
+		writeHttpYamlEntries(document);
+			
+	}
+
+	private void writeDataStoreYamlEntries(YamlDocument document) throws YamlException {
+		YamlEntry entry = (YamlEntry)document.getEntry("dataStore");
+		YamlMapping store = (YamlMapping)entry.getValue();
+		entry = store.getEntry("dbName");
+		entry.setValue(new YamlScalar("DATA"));
+	}
+
+	private void writeCodeStoreYamlEntries(YamlDocument document) throws YamlException {
+		YamlEntry entry = (YamlEntry)document.getEntry("codeStore");
+		YamlMapping store = (YamlMapping)entry.getValue();
+		entry = store.getEntry("dbName");
+		entry.setValue(new YamlScalar("CODE"));
+	}
+
+	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {
 		YamlEntry entry = (YamlEntry)document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
 		http.setEntry("port", port);
@@ -243,11 +266,10 @@ public class ModuleProcess {
 		return File.createTempFile("config-", ".yml");
 	}
 
-	private File locateYamlConfigFile() throws Exception {
+	File locateYamlConfigFile() throws Exception {
 		String cmdLine = System.getProperty("sun.java.command").toString();
-		Map<String, String> args = CmdLineParser.parse(cmdLine);
-		String yamlFilePath = args.get("-yamlConfigFile");
-		return new File(yamlFilePath);
+		String location = locateYamlConfigFile(cmdLine);
+		return new File(location);
 	}
 
 	private void addClassPathArgs(List<String> cmds) {
@@ -261,6 +283,16 @@ public class ModuleProcess {
 	// see: https://stackoverflow.com/questions/13495449/how-to-split-a-command-line-like-string
 	private static final Pattern splitter = Pattern.compile("[^\\s]*\"(\\\\+\"|[^\"])*?\"|[^\\s]*'(\\\\+'|[^'])*?'|(\\\\\\s|[^\\s])+", Pattern.MULTILINE);
 	
+	public static String locateYamlConfigFile(String cmdLine) {
+		Matcher matcher = splitter.matcher(cmdLine);
+		while(matcher.find()) {
+			String key = matcher.group();
+			if("-yamlConfigFile".equals(key) && matcher.find())
+				return matcher.group();
+		}
+		return null;
+	}
+
 	private void addRelevantCmdLineArgs(List<String> cmds) {
 		String cmdLine = System.getProperty("sun.java.command").toString();
 		Matcher matcher = splitter.matcher(cmdLine);
