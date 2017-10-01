@@ -22,10 +22,13 @@ import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.IStored;
 import prompto.store.IQueryBuilder.MatchOp;
+import prompto.utils.Logger;
 
 /* need a shared cache to avoid costly calls to db */
 public class StoredUserInfoCache {
 
+	static Logger logger = new Logger();
+	
 	static StoredUserInfoCache instance = null;
 	static Timer timer = new Timer();
 	static long KEEP_ALIVE_DELAY = 30_000;
@@ -70,7 +73,7 @@ public class StoredUserInfoCache {
 		cache.values().stream()
 			.filter(c->((now - c.lastChecked) > KEEP_ALIVE_DELAY))
 			.collect(Collectors.toList()) // need an intermediate list to avoid modifying while traversing
-			.forEach(c->cache.remove(c.username));
+			.forEach(c->cache.remove(c.userName));
 		
 	}
 
@@ -83,12 +86,12 @@ public class StoredUserInfoCache {
 	@SuppressWarnings("serial")
 	class StoredPasswordDigestCredential extends Credential {
 
-		String username;
+		String userName;
 		long lastChecked;
 		int hashed;
 		
-		public StoredPasswordDigestCredential(String username) {
-			this.username = username;
+		public StoredPasswordDigestCredential(String userName) {
+			this.userName = userName;
 			lastChecked = 0;
 			hashed = 0;
 		}
@@ -105,10 +108,11 @@ public class StoredUserInfoCache {
 		}
 		
 		private boolean checkNow(Object credentials) {
+			logger.info(()->"Authenticating user: " + userName);
 			if (isNullCredentials(credentials))
 				return false;
 			IQueryBuilder query = store.newQueryBuilder();
-			query.verify(LOGIN, MatchOp.EQUALS, this.username);
+			query.verify(LOGIN, MatchOp.EQUALS, this.userName);
 			IStored authRecord = store.fetchOne(query.build());
 			if (authRecord == null)
 				return false; // unregistered user
