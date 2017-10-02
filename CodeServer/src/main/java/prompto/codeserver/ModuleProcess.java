@@ -37,7 +37,6 @@ import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 import com.esotericsoftware.yamlbeans.document.YamlEntry;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
-import com.esotericsoftware.yamlbeans.document.YamlScalar;
 
 /* represents the process used to run a Module on the server */
 public class ModuleProcess {
