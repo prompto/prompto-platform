@@ -266,27 +266,56 @@ public class ModuleProcess {
 	}
 
 	File locateYamlConfigFile() throws Exception {
-		String cmdLine = System.getProperty("sun.java.command").toString();
-		String location = locateYamlConfigFile(cmdLine);
+		String location = locateYamlConfigFilePath();
 		return new File(location);
 	}
 
 	private void addClassPathArgs(List<String> cmds) {
-		String classPaths = Stream.of(System.getProperty("java.class.path").toString().split(":"))
-				.filter((s)->!s.contains("CodeServer"))
-				.collect(Collectors.joining(":"));
+		String cp = extractCmdLineArgument("-cp");
+		if(cp==null)
+			addServerJarArgs(cmds);
+		else
+			addClassFileArgs(cmds);
+			
+	}
+
+	private void addClassFileArgs(List<String> cmds) {
 		cmds.add("-cp");
+		String classPaths = Stream.of(System.getProperty("java.class.path").toString().split(":"))
+				.filter((s)->!s.startsWith(this.getClass().getPackage().getName()))
+				.collect(Collectors.joining(":"));
 		cmds.add(classPaths);
+	}
+
+	private void addServerJarArgs(List<String> cmds) {
+		// when running from jars, the jar is the wd
+		File wd = new File(System.getProperty("user.dir"));
+		for(File file : wd.listFiles()) {
+			if(file.getName().startsWith("Server-") && file.getName().endsWith(".jar")) {
+				cmds.add("-jar");
+				cmds.add(file.getAbsolutePath());
+				return;
+			}
+		}
+		throw new IllegalStateException("Could not locate Server jar in " + System.getProperty("user.dir") + "!");
 	}
 
 	// see: https://stackoverflow.com/questions/13495449/how-to-split-a-command-line-like-string
 	private static final Pattern splitter = Pattern.compile("[^\\s]*\"(\\\\+\"|[^\"])*?\"|[^\\s]*'(\\\\+'|[^'])*?'|(\\\\\\s|[^\\s])+", Pattern.MULTILINE);
 	
-	public static String locateYamlConfigFile(String cmdLine) {
+	private static String locateYamlConfigFilePath() {
+		return extractCmdLineArgument("-yamlConfigFile");
+	}
+
+	public static String extractCmdLineArgument(String argument) {
+		return extractCmdLineArgument(System.getProperty("sun.java.command"), argument);
+	}
+
+	public static String extractCmdLineArgument(String cmdLine, String argument) {
 		Matcher matcher = splitter.matcher(cmdLine);
 		while(matcher.find()) {
 			String key = matcher.group();
-			if("-yamlConfigFile".equals(key) && matcher.find())
+			if(argument.equals(key) && matcher.find())
 				return matcher.group();
 		}
 		return null;
