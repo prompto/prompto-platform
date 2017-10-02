@@ -94,7 +94,7 @@ public class AppServer {
 	}
 
 	public static IServerConfiguration loadConfiguration(String[] args) throws Exception {
-		Map<String, String> argsMap = CmdLineParser.parse(args);
+		Map<String, String> argsMap = CmdLineParser.read(args);
 		IConfigurationReader reader = Standalone.readerFromArgs(argsMap);
 		IServerConfiguration config = new ServerConfiguration(reader, argsMap);
 		config.setRuntimeLibsSupplier(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
