@@ -15,10 +15,13 @@ import prompto.server.DataServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
+import prompto.utils.Logger;
 import prompto.utils.ResourceUtils;
 
 public class CodeServer {
 
+	static Logger logger = new Logger();
+	
 	public static void main(String[] args) throws Throwable {
 		main(args, false);
 	}
@@ -38,9 +41,13 @@ public class CodeServer {
 	
 	private static void redirectDataServlet(IServerConfiguration config) {
 		try {
-			IStoreConfiguration code = config.getDataStoreConfiguration(); // points to CODE
-			IStoreFactory factory = IStoreFactory.newStoreFactory(code.getFactory());
-			DataServlet.store = factory.newStore(code.withDbName("DATA"));
+			IStoreConfiguration code = config.getDataStoreConfiguration(); // originally points to TOOLS or CODE
+			IStoreConfiguration data = code.withDbName("DATA");
+			logger.info(()->"Redirecting data servlet to " + data.getDbName() + ".");
+			IStoreFactory factory = IStoreFactory.newStoreFactory(data.getFactory());
+			DataServlet.store = factory.newStore(data);
+			// TODO ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), null, "someApp", PromptoVersion.LATEST, new URL[]{}, new URL[]{});
+			// TODO Standalone.synchronizeSchema(codeStore, DataServlet.store);
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}
