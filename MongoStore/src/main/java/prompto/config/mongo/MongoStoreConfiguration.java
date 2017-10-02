@@ -1,59 +1,46 @@
 package prompto.config.mongo;
 
+import java.util.function.Supplier;
+
 import prompto.config.IConfigurationReader;
-import prompto.config.IStoreConfiguration;
 import prompto.config.StoreConfiguration;
 
 public class MongoStoreConfiguration extends StoreConfiguration implements IMongoStoreConfiguration {
 
+	Supplier<String> replicaSetURI;
+	Supplier<IMongoReplicaSetConfiguration> replicaSetConfig;
+	
 	public MongoStoreConfiguration(IConfigurationReader reader) {
 		super(reader);
+		port = ()->reader.getIntegerOrDefault("port", 27017);
+		replicaSetURI = ()->reader.getString("replicaSetURI");
+		replicaSetConfig = ()->{
+			IConfigurationReader child = reader.getObject("replicaSet");
+			return child==null ? null : new MongoReplicaSetConfiguration(child);
+		};
 	}
 	
 	@Override
 	public String getReplicaSetURI() {
-		return reader.getString("replicaSetURI");
+		return replicaSetURI.get();
 	}
-	
-	public Integer getPort() {
-		return reader.getIntegerOrDefault("port", 27017);
-	};
-	
-	
+
 	@Override
 	public IMongoReplicaSetConfiguration getReplicaSetConfiguration() {
-		IConfigurationReader child = reader.getObject("replicaSet");
-		return child==null ? null : new MongoReplicaSetConfiguration(child);
+		return replicaSetConfig.get();
 	}
-	
-	@Override
-	public IStoreConfiguration withDbName(String dbName) {
-		return new MongoStoreConfiguration(reader) {
-			@Override
-			public String getDbName() {
-				return dbName;
-			}
-		};
-	}
-	
+
 	@Override
 	public IMongoStoreConfiguration withReplicaSetURI(String uri) {
-		return new MongoStoreConfiguration(reader) {
-			@Override
-			public String getReplicaSetURI() {
-				return uri;
-			}
-		};
+		replicaSetURI = ()->uri;
+		return this;
 	}
 
 	@Override
 	public IMongoStoreConfiguration withReplicaSetConfiguration(IMongoReplicaSetConfiguration config) {
-		return new MongoStoreConfiguration(reader) {
-			@Override
-			public IMongoReplicaSetConfiguration getReplicaSetConfiguration() {
-				return config;
-			}
-		};
+		replicaSetConfig = ()->config;
+		return this;
 	}
+
 	
 }
