@@ -22,6 +22,7 @@ import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.intrinsic.PromptoVersion;
+import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
@@ -34,7 +35,7 @@ public abstract class BaseServerTest {
 	
 	@Before
 	public void __before__() throws Throwable {
-		IServerConfiguration config = getServerConfig(port);
+		IServerConfiguration config = getServerConfig(-1);
 		bootstrapCodeStore(config);
 		port = AppServer.startServer(config.getHttpConfiguration(), null, null, null, (secure)->prepareHandler(null, secure), null);
 		assertTrue(AppServer.isStarted());
@@ -44,7 +45,10 @@ public abstract class BaseServerTest {
 		return new IServerConfiguration.Inline()
 			.withHttpConfiguration(ssl ? this.getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration())
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-			.withApplicationName("test");
+			.withApplicationName("test")
+			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
+			.withTestMode(true)
+			.withLoadRuntime(false);
 	}
 
 	protected IHttpConfiguration getHttpsConfiguration() {

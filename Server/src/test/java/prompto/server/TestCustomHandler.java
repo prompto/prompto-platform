@@ -55,7 +55,8 @@ public class TestCustomHandler {
 			})
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationName("test")
-			.withApplicationVersion(PromptoVersion.parse("1.0.0"));
+			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
+			.withTestMode(true);
 	}
 
 	@FunctionalInterface

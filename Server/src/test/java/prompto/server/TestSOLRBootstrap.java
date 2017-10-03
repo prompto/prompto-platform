@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import prompto.config.IRuntimeConfiguration;
 import prompto.intrinsic.PromptoVersion;
+import prompto.libraries.Libraries;
 import prompto.runtime.Standalone;
 import prompto.store.Family;
 import prompto.store.IStore;
@@ -30,8 +31,11 @@ public class TestSOLRBootstrap {
 	
 	private IRuntimeConfiguration newRuntimeConfig() {
 		return new IRuntimeConfiguration.Inline()
+			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-			.withApplicationName("test");
+			.withApplicationName("test")
+			.withLoadRuntime(false)
+			.withTestMode(true);
 	}
 
 	private EmbeddedSOLRStore newEmbeddedStore() {

@@ -25,7 +25,9 @@ public class TestMongoBootstrap extends BaseMongoTest {
 		return new IRuntimeConfiguration.Inline()
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-			.withApplicationName("test");
+			.withApplicationName("test")
+			.withLoadRuntime(false)
+			.withTestMode(true);
 	}
 
 	@Test
