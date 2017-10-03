@@ -40,6 +40,7 @@ import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import prompto.cloud.CloudHelper;
 import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
@@ -82,10 +83,27 @@ public class AppServer {
 	}
 
 	public static void main(IServerConfiguration config, Consumer<IServerConfiguration> afterStart) throws Throwable {
+		config = extendConfigWithCloudAddOnURL(config);
 		initialize(config);
 		run(config);
 		if(afterStart!=null)
 			afterStart.accept(config);
+	}
+
+	private static IServerConfiguration extendConfigWithCloudAddOnURL(IServerConfiguration config) {
+		URL cloudAddOnURL = CloudHelper.getCloudAddOnURL();
+		if(cloudAddOnURL==null)
+			return config;
+		URL[] addOnURLS = config.getAddOnURLs();
+		if(addOnURLS==null)
+			addOnURLS = new URL[] { cloudAddOnURL };
+		else {
+			URL[] all = new URL[addOnURLS.length + 1];
+			System.arraycopy(addOnURLS, 0, all, 0, addOnURLS.length);
+			all[addOnURLS.length] = cloudAddOnURL;
+			addOnURLS = all;
+		}
+		return config.withAddOnURLs(addOnURLS);
 	}
 
 	public static void initialize(IServerConfiguration config) throws Throwable {
@@ -97,8 +115,7 @@ public class AppServer {
 		Map<String, String> argsMap = CmdLineParser.read(args);
 		IConfigurationReader reader = Standalone.readerFromArgs(argsMap);
 		IServerConfiguration config = new ServerConfiguration(reader, argsMap);
-		config.setRuntimeLibsSupplier(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
-		return config;
+		return config.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
 	}
 
 	private static void run(IServerConfiguration config) throws Throwable {
