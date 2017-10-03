@@ -1,29 +1,25 @@
 package prompto.server;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.ILoginConfiguration;
 import prompto.config.IServerConfiguration;
-import prompto.config.IStoreConfiguration;
 import prompto.declaration.DeclarationList;
 import prompto.expression.IExpression;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
-import prompto.runtime.Standalone;
 import prompto.runtime.Context;
+import prompto.runtime.Standalone;
 import prompto.type.DictType;
 import prompto.type.TextType;
 import prompto.utils.Out;
@@ -47,20 +43,8 @@ public class TestCustomHandler {
 	}
 	
 	private IServerConfiguration newServerConfiguration() {
-		return new IServerConfiguration() {
-			@Override public void setRuntimeLibsSupplier(Supplier<Collection<URL>> supplier) { }
-			@Override public Supplier<Collection<URL>> getRuntimeLibsSupplier() { return ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class); }
-			@Override public IStoreConfiguration getCodeStoreConfiguration() { return null; }
-			@Override public IStoreConfiguration getDataStoreConfiguration() { return null; }
-			@Override public IDebugConfiguration getDebugConfiguration() { return null; }
-			@Override public Map<String, String> getArguments() { return null; }
-			@Override public String getApplicationName() { return "test"; }
-			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
-			@Override public boolean isTestMode() { return true; }
-			@Override public URL[] getAddOnURLs() { return null; }
-			@Override public URL[] getResourceURLs() { return null; }
-			@Override public boolean isLoadRuntime() { return true; }
-			@Override public IHttpConfiguration getHttpConfiguration() { return new IHttpConfiguration() {
+		return new IServerConfiguration.Inline()
+			.withHttpConfiguration(new IHttpConfiguration() {
 				@Override public String getProtocol() { return "http"; }
 				@Override public int getPort() { return -1; }
 				@Override public Integer getRedirectFrom() { return null; }
@@ -68,10 +52,10 @@ public class TestCustomHandler {
 				@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
 				@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
 				@Override public ILoginConfiguration getLoginConfiguration() { return null; }
-			}; }
-			@Override public String getServerAboutToStartMethod() { return null; }
-			@Override public String getWebSiteRoot() { return null; }
-		};
+			})
+			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
+			.withApplicationName("test")
+			.withApplicationVersion(PromptoVersion.parse("1.0.0"));
 	}
 
 	@FunctionalInterface

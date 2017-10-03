@@ -28,14 +28,12 @@ public class CodeServer {
 	
 	public static void main(String[] args, boolean testMode) throws Throwable {
 		IServerConfiguration config = AppServer.loadConfiguration(args);
-		config = new IServerConfiguration.Sourced(config) {
-			
-			@Override public String getApplicationName() { return "dev-center"; }
-			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
-			@Override public URL[] getResourceURLs() { return CodeServer.getResourceURLs(); }
-			@Override public String getServerAboutToStartMethod() { return "serverAboutToStart";  }
-			@Override public boolean isTestMode() { return testMode; }
-		};
+		config = config
+				.withServerAboutToStartMethod("serverAboutToStart")
+				.withApplicationName("dev-center")
+				.withApplicationVersion(PromptoVersion.parse("1.0.0"))
+				.withResourceURLs(CodeServer.getResourceURLs())
+				.withTestMode(testMode);
 		AppServer.main(config, CodeServer::redirectDataServlet); 
 	}
 	

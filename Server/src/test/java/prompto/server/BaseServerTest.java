@@ -1,12 +1,9 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.security.KeyStore;
-import java.util.Collection;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
@@ -18,16 +15,13 @@ import org.junit.After;
 import org.junit.Before;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
-import prompto.config.IStoreConfiguration;
 import prompto.intrinsic.PromptoVersion;
-import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
@@ -47,23 +41,10 @@ public abstract class BaseServerTest {
 	}
 	
 	protected IServerConfiguration getServerConfig(int port) {
-		return new IServerConfiguration() {
-			@Override public void setRuntimeLibsSupplier(Supplier<Collection<URL>> supplier) { }
-			@Override public boolean isTestMode() { return true; }
-			@Override public boolean isLoadRuntime() { return false; }
-			@Override public Supplier<Collection<URL>> getRuntimeLibsSupplier() { return ()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class); }
-			@Override public URL[] getResourceURLs() { return null; }
-			@Override public IDebugConfiguration getDebugConfiguration() { return null; }
-			@Override public IStoreConfiguration getDataStoreConfiguration() { return null; }
-			@Override public IStoreConfiguration getCodeStoreConfiguration() { return null; }
-			@Override public Map<String, String> getArguments() { return null; }
-			@Override public PromptoVersion getApplicationVersion() { return PromptoVersion.parse("1.0.0"); }
-			@Override public String getApplicationName() { return "test"; }
-			@Override public URL[] getAddOnURLs() { return null; }
-			@Override public IHttpConfiguration getHttpConfiguration() { return ssl ? getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration(); }
-			@Override public String getServerAboutToStartMethod() { return null; }
-			@Override public String getWebSiteRoot() { return null; }
-		};
+		return new IServerConfiguration.Inline()
+			.withHttpConfiguration(ssl ? this.getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration())
+			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
+			.withApplicationName("test");
 	}
 
 	protected IHttpConfiguration getHttpsConfiguration() {
