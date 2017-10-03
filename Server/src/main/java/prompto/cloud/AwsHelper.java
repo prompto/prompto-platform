@@ -5,11 +5,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
-public class AwsCloudHelper extends CloudHelper {
+class AwsHelper implements Cloud.Helper {
 	
 	private Boolean isThisCloud = null;
 	
@@ -21,18 +26,22 @@ public class AwsCloudHelper extends CloudHelper {
 	}
 	
 	@Override
-	public URL getAddOnURL() {
+	public Collection<URL> getJarURLs() {
 		if(!checkHost())
 			return null;
 		File awsDir = new File("/AwsClient/");
-		for(File child : awsDir.listFiles()) {
-			if(child.getName().startsWith("AwsClient-") && child.getName().endsWith(".jar")) try {
-				return child.toURI().toURL();
-			} catch(IOException e) {
-				return null;
-			}		
+		return Stream.of(awsDir.listFiles())
+				.map(File::toURI)
+				.map(this::safeURItoURL)
+				.collect(Collectors.toList());
+	}
+	
+	URL safeURItoURL(URI uri) {
+		try {
+			return uri.toURL();
+		} catch(MalformedURLException e) {
+			throw new RuntimeException(); // will never happen in this context
 		}
-		return null;
 	}
 
 	private Boolean checkThisCloud() {

@@ -9,7 +9,10 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.ServerSocket;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -270,7 +273,7 @@ public class ModuleProcess {
 		return new File(location);
 	}
 
-	private void addClassPathArgs(List<String> cmds) {
+	private void addClassPathArgs(List<String> cmds) throws URISyntaxException {
 		String cp = extractCmdLineArgument("-cp");
 		if(cp==null)
 			addServerJarArgs(cmds);
@@ -287,10 +290,10 @@ public class ModuleProcess {
 		cmds.add(classPaths);
 	}
 
-	private void addServerJarArgs(List<String> cmds) {
-		// when running from jars, the jar is the wd
-		File wd = new File(System.getProperty("user.dir"));
-		for(File file : wd.listFiles()) {
+	private void addServerJarArgs(List<String> cmds) throws URISyntaxException {
+		URL thisJar = this.getClass().getProtectionDomain().getCodeSource().getLocation();
+		File parent = Paths.get(thisJar.toURI()).getParent().toFile();
+		for(File file : parent.listFiles()) {
 			if(file.getName().startsWith("Server-") && file.getName().endsWith(".jar")) {
 				cmds.add("-jar");
 				cmds.add(file.getAbsolutePath());

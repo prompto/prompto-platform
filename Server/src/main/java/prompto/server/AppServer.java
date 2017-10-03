@@ -3,12 +3,18 @@ package prompto.server;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +46,7 @@ import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-import prompto.cloud.CloudHelper;
+import prompto.cloud.Cloud;
 import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
@@ -83,28 +89,41 @@ public class AppServer {
 	}
 
 	public static void main(IServerConfiguration config, Consumer<IServerConfiguration> afterStart) throws Throwable {
-		config = extendConfigWithCloudAddOnURL(config);
+		installCloudJARs();
 		initialize(config);
 		run(config);
 		if(afterStart!=null)
 			afterStart.accept(config);
 	}
 
-	private static IServerConfiguration extendConfigWithCloudAddOnURL(IServerConfiguration config) {
-		URL cloudAddOnURL = CloudHelper.getCloudAddOnURL();
-		if(cloudAddOnURL==null)
-			return config;
-		URL[] addOnURLS = config.getAddOnURLs();
-		if(addOnURLS==null)
-			addOnURLS = new URL[] { cloudAddOnURL };
-		else {
-			URL[] all = new URL[addOnURLS.length + 1];
-			System.arraycopy(addOnURLS, 0, all, 0, addOnURLS.length);
-			all[addOnURLS.length] = cloudAddOnURL;
-			addOnURLS = all;
-		}
-		return config.withAddOnURLs(addOnURLS);
+	private static void installCloudJARs() throws Exception {
+		Cloud cloud = Cloud.current();
+		if(cloud==null)
+			return;
+		Collection<URL> jars = cloud.getJarURsL();
+		if(jars==null)
+			return;
+		jars = filterOutAlreadyLoadedJars(jars);
+		addJarsToSystemClassLoader(jars);
 	}
+	
+	private static Collection<URL> filterOutAlreadyLoadedJars(Collection<URL> jars) {
+		URLClassLoader loader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+		Set<URL> alreadyLoaded = new HashSet<>(Arrays.asList(loader.getURLs()));
+		return jars.stream()
+				.filter(u->!alreadyLoaded.contains(u))
+				.collect(Collectors.toList());
+	}
+
+	 private static void addJarsToSystemClassLoader(Collection<URL> jars) throws Exception {
+		URLClassLoader loader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+        method.setAccessible(true); /*promote the method to public access*/
+        for(URL url : jars) {
+        	logger.info(()->"Adding JAR " + url.toString() + " to system class loader...");
+        	method.invoke(loader, new Object[] { url });
+        }
+    }
 
 	public static void initialize(IServerConfiguration config) throws Throwable {
 		ServerIdentifierProcessor.register();
