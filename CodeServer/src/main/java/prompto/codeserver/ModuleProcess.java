@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -145,7 +146,7 @@ public class ModuleProcess {
 	Process process;
 
 	public void start() throws Exception {
-		this.port = findAvailablePort();
+		this.port = findAvailablePortInRange(8080, 9090); // TODO extract from security group
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
 			.redirectError(Redirect.INHERIT)
@@ -163,9 +164,25 @@ public class ModuleProcess {
 	}
 	
 
-	private int findAvailablePort() throws IOException {
-		try(ServerSocket s = new ServerSocket(0)) {
-			return s.getLocalPort();
+	public static int findAvailablePortInRange(int min, int max) throws IOException {
+		Set<Integer> alreadyTried = new HashSet<>();
+		for(;;) {
+			int port = ThreadLocalRandom.current().nextInt(min, max + 1);
+			if(!alreadyTried.add(port))
+				continue;
+			if(alreadyTried.size() >= 1 + max - min)
+				throw new IOException("No available port!");
+			if(isAvailablePort(port))
+				return port;
+		}
+	}
+	
+	public static boolean isAvailablePort(int port) {
+		try(ServerSocket s = new ServerSocket(port)) {
+			s.setReuseAddress(true);
+			return true;
+		} catch(IOException e) {
+			return false;
 		}
 	}
 
@@ -259,6 +276,7 @@ public class ModuleProcess {
 		YamlEntry entry = (YamlEntry)document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
 		http.setEntry("port", port);
+		http.deleteEntry("redirectFom");
 		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
 		if(origin!=null)
 			http.setEntry("allowedOrigin", origin);
