@@ -36,14 +36,14 @@ public abstract class BaseServerTest {
 	
 	@Before
 	public void __before__() throws Throwable {
-		IServerConfiguration config = getServerConfig(-1);
-		bootstrapCodeStore(config);
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
+		IServerConfiguration config = getServerConfig();
+		bootstrapCodeStore(config);
 		AppServer.startServer(config.getHttpConfiguration(), null, null, null, this::prepareHandler, null);
 		assertTrue(AppServer.isStarted());
 	}
 	
-	protected IServerConfiguration getServerConfig(int port) {
+	protected IServerConfiguration getServerConfig() {
 		return new IServerConfiguration.Inline()
 			.withHttpConfiguration(ssl ? this.getHttpsConfiguration() : BaseServerTest.this.getHttpConfiguration())
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))

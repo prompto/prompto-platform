@@ -18,7 +18,7 @@ public class TestResourceInJar {
 	@Test
 	public void testThatResourceCanBeFoundInZipFile() throws IOException {
 		try(ZipFile zip = new ZipFile("/Users/ericvergnaud/.m2/repository/org/prompto/Server/0.0.1-SNAPSHOT/Server-0.0.1-SNAPSHOT.jar")) {
-			ZipEntry entry = zip.getEntry("mimeTypes.json");
+			ZipEntry entry = zip.getEntry("jetty-logging.properties");
 			assertNotNull(entry);
 		}
 	}
