@@ -26,7 +26,7 @@ public class TestEditor extends BaseWebTest {
 				"-codeStore-root",
 				"target/test-classes/solr-test",
 				"-codeStore-dbName",
-				"CODE",
+				"APPS",
 				"-dataStore-factory",
 				"prompto.store.solr.SOLRStoreFactory",
 				"-dataStore-root",

@@ -17,7 +17,7 @@ public class TestMongoBootstrap extends BaseMongoTest {
 	
 	@Before
 	public void before() throws Exception {
-		createStore("CODE");
+		createStore("APPS");
 		Standalone.bootstrapCodeStore(store, newRuntimeConfig());
 	}
 	

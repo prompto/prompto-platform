@@ -249,7 +249,7 @@ public class ModuleProcess {
 		YamlEntry entry = (YamlEntry)document.getEntry("codeStore");
 		YamlMapping store = (YamlMapping)entry.getValue();
 		entry = store.getEntry("dbName");
-		entry.setValue("CODE");
+		entry.setValue("APPS");
 	}
 
 	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {

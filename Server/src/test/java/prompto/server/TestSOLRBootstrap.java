@@ -39,7 +39,7 @@ public class TestSOLRBootstrap {
 	}
 
 	private EmbeddedSOLRStore newEmbeddedStore() {
-		return new EmbeddedSOLRStore(new File("target/test-classes/solr-test"), "CODE");
+		return new EmbeddedSOLRStore(new File("target/test-classes/solr-test"), "APPS");
 	}
 
 	@After
