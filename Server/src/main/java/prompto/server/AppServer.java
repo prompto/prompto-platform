@@ -21,9 +21,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
@@ -37,7 +34,6 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -318,15 +314,7 @@ public class AppServer {
 	static Handler prepareWebHandlers(IServerConfiguration config) {
 		try {
 			logger.info(()->"Preparing web handlers...");
-			HandlerList list = new HandlerList() {
-				@Override
-				public void handle(String target, Request baseRequest,
-						HttpServletRequest request, HttpServletResponse response)
-						throws IOException, ServletException {
-					logger.info(()->"HandlerList: " + request.toString());
-					super.handle(target, baseRequest, request, response);
-				}
-			};
+			HandlerList list = new HandlerList();
 			if(config.getHttpConfiguration().getRedirectFrom()!=null)
 				list.addHandler(new SecuredRedirectHandler());
 			list.addHandler(newResourceHandler("/", config.getWebSiteRoot()));
@@ -387,13 +375,7 @@ public class AppServer {
 	}
 	
 	public static ServletContextHandler newServiceHandler(String path, URL base, boolean sendsXAutorization) {
-		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS) {
-			@Override
-			public void handle(Request request, Runnable runnable) {
-				logger.info(()->"ServletContextHandler: " + request.toString());
-				super.handle(request, runnable);
-			}
-		};
+		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
         handler.setContextPath(path);
         handler.setResourceBase(base.toExternalForm());
         handler.addServlet(new ControlServlet().getHolder(), "/control/*");

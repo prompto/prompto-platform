@@ -17,19 +17,23 @@ import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.B64Code;
 
+import prompto.utils.Logger;
+
 final class BasicAuthenticatorWithXAuthorization extends BasicAuthenticator {
+
+	static final Logger logger = new Logger();
 	
 	@Override
 	public Authentication validateRequest(ServletRequest req, ServletResponse res, boolean mandatory) throws ServerAuthException {
 	     HttpServletRequest request = (HttpServletRequest)req;
-		AppServer.logger.info(()->"BasicAuthenticator: " + request.toString());
-		AppServer.logger.info(()->"Origin: " + request.getHeader("Origin"));
-		AppServer.logger.info(()->"Authorization: " + request.getHeader("Authorization"));
-		AppServer.logger.info(()->"X-Authorization: " + request.getHeader("X-Authorization"));
+//		logger.debug(()->"BasicAuthenticator: " + request.toString());
+//		logger.debug(()->"Origin: " + request.getHeader("Origin"));
+//		logger.debug(()->"Authorization: " + request.getHeader("Authorization"));
+//		logger.debug(()->"X-Authorization: " + request.getHeader("X-Authorization"));
 		HttpServletResponse response = (HttpServletResponse) res;
 		String credentials = request.getHeader(HttpHeader.AUTHORIZATION.asString());
 		if(credentials==null && request.getHeader("X-Authorization")!=null) {
-			AppServer.logger.info(()->"Using X-Authorization for Authorization");
+			logger.debug(()->"Using X-Authorization for Authorization");
 			credentials = request.getHeader("X-Authorization");
 		}
 		try {

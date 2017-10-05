@@ -55,6 +55,11 @@ public class PromptoServlet extends HttpServletWithHolder {
 		sb.append(":");
 		sb.append(req.getServerPort());
 		REGISTERED_ORIGIN.set(sb.toString());
+		if(sendsXAutorization) {
+			logger.debug(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
+			if(req.getHeader("Authorization")!=null)
+				resp.addHeader("X-Authorization", req.getHeader("Authorization"));
+		}
 		super.service(req, resp);
 	}
 
@@ -70,11 +75,6 @@ public class PromptoServlet extends HttpServletWithHolder {
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
 			RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
-			if(sendsXAutorization) {
-				logger.info(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
-				if(req.getHeader("Authorization")!=null)
-					resp.addHeader("X-Authorization", req.getHeader("Authorization"));
-			}
 			resp.setContentType("text/json");
 			resp.setStatus(HttpServletResponse.SC_OK);
 			handler.route(mode, methodName, jsonParams, null, main, resp.getOutputStream());
@@ -142,11 +142,6 @@ public class PromptoServlet extends HttpServletWithHolder {
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
 		RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
-		if(sendsXAutorization) {
-			logger.info(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
-			if(req.getHeader("Authorization")!=null)
-				resp.addHeader("X-Authorization", req.getHeader("Authorization"));
-		}
 		resp.setContentType("application/json");
 		resp.setStatus(200);
 		handler.route(mode, methodName, jsonParams, parts, main, resp.getOutputStream());
