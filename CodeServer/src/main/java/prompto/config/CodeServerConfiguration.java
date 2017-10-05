@@ -9,9 +9,9 @@ public class CodeServerConfiguration extends ServerConfiguration implements ICod
 	}
 
 	@Override
-	public String getTargetDbName() {
-		return reader.getStringOrDefault("targetDBName", "DATA");
+	public IStoreConfiguration getTargetDataStoreConfiguration() {
+		return reader.readStoreConfiguration("targetDataStore");
 	}
-
+	
 	
 }

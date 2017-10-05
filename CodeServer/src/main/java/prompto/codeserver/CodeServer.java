@@ -52,11 +52,10 @@ public class CodeServer {
 	
 	private static void redirectDataServlet(ICodeServerConfiguration config) {
 		try {
-			IStoreConfiguration code = config.getDataStoreConfiguration(); // originally points to TOOLS or CODE
-			IStoreConfiguration data = code.withDbName(config.getTargetDbName());
-			logger.info(()->"Redirecting data servlet to " + data.getDbName() + ".");
-			IStoreFactory factory = IStoreFactory.newStoreFactory(data.getFactory());
-			DataServlet.store = factory.newStore(data);
+			IStoreConfiguration code = config.getTargetDataStoreConfiguration(); 
+			logger.info(()->"Redirecting data servlet to " + code.getDbName() + ".");
+			IStoreFactory factory = IStoreFactory.newStoreFactory(code.getFactory());
+			DataServlet.store = factory.newStore(code);
 			// TODO ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), null, "someApp", PromptoVersion.LATEST, new URL[]{}, new URL[]{});
 			// TODO Standalone.synchronizeSchema(codeStore, DataServlet.store);
 		} catch(Throwable t) {
