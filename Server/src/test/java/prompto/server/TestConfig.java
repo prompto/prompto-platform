@@ -27,7 +27,7 @@ public class TestConfig {
 			IHttpConfiguration config = new HttpConfiguration(reader.getObject("http"));
 			assertEquals("https", config.getProtocol());
 			assertEquals(443, config.getPort());
-			assertEquals("somewhere", config.getAllowedOrigin());
+			assertEquals("somewhere", config.getAllowedOrigins());
 			// keystore
 			IKeyStoreConfiguration ksc = config.getKeyStoreConfiguration();
 			checkKeyStoreConfiguration(ksc);

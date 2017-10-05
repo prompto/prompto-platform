@@ -7,11 +7,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.eclipse.jetty.server.Handler;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
-import prompto.config.IKeyStoreConfiguration;
-import prompto.config.ILoginConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.declaration.DeclarationList;
 import prompto.expression.IExpression;
@@ -23,6 +22,7 @@ import prompto.runtime.Standalone;
 import prompto.type.DictType;
 import prompto.type.TextType;
 import prompto.utils.Out;
+import prompto.utils.SocketUtils;
 import prompto.value.ExpressionValue;
 import prompto.value.NullValue;
 
@@ -30,7 +30,8 @@ public class TestCustomHandler {
 
 	@Test
 	public void testParseAndCheck() throws Throwable {
-		IServerConfiguration config = newServerConfiguration();
+		int port = SocketUtils.findAvailablePortInRange(8000, 9000);
+		IServerConfiguration config = newServerConfiguration(port);
 		AppServer.initialize(config);
 		try(InputStream input = Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream("prompto/customHandler.pec")) {
@@ -42,17 +43,11 @@ public class TestCustomHandler {
 		}
 	}
 	
-	private IServerConfiguration newServerConfiguration() {
+	private IServerConfiguration newServerConfiguration(int port) {
 		return new IServerConfiguration.Inline()
-			.withHttpConfiguration(new IHttpConfiguration() {
-				@Override public String getProtocol() { return "http"; }
-				@Override public int getPort() { return -1; }
-				@Override public Integer getRedirectFrom() { return null; }
-				@Override public String getAllowedOrigin() { return null; }
-				@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
-				@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
-				@Override public ILoginConfiguration getLoginConfiguration() { return null; }
-			})
+			.withHttpConfiguration(new IHttpConfiguration.Inline() 
+				.withProtocol("http")
+				.withPort(port))
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationName("test")
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
@@ -100,7 +95,8 @@ public class TestCustomHandler {
 	public void testInterpret(Consumer<Integer> consumer) throws Throwable {
 		Out.init();
 		try {
-			IServerConfiguration config = newServerConfiguration();
+			int port = SocketUtils.findAvailablePortInRange(8000, 9000);
+			IServerConfiguration config = newServerConfiguration(port);
 			AppServer.initialize(config);
 			try(InputStream input = Thread.currentThread().getContextClassLoader()
 					.getResourceAsStream("prompto/customHandler.pec")) {
@@ -110,7 +106,7 @@ public class TestCustomHandler {
 				decls.register(context);
 			}
 			IExpression args = new ExpressionValue(new DictType(TextType.instance()), NullValue.instance());
-			int port = AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, (secure)->BaseServerTest.prepareHandler(null, secure), null);
+			AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, this::prepareHandler, null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);
@@ -118,6 +114,10 @@ public class TestCustomHandler {
 			Out.restore();
 			AppServer.stop();
 		}
+	}
+	
+	Handler prepareHandler() {
+		return BaseServerTest.prepareHandler(false);
 	}
 	
 }

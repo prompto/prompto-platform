@@ -19,17 +19,6 @@ public class ControlServlet extends HttpServletWithHolder {
 	}
 	
 	@Override
-	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		if(AppServer.HTTP_ALLOWED_ORIGIN!=null) {
-			resp.setHeader("Access-Control-Allow-Origin", AppServer.HTTP_ALLOWED_ORIGIN);
-			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
-		}
-		super.service(req, resp);
-	}
-
-
-	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			resp.setContentType("text/plain");

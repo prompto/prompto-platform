@@ -11,13 +11,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
@@ -31,6 +37,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -40,7 +47,9 @@ import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.SecuredRedirectHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.eclipse.jetty.util.security.Constraint;
@@ -74,8 +83,6 @@ public class AppServer {
 	static final Logger logger = new Logger();
 	
 	public static final String WEB_SERVER_SUCCESSFULLY_STARTED = "Web server successfully started on port ";
-
-	public static String HTTP_ALLOWED_ORIGIN = null;
 	
 	private static Server jettyServer;
 
@@ -120,7 +127,7 @@ public class AppServer {
         Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
         method.setAccessible(true); /*promote the method to public access*/
         for(URL url : jars) {
-        	logger.info(()->"Adding JAR " + url.toString() + " to system class loader...");
+        	logger.debug(()->"Adding JAR " + url.toString() + " to system class loader...");
         	method.invoke(loader, new Object[] { url });
         }
     }
@@ -148,12 +155,12 @@ public class AppServer {
 		String webSite = config.getWebSiteRoot();
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug!=null)
-			debugServer(debug, http, webSite, serverAboutToStart, argsValue, (secure)->prepareWebHandlers(webSite, secure));
+			debugServer(debug, http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(config));
 		else
-			startServer(http, webSite, serverAboutToStart, argsValue, (secure)->prepareWebHandlers(webSite, secure), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
+			startServer(http, webSite, serverAboutToStart, argsValue, ()->prepareWebHandlers(config), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
 	}
 
-	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<Boolean, Handler> handler) throws Throwable {
+	static int debugServer(IDebugConfiguration debug, IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler) throws Throwable {
 		DebugRequestServer server = Standalone.startDebugging(debug.getHost(), debug.getPort());
 		return startServer(http, webSite, serverAboutToStartMethod, argValue, handler, ()->{
 			Standalone.getGlobalContext().notifyTerminated();
@@ -162,9 +169,8 @@ public class AppServer {
 	}
 	
 	
-	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Function<Boolean, Handler> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(IHttpConfiguration http, String webSite, String serverAboutToStartMethod, IExpression argValue, Supplier<Handler> handler, Runnable serverStopped) throws Throwable {
 		logger.info(()->"Starting web server on port " + http.getPort() + "...");
-		HTTP_ALLOWED_ORIGIN = http.getAllowedOrigin();
 		jettyServer = new Server(http.getPort());
 		ServerConnector sc = prepareMainConnector(http);
 		ServerConnector sc2 = prepareRedirectConnector(http);
@@ -253,18 +259,20 @@ public class AppServer {
 		return 0;
 	}
 
-	static Handler prepareSecurityHandler(IHttpConfiguration config, Function<Boolean, Handler> handler) {
+	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
 		ILoginConfiguration login = config.getLoginConfiguration();
 		if(login==null) {
 			logger.info(()->"Not using security handler!");
-			return handler.apply("https".equals(config.getProtocol()));
+			return handler.get();
 		} else try {
 			logger.info(()->"Preparing security handler...");
-			ConstraintSecurityHandler security = new ConstraintSecurityHandler();
+			ConstraintSecurityHandler security = config.getAllowsXAuthorization() && config.getAllowedOrigins()!=null ?
+				new ConstraintSecurityHandlerWithXAuthorization() :
+				new ConstraintSecurityHandler();	
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
-			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
+			security.setAuthenticator(prepareAuthenticator(config)); // how to request credentials
 			security.setConstraintMappings(prepareConstraintMappings()); // when to require security
-			security.setHandler(handler.apply("https".equals(config.getProtocol())));
+			security.setHandler(handler.get());
 			logger.info(()->"Security handler successfully prepared.");
 			return security;
 		} catch(Exception e) {
@@ -272,8 +280,11 @@ public class AppServer {
 		}
 	}
 	
-	private static Authenticator prepareAuthenticator() {
-		return new BasicAuthenticator();
+	private static Authenticator prepareAuthenticator(IHttpConfiguration config) {
+		if(!config.getAllowsXAuthorization())
+			return new BasicAuthenticator();
+		else
+			return new BasicAuthenticatorWithXAuthorization();
 	}
 
 	private static List<ConstraintMapping> prepareConstraintMappings() {
@@ -304,14 +315,22 @@ public class AppServer {
 		return new DefaultIdentityService();
 	}
 	
-	static Handler prepareWebHandlers(String webSite, boolean withSecuredRedirect) {
+	static Handler prepareWebHandlers(IServerConfiguration config) {
 		try {
 			logger.info(()->"Preparing web handlers...");
-			HandlerList list = new HandlerList();
-			if(withSecuredRedirect)
+			HandlerList list = new HandlerList() {
+				@Override
+				public void handle(String target, Request baseRequest,
+						HttpServletRequest request, HttpServletResponse response)
+						throws IOException, ServletException {
+					logger.info(()->"HandlerList: " + request.toString());
+					super.handle(target, baseRequest, request, response);
+				}
+			};
+			if(config.getHttpConfiguration().getRedirectFrom()!=null)
 				list.addHandler(new SecuredRedirectHandler());
-			list.addHandler(newResourceHandler("/", webSite));
-			list.addHandler(newServiceHandler("/ws/"));
+			list.addHandler(newResourceHandler("/", config.getWebSiteRoot()));
+			list.addHandler(newServiceHandler("/ws/", config.getHttpConfiguration()));
 			list.addHandler(new DefaultHandler());
 			logger.info(()->"Web handlers successfully prepared.");
 			return list;
@@ -319,12 +338,28 @@ public class AppServer {
 			throw new RuntimeException(e);
 		}
 	}
+	
 
-	static Handler newServiceHandler(String path) throws Exception {
+	static ServletContextHandler newServiceHandler(String path, IHttpConfiguration config) throws Exception {
 		URL url = getRootURL();
-		return newServiceHandler(path, url.toExternalForm());
+		ServletContextHandler sch = newServiceHandler(path, url, config.getSendsXAuthorization());
+		if(config.getAllowedOrigins()!=null)
+			installCrossOriginHandler(sch, path, config.getAllowedOrigins());
+		return sch;
 	}
 	
+    private static void installCrossOriginHandler(ServletContextHandler handler, String path, String allowedOrigins) {
+		logger.info(()->"Setting allowed origins to: "  + allowedOrigins);
+		FilterHolder holder = new FilterHolder();
+		holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
+		holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, allowedOrigins);
+		holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,HEAD,OPTIONS");
+		holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,X-Authorization,Content-Type,Accept,Origin,Access-Control-Allow-Origin");
+		// holder.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
+		holder.setFilter(new LoggingCrossOriginFilter());
+		handler.addFilter(holder, "/*", EnumSet.of(DispatcherType.REQUEST));
+	 }
+
 	private static URL getRootURL() throws IOException {
 		URL url = AppServer.class.getResource("/js/lib/require.js");
 		url = new URL(url.toExternalForm().replace("/js/lib/require.js", "/"));
@@ -351,14 +386,20 @@ public class AppServer {
         handler.addServlet(new UserServlet(method).getHolder(), path);       
 	}
 	
-	public static Handler newServiceHandler(String path, String base) {
-		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
+	public static ServletContextHandler newServiceHandler(String path, URL base, boolean sendsXAutorization) {
+		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS) {
+			@Override
+			public void handle(Request request, Runnable runnable) {
+				logger.info(()->"ServletContextHandler: " + request.toString());
+				super.handle(request, runnable);
+			}
+		};
         handler.setContextPath(path);
-        handler.setResourceBase(base);
+        handler.setResourceBase(base.toExternalForm());
         handler.addServlet(new ControlServlet().getHolder(), "/control/*");
         handler.addServlet(new BinaryServlet().getHolder(), "/bin/*");
         handler.addServlet(new DataServlet().getHolder(), "/data/*");       
-        handler.addServlet(new PromptoServlet().getHolder(), "/run/*");       
+        handler.addServlet(new PromptoServlet(sendsXAutorization).getHolder(), "/run/*");    
 		return handler;
 	}
 

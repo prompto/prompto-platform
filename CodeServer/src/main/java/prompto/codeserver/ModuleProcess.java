@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
-import java.net.ServerSocket;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -20,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,12 +29,13 @@ import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
 import prompto.store.IStored;
 import prompto.utils.Logger;
+import prompto.utils.SocketUtils;
 import prompto.value.IValue;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 import com.esotericsoftware.yamlbeans.document.YamlEntry;
@@ -146,7 +145,7 @@ public class ModuleProcess {
 	Process process;
 
 	public void start() throws Exception {
-		this.port = findAvailablePortInRange(8080, 9090); // TODO extract from security group
+		this.port = SocketUtils.findAvailablePortInRange(8080, 9090); // TODO extract from security group
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
 			.redirectError(Redirect.INHERIT)
@@ -164,31 +163,10 @@ public class ModuleProcess {
 	}
 	
 
-	public static int findAvailablePortInRange(int min, int max) throws IOException {
-		Set<Integer> alreadyTried = new HashSet<>();
-		for(;;) {
-			int port = ThreadLocalRandom.current().nextInt(min, max + 1);
-			if(!alreadyTried.add(port))
-				continue;
-			if(alreadyTried.size() >= 1 + max - min)
-				throw new IOException("No available port!");
-			if(isAvailablePort(port))
-				return port;
-		}
-	}
-	
-	public static boolean isAvailablePort(int port) {
-		try(ServerSocket s = new ServerSocket(port)) {
-			s.setReuseAddress(true);
-			return true;
-		} catch(IOException e) {
-			return false;
-		}
-	}
-
 	private String[] buildCommandLineArgs() throws Exception {
 		List<String> cmds = new ArrayList<String>();
 		cmds.add("java");
+		// cmds.add("-Xdebug");
 		// cmds.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888");
 		addClassPathArgs(cmds);
 		cmds.add(AppServer.class.getName());
@@ -218,8 +196,10 @@ public class ModuleProcess {
 		cmds.add(version.toString());
 		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
 		if(origin!=null) {
-			cmds.add("-http-allowedOrigin");
+			cmds.add("-http-allowedOrigins");
 			cmds.add(origin);
+			cmds.add("-http-allowsXAuthorization");
+			cmds.add("true");
 		}
 	}
 
@@ -276,10 +256,13 @@ public class ModuleProcess {
 		YamlEntry entry = (YamlEntry)document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
 		http.setEntry("port", port);
-		http.deleteEntry("redirectFom");
+		http.deleteEntry("redirectFrom");
+		http.deleteEntry("sendsXAuthorization");
 		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
-		if(origin!=null)
-			http.setEntry("allowedOrigin", origin);
+		if(origin!=null) {
+			http.setEntry("allowedOrigins", origin);
+			http.setEntry("allowsXAuthorization", true);
+		}
 	}
 
 	private File createTempYamlFile() throws IOException {
@@ -292,15 +275,18 @@ public class ModuleProcess {
 	}
 
 	private void addClassPathArgs(List<String> cmds) throws URISyntaxException {
-		String cp = extractCmdLineArgument("-cp");
-		if(cp==null)
+		if(isRunningFromJar())
 			addServerJarArgs(cmds);
 		else
-			addClassFileArgs(cmds);
-			
+			addImplicitClassPathArgs(cmds);
 	}
 
-	private void addClassFileArgs(List<String> cmds) {
+	private boolean isRunningFromJar() {
+		String[] args = System.getProperty("sun.java.command").split(" ");
+		return args[0].toLowerCase().endsWith(".jar");
+	}
+
+	private void addImplicitClassPathArgs(List<String> cmds) {
 		cmds.add("-cp");
 		String classPaths = Stream.of(System.getProperty("java.class.path").toString().split(":"))
 				.filter((s)->!s.startsWith(this.getClass().getPackage().getName()))

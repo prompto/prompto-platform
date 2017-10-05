@@ -14,13 +14,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import prompto.grammar.Identifier;
 import prompto.runtime.Standalone;
 import prompto.utils.Logger;
 import prompto.value.Document;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 @SuppressWarnings("serial")
 public class PromptoServlet extends HttpServletWithHolder {
@@ -28,6 +28,13 @@ public class PromptoServlet extends HttpServletWithHolder {
 	static final Logger logger = new Logger();
 	
 	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
+	
+	boolean sendsXAutorization;
+	
+	
+	public PromptoServlet(boolean sendsXAutorization) {
+		this.sendsXAutorization = sendsXAutorization;
+	}
 	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
@@ -37,20 +44,25 @@ public class PromptoServlet extends HttpServletWithHolder {
 	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String origin = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort();
-		REGISTERED_ORIGIN.set(origin);
-		if(AppServer.HTTP_ALLOWED_ORIGIN!=null) {
-			resp.setHeader("Access-Control-Allow-Origin", AppServer.HTTP_ALLOWED_ORIGIN);
-			resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-			resp.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Origin");
-		}
+		StringBuilder sb = new StringBuilder();
+		sb.append(req.getScheme());
+		sb.append("://");
+		sb.append(req.getServerName());
+		sb.append(",");
+		sb.append(req.getScheme());
+		sb.append("://");
+		sb.append(req.getServerName());
+		sb.append(":");
+		sb.append(req.getServerPort());
+		REGISTERED_ORIGIN.set(sb.toString());
 		super.service(req, resp);
 	}
+
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
-			authenticate(req);
+			readUser(req);
 			readSession(req);
 			ExecutionMode mode = readMode(req);
 			Identifier methodName = readMethod(req);
@@ -58,9 +70,14 @@ public class PromptoServlet extends HttpServletWithHolder {
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
 			RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
-			handler.route(mode, methodName, jsonParams, null, main, resp.getOutputStream());
+			if(sendsXAutorization) {
+				logger.info(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
+				if(req.getHeader("Authorization")!=null)
+					resp.addHeader("X-Authorization", req.getHeader("Authorization"));
+			}
 			resp.setContentType("text/json");
 			resp.setStatus(HttpServletResponse.SC_OK);
+			handler.route(mode, methodName, jsonParams, null, main, resp.getOutputStream());
 			resp.getOutputStream().close();
 			resp.flushBuffer();
 		} catch(Throwable t) {
@@ -91,9 +108,9 @@ public class PromptoServlet extends HttpServletWithHolder {
 		Server.setHttpSession(doc);
 	}
 
-	private void authenticate(HttpServletRequest req) {
-		IAuthenticator authenticator = IAuthenticator.getInstance();
-		String user = authenticator==null ? "<anonymous>" : authenticator.authenticate(req);
+	private void readUser(HttpServletRequest req) {
+		ILoginReader reader = ILoginReader.getInstance();
+		String user = reader==null ? "<anonymous>" : reader.getUser(req);
 		Server.setHttpUser(user);
 	}
 
@@ -117,7 +134,7 @@ public class PromptoServlet extends HttpServletWithHolder {
 	}
 
 	private void doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-		authenticate(req);
+		readUser(req);
 		readSession(req);
 		Identifier methodName = readMethod(req);
 		ExecutionMode mode = readMode(req);
@@ -125,6 +142,11 @@ public class PromptoServlet extends HttpServletWithHolder {
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
 		RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
+		if(sendsXAutorization) {
+			logger.info(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
+			if(req.getHeader("Authorization")!=null)
+				resp.addHeader("X-Authorization", req.getHeader("Authorization"));
+		}
 		resp.setContentType("application/json");
 		resp.setStatus(200);
 		handler.route(mode, methodName, jsonParams, parts, main, resp.getOutputStream());

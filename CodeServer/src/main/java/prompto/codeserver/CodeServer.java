@@ -30,6 +30,7 @@ public class CodeServer {
 		IServerConfiguration config = AppServer.loadConfiguration(args);
 		config = config
 				.withServerAboutToStartMethod("serverAboutToStart")
+				.withHttpConfiguration(config.getHttpConfiguration().withSendsXAuthorization(true))
 				.withApplicationName("dev-center")
 				.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 				.withResourceURLs(CodeServer.getResourceURLs())

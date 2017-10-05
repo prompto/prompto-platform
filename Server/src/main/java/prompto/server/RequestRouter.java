@@ -42,7 +42,7 @@ public class RequestRouter {
 			if(isTest)
 				return interpretTest(methodName, output);
 			else
-				return interpretMethod(methodName, jsonParams, parts, main,output);
+				return interpretMethod(methodName, jsonParams, parts, main, output);
 		case EXECUTE:
 			if(isTest)
 				return executeTest(methodName, output);

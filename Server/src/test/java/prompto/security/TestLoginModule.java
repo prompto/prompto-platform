@@ -14,8 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
-import prompto.config.IKeyStoreConfiguration;
-import prompto.config.ILoginConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.IStoredLoginConfiguration;
@@ -44,15 +42,10 @@ public class TestLoginModule extends BaseServerTest {
 	
 	@Override
 	protected IHttpConfiguration getHttpConfiguration() {
-		return new IHttpConfiguration() {
-			@Override public String getProtocol() { return "http"; }
-			@Override public int getPort() { return port; }
-			@Override public Integer getRedirectFrom() { return null; }
-			@Override public String getAllowedOrigin() { return null; }
-			@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return null; }
-			@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return null; }
-			@Override public ILoginConfiguration getLoginConfiguration() { 
-				return new IStoredLoginConfiguration() {
+		return new IHttpConfiguration.Inline()
+			.withProtocol("http")
+			.withPort(port)
+			.withLoginConfiguration(new IStoredLoginConfiguration() {
 
 					@Override
 					public ILoginModuleFactory getLoginModuleFactory() {
@@ -76,9 +69,7 @@ public class TestLoginModule extends BaseServerTest {
 							@Override public String getDbName() { return null; }
 						}; 
 					}
-				}; 
-			}
-		};
+				});
 	}
 	
 	@Before
