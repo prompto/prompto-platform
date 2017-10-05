@@ -27,11 +27,11 @@ public class AwsKMSSecretKeyFactory implements ISecretKeyFactory {
 	@Override
 	public String getAsPlainText() {
 		String awsRegion = config.getAwsRegion();
-		logger.info(()->"AWS KMS: decrypting secret " + new String(config.getSecret()) + " in region " + awsRegion);
+		logger.debug(()->"AWS KMS: decrypting secret " + new String(config.getSecret()) + " in region " + awsRegion);
 		KMS kms = KMS.newInstance(awsRegion, null, null);
 		String plainText = kms.decrypt(new String(config.getSecret()));
 		if("true".equals(System.getenv("DEBUG_AWS_KMS")))
-			logger.info(()->"AWS KMS: decrypted secret " + new String(config.getSecret()) + " to " + plainText);
+			logger.debug(()->"AWS KMS: decrypted secret " + new String(config.getSecret()) + " to " + plainText);
 		return plainText;
 	}
 

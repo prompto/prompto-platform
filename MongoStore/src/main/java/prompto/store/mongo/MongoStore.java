@@ -127,7 +127,7 @@ public class MongoStore implements IStore {
 		                .build();
 			}
 		};
-		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + config.getDbName() + "' database " + mcu.toString());
+		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + config.getDbName() + "' database @" + config.getReplicaSetURI());
 		client = new MongoClient(mcu);
 		db = client.getDatabase(config.getDbName());
 	}
