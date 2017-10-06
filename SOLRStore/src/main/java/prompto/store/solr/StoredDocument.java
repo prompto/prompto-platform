@@ -1,5 +1,6 @@
 package prompto.store.solr;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.solr.common.SolrDocument;
@@ -39,4 +40,8 @@ public class StoredDocument extends BaseDocument implements IStored {
 		return store.readFieldData(fieldName, data);
 	}
 
+	@Override
+	public Set<String> keySet() throws PromptoError {
+		return document.keySet();
+	}
 }

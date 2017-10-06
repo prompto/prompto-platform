@@ -1,5 +1,6 @@
 package prompto.store.mongo;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.bson.Document;
@@ -38,6 +39,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 	public Object getData(String fieldName) throws PromptoError {
 		Object data = document.get(fieldName);
 		return data==null ? null : store.readFieldData(fieldName, data);
+	}
+	
+	@Override
+	public Set<String> keySet() throws PromptoError {
+		return document.keySet();
 	}
 
 }

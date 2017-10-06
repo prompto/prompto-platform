@@ -13,6 +13,7 @@ import prompto.config.IConfigurationReader;
 import prompto.config.IStoreConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
+import prompto.memstore.MemStoreFactory;
 import prompto.runtime.Standalone;
 import prompto.server.AppServer;
 import prompto.server.DataServlet;
@@ -55,9 +56,10 @@ public class CodeServer {
 			IStoreConfiguration code = config.getTargetDataStoreConfiguration(); 
 			logger.info(()->"Redirecting data servlet to " + code.getDbName() + ".");
 			IStoreFactory factory = IStoreFactory.newStoreFactory(code.getFactory());
-			DataServlet.store = factory.newStore(code);
-			// TODO ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), null, "someApp", PromptoVersion.LATEST, new URL[]{}, new URL[]{});
-			// TODO Standalone.synchronizeSchema(codeStore, DataServlet.store);
+			if(factory instanceof MemStoreFactory) {
+				DataServlet.store = IDataStore.getInstance();
+			} else
+				DataServlet.store = factory.newStore(code);
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}
