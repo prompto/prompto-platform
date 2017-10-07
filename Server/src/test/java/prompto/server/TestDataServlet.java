@@ -69,7 +69,7 @@ public class TestDataServlet extends BaseServerTest {
 	
 
 	private JsonNode runQuery(String query) throws Exception {
-		URL url = new URL("http://localhost:" + port + "/ws/data?query=" + URLEncoder.encode(query, "UTF-8"));
+		URL url = new URL("http://localhost:" + port + "/ws/data/fetch?query=" + URLEncoder.encode(query, "UTF-8"));
 		try(InputStream input = url.openStream()) {
 			return new ObjectMapper().readTree(input);
 		}

@@ -56,7 +56,7 @@ public class DataServlet extends HttpServletWithHolder {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String path = req.getPathInfo();
-		switch(path) {
+		if(path!=null) switch(path) {
 		case "/fetch":
 			doFetch(req, resp);
 			break;
