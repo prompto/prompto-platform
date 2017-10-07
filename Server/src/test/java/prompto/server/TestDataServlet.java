@@ -56,6 +56,8 @@ public class TestDataServlet extends BaseServerTest {
 		node = node.get("data");
 		assertEquals(1, node.get("totalLength").asLong());
 		node = node.get("value").get(0);
+		assertEquals("MyCategory", node.get("type").asText());	
+		node = node.get("value");
 		assertEquals("someName", node.get("text").asText());	
 		assertEquals(987654321L, node.get("integer").asLong());	
 		assertEquals(987654321.654, node.get("decimal").asDouble(), 0.01);	
