@@ -5,15 +5,20 @@ import java.util.Collections;
 
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.LoggerFactory;
 
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
+import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
+import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
+import de.flapdoodle.embed.process.config.io.ProcessOutput;
 import de.flapdoodle.embed.process.runtime.Network;
 
 public abstract class BaseMongoTest {
@@ -30,7 +35,11 @@ public abstract class BaseMongoTest {
 	}
 	
 	public static MongodExecutable startMongo(int mongoPort) throws IOException {
-		MongodStarter starter = MongodStarter.getDefaultInstance();
+		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
+			.defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(BaseMongoTest.class.getName()))
+			.processOutput(ProcessOutput.getDefaultInstanceSilent())
+			.build();
+		MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 		IMongodConfig mongodConfig = new MongodConfigBuilder()
 			.version(Version.Main.PRODUCTION)
 			.net(new Net(mongoPort, Network.localhostIsIPv6()))
