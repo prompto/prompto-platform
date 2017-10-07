@@ -71,6 +71,7 @@ public class MongoStore implements IStore {
 	MongoClient client;
 	MongoDatabase db;
 	Map<String, AttributeInfo> fields = new HashMap<>();
+	Function<String, AttributeInfo> attributeInfoSupplier;
 	
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
@@ -179,6 +180,16 @@ public class MongoStore implements IStore {
 	@Override
 	public void createOrUpdateColumns(Collection<AttributeInfo> columns) throws PromptoError {
 		columns.forEach((c)->fields.put(c.getName(), c));
+	}
+
+	@Override
+	public void setAttributeInfoSupplier(Function<String, AttributeInfo> supplier) {
+		this.attributeInfoSupplier = supplier;
+	}
+	
+	@Override
+	public Function<String, AttributeInfo> getAttributeInfoSupplier() {
+		return attributeInfoSupplier;
 	}
 
 	@Override
@@ -362,6 +373,8 @@ public class MongoStore implements IStore {
 	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = fields.get(fieldName);
+		if(info==null && attributeInfoSupplier!=null)
+			info = attributeInfoSupplier.apply(fieldName);
 		if(info==null)
 			throw new RuntimeException("Missing AttributeInfo for " + fieldName);
 		if(info.isCollection() && data instanceof Collection)
@@ -381,6 +394,7 @@ public class MongoStore implements IStore {
 	public void insertDocuments(Document ... docs) {
 		db.getCollection("instances").insertMany(Arrays.asList(docs));
 	}
+
 
 
 }

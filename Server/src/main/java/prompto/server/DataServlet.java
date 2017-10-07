@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
 import java.util.AbstractMap;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +27,8 @@ import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.literal.IntegerLiteral;
 import prompto.parser.ECleverParser;
-import prompto.store.IDataStore;
+import prompto.store.AttributeInfo;
+import prompto.store.Family;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
@@ -40,39 +42,69 @@ public class DataServlet extends HttpServletWithHolder {
 
 	static Logger logger = new Logger();
 	
-	public static IStore store;
+	static IStore dataStore;
+	
+	public static void useDataStore(IStore dataStore) {
+		DataServlet.dataStore = dataStore;
+	}
 	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-		store = IDataStore.getInstance();
 	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		String path = req.getPathInfo();
+		switch(path) {
+		case "/fetch":
+			doFetch(req, resp);
+			break;
+		default:
+			resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+		}
+	}
+	protected void doFetch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			String query = req.getParameter("query");
+			if(query==null || query.trim().isEmpty()) {
+				writeJsonResponseError("Empty query!", resp.getOutputStream());
+				return;
+			}
 			String first = req.getParameter("first");
 			String last = req.getParameter("last");
 			String format = req.getParameter("format");
 			if(format==null)
-				format = "raw";
+				format = "list";
 			ECleverParser parser = new ECleverParser(query);
 			IFetchExpression fetch = parser.parse_fetch_store_expression();
 			adjustQueryRange(fetch, first, last);
 			logger.info(()->"Running query: " + fetch.toString());
-			if("raw".equals(format.toLowerCase())) {
+			if("list".equals(format.toLowerCase())) {
+				Map<String, JsonWriter> writers = new HashMap<>();
 				resp.setContentType("application/json");
-				Object fetched = fetch.fetchRaw(store);
-				writeJsonResponseRaw(fetched, resp.getOutputStream());
+				Object fetched = fetch.fetchRaw(dataStore);
+				writeJsonResponseList(fetched, resp.getOutputStream(), writers);
 			} else
-				throw new InvalidParameterException("Format not supported: " + format);
+				writeJsonResponseError("Invalid query!", resp.getOutputStream());
+		} catch(PromptoError e) {
+			writeJsonResponseError("Invalid query!", resp.getOutputStream());
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 	
+	private void writeJsonResponseError(String error, OutputStream output) throws IOException {
+		JsonGenerator generator = new JsonFactory().createGenerator(output);
+		generator.writeStartObject();
+		generator.writeStringField("error", error);
+		generator.writeNullField("data");
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
+	}
+
 	private static void adjustQueryRange(IFetchExpression fetch, String first, String last) {
 		if(fetch instanceof FetchManyExpression) {
 			FetchManyExpression many = (FetchManyExpression)fetch;
@@ -84,121 +116,167 @@ public class DataServlet extends HttpServletWithHolder {
 		
 	}
 
-	private static void writeJsonResponseRaw(Object fetched, OutputStream output) throws IOException, PromptoError {
+	private static void writeJsonResponseList(Object fetched, OutputStream output, Map<String, JsonWriter> writers) throws IOException, PromptoError {
 		JsonGenerator generator = new JsonFactory().createGenerator(output);
 		generator.writeStartObject();
 		generator.writeNullField("error");
 		generator.writeFieldName("data");
-		writeJsonDataRaw(generator, fetched);
+		writeJsonList(generator, fetched, writers);
 		generator.writeEndObject();
 		generator.flush();
 		generator.close();
 	}
 
-	private static void writeJsonDataRaw(JsonGenerator generator, Object fetched) throws IOException {
+	private static void writeJsonList(JsonGenerator generator, Object fetched, Map<String, JsonWriter> writers) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
-		generator.writeString("Any[]");
+		generator.writeString("Any[]"); // does not matter here
 		generator.writeFieldName("totalLength");
 		if(fetched==null) {
 			generator.writeNumber(0);
 			generator.writeNullField("value");
-			return;
 		} else if(fetched instanceof IStored) {
 			generator.writeNumber(1);
-			fetched = Collections.singletonList(fetched); // always return an array
+			generator.writeFieldName("value");
+			generator.writeStartArray();
+			writeJsonStored(generator, (IStored)fetched, writers);
+			generator.writeEndArray();
 		} else if(fetched instanceof IStoredIterable) {
 			generator.writeNumber(((IStoredIterable)fetched).totalLength());
+			generator.writeFieldName("value");
+			generator.writeStartArray();
+			for(IStored stored : (IStoredIterable)fetched)
+				writeJsonStored(generator, stored, writers);
+			generator.writeEndArray();
 		} else
 			throw new InvalidParameterException("Type not supported: " + fetched.getClass().getName());
+	}
+	
+	private static void writeJsonStored(JsonGenerator generator, IStored stored, Map<String, JsonWriter> writers) throws IOException {
+		generator.writeStartObject();
+		generator.writeFieldName("type");
+		generator.writeString(readCategory(stored));
 		generator.writeFieldName("value");
-		writeJsonRaw(generator, fetched);
+		generator.writeStartObject();
+		generator.writeFieldName("dbId");
+		writeJsonRaw(generator, stored.getDbId());
+		for(String name : stored.getNames()) {
+			if("category".equals(name) || "dbId".equals(name))
+				continue;
+			writeJsonField(generator, name, stored.getData(name), writers);
+		}
+		generator.writeEndObject();
+		generator.writeEndObject();
+	}
+
+
+
+	private static void writeJsonRaw(JsonGenerator generator, Object value) throws IOException {
+		JsonWriter writer = writerForValue(value);
+		if(writer!=null)
+			writer.apply(generator, value);
+		else try {
+			generator.writeObject(value);
+		} catch(IllegalStateException e) { 
+			// No ObjectCodec defined
+			generator.writeString(value.toString());
+		}
+	}
+
+	private static void writeJsonField(JsonGenerator generator, String name, Object value, Map<String, JsonWriter> writers) throws IOException {
+		JsonWriter writer = writerForName(name, writers);
+		if(writer==null)
+			writer = writerForValue(value);
+		generator.writeFieldName(name);
+		writer.apply(generator, value);
+	}
+
+	static Map<Family, JsonWriter> familyWriters = Stream.of(
+			newEntry(Family.BOOLEAN, (g,o)->g.writeBoolean((Boolean)o)),
+			newEntry(Family.INTEGER, (g,o)->g.writeNumber(((Number)o).longValue())),
+			newEntry(Family.DECIMAL, (g,o)->g.writeNumber(((Number)o).doubleValue())),
+			newEntry(Family.TEXT, (g,o)->g.writeString((String)o)),
+			newEntry(Family.UUID, DataServlet::writeUUID),
+			newEntry(Family.DATE, DataServlet::writePromptoDate),
+			newEntry(Family.TIME, DataServlet::writePromptoTime),
+			newEntry(Family.DATETIME, DataServlet::writePromptoDateTime),
+			newEntry(Family.VERSION, DataServlet::writePromptoVersion),
+			newEntry(Family.CATEGORY, (g,o)->g.writeString("<instance>")), 
+			newEntry(Family.IMAGE, DataServlet::writeImage),
+			newEntry(Family.BLOB, DataServlet::writeBlob)
+		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+	private static JsonWriter writerForName(String name, Map<String, JsonWriter> writers) throws IOException {
+		JsonWriter writer = writers.get(name);
+		if(writer!=null)
+			return writer;
+		Function<String, AttributeInfo> supplier = dataStore.getAttributeInfoSupplier();
+		if(supplier==null)
+			return null;
+		AttributeInfo info = supplier.apply(name);
+		if(info==null)
+			return null;
+		writer = familyWriters.get(info.getFamily());
+		if(writer==null)
+			throw new IOException("No writer for " + info.getFamily().name());
+		if(info.isCollection())
+			writer = listJsonWriterFor(writer);
+		writers.put(name, writer);
+		return writer;
+	}
+
+	private static JsonWriter listJsonWriterFor(JsonWriter writer) {
+		throw new RuntimeException("Not implemented!");
 	}
 
 	interface JsonWriter {
 		void apply(JsonGenerator generator, Object value) throws IOException;
 	}
 	
-	@SuppressWarnings("rawtypes")
-	static Map.Entry<Class, JsonWriter> newEntry(Class klass, JsonWriter writer) {
-		return new AbstractMap.SimpleEntry<>(klass, writer);
+	static <T> Map.Entry<T, JsonWriter> newEntry(T key, JsonWriter writer) {
+		return new AbstractMap.SimpleEntry<>(key, writer);
 	}
 	
-	static Map<Class<?>, JsonWriter> rawWriters = Stream.of(
-			newEntry(IStored.class, DataServlet::writeStoredRaw),
-			newEntry(Map.class, DataServlet::writeMapRaw),
-			newEntry(Iterable.class, DataServlet::writeIterableRaw),
+	static Map<Class<?>, JsonWriter> classWriters = Stream.of(
 			newEntry(Boolean.class, (g,o)->g.writeBoolean((Boolean)o)),
 			newEntry(Long.class, (g,o)->g.writeNumber(((Number)o).longValue())),
 			newEntry(Double.class, (g,o)->g.writeNumber(((Number)o).doubleValue())),
 			newEntry(String.class, (g,o)->g.writeString((String)o)),
-			newEntry(UUID.class, DataServlet::writeUUIDRaw),
-			newEntry(PromptoDate.class, DataServlet::writeDateRaw),
-			newEntry(PromptoTime.class, DataServlet::writeTimeRaw),
-			newEntry(PromptoDateTime.class, DataServlet::writeDateTimeRaw),
-			newEntry(PromptoVersion.class, DataServlet::writeVersionRaw),
-			newEntry(PromptoBinary.class, DataServlet::writeBinaryRaw)
+			newEntry(UUID.class, DataServlet::writeUUID),
+			newEntry(PromptoDate.class, DataServlet::writePromptoDate),
+			newEntry(PromptoTime.class, DataServlet::writePromptoTime),
+			newEntry(PromptoDateTime.class, DataServlet::writePromptoDateTime),
+			newEntry(PromptoVersion.class, DataServlet::writePromptoVersion),
+			newEntry(PromptoBinary.class, DataServlet::writeBinary)
 		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 	
-	private static void writeJsonRaw(JsonGenerator generator, Object value) throws IOException {
+	private static JsonWriter writerForValue(Object value) throws IOException {
 		if(value==null) 
-			generator.writeNull();
+			return (g,o)->g.writeNull();
 		else {
-			JsonWriter writer = rawWriters.get(value.getClass());
+			JsonWriter writer = classWriters.get(value.getClass());
 			if(writer==null && Iterable.class.isAssignableFrom(value.getClass()))
-				writer = rawWriters.get(Iterable.class);
+				writer = classWriters.get(Iterable.class);
 			if(writer==null && IStored.class.isAssignableFrom(value.getClass()))
-				writer = rawWriters.get(IStored.class);
+				writer = classWriters.get(IStored.class);
 			if(writer==null)
-				throw new IOException("No writer for " + value.getClass().getName());
-			else
-				writer.apply(generator, value);
+				writer = (g,o)->g.writeString("<unsupported>");
+			return writer;
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	private static void writeMapRaw(JsonGenerator generator, Object value) throws IOException {
-		generator.writeStartObject();
-		for(Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
-			generator.writeFieldName(entry.getKey());
-			writeJsonRaw(generator, entry.getValue());
-		}
-		generator.writeEndObject();
-	}
-
-	private static void writeStoredRaw(JsonGenerator generator, Object value) throws IOException {
-		generator.writeStartObject();
-		generator.writeFieldName("type");
-		generator.writeString(readCategory((IStored)value));
-		generator.writeFieldName("value");
-		generator.writeStartObject();
-		for(String name : ((IStored)value).keySet()) {
-			if("category".equals(name))
-				continue;
-			generator.writeFieldName(name);
-			Object field = ((IStored)value).getData(name);
-			writeJsonRaw(generator, field);
-		}
-		generator.writeEndObject();
-		generator.writeEndObject();
-	}
-
 	@SuppressWarnings("unchecked")
 	private static String readCategory(IStored value) {
 		List<String> categories = (List<String>)((IStored)value).getData("category");
-		return categories.get(categories.size()-1);
+		if(categories==null || categories.size()<1)
+			return "<undefined>";
+		else
+			return categories.get(categories.size()-1);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static void writeIterableRaw(JsonGenerator generator, Object value) throws IOException {
-		generator.writeStartArray();
-		for(Object item : (Iterable<Object>)value)
-			writeJsonRaw(generator, item);
-		generator.writeEndArray();
-	}
 	
-	private static void writeUUIDRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writeUUID(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("UUID");
@@ -207,7 +285,7 @@ public class DataServlet extends HttpServletWithHolder {
 		generator.writeEndObject();
 	}
 	
-	private static void writeDateRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writePromptoDate(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("Date");
@@ -216,7 +294,7 @@ public class DataServlet extends HttpServletWithHolder {
 		generator.writeEndObject();
 	}
 	
-	private static void writeTimeRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writePromptoTime(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("Time");
@@ -225,7 +303,7 @@ public class DataServlet extends HttpServletWithHolder {
 		generator.writeEndObject();
 	}
 	
-	private static void writeDateTimeRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writePromptoDateTime(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("DateTime");
@@ -234,7 +312,7 @@ public class DataServlet extends HttpServletWithHolder {
 		generator.writeEndObject();
 	}
 	
-	private static void writeVersionRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writePromptoVersion(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("Version");
@@ -243,7 +321,25 @@ public class DataServlet extends HttpServletWithHolder {
 		generator.writeEndObject();
 	}
 
-	private static void writeBinaryRaw(JsonGenerator generator, Object value) throws IOException {
+	private static void writeImage(JsonGenerator generator, Object value) throws IOException {
+		generator.writeStartObject();
+		generator.writeFieldName("type");
+		generator.writeString("Image");
+		generator.writeFieldName("value");
+		generator.writeString("<image>");
+		generator.writeEndObject();
+	}
+
+	private static void writeBlob(JsonGenerator generator, Object value) throws IOException {
+		generator.writeStartObject();
+		generator.writeFieldName("type");
+		generator.writeString("Bob");
+		generator.writeFieldName("value");
+		generator.writeString("<blob>");
+		generator.writeEndObject();
+	}
+
+	private static void writeBinary(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("Binary");

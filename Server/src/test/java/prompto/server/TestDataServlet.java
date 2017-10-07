@@ -22,7 +22,7 @@ public class TestDataServlet extends BaseServerTest {
 
 	@Test
 	public void testThatFetchAllOnEmptyStoreIsOk() throws Exception {
-		DataServlet.store = new MemStore();
+		DataServlet.dataStore = new MemStore();
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		assertEquals(0, node.get("data").get("totalLength").asLong());
@@ -30,10 +30,10 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void testThatFetchAllWithAnyIsOk() throws Exception {
-		DataServlet.store = new MemStore();
-		IStorable doc = DataServlet.store.newStorable(Collections.singletonList("Any"), id->{});
+		DataServlet.dataStore = new MemStore();
+		IStorable doc = DataServlet.dataStore.newStorable(Collections.singletonList("Any"), id->{});
 		doc.setData("name", "John");
-		DataServlet.store.store(doc);
+		DataServlet.dataStore.store(doc);
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");
@@ -42,15 +42,15 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void testThatFetchAllWithCategoryIsOk() throws Exception {
-		DataServlet.store = new MemStore();
-		IStorable doc = DataServlet.store.newStorable(Collections.singletonList("MyCategory"), id->{});
+		DataServlet.dataStore = new MemStore();
+		IStorable doc = DataServlet.dataStore.newStorable(Collections.singletonList("MyCategory"), id->{});
 		doc.setData("text", "someName");
 		doc.setData("integer", 987654321L);
 		doc.setData("decimal", 987654321.654);
 		doc.setData("date", new PromptoDate(2017, 3, 14));
 		doc.setData("time", new PromptoTime(16, 32, 45, 11));
 		doc.setData("datetime", PromptoDateTime.parse("2017-03-14T16:32:45.011+08:00"));
-		DataServlet.store.store(doc);
+		DataServlet.dataStore.store(doc);
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");

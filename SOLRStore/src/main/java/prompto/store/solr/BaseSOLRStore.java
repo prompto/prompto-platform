@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -168,6 +169,18 @@ abstract class BaseSOLRStore implements IStore {
 		} catch(Exception e) {
 			throw new InternalError(e);
 		}
+	}
+	
+	Function<String, AttributeInfo> attributeInfoSupplier;
+
+	@Override
+	public void setAttributeInfoSupplier(Function<String, AttributeInfo> supplier) {
+		this.attributeInfoSupplier = supplier;
+	}
+	
+	@Override
+	public Function<String, AttributeInfo> getAttributeInfoSupplier() {
+		return attributeInfoSupplier;
 	}
 	
 	private void createOrUpdateColumn(AttributeInfo column) throws SolrServerException, IOException {

@@ -51,15 +51,37 @@ public class CodeServer {
 	}
 
 	
-	private static void redirectDataServlet(ICodeServerConfiguration config) {
+	private static void redirectDataServlet(ICodeServerConfiguration codeServerConfig) {
+		IStoreConfiguration targetStoreConfig = codeServerConfig.getTargetDataStoreConfiguration(); 
+		if(targetStoreConfig==null)
+			redirectDataServletToDataStore(codeServerConfig);
+		else
+			redirectDataServletToTargetStore(codeServerConfig);
+	}
+
+	private static void redirectDataServletToDataStore(ICodeServerConfiguration codeServerConfig) {
+		IStoreConfiguration targetStoreConfig = codeServerConfig.getDataStoreConfiguration(); 
+		logger.warn(()->"Could not locate target data store configuration, reverting to " + targetStoreConfig.getDbName() + " store.");
+		redirectDataServlet(targetStoreConfig, ICodeStore.getInstance());
+	}
+
+	private static void redirectDataServletToTargetStore(ICodeServerConfiguration codeServerConfig) {
+		IStoreConfiguration targetStoreConfig = codeServerConfig.getTargetDataStoreConfiguration(); 
+		logger.info(()->"Redirecting data servlet to " + targetStoreConfig.getDbName() + ".");
+		ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), codeServerConfig.getRuntimeLibs(), "Thesaurus", PromptoVersion.LATEST, null, (URL[])null);
+		redirectDataServlet(targetStoreConfig, codeStore);
+	}
+
+	private static void redirectDataServlet(IStoreConfiguration targetStoreConfig, ICodeStore codeStore) {
 		try {
-			IStoreConfiguration code = config.getTargetDataStoreConfiguration(); 
-			logger.info(()->"Redirecting data servlet to " + code.getDbName() + ".");
-			IStoreFactory factory = IStoreFactory.newStoreFactory(code.getFactory());
-			if(factory instanceof MemStoreFactory) {
-				DataServlet.store = IDataStore.getInstance();
-			} else
-				DataServlet.store = factory.newStore(code);
+			IStoreFactory factory = IStoreFactory.newStoreFactory(targetStoreConfig.getFactory());
+			if(factory instanceof MemStoreFactory)
+				DataServlet.useDataStore(IDataStore.getInstance());
+			else {
+				IStore store = factory.newStore(targetStoreConfig);
+				store.setAttributeInfoSupplier(codeStore::fetchAttributeInfo);
+				DataServlet.useDataStore(store);
+			}
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}

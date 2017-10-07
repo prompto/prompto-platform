@@ -42,8 +42,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 	}
 	
 	@Override
-	public Set<String> keySet() throws PromptoError {
-		return document.keySet();
+	public Set<String> getNames() throws PromptoError {
+		Set<String> names = document.keySet();
+		names.remove("category");
+		names.remove("_id");
+		return names;
 	}
 
 }

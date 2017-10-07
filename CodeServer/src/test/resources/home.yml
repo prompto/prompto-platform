@@ -9,11 +9,11 @@ mongoStore: &homeMongoStore
     
 codeStore: 
   <<: *homeMongoStore
-  dbName: TOOLS
+  dbName: SEED
   
 dataStore: 
   <<: *homeMongoStore
-  dbName: CODE
+  dbName: TOOLS
 
 http:
   port: 8080

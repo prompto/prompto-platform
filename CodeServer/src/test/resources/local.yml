@@ -5,11 +5,11 @@ localMongoStore: &localMongoStore
 
 codeStore: 
   <<: *localMongoStore
-  dbName: TOOLS
+  dbName: SEED
   
 dataStore: 
   <<: *localMongoStore
-  dbName: CODE
+  dbName: TOOLS
 
 http:
   port: 0
