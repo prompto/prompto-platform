@@ -239,21 +239,28 @@ public class ModuleProcess {
 	}
 
 	private void writeDataStoreYamlEntries(YamlDocument document) throws YamlException {
-		YamlEntry entry = (YamlEntry)document.getEntry("dataStore");
-		YamlMapping store = (YamlMapping)entry.getValue();
-		entry = store.getEntry("dbName");
-		entry.setValue("DATA");
+		YamlEntry entry = document.getEntry("dataStore");
+		YamlMapping current = (YamlMapping)entry.getValue();
+		// create a copy
+		YamlMapping target = new YamlMapping();
+		for(int i=0; i<current.size(); i++) {
+			entry = current.getEntry(i);
+			if("dbName".equals(entry.getKey()))
+				continue;
+			else
+				target.setEntry(entry.getKey().getValue(), entry.getValue());
+		}
+		target.setEntry("dbName", "DATA");
+		document.setEntry("dataStore", target);
 	}
 
 	private void writeCodeStoreYamlEntries(YamlDocument document) throws YamlException {
-		YamlEntry entry = (YamlEntry)document.getEntry("codeStore");
-		YamlMapping store = (YamlMapping)entry.getValue();
-		entry = store.getEntry("dbName");
-		entry.setValue("APPS");
+		YamlEntry entry = document.getEntry("dataStore");
+		document.setEntry("codeStore", entry.getValue());
 	}
 
 	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {
-		YamlEntry entry = (YamlEntry)document.getEntry("http");
+		YamlEntry entry = document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
 		http.setEntry("port", port);
 		http.deleteEntry("redirectFrom");
