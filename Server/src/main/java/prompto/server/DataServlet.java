@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
 import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -221,8 +222,14 @@ public class DataServlet extends HttpServletWithHolder {
 		return writer;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static JsonWriter listJsonWriterFor(JsonWriter writer) {
-		throw new RuntimeException("Not implemented!");
+		return (g,o)->{
+			g.writeStartArray();
+			for(Object i : ((Collection<Object>)o))
+				writer.apply(g, i);
+			g.writeEndArray();
+		};
 	}
 
 	interface JsonWriter {
