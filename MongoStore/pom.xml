@@ -39,7 +39,7 @@
 				<version>2.19.1</version>
 				<configuration>                                                                                         
 			        <trimStackTrace>false</trimStackTrace>                                                              
-					<excludedGroups>prompto.codeserver.SeleniumTest,prompto.utils.ManualTests</excludedGroups>
+					<excludedGroups>prompto.utils.ManualTests</excludedGroups>
 				</configuration>
 			</plugin>
 		</plugins>

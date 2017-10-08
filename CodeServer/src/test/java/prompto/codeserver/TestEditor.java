@@ -11,7 +11,7 @@ import org.openqa.selenium.WebElement;
 
 import prompto.server.AppServer;
 
-@Category(SeleniumTest.class)
+@Category(SeleniumTests.class)
 public class TestEditor extends BaseWebTest {
 
 	@BeforeClass
