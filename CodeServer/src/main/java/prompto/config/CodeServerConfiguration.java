@@ -8,10 +8,4 @@ public class CodeServerConfiguration extends ServerConfiguration implements ICod
 		super(reader, argsMap);
 	}
 
-	@Override
-	public IStoreConfiguration getTargetDataStoreConfiguration() {
-		return reader.readStoreConfiguration("targetDataStore");
-	}
-	
-	
 }

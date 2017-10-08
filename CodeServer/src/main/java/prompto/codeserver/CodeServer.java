@@ -52,22 +52,7 @@ public class CodeServer {
 
 	
 	private static void redirectDataServlet(ICodeServerConfiguration codeServerConfig) {
-		IStoreConfiguration targetStoreConfig = codeServerConfig.getTargetDataStoreConfiguration(); 
-		if(targetStoreConfig==null)
-			redirectDataServletToDataStore(codeServerConfig);
-		else
-			redirectDataServletToTargetStore(codeServerConfig);
-	}
-
-	private static void redirectDataServletToDataStore(ICodeServerConfiguration codeServerConfig) {
 		IStoreConfiguration targetStoreConfig = codeServerConfig.getDataStoreConfiguration(); 
-		logger.warn(()->"Could not locate target data store configuration, reverting to " + targetStoreConfig.getDbName() + " store.");
-		redirectDataServlet(targetStoreConfig);
-	}
-
-	private static void redirectDataServletToTargetStore(ICodeServerConfiguration codeServerConfig) {
-		IStoreConfiguration targetStoreConfig = codeServerConfig.getTargetDataStoreConfiguration(); 
-		logger.info(()->"Redirecting data servlet to " + targetStoreConfig.getDbName() + ".");
 		redirectDataServlet(targetStoreConfig);
 	}
 
