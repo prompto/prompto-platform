@@ -190,7 +190,7 @@ define deleteModule as method receiving dbId doing:
 		raise NULL_REFERENCE
 	stuff = fetch all Stuff where module = module
 	sessions = fetch all RecentSession where module = module
-	delete stuff, sessions, module
+	delete stuff, sessions, module, module.dependencies
 	flush
 
 
