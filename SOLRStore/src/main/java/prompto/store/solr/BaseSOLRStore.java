@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -142,11 +141,13 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public Family getColumnTypeFamily(String fieldName) throws PromptoError {
+	public AttributeInfo getAttributeInfo(String fieldName) throws PromptoError {
 		String typeName = getColumnTypeName(fieldName);
-		if(typeName.endsWith("[]"))
+		boolean multi = typeName.endsWith("[]");
+		if(multi)
 			typeName = typeName.substring(0, typeName.length()-"[]".length());
-		return typeMap.get(typeName);
+		Family family = typeMap.get(typeName);
+		return new AttributeInfo(fieldName, family, multi, null);
 	}
 	
 	@Override
@@ -163,43 +164,31 @@ abstract class BaseSOLRStore implements IStore {
 	}
 	
 	@Override
-	public void createOrUpdateColumns(Collection<AttributeInfo> columns) throws PromptoError {
-		for(AttributeInfo column : columns) try {
-			createOrUpdateColumn(column);
+	public void createOrUpdateAttributes(Collection<AttributeInfo> attributes) throws PromptoError {
+		for(AttributeInfo attribute : attributes) try {
+			createOrUpdateAttribute(attribute);
 		} catch(Exception e) {
 			throw new InternalError(e);
 		}
 	}
 	
-	Function<String, AttributeInfo> attributeInfoSupplier;
-
-	@Override
-	public void setAttributeInfoSupplier(Function<String, AttributeInfo> supplier) {
-		this.attributeInfoSupplier = supplier;
-	}
-	
-	@Override
-	public Function<String, AttributeInfo> getAttributeInfoSupplier() {
-		return attributeInfoSupplier;
-	}
-	
-	private void createOrUpdateColumn(AttributeInfo column) throws SolrServerException, IOException {
+	private void createOrUpdateAttribute(AttributeInfo attribute) throws SolrServerException, IOException {
 		Map<String, Object> options = new HashMap<>();
 		options.put("indexed", true);
 		options.put("stored", true);
-		if(column.isCollection()) 
+		if(attribute.isCollection()) 
 			options.put("multiValued", true);
-		if("version".equals(column.getName()))  {
+		if("version".equals(attribute.getName()))  {
 			if(!hasField("version"))
 				addField("version", "version", options);
-		} else if(column.getFamily()==Family.TEXT)
-			createOrUpdateTextColumn(column, options);
-		else if(!hasField(column.getName())) {
-			if(column.getFamily()==Family.CATEGORY) {
-				addField(column.getName(), "db-ref", options);
+		} else if(attribute.getFamily()==Family.TEXT)
+			createOrUpdateTextColumn(attribute, options);
+		else if(!hasField(attribute.getName())) {
+			if(attribute.getFamily()==Family.CATEGORY) {
+				addField(attribute.getName(), "db-ref", options);
 			} else {
-			String typeName = column.getFamily().name().toLowerCase();
-			addField(column.getName(), typeName, options);
+				String typeName = attribute.getFamily().name().toLowerCase();
+				addField(attribute.getName(), typeName, options);
 			}
 		}
 	}

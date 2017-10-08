@@ -52,6 +52,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 
 public class MongoStore implements IStore {
@@ -70,8 +71,7 @@ public class MongoStore implements IStore {
 		 
 	MongoClient client;
 	MongoDatabase db;
-	Map<String, AttributeInfo> fields = new HashMap<>();
-	Function<String, AttributeInfo> attributeInfoSupplier;
+	Map<String, AttributeInfo> attributes = new HashMap<>();
 	
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
@@ -131,6 +131,7 @@ public class MongoStore implements IStore {
 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + config.getDbName() + "' database @" + mcu.getOptions().getRequiredReplicaSetName());
 		client = new MongoClient(mcu);
 		db = client.getDatabase(config.getDbName());
+		loadAttributes();
 	}
 	
 	public MongoStore(String host, int port, String database) {
@@ -159,6 +160,7 @@ public class MongoStore implements IStore {
 			client = new MongoClient(address, options);
 		}
 		db = client.getDatabase(database);
+		loadAttributes();
 	}
 
 	@Override
@@ -172,24 +174,53 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Family getColumnTypeFamily(String name) throws PromptoError {
-		AttributeInfo info = fields.get(name);
-		return info==null ? null : info.getFamily();
+	public AttributeInfo getAttributeInfo(String name) throws PromptoError {
+		return attributes.get(name);
 	}
-
-	@Override
-	public void createOrUpdateColumns(Collection<AttributeInfo> columns) throws PromptoError {
-		columns.forEach((c)->fields.put(c.getName(), c));
+	
+	void loadAttributes() {
+		db.getCollection("attributes").find().forEach(this::loadAttribute);
 	}
-
-	@Override
-	public void setAttributeInfoSupplier(Function<String, AttributeInfo> supplier) {
-		this.attributeInfoSupplier = supplier;
+	
+	void loadAttribute(Document doc) {
+		String name = doc.getString("name");
+		Family family = Family.valueOf(doc.getString("family"));
+		boolean collection = doc.getBoolean("collection", false);
+		boolean key = doc.getBoolean(AttributeInfo.KEY, false);
+		boolean value = doc.getBoolean(AttributeInfo.VALUE, false);
+		boolean words = doc.getBoolean(AttributeInfo.WORDS, false);
+		attributes.put(name, new AttributeInfo(name, family, collection, key, value, words));
 	}
 	
 	@Override
-	public Function<String, AttributeInfo> getAttributeInfoSupplier() {
-		return attributeInfoSupplier;
+	public void createOrUpdateAttributes(Collection<AttributeInfo> infos) throws PromptoError {
+		// TODO check for discrepancies
+		storeAttributes(infos);
+		loadAttributes();
+	}
+
+	private void storeAttributes(Collection<AttributeInfo> infos) {
+		List<UpdateOneModel<Document>> operations = infos.stream()
+				.map(this::buildWriteModel)
+				.collect(Collectors.toList());
+		if(!operations.isEmpty()) {
+			MongoCollection<Document> coll = db.getCollection("attributes");
+			coll.bulkWrite(operations);
+		}
+	}
+
+	private UpdateOneModel<Document> buildWriteModel(AttributeInfo attribute) {
+		Document data = new Document();
+		data.put("name", attribute.getName());
+		data.put("family", attribute.getFamily().name());
+		data.put("collection", attribute.isCollection());
+		data.put(AttributeInfo.KEY, attribute.isKey());
+		data.put(AttributeInfo.VALUE, attribute.isValue());
+		data.put(AttributeInfo.WORDS, attribute.isWords());
+		Bson filter = Filters.eq("name", attribute.getName());
+		UpdateOneModel<Document> model = new UpdateOneModel<>(filter, new Document("$set", data));
+		model.getOptions().upsert(true);
+		return model;
 	}
 
 	@Override
@@ -372,9 +403,7 @@ public class MongoStore implements IStore {
 	
 	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
-		AttributeInfo info = fields.get(fieldName);
-		if(info==null && attributeInfoSupplier!=null)
-			info = attributeInfoSupplier.apply(fieldName);
+		AttributeInfo info = attributes.get(fieldName);
 		if(info==null)
 			throw new RuntimeException("Missing AttributeInfo for " + fieldName);
 		if(info.isCollection() && data instanceof Collection)

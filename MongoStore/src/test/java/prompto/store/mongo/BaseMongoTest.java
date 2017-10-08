@@ -66,7 +66,7 @@ public abstract class BaseMongoTest {
 
 	protected void createField(String name, Family family, boolean collection) {
 		AttributeInfo info = new AttributeInfo(name, family, collection, false, false, false);
-		store.createOrUpdateColumns(Collections.singletonList(info));
+		store.createOrUpdateAttributes(Collections.singletonList(info));
 	}
 
 	

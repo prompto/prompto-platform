@@ -62,7 +62,7 @@ public class StoredUserInfoCache {
 		IStoreConfiguration storeConfig = config.getStoreConfiguration();
 		try {
 			store = IStoreFactory.newStoreFromConfig(storeConfig);
-			store.createOrUpdateColumns(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
+			store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}

@@ -62,24 +62,22 @@ public class CodeServer {
 	private static void redirectDataServletToDataStore(ICodeServerConfiguration codeServerConfig) {
 		IStoreConfiguration targetStoreConfig = codeServerConfig.getDataStoreConfiguration(); 
 		logger.warn(()->"Could not locate target data store configuration, reverting to " + targetStoreConfig.getDbName() + " store.");
-		redirectDataServlet(targetStoreConfig, ICodeStore.getInstance());
+		redirectDataServlet(targetStoreConfig);
 	}
 
 	private static void redirectDataServletToTargetStore(ICodeServerConfiguration codeServerConfig) {
 		IStoreConfiguration targetStoreConfig = codeServerConfig.getTargetDataStoreConfiguration(); 
 		logger.info(()->"Redirecting data servlet to " + targetStoreConfig.getDbName() + ".");
-		ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), codeServerConfig.getRuntimeLibs(), "Thesaurus", PromptoVersion.LATEST, null, (URL[])null);
-		redirectDataServlet(targetStoreConfig, codeStore);
+		redirectDataServlet(targetStoreConfig);
 	}
 
-	private static void redirectDataServlet(IStoreConfiguration targetStoreConfig, ICodeStore codeStore) {
+	private static void redirectDataServlet(IStoreConfiguration targetStoreConfig) {
 		try {
 			IStoreFactory factory = IStoreFactory.newStoreFactory(targetStoreConfig.getFactory());
 			if(factory instanceof MemStoreFactory)
 				DataServlet.useDataStore(IDataStore.getInstance());
 			else {
 				IStore store = factory.newStore(targetStoreConfig);
-				store.setAttributeInfoSupplier(codeStore::fetchAttributeInfo);
 				DataServlet.useDataStore(store);
 			}
 		} catch(Throwable t) {

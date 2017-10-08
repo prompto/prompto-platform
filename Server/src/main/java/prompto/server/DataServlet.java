@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -210,10 +209,7 @@ public class DataServlet extends HttpServletWithHolder {
 		JsonWriter writer = writers.get(name);
 		if(writer!=null)
 			return writer;
-		Function<String, AttributeInfo> supplier = dataStore.getAttributeInfoSupplier();
-		if(supplier==null)
-			return null;
-		AttributeInfo info = supplier.apply(name);
+		AttributeInfo info = dataStore.getAttributeInfo(name);
 		if(info==null)
 			return null;
 		writer = familyWriters.get(info.getFamily());
