@@ -149,32 +149,24 @@ define createModule as method receiving Text type, name, description = nothing, 
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
 	module = Module with name as name, 'v0.0.1' as version, description as description, image as image and deps as dependencies
+	if createStart:
+		startMethod = "main_" + name.replaceAll with " " as toReplace and "_" as replaceWith
 	switch on type:
 		when "library":
 			module = Library from module
 		when "script":
 			module = Script from module
 		when "batch":
-			if createStart:
-				startMethod = "main_" + name
-			batch = Batch from module with startMethod as startMethod
-			decl = createStartMethod with batch as module and startMethod as name
-			module = batch
+			module = Batch from module with startMethod as startMethod
 		when "service":
-			if createStart:
-				startMethod = "main_" + name
-			service = Service from module with startMethod as serverAboutToStartMethod
-			decl = createStartMethod with service as module and startMethod as name
-			module = service
+			module = Service from module with startMethod as serverAboutToStartMethod
 		when "website":
-			if createStart:
-				startMethod = "main_" + name
 			if createHome:
 				homePage = name + "/index.html"
-			webSite = WebSite from module with startMethod as serverAboutToStartMethod and homePage as homePage
-			decl = createStartMethod with webSite as module and startMethod as name
-			page = createHomePage with webSite as module and homePage as name
-			module = webSite
+			module = WebSite from module with startMethod as serverAboutToStartMethod and homePage as homePage
+			page = createHomePage with module as module and homePage as name
+	if createStart:
+		decl = createStartMethod with module as module and startMethod as name
 	store decl, page, module
 	flush
 
