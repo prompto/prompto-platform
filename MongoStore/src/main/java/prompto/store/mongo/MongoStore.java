@@ -179,7 +179,9 @@ public class MongoStore implements IStore {
 	}
 	
 	void loadAttributes() {
-		db.getCollection("attributes").find().forEach(this::loadAttribute);
+		// need 2 statement otherwice javac will fail on Travis with ambiguous forEach
+		FindIterable<Document> docs = db.getCollection("attributes").find();
+		docs.forEach(this::loadAttribute);
 	}
 	
 	void loadAttribute(Document doc) {
