@@ -3,10 +3,6 @@ localMongoStore: &localMongoStore
   host: localhost
   port: 27017
 
-codeStore: 
-  <<: *localMongoStore
-  dbName: SEED
-  
 dataStore: 
   <<: *localMongoStore
   dbName: TOOLS

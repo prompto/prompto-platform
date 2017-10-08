@@ -6,7 +6,6 @@ import java.util.Map;
 
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
-import prompto.code.QueryableCodeStore;
 import prompto.config.CodeServerConfiguration;
 import prompto.config.ICodeServerConfiguration;
 import prompto.config.IConfigurationReader;
@@ -78,9 +77,8 @@ public class CodeServer {
 	public static void createThesaurusAndImportSamples() {
 		try {
 			IStore dataStore = IDataStore.getInstance();
-			ICodeStore codeStore = new QueryableCodeStore(dataStore, ()->Libraries.getPromptoLibraries(Libraries.class), "dev-center", PromptoVersion.parse("1.0.0"), null);
 			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
-			importer.importModule(codeStore);
+			importer.importModule(ICodeStore.getInstance());
 			/* TODO split in 2 methods, making samples optional
 			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
 			for(URL sample : samples) {
