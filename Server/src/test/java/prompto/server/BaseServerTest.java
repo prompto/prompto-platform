@@ -1,6 +1,6 @@
 package prompto.server;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
