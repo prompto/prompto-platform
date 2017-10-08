@@ -250,7 +250,7 @@ public class ModuleProcess {
 			else
 				target.setEntry(entry.getKey().getValue(), entry.getValue());
 		}
-		target.setEntry("dbName", "DATA");
+		target.setEntry("dbName", "APPS");
 		document.setEntry("dataStore", target);
 	}
 
