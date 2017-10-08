@@ -149,8 +149,9 @@ define createModule as method receiving Text type, name, description = nothing, 
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
 	module = Module with name as name, 'v0.0.1' as version, description as description, image as image and deps as dependencies
+	cleanName = name.replaceAll with " " as toReplace and "_" as replaceWith
 	if createStart:
-		startMethod = "main_" + name.replaceAll with " " as toReplace and "_" as replaceWith
+		startMethod = "main_" + cleanName
 	switch on type:
 		when "library":
 			module = Library from module
@@ -162,7 +163,7 @@ define createModule as method receiving Text type, name, description = nothing, 
 			module = Service from module with startMethod as serverAboutToStartMethod
 		when "website":
 			if createHome:
-				homePage = name + "/index.html"
+				homePage = cleanName + "/index.html"
 			module = WebSite from module with startMethod as serverAboutToStartMethod and homePage as homePage
 			page = createHomePage with module as module and homePage as name
 	if createStart:
