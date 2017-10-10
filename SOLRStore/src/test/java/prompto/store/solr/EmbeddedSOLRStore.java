@@ -39,6 +39,15 @@ public class EmbeddedSOLRStore extends BaseSOLRStore {
 	}
 	
 	@Override
+	public boolean checkConnection() {
+		try {
+			return server.ping().getStatus()==0;
+		} catch(Exception e) {
+			return false;
+		}
+	}
+	
+	@Override
 	public void setCommitDelay(int commitDelay) throws SolrServerException {
 		this.commitDelay = commitDelay;
 	}

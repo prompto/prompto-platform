@@ -37,6 +37,15 @@ public class RemoteSOLRStore extends BaseSOLRStore {
 		this.client = new HttpSolrClient(baseURL);
 		this.coreName = coreName;
 	}
+	
+	@Override
+	public boolean checkConnection() {
+		try {
+			return client.ping().getStatus()==0;
+		} catch(Exception e) {
+			return false;
+		}
+	}
 
 	@Override
 	public void setCommitDelay(int commitDelay) throws SolrServerException {

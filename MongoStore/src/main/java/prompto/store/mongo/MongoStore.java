@@ -114,6 +114,8 @@ public class MongoStore implements IStore {
 	}
 
 	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
+		// we use 'admin' for default connection
+		final String dbName = config.getDbName()==null ? "admin" : config.getDbName();
 		MongoClientURI mcu = new MongoClientURI(config.getReplicaSetURI()) {
 			public MongoCredential getCredentials() {
 				if(password==null)
@@ -128,10 +130,11 @@ public class MongoStore implements IStore {
 		                .build();
 			}
 		};
-		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + config.getDbName() + "' database @" + mcu.getOptions().getRequiredReplicaSetName());
+		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + mcu.getOptions().getRequiredReplicaSetName());
 		client = new MongoClient(mcu);
-		db = client.getDatabase(config.getDbName());
-		loadAttributes();
+		db = client.getDatabase(dbName);
+		if(!"admin".equals(dbName))
+			loadAttributes();
 	}
 	
 	public MongoStore(String host, int port, String database) {
@@ -147,22 +150,34 @@ public class MongoStore implements IStore {
 	}
 
 	private void connectWithParams(String host, int port, String database, String user, char[] password) {
+		// we use 'admin' for default connection
+		final String dbName = database==null ? "admin" : database;
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
 		                .codecRegistry(codecRegistry)
 		                .build();
 		if(user!=null && password!=null) {
-			logger.info(()->"Connecting user '" + user + "' to '" + database + "' database");
+			logger.info(()->"Connecting user '" + user + "' to '" + dbName + "' database");
 			MongoCredential cred = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
 			client = new MongoClient(address, Collections.singletonList(cred), options);
 		} else {
-			logger.info(()->"Connecting anonymously to '" + database + "' database");
+			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
 			client = new MongoClient(address, options);
 		}
-		db = client.getDatabase(database);
-		loadAttributes();
+		db = client.getDatabase(dbName);
+		if(!"admin".equals(dbName))
+			loadAttributes();
 	}
 
+	@Override
+	public boolean checkConnection() {
+		try {
+			return client.getDatabase("admin")!=null;
+		} catch(Exception e) {
+			return false;
+		}
+	}
+	
 	@Override
 	public Class<?> getDbIdClass() {
 		return UUID.class;
