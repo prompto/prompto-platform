@@ -13,11 +13,14 @@ import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
 import prompto.grammar.Identifier;
 import prompto.intrinsic.PromptoDict;
+import prompto.memstore.MemStore;
 import prompto.remoting.ParameterList;
 import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
 import prompto.statement.MethodCall;
+import prompto.store.IDataStore;
+import prompto.store.IStore;
 import prompto.value.BinaryValue;
 import prompto.value.IValue;
 import prompto.value.Text;
@@ -55,6 +58,8 @@ public class RequestRouter {
 	
 	private String executeTest(Identifier testName, OutputStream output) throws Exception {
 		PrintStream oldOut = System.out;
+		IStore oldStore = IDataStore.getInstance();
+		IDataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
 		try {
@@ -63,12 +68,15 @@ public class RequestRouter {
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			return writeJsonResponse(lines, output);
 		} finally {
+			IDataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}
 
 	private String interpretTest(Identifier testName, OutputStream output) throws IOException {
 		PrintStream oldOut = System.out;
+		IStore oldStore = IDataStore.getInstance();
+		IDataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
 		try {
@@ -77,6 +85,7 @@ public class RequestRouter {
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			return writeJsonResponse(lines, output);
 		} finally {
+			IDataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}

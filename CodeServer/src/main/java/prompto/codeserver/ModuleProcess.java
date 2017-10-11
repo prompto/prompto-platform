@@ -84,7 +84,7 @@ public class ModuleProcess {
 	}
 
 	private static ModuleProcess createModuleProcess(Object dbId) throws Exception {
-		IStored stored = IDataStore.instance.get().fetchUnique(dbId);
+		IStored stored = IDataStore.getInstance().fetchUnique(dbId);
 		if(stored==null)
 			return null;
 		ModuleProcess module = new ModuleProcess();
