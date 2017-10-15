@@ -60,7 +60,9 @@ public class ModuleProcess {
 		}
 	}
 	
-	public static Long launchIfNeeded(Object dbId) {
+	public static Long launchIfNeeded(Object dbId, Boolean optional) {
+		if(optional==null)
+			optional = false;
 		synchronized(modules) {
 			try {
 				if(dbId instanceof IValue)
@@ -72,6 +74,8 @@ public class ModuleProcess {
 					module = null;
 				// create needed ?
 				if(module==null) {
+					if(optional)
+						return -1L; // don't create it
 					module = createModuleProcess(dbId);
 					modules.put(dbId, module);
 				}
