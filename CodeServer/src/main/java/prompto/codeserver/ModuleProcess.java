@@ -166,8 +166,11 @@ public class ModuleProcess {
 	private String[] buildCommandLineArgs() throws Exception {
 		List<String> cmds = new ArrayList<String>();
 		cmds.add("java");
-		// cmds.add("-Xdebug");
-		// cmds.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888");
+		String debugPort = System.getenv("PROMPTO_DEBUG_TARGET_PORT");
+		if(debugPort!=null && !debugPort.isEmpty()) {
+			cmds.add("-Xdebug");
+			cmds.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + debugPort);
+		}
 		addClassPathArgs(cmds);
 		cmds.add(AppServer.class.getName());
 		addPromptoArgs(cmds);
