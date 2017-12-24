@@ -2,10 +2,11 @@ package prompto.server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.InvalidParameterException;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
 
 import prompto.compiler.PromptoClassLoader;
 import prompto.error.PromptoError;
@@ -38,25 +39,27 @@ public class RequestRouter {
 		this.context = context.newLocalContext();
 	}
 
-	public String route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
+	public void route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		boolean isTest = methodName.toString().startsWith("\"") && methodName.toString().endsWith("\"");
 		switch(mode) {
 		case INTERPRET:
 			if(isTest)
-				return interpretTest(methodName, output);
+				interpretTest(methodName, response);
 			else
-				return interpretMethod(methodName, jsonParams, parts, main, output);
+				interpretMethod(methodName, jsonParams, parts, main, response);
+			break;
 		case EXECUTE:
 			if(isTest)
-				return executeTest(methodName, output);
+				executeTest(methodName, response);
 			else
-				return executeMethod(methodName, jsonParams, parts, main, output);
+				executeMethod(methodName, jsonParams, parts, main, response);
+			break;
 		default:
 			throw new InvalidParameterException(mode.name());
 		}
 	}
 	
-	private String executeTest(Identifier testName, OutputStream output) throws Exception {
+	private void executeTest(Identifier testName, HttpServletResponse response) throws Exception {
 		PrintStream oldOut = System.out;
 		IStore oldStore = IDataStore.getInstance();
 		IDataStore.setInstance(new MemStore());
@@ -66,14 +69,14 @@ public class RequestRouter {
 			Executor.executeTest(classLoader, testName.toString());
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
-			return writeJsonResponse(lines, output);
+			writeJsonResponse(lines, response);
 		} finally {
 			IDataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}
 
-	private String interpretTest(Identifier testName, OutputStream output) throws IOException {
+	private void interpretTest(Identifier testName, HttpServletResponse response) throws IOException {
 		PrintStream oldOut = System.out;
 		IStore oldStore = IDataStore.getInstance();
 		IDataStore.setInstance(new MemStore());
@@ -83,14 +86,14 @@ public class RequestRouter {
 			Interpreter.interpretTest(context, testName, true);
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
-			return writeJsonResponse(lines, output);
+			writeJsonResponse(lines, response);
 		} finally {
 			IDataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}
 
-	public String executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
+	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			Class<?>[] argTypes = params.toJavaTypes(context, classLoader);
@@ -102,13 +105,13 @@ public class RequestRouter {
 			Object result = Executor.executeGlobalMethod(classLoader, methodName, argTypes, args);
 			// TODO JSON output
 			Text text = new Text(result==null ? "success!" : result.toString());
-			return writeJsonResponse(text, output);
+			writeJsonResponse(text, response);
 		} finally {
 			context.notifyTerminated();
 		}
 	}
 	
-	public String interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, OutputStream output) throws Exception {
+	public void interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			ArgumentAssignmentList assignments = params.toAssignments(context);
@@ -116,9 +119,9 @@ public class RequestRouter {
 			if(value==null)
 				value = new Text("Success!");
 			if(value instanceof BinaryValue)
-				return writeBinaryResponse((BinaryValue)value, output);
+				writeBinaryResponse((BinaryValue)value, response);
 			else
-				return writeJsonResponse(value, output);
+				writeJsonResponse(value, response);
 		} finally {
 			context.notifyTerminated();
 		}
@@ -134,13 +137,16 @@ public class RequestRouter {
 		}
 	}
 
-	private String writeBinaryResponse(BinaryValue value, OutputStream output) throws IOException {
-		output.write(value.getBytes());
-		return value.getMimeType();
+	private void writeBinaryResponse(BinaryValue value, HttpServletResponse response) throws IOException {
+		response.setContentType(value.getMimeType());
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getOutputStream().write(value.getBytes());
 	}
 
-	private String writeJsonResponse(IValue value, OutputStream output) throws IOException, PromptoError {
-		JsonGenerator generator = new JsonFactory().createGenerator(output);
+	private void writeJsonResponse(IValue value, HttpServletResponse response) throws IOException, PromptoError {
+		response.setContentType("text/json");
+		response.setStatus(HttpServletResponse.SC_OK);
+		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
 		generator.writeStartObject();
 		generator.writeNullField("error");
 		if(value==null)
@@ -152,11 +158,12 @@ public class RequestRouter {
 		generator.writeEndObject();
 		generator.flush();
 		generator.close();
-		return "text/json";
 	}
 	
-	private String writeJsonResponse(String[] lines, OutputStream output) throws IOException, PromptoError {
-		JsonGenerator generator = new JsonFactory().createGenerator(output);
+	private void writeJsonResponse(String[] lines, HttpServletResponse response) throws IOException, PromptoError {
+		response.setContentType("text/json");
+		response.setStatus(HttpServletResponse.SC_OK);
+		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
 		generator.writeStartObject();
 		generator.writeNullField("error");
 		generator.writeArrayFieldStart("data");
@@ -166,7 +173,6 @@ public class RequestRouter {
 		generator.writeEndObject();
 		generator.flush();
 		generator.close();
-		return "text/json";
 	}
 
 }
