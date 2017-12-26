@@ -142,33 +142,61 @@ define storeEdited as method receiving EditedStuff[] edited doing:
 	flush
 
 
-define createModule as method receiving Text type, name, description = nothing, image = nothing,
-		Boolean createStart, startMethod = nothing, Boolean createHome and homePage = nothing doing:
-	decl = nothing as Declaration
-	page = nothing as TextResource
+define createScript as method receiving name, description = nothing doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
-	module = Module with name as name, 'v0.0.1' as version, description as description, image as image and deps as dependencies
-	cleanName = name.replaceAll with " " as toReplace and "_" as replaceWith
-	if createStart:
-		startMethod = "main_" + cleanName
-	switch on type:
-		when "library":
-			module = Library from module
-		when "script":
-			module = Script from module
-		when "batch":
-			module = Batch from module with startMethod as startMethod
-		when "service":
-			module = Service from module with startMethod as serverAboutToStartMethod
-		when "website":
-			if createHome:
-				homePage = cleanName + "/index.html"
-			module = WebSite from module with startMethod as serverAboutToStartMethod and homePage as homePage
-			page = createHomePage with module as module and homePage as name
+	module = Script with name as name, 'v0.0.1' as version, description as description and deps as dependencies
+	store module
+	flush
+
+
+define createLibrary as method receiving name, description = nothing doing:
+	// at minimal, all modules depend on Thesaurus
+	lib = fetch one Library where name = "Thesaurus"
+	deps = [Dependency from lib]
+	module = Library with name as name, 'v0.0.1' as version, description as description and deps as dependencies
+	store module
+	flush
+
+
+define createBatch as method receiving name, description = nothing, Boolean createStart, startMethod = nothing doing:
+	// at minimal, all modules depend on Thesaurus
+	lib = fetch one Library where name = "Thesaurus"
+	deps = [Dependency from lib]
+	module = Batch with name as name, 'v0.0.1' as version, description as description, startMethod as startMethod and deps as dependencies
+	decl = nothing as Declaration
 	if createStart:
 		decl = createStartMethod with module as module and startMethod as name
+	store decl, module
+	flush
+
+
+define createService as method receiving name, description = nothing,
+		Boolean createStart, serverAboutToStartMethod = nothing doing:
+	// at minimal, all modules depend on Thesaurus
+	lib = fetch one Library where name = "Thesaurus"
+	deps = [Dependency from lib]
+	module = Service with name as name, 'v0.0.1' as version, description as description, serverAboutToStartMethod as serverAboutToStartMethod and deps as dependencies
+	decl = nothing as Declaration
+	if createStart:
+		decl = createStartMethod with module as module and serverAboutToStartMethod as name
+	store decl, module
+	flush
+
+
+define createWebSite as method receiving name, description = nothing, image = nothing,
+		Boolean createStart, serverAboutToStartMethod = nothing, Boolean createHome and homePage = nothing doing:
+	// at minimal, all modules depend on Thesaurus
+	lib = fetch one Library where name = "Thesaurus"
+	deps = [Dependency from lib]
+	module = WebSite with name as name, 'v0.0.1' as version, description as description, image as image, serverAboutToStartMethod as serverAboutToStartMethod, homePage as homePage and deps as dependencies
+	decl = nothing as Declaration
+	if createStart:
+		decl = createStartMethod with module as module and serverAboutToStartMethod as name
+	page = nothing as TextResource
+	if createHome:
+		page = createHomePage with module as module and homePage as name
 	store decl, page, module
 	flush
 
@@ -200,6 +228,7 @@ define exportModule as method receiving dbId doing:
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
 		raise NULL_REFERENCE
+	// TODO use reflection once available
 	type = ""
 	if module is a Batch:
 		type = "batch"
