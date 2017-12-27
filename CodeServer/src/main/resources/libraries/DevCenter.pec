@@ -160,43 +160,33 @@ define createLibrary as method receiving name, description = nothing doing:
 	flush
 
 
-define createBatch as method receiving name, description = nothing, Boolean createStart, startMethod = nothing doing:
+define createBatch as method receiving name, description = nothing and startMethod doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
 	module = Batch with name as name, 'v0.0.1' as version, description as description, startMethod as startMethod and deps as dependencies
-	decl = nothing as Declaration
-	if createStart:
-		decl = createStartMethod with module as module and startMethod as name
+	decl = createStartMethod with module as module and startMethod as name
 	store decl, module
 	flush
 
 
-define createService as method receiving name, description = nothing,
-		Boolean createStart, serverAboutToStartMethod = nothing doing:
+define createService as method receiving name, description = nothing and serverAboutToStartMethod doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
 	module = Service with name as name, 'v0.0.1' as version, description as description, serverAboutToStartMethod as serverAboutToStartMethod and deps as dependencies
-	decl = nothing as Declaration
-	if createStart:
-		decl = createStartMethod with module as module and serverAboutToStartMethod as name
+	decl = createStartMethod with module as module and serverAboutToStartMethod as name
 	store decl, module
 	flush
 
 
-define createWebSite as method receiving name, description = nothing, image = nothing,
-		Boolean createStart, serverAboutToStartMethod = nothing, Boolean createHome and homePage = nothing doing:
+define createWebSite as method receiving name, description = nothing, image = nothing, serverAboutToStartMethod and homePage doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
 	deps = [Dependency from lib]
 	module = WebSite with name as name, 'v0.0.1' as version, description as description, image as image, serverAboutToStartMethod as serverAboutToStartMethod, homePage as homePage and deps as dependencies
-	decl = nothing as Declaration
-	if createStart:
-		decl = createStartMethod with module as module and serverAboutToStartMethod as name
-	page = nothing as TextResource
-	if createHome:
-		page = createHomePage with module as module and homePage as name
+	decl = createStartMethod with module as module and serverAboutToStartMethod as name
+	page = createHomePage with module as module and homePage as name
 	store decl, page, module
 	flush
 
