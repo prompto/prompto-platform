@@ -55,6 +55,12 @@ public class TestLoginModule extends BaseServerTest {
 					}
 					
 					@Override
+					public ILoginMethodFactory getLoginMethodFactory() {
+						return new BasicLoginMethodFactory();
+					}
+					
+					
+					@Override
 					public IStoreConfiguration getStoreConfiguration() {
 						return new IStoreConfiguration() {
 							@Override public IStoreConfiguration withDbName(String dbName) { return null; }

@@ -29,7 +29,6 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -69,6 +68,7 @@ import prompto.libraries.Libraries;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
+import prompto.security.ILoginMethodFactory;
 import prompto.security.ISecretKeyFactory;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
@@ -266,7 +266,7 @@ public class AppServer {
 				new ConstraintSecurityHandlerWithXAuthorization() :
 				new ConstraintSecurityHandler();	
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
-			security.setAuthenticator(prepareAuthenticator(config)); // how to request credentials
+			security.setAuthenticator(prepareAuthenticator(config, login)); // how to request credentials
 			security.setConstraintMappings(prepareConstraintMappings()); // when to require security
 			security.setHandler(handler.get());
 			logger.info(()->"Security handler successfully prepared.");
@@ -276,11 +276,10 @@ public class AppServer {
 		}
 	}
 	
-	private static Authenticator prepareAuthenticator(IHttpConfiguration config) {
-		if(!config.getAllowsXAuthorization())
-			return new BasicAuthenticator();
-		else
-			return new BasicAuthenticatorWithXAuthorization();
+	private static Authenticator prepareAuthenticator(IHttpConfiguration config, ILoginConfiguration login) {
+		boolean xauth = config.getAllowsXAuthorization();
+		ILoginMethodFactory factory = login.getLoginMethodFactory();
+		return factory.newAuthenticator(xauth);
 	}
 
 	private static List<ConstraintMapping> prepareConstraintMappings() {

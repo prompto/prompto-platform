@@ -1,4 +1,4 @@
-package prompto.server;
+package prompto.security;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,20 +46,14 @@ final class BasicAuthenticatorWithXAuthorization extends BasicAuthenticator {
 					String method = credentials.substring(0, space);
 					if ("basic".equalsIgnoreCase(method)) {
 						credentials = credentials.substring(space + 1);
-						credentials = B64Code.decode(credentials,
-								StandardCharsets.ISO_8859_1);
+						credentials = B64Code.decode(credentials, StandardCharsets.ISO_8859_1);
 						int i = credentials.indexOf(':');
 						if (i > 0) {
-							String username = credentials.substring(0,
-									i);
-							String password = credentials
-									.substring(i + 1);
-
-							UserIdentity user = login(username,
-									password, request);
+							String username = credentials.substring(0, i);
+							String password = credentials.substring(i + 1);
+							UserIdentity user = login(username, password, request);
 							if (user != null) {
-								return new UserAuthentication(
-										getAuthMethod(), user);
+								return new UserAuthentication(getAuthMethod(), user);
 							}
 						}
 					}
@@ -69,8 +63,7 @@ final class BasicAuthenticatorWithXAuthorization extends BasicAuthenticator {
 			if (DeferredAuthentication.isDeferred(response))
 				return Authentication.UNAUTHENTICATED;
 
-			response.setHeader(HttpHeader.WWW_AUTHENTICATE.asString(),
-					"basic realm=\"" + _loginService.getName() + '"');
+			response.setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), "basic realm=\"" + _loginService.getName() + '"');
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 			return Authentication.SEND_CONTINUE;
 		} catch (IOException e) {
