@@ -204,6 +204,10 @@ define createHomePage as method receiving module and name doing:
 	return page
 
 
+define storeModule as method receiving module doing:
+	store module
+	flush
+
 define deleteModule as method receiving dbId doing:
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
