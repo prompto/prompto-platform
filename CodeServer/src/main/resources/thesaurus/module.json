@@ -2,6 +2,6 @@
 	"type" : "THESAURUS",
 	"name" : "Thesaurus",
 	"version" : "1.0.0",
-	"description" : "Data model",
+	"description" : "Shared data model",
 	"imageResource" : "Thesaurus.jpg"
 }
