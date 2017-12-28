@@ -1,7 +1,7 @@
 package prompto.security;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.ILoginConfiguration;
+import prompto.config.ILoginModuleConfiguration;
 import prompto.config.IStoredLoginConfiguration;
 import prompto.config.StoredLoginConfiguration;
 
@@ -10,12 +10,12 @@ public class StoredPasswordDigestLoginModuleFactory implements ILoginModuleFacto
 	IStoredLoginConfiguration config;
 	
 	@Override
-	public ILoginConfiguration newConfiguration(IConfigurationReader reader) {
+	public ILoginModuleConfiguration newConfiguration(IConfigurationReader reader) {
 		return new StoredLoginConfiguration(reader);
 	}
 
 	@Override
-	public void setLoginConfiguration(ILoginConfiguration config) {
+	public void setLoginConfiguration(ILoginModuleConfiguration config) {
 		this.config = (IStoredLoginConfiguration)config;
 	}
 

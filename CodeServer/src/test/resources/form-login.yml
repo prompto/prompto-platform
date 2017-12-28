@@ -1,0 +1,11 @@
+http:
+  port: 0
+  loginModule:
+    factory: prompto.security.PasswordIsUserNameLoginModuleFactory
+  loginMethod:
+    factory: prompto.security.FormLoginMethodFactory
+    loginPage: loginPage.html
+    errorPage: errorPage.html
+
+webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
+  

@@ -10,7 +10,7 @@ public class BasicLoginMethodFactory implements ILoginMethodFactory {
 
 	@Override
 	public ILoginMethodConfiguration newConfiguration(IConfigurationReader reader) {
-		return new ILoginMethodConfiguration() {};
+		return null; // no config
 	}
 
 	@Override

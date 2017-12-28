@@ -56,7 +56,7 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
-import prompto.config.ILoginConfiguration;
+import prompto.config.ILoginModuleConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
@@ -256,7 +256,7 @@ public class AppServer {
 	}
 
 	static Handler prepareSecurityHandler(IHttpConfiguration config, Supplier<Handler> handler) {
-		ILoginConfiguration login = config.getLoginConfiguration();
+		ILoginModuleConfiguration login = config.getLoginModuleConfiguration();
 		if(login==null) {
 			logger.info(()->"Not using security handler!");
 			return handler.get();
@@ -266,7 +266,7 @@ public class AppServer {
 				new ConstraintSecurityHandlerWithXAuthorization() :
 				new ConstraintSecurityHandler();	
 			security.setLoginService(prepareLoginService(login)); // where to check credentials
-			security.setAuthenticator(prepareAuthenticator(config, login)); // how to request credentials
+			security.setAuthenticator(prepareAuthenticator(config)); // how to request credentials
 			security.setConstraintMappings(prepareConstraintMappings()); // when to require security
 			security.setHandler(handler.get());
 			logger.info(()->"Security handler successfully prepared.");
@@ -276,9 +276,9 @@ public class AppServer {
 		}
 	}
 	
-	private static Authenticator prepareAuthenticator(IHttpConfiguration config, ILoginConfiguration login) {
+	private static Authenticator prepareAuthenticator(IHttpConfiguration config) {
 		boolean xauth = config.getAllowsXAuthorization();
-		ILoginMethodFactory factory = login.getLoginMethodFactory();
+		ILoginMethodFactory factory = config.getLoginMethodConfiguration().getLoginMethodFactory();
 		return factory.newAuthenticator(xauth);
 	}
 
@@ -297,7 +297,7 @@ public class AppServer {
 		return constraint;
 	}
 
-	private static LoginService prepareLoginService(ILoginConfiguration login) throws Exception {
+	private static LoginService prepareLoginService(ILoginModuleConfiguration login) throws Exception {
 		String loginModuleName = login.getLoginModuleFactory().installLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());

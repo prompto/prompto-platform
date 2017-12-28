@@ -52,6 +52,8 @@ public class CodeServer {
 	
 	private static void redirectDataServlet(ICodeServerConfiguration codeServerConfig) {
 		IStoreConfiguration targetStoreConfig = codeServerConfig.getDataStoreConfiguration(); 
+		if(targetStoreConfig==null)
+			targetStoreConfig = IStoreConfiguration.MEM_STORE_CONFIG;
 		redirectDataServlet(targetStoreConfig);
 	}
 

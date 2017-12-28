@@ -9,11 +9,11 @@ import javax.security.auth.login.Configuration;
 
 import org.eclipse.jetty.jaas.spi.AbstractLoginModule;
 
-import prompto.config.ILoginConfiguration;
+import prompto.config.ILoginModuleConfiguration;
 
 public abstract class LoginModuleBase extends AbstractLoginModule {
 
-	public static void install(final String loginModuleClassName, final ILoginConfiguration config) {
+	public static void install(final String loginModuleClassName, final ILoginModuleConfiguration config) {
 		Configuration current = Configuration.getConfiguration();
 		Configuration wrapper = new Configuration() {
 

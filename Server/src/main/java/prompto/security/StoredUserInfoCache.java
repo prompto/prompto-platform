@@ -39,7 +39,7 @@ public class StoredUserInfoCache {
 				if(StoredUserInfoCache.instance==null) {
 					StoredUserInfoCache.instance = new StoredUserInfoCache(config);// ensure the cache doesn't grow out of control
 					TimerTask task = new TimerTask() { @Override public void run() { instance.evictOldEntriesFromCache(); }};
-					timer.scheduleAtFixedRate(task, 30000L, 30000L);
+					timer.scheduleAtFixedRate(task, 30_000L, 30_000L);
 				}
 			}
 		}

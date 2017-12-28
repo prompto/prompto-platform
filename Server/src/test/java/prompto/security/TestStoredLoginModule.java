@@ -27,7 +27,7 @@ import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 
-public class TestLoginModule extends BaseServerTest {
+public class TestStoredLoginModule extends BaseServerTest {
 
 	static IStore store = new MemStore(); // need a static to share MemStore across classes
 
@@ -45,7 +45,8 @@ public class TestLoginModule extends BaseServerTest {
 		return new IHttpConfiguration.Inline()
 			.withProtocol("http")
 			.withPort(port)
-			.withLoginConfiguration(new IStoredLoginConfiguration() {
+			.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
+			.withLoginModuleConfiguration(new IStoredLoginConfiguration() {
 
 					@Override
 					public ILoginModuleFactory getLoginModuleFactory() {
@@ -53,12 +54,6 @@ public class TestLoginModule extends BaseServerTest {
 						factory.setLoginConfiguration(this);
 						return factory;
 					}
-					
-					@Override
-					public ILoginMethodFactory getLoginMethodFactory() {
-						return new BasicLoginMethodFactory();
-					}
-					
 					
 					@Override
 					public IStoreConfiguration getStoreConfiguration() {

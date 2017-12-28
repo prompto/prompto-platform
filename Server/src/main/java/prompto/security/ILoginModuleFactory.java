@@ -1,7 +1,7 @@
 package prompto.security;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.ILoginConfiguration;
+import prompto.config.ILoginModuleConfiguration;
 
 public interface ILoginModuleFactory {
 
@@ -12,8 +12,8 @@ public interface ILoginModuleFactory {
 		return (ILoginModuleFactory)klass.newInstance();
 	}
 
-	ILoginConfiguration newConfiguration(IConfigurationReader reader);
-	void setLoginConfiguration(ILoginConfiguration config);
+	ILoginModuleConfiguration newConfiguration(IConfigurationReader reader);
+	void setLoginConfiguration(ILoginModuleConfiguration config);
 	String installLoginModule();
 
 
