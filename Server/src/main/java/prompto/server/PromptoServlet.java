@@ -23,7 +23,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 @SuppressWarnings("serial")
-public class PromptoServlet extends HttpServletWithHolder {
+public class PromptoServlet extends CleverServlet {
 
 	static final Logger logger = new Logger();
 	

@@ -1,13 +1,10 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
 
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.SecuredRedirectHandler;
 import org.eclipse.jetty.util.resource.Resource;
@@ -39,7 +36,7 @@ public abstract class BaseServerTest {
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
 		IServerConfiguration config = getServerConfig();
 		bootstrapCodeStore(config);
-		AppServer.startServer(config.getHttpConfiguration(), null, null, null, this::prepareHandler, null);
+		AppServer.startServer(config, this::prepareHandlers, null);
 		assertTrue(AppServer.isStarted());
 	}
 	
@@ -140,33 +137,19 @@ public abstract class BaseServerTest {
 			.withPort(port); 
 	}
 
-	public Handler prepareHandler() {
-		return prepareHandler(ssl);
+	public void prepareHandlers(JettyServer server, HandlerList list) {
+		prepareHandlers(server, list, ssl);
 	}
 	
 	
-	public static Handler prepareHandler(boolean ssl) {
+	public static void prepareHandlers(JettyServer server, HandlerList list, boolean ssl) {
 		try {
-			HandlerList list = new HandlerList();
 			if(ssl)
 				list.addHandler(new SecuredRedirectHandler());
-			list.addHandler(getResourceHandler());
-			list.addHandler(getServiceHandler());
-			list.addHandler(new DefaultHandler());
-			return list;
+			list.addHandler(server.newWebAppHandler());
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private static Handler getResourceHandler() throws Exception {
-		return AppServer.newResourceHandler("/", null);
-	}
-
-	private static Handler getServiceHandler() throws MalformedURLException {
-		URL thisPath = BaseServerTest.class.getProtectionDomain().getCodeSource().getLocation();
-		System.out.println("Loading classes from: " + thisPath);
-		return AppServer.newServiceHandler("/ws", thisPath, false);
 	}
 
 	public static void bootstrapCodeStore(IServerConfiguration config) throws Exception {

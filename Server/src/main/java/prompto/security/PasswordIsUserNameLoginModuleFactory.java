@@ -2,24 +2,28 @@ package prompto.security;
 
 import prompto.config.IConfigurationReader;
 import prompto.config.ILoginModuleConfiguration;
+import prompto.config.LoginModuleConfiguration;
 
 public class PasswordIsUserNameLoginModuleFactory implements ILoginModuleFactory {
 
+	ILoginModuleConfiguration config;
+	
 	@Override
 	public ILoginModuleConfiguration newConfiguration(IConfigurationReader reader) {
-		return null; // no config
+		return new LoginModuleConfiguration(reader);
 	}
 
 	@Override
 	public void setLoginConfiguration(ILoginModuleConfiguration config) {
-		// nothing to do
+		this.config = config;
 	}
 
 	@Override
 	public String installLoginModule() {
-		// TODO Auto-generated method stub
-		return null;
+		String moduleName = PasswordIsUserNameLoginModule.class.getName();
+		LoginModuleBase.install(moduleName, config);
+		return moduleName;
 	}
-	
+
 
 }

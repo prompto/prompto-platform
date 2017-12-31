@@ -11,13 +11,18 @@ import java.time.ZoneOffset;
 
 import org.eclipse.jetty.util.resource.Resource;
 
-public class CodeStoreResource extends Resource {
+public class CodeStoreResource extends Resource implements MimeTypeProvider {
 
 	final prompto.code.Resource wrapped;
 	
 	
 	public CodeStoreResource(prompto.code.Resource wrapped) {
 		this.wrapped = wrapped;
+	}
+	
+	@Override
+	public String getMimeType() {
+		return wrapped.getMimeType();
 	}
 	
 	@Override

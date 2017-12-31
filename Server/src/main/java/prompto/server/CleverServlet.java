@@ -6,19 +6,22 @@ import javax.servlet.http.HttpServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 @SuppressWarnings("serial")
-public class HttpServletWithHolder extends HttpServlet {
+public class CleverServlet extends HttpServlet {
 
-	ServletHolder holder = new ServletHolder();
+	ServletHolder holder;
 	
-	protected HttpServletWithHolder() {
-		holder.setServlet(this);
+	@Override
+	public String getServletName() {
+		return this.getClass().getSimpleName();
 	}
 	
-	public ServletHolder getHolder() {
-		return holder;
+	public void setHolder(ServletHolder holder) {
+		this.holder = holder;
 	}
 	
 	public void setMultipartConfig(MultipartConfigElement config) {
 		holder.getRegistration().setMultipartConfig(config);
 	}
+
+	
 }

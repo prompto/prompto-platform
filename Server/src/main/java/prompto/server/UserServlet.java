@@ -27,7 +27,7 @@ import prompto.value.Text;
 
 
 @SuppressWarnings("serial")
-public class UserServlet extends HttpServletWithHolder {
+public class UserServlet extends CleverServlet {
 
 	IMethodDeclaration method;
 	

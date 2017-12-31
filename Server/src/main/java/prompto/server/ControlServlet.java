@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import prompto.runtime.Standalone;
 
 @SuppressWarnings("serial")
-public class ControlServlet extends HttpServletWithHolder {
+public class ControlServlet extends CleverServlet {
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {

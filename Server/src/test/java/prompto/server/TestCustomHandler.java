@@ -7,24 +7,19 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.handler.HandlerList;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.declaration.DeclarationList;
-import prompto.expression.IExpression;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
 import prompto.runtime.Context;
 import prompto.runtime.Standalone;
-import prompto.type.DictType;
-import prompto.type.TextType;
 import prompto.utils.Out;
 import prompto.utils.SocketUtils;
-import prompto.value.ExpressionValue;
-import prompto.value.NullValue;
 
 public class TestCustomHandler {
 
@@ -62,8 +57,8 @@ public class TestCustomHandler {
 	@Test
 	public void testInterpret_GET() throws Throwable {
 		testInterpret((port)->{
-			URL url = new URL("http://localhost:" + port + "/ws/ec2/stuff?data=abc&doto=i-efg");
-			try(InputStream data = url.openStream()) {}
+		URL url = new URL("http://localhost:" + port + "/ws/ec2/stuff?data=abc&doto=i-efg");
+		try(InputStream data = url.openStream()) {}
 			String out  = Out.read();
 			assertTrue(out.contains("abc"));
 			assertTrue(out.contains("i-efg"));
@@ -96,7 +91,8 @@ public class TestCustomHandler {
 		Out.init();
 		try {
 			int port = SocketUtils.findAvailablePortInRange(8000, 9000);
-			IServerConfiguration config = newServerConfiguration(port);
+			IServerConfiguration config = newServerConfiguration(port)
+					.withServerAboutToStartMethod("serverAboutToStart");
 			AppServer.initialize(config);
 			try(InputStream input = Thread.currentThread().getContextClassLoader()
 					.getResourceAsStream("prompto/customHandler.pec")) {
@@ -105,8 +101,7 @@ public class TestCustomHandler {
 				Context context = Standalone.getGlobalContext();
 				decls.register(context);
 			}
-			IExpression args = new ExpressionValue(new DictType(TextType.instance()), NullValue.instance());
-			AppServer.startServer(config.getHttpConfiguration(), null, "serverAboutToStart", args, this::prepareHandler, null);
+			AppServer.startServer(config, this::prepareHandlers, null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);
@@ -116,8 +111,8 @@ public class TestCustomHandler {
 		}
 	}
 	
-	Handler prepareHandler() {
-		return BaseServerTest.prepareHandler(false);
+	void prepareHandlers(JettyServer server, HandlerList list) {
+		BaseServerTest.prepareHandlers(server, list, false);
 	}
 	
 }

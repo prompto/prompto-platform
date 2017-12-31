@@ -38,7 +38,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 @SuppressWarnings("serial")
-public class DataServlet extends HttpServletWithHolder {
+public class DataServlet extends CleverServlet {
 
 	static Logger logger = new Logger();
 	

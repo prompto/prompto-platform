@@ -1,0 +1,47 @@
+
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+          http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	version="3.0">
+	<display-name>MyWebApp</display-name>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>User Auth</web-resource-name>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>**</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>prompto.login.service</realm-name>
+		<form-login-config>
+			<form-login-page>/login.html</form-login-page>
+			<form-error-page>/error.jsp</form-error-page>
+		</form-login-config>
+	</login-config>
+
+	<servlet>
+        <servlet-name>TestServlet</servlet-name>
+        <servlet-class>test.jetty.TestServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+	    <servlet-name>TestServlet</servlet-name>
+	    <url-pattern>/ws/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+        <servlet-name>TestServlet2</servlet-name>
+        <servlet-class>test.jetty.TestServlet2</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+	    <servlet-name>TestServlet2</servlet-name>
+	    <url-pattern>/ws2/*</url-pattern>
+	</servlet-mapping>
+
+</web-app>

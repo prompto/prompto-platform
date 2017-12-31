@@ -1,11 +1,24 @@
+mongoStore: &homeMongoStore
+  factory: prompto.store.mongo.MongoStoreFactory
+  host: 192.168.1.11
+  port: 27017
+  user: prompto
+  secretKey:
+    factory: prompto.security.PlainSecretKeyFactory
+    secret: prompto
+    
+dataStore: 
+  <<: *homeMongoStore
+  dbName: TOOLS
+
 http:
-  port: 0
+  port: 8080
   loginModule:
     factory: prompto.security.PasswordIsUserNameLoginModuleFactory
   loginMethod:
     factory: prompto.security.FormLoginMethodFactory
-    loginPage: loginPage.html
-    errorPage: errorPage.html
+    loginPage: /auth/loginPage.html
+    errorPage: /auth/errorPage.html
 
 webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   

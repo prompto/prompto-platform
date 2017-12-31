@@ -12,7 +12,7 @@ import prompto.store.IDataStore;
 import prompto.store.IStore;
 
 @SuppressWarnings("serial")
-public class BinaryServlet extends HttpServletWithHolder {
+public class BinaryServlet extends CleverServlet {
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {

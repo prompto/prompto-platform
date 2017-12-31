@@ -2,7 +2,6 @@ package prompto.server;
 
 import java.io.IOException;
 
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Request;
 
 import prompto.utils.Logger;
