@@ -112,11 +112,12 @@ public abstract class ResourceServlet extends CleverServlet {
 
         
 	private void writeBody(HttpServletRequest request, HttpServletResponse response, Resource resource) throws IOException {
-        try(OutputStream out = response.getOutputStream()) {
-        	if(out instanceof HttpOutput)
-        		writeBody(request, response, (HttpOutput)out, resource);
-        	else
-        		resource.writeTo(out,0,resource.length());
+        OutputStream out = response.getOutputStream();
+    	if(out instanceof HttpOutput)
+    		writeBody(request, response, (HttpOutput)out, resource);
+    	else {
+    		resource.writeTo(out,0,resource.length());
+    		out.close();
         }
 	}
 	
@@ -125,8 +126,10 @@ public abstract class ResourceServlet extends CleverServlet {
         int minAsyncSize = minAsyncContentLength==0 ? response.getBufferSize() : minAsyncContentLength;
         if (request.isAsyncSupported() &&  minAsyncSize > 0 && resource.length() >= minAsyncSize)
         	writeBodyAsync(request, out, resource, minAsyncSize);
-        else
+        else {
            	writeBodySync(request, out, resource);
+           	out.close();
+        }
 	}
 	
 	private void writeBodyAsync(HttpServletRequest request, HttpOutput out, Resource resource, int minAsyncSize) throws IOException {
