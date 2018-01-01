@@ -44,6 +44,8 @@ public class PromptoServlet extends CleverServlet {
 	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		HttpUserReader.readAndSet(req);
+		readSession(req);
 		StringBuilder sb = new StringBuilder();
 		sb.append(req.getScheme());
 		sb.append("://");
@@ -67,8 +69,6 @@ public class PromptoServlet extends CleverServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
-			readUser(req);
-			readSession(req);
 			ExecutionMode mode = readMode(req);
 			Identifier methodName = readMethod(req);
 			boolean main = readMain(req);
@@ -106,12 +106,6 @@ public class PromptoServlet extends CleverServlet {
 		Server.setHttpSession(doc);
 	}
 
-	private void readUser(HttpServletRequest req) {
-		ILoginReader reader = ILoginReader.getInstance();
-		String user = reader==null ? "<anonymous>" : reader.getUser(req);
-		Server.setHttpUser(user);
-	}
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
@@ -132,8 +126,6 @@ public class PromptoServlet extends CleverServlet {
 	}
 
 	private void doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-		readUser(req);
-		readSession(req);
 		Identifier methodName = readMethod(req);
 		ExecutionMode mode = readMode(req);
 		boolean main = readMain(req);
