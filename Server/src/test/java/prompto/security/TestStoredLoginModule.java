@@ -122,7 +122,7 @@ public class TestStoredLoginModule extends BaseServerTest {
 	static final String HTTP_CODE_PREFIX = "Server returned HTTP response code: ";
 	
 	private int loadResource(String login, String password) throws Exception {
-		URL url = new URL("http://localhost:" + port + "/js/lib/require.js");
+		URL url = new URL("http://localhost:" + port + "/ws/run/getAllAttributes");
 		URLConnection cnx = url.openConnection();
 		String authorization = Base64.getEncoder().encodeToString((login + ":" + password).getBytes());
 		cnx.setRequestProperty("Authorization", "Basic " + authorization);		
