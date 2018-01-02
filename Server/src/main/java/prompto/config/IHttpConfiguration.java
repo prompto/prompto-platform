@@ -10,8 +10,7 @@ public interface IHttpConfiguration {
 	String getAllowedOrigins();
 	IKeyStoreConfiguration getKeyStoreConfiguration();
 	IKeyStoreConfiguration getTrustStoreConfiguration();
-	ILoginModuleConfiguration getLoginModuleConfiguration();
-	ILoginMethodConfiguration getLoginMethodConfiguration();
+	ILoginConfiguration getLoginConfiguration();
 	boolean getAllowsXAuthorization();
 	boolean getSendsXAuthorization();
 	
@@ -20,8 +19,7 @@ public interface IHttpConfiguration {
 	IHttpConfiguration withSendsXAuthorization(boolean set);
 	IHttpConfiguration withKeyStoreConfiguration(IKeyStoreConfiguration config);
 	IHttpConfiguration withTrustStoreConfiguration(IKeyStoreConfiguration config);
-	IHttpConfiguration withLoginModuleConfiguration(ILoginModuleConfiguration config);
-	IHttpConfiguration withLoginMethodConfiguration(ILoginMethodConfiguration config);
+	IHttpConfiguration withLoginConfiguration(ILoginConfiguration config);
 	
 	
 	public static class Inline implements IHttpConfiguration {
@@ -32,8 +30,7 @@ public interface IHttpConfiguration {
 		Supplier<String> allowedOrigins = ()->null;
 		Supplier<IKeyStoreConfiguration> keyStoreConfiguration = ()->null;
 		Supplier<IKeyStoreConfiguration> trustStoreConfiguration = ()->null;
-		Supplier<ILoginModuleConfiguration> loginModuleConfiguration = ()->null;
-		Supplier<ILoginMethodConfiguration> loginMethodConfiguration = ()->null;
+		Supplier<ILoginConfiguration> loginConfiguration = ()->null;
 		Supplier<Boolean> allowsXAuthorization = ()->false;
 		Supplier<Boolean> sendsXAuthorization = ()->false;
 		
@@ -43,8 +40,7 @@ public interface IHttpConfiguration {
 		@Override public String getAllowedOrigins() { return allowedOrigins.get(); }
 		@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return keyStoreConfiguration.get(); }
 		@Override public IKeyStoreConfiguration getTrustStoreConfiguration() { return trustStoreConfiguration.get(); }
-		@Override public ILoginModuleConfiguration getLoginModuleConfiguration() { return loginModuleConfiguration.get(); }
-		@Override public ILoginMethodConfiguration getLoginMethodConfiguration() { return loginMethodConfiguration.get(); }
+		@Override public ILoginConfiguration getLoginConfiguration() { return loginConfiguration.get(); }
 		@Override public boolean getAllowsXAuthorization() { return allowsXAuthorization.get(); }
 		@Override public boolean getSendsXAuthorization() { return sendsXAuthorization.get(); }
 		
@@ -65,33 +61,26 @@ public interface IHttpConfiguration {
 			sendsXAuthorization = ()->set;
 			return this;
 		}
+		
 		@Override
 		public IHttpConfiguration withKeyStoreConfiguration(IKeyStoreConfiguration config) {
 			keyStoreConfiguration = ()->config;
 			return this;
 		}
+		
 		@Override
 		public IHttpConfiguration withTrustStoreConfiguration(IKeyStoreConfiguration config) {
 			trustStoreConfiguration = ()->config;
 			return this;
 		}
+
 		@Override
-		public IHttpConfiguration withLoginModuleConfiguration(ILoginModuleConfiguration config) {
-			loginModuleConfiguration = ()->config;
-			return this;
-		}
-		@Override
-		public IHttpConfiguration withLoginMethodConfiguration(ILoginMethodConfiguration config) {
-			loginMethodConfiguration = ()->config;
+		public IHttpConfiguration withLoginConfiguration(ILoginConfiguration config) {
+			loginConfiguration = ()->config;
 			return this;
 		}
 	
 	}
 
 	
-
-	
-
-	
-
 }

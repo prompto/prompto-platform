@@ -13,12 +13,13 @@ dataStore:
 
 http:
   port: 8080
-  loginModule:
-    factory: prompto.security.PasswordIsUserNameLoginModuleFactory
-  loginMethod:
-    factory: prompto.security.FormLoginMethodFactory
-    loginPage: /auth/loginPage.html
-    errorPage: /auth/errorPage.html
+  login:
+    module:
+      factory: prompto.security.PasswordIsUserNameLoginModuleFactory
+    method:
+      factory: prompto.security.FormLoginMethodFactory
+      loginPage: /auth/loginPage.html
+      errorPage: /auth/errorPage.html
 
 webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   

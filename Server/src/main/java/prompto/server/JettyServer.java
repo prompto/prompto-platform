@@ -2,7 +2,6 @@ package prompto.server;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -36,6 +35,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
+import prompto.config.ILoginConfiguration;
 import prompto.config.ILoginModuleConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
@@ -200,7 +200,7 @@ class JettyServer extends Server {
 	}
 
 	private void prepareSecurityHandler() {
-		ILoginModuleConfiguration login = config.getHttpConfiguration().getLoginModuleConfiguration();
+		ILoginConfiguration login = config.getHttpConfiguration().getLoginConfiguration();
 		if(login!=null)
 			securityHandler = prepareAuthSecurityHandler();
 		else
@@ -249,12 +249,12 @@ class JettyServer extends Server {
 
 	private Authenticator prepareAuthenticator() {
 		boolean xauth = config.getHttpConfiguration().getAllowsXAuthorization();
-		ILoginMethodFactory factory = config.getHttpConfiguration().getLoginMethodConfiguration().getLoginMethodFactory();
+		ILoginMethodFactory factory = config.getHttpConfiguration().getLoginConfiguration().getLoginMethodConfiguration().getLoginMethodFactory();
 		return factory.newAuthenticator(xauth);
 	}
 
 	private LoginService prepareLoginService() throws Exception {
-		ILoginModuleConfiguration login = config.getHttpConfiguration().getLoginModuleConfiguration();
+		ILoginModuleConfiguration login = config.getHttpConfiguration().getLoginConfiguration().getLoginModuleConfiguration();
 		String loginModuleName = login.getLoginModuleFactory().installLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
@@ -268,22 +268,20 @@ class JettyServer extends Server {
 	}
 	
 	private List<ConstraintMapping> prepareAuthConstraintMappings() {
-		Stream<ConstraintMapping> allowed = prepareAllowedExtensionConstraintMappings();
+		Stream<ConstraintMapping> allowed = prepareAllowedConstraintMappings();
 		ConstraintMapping protect = new ConstraintMapping();
-		protect.setPathSpec("/*"); // for now protect all paths
+		protect.setPathSpec("/"); // protect all paths
 		protect.setConstraint(prepareAuthenticationConstraint());
 		return Stream.concat(allowed, Stream.of(protect))
 				.collect(Collectors.toList());
 	}
 	
-	static final List<String> ALLOWED_EXTENSIONS = Arrays.asList( "jpg", "jpeg", "ico", "png", "tif", "tiff", "js", "jsx", "css" );
-	
-	private Stream<ConstraintMapping> prepareAllowedExtensionConstraintMappings() {
+	private Stream<ConstraintMapping> prepareAllowedConstraintMappings() {
 		Constraint allow = prepareNoAuthenticationConstraint();
-		return ALLOWED_EXTENSIONS.stream()
-				.map(ext->{
+		return config.getHttpConfiguration().getLoginConfiguration().getWhiteList().stream()
+				.map(path->{
 					ConstraintMapping cm = new ConstraintMapping();
-					cm.setPathSpec("*." + ext);
+					cm.setPathSpec(path);
 					cm.setConstraint(allow);
 					return cm;
 				});

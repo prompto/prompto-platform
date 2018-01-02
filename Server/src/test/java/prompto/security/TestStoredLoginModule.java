@@ -1,6 +1,6 @@
 package prompto.security;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,14 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
-import prompto.config.ISecretKeyConfiguration;
+import prompto.config.ILoginConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.IStoredLoginConfiguration;
 import prompto.memstore.MemStore;
-import prompto.security.DigestMethod;
-import prompto.security.ILoginModuleFactory;
-import prompto.security.StoredPasswordDigestLoginModuleFactory;
-import prompto.security.StoredUserInfoCache;
 import prompto.server.BaseServerTest;
 import prompto.store.IStorable;
 import prompto.store.IStore;
@@ -45,8 +41,9 @@ public class TestStoredLoginModule extends BaseServerTest {
 		return new IHttpConfiguration.Inline()
 			.withProtocol("http")
 			.withPort(port)
-			.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
-			.withLoginModuleConfiguration(new IStoredLoginConfiguration() {
+			.withLoginConfiguration(new ILoginConfiguration.Inline()
+				.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
+				.withLoginModuleConfiguration(new IStoredLoginConfiguration() {
 
 					@Override
 					public ILoginModuleFactory getLoginModuleFactory() {
@@ -57,20 +54,14 @@ public class TestStoredLoginModule extends BaseServerTest {
 					
 					@Override
 					public IStoreConfiguration getStoreConfiguration() {
-						return new IStoreConfiguration() {
-							@Override public IStoreConfiguration withDbName(String dbName) { return null; }
-							@Override public String getUser() { return null; }
-							@Override public Integer getPort() { return null; }
-							@Override public ISecretKeyConfiguration getSecretKeyConfiguration() { return null; }
-							@Override public String getHost() { return null; }
+						return new IStoreConfiguration.Inline() {
 							@Override
 							public String getFactory() {
 								return StoreFactoryTest.class.getName();
 							}
-							@Override public String getDbName() { return null; }
 						}; 
 					}
-				});
+				}));
 	}
 	
 	@Before
