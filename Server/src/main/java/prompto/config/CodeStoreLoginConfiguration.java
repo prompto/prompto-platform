@@ -5,8 +5,8 @@ import java.util.Collection;
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
 import prompto.security.ILoginMethodFactory;
-import prompto.security.ILoginModuleFactory;
-import prompto.security.PasswordIsUserNameLoginModuleFactory;
+import prompto.security.ILoginSourceFactory;
+import prompto.security.PasswordIsUserNameLoginSourceFactory;
 import prompto.store.IStore;
 import prompto.utils.Logger;
 
@@ -18,13 +18,13 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 
 	IConfigurationReader source;
 	StoredRecordConfigurationReader reader;
-	Supplier<ILoginModuleConfiguration> storedLoginModuleConfiguration;
+	Supplier<ILoginSourceConfiguration> storedLoginSourceConfiguration;
 	Supplier<ILoginMethodConfiguration> storedLoginMethodConfiguration;
 	Supplier<Collection<String>> storedWhiteList;
 	
 	public CodeStoreLoginConfiguration(IConfigurationReader reader) {
 		this.source = reader;
-		this.loginModuleConfiguration = ()->readLoginModuleConfiguration();
+		this.loginSourceConfiguration = ()->readLoginSourceConfiguration();
 		this.loginMethodConfiguration = ()->readLoginMethodConfiguration();
 		this.whiteList = ()->readWhiteList();
 	}
@@ -54,7 +54,8 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 			logger.error(()->"No dbId to fetch config!");
 			return false;
 		}
-		reader = new StoredRecordConfigurationReader(store, dbId);
+		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, dbId);
+		reader = app.getObject("authenticationSettings");
 		return true;
 	}
 	
@@ -86,16 +87,16 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		}
 	}
 
-	public ILoginModuleConfiguration readLoginModuleConfiguration() {
-		if(storedLoginModuleConfiguration==null)
-			return storedLoginModuleConfiguration.get();
-		ILoginModuleConfiguration config = fetchLoginModuleConfiguration();
-		storedLoginModuleConfiguration = ()->config;
+	public ILoginSourceConfiguration readLoginSourceConfiguration() {
+		if(storedLoginSourceConfiguration!=null)
+			return storedLoginSourceConfiguration.get();
+		ILoginSourceConfiguration config = fetchLoginSourceConfiguration();
+		storedLoginSourceConfiguration = ()->config;
 		return config;
 	}
 
 
-	private ILoginModuleConfiguration fetchLoginModuleConfiguration() {
+	private ILoginSourceConfiguration fetchLoginSourceConfiguration() {
 		try{
 			if(!loadReader())
 				return null;
@@ -104,8 +105,8 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 				return null;
 			Boolean useTestSourceInDev = reader.getBooleanOrDefault("useTestSourceInDev", Boolean.FALSE);
 			if(useTestSourceInDev) {
-				ILoginModuleConfiguration config = ()->new PasswordIsUserNameLoginModuleFactory();
-				storedLoginModuleConfiguration = ()->config;
+				ILoginSourceConfiguration config = ()->new PasswordIsUserNameLoginSourceFactory();
+				storedLoginSourceConfiguration = ()->config;
 				return config;
 			}
 			IConfigurationReader source = reader.getObject("authenticationSource");
@@ -114,7 +115,7 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 			String factoryName = source.getString("factory");
 			if(factoryName==null)
 				return null;
-			ILoginModuleFactory factory = ILoginModuleFactory.newFactory(factoryName);
+			ILoginSourceFactory factory = ILoginSourceFactory.newFactory(factoryName);
 			return factory.newConfiguration(source);
 		} catch(Throwable t) {
 			throw new RuntimeException(t);

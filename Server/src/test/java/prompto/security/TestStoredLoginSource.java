@@ -16,14 +16,14 @@ import org.junit.Test;
 import prompto.config.IHttpConfiguration;
 import prompto.config.ILoginConfiguration;
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredLoginModuleConfiguration;
+import prompto.config.IStoredLoginSourceConfiguration;
 import prompto.memstore.MemStore;
 import prompto.server.BaseServerTest;
 import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 
-public class TestStoredLoginModule extends BaseServerTest {
+public class TestStoredLoginSource extends BaseServerTest {
 
 	static IStore store = new MemStore(); // need a static to share MemStore across classes
 
@@ -43,11 +43,11 @@ public class TestStoredLoginModule extends BaseServerTest {
 			.withPort(port)
 			.withLoginConfiguration(new ILoginConfiguration.Inline()
 				.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
-				.withLoginModuleConfiguration(new IStoredLoginModuleConfiguration() {
+				.withLoginSourceConfiguration(new IStoredLoginSourceConfiguration() {
 
 					@Override
-					public ILoginModuleFactory getLoginModuleFactory() {
-						ILoginModuleFactory factory = new StoredPasswordDigestLoginModuleFactory();
+					public ILoginSourceFactory getLoginSourceFactory() {
+						ILoginSourceFactory factory = new StoredPasswordDigestLoginSourceFactory();
 						factory.setConfiguration(this);
 						return factory;
 					}

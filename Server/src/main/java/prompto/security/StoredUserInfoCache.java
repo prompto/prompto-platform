@@ -14,7 +14,7 @@ import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
 
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredLoginModuleConfiguration;
+import prompto.config.IStoredLoginSourceConfiguration;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import prompto.store.IQueryBuilder;
@@ -33,7 +33,7 @@ public class StoredUserInfoCache {
 	static Timer timer = new Timer();
 	static long KEEP_ALIVE_DELAY = 30_000;
 	
-	public static StoredUserInfoCache initialize(IStoredLoginModuleConfiguration config) {
+	public static StoredUserInfoCache initialize(IStoredLoginSourceConfiguration config) {
 		if(StoredUserInfoCache.instance==null) {
 			synchronized(StoredUserInfoCache.class) {
 				if(StoredUserInfoCache.instance==null) {
@@ -58,7 +58,7 @@ public class StoredUserInfoCache {
 	Map<String, StoredPasswordDigestCredential> cache = new ConcurrentHashMap<>(new HashMap<>());
 	IStore store;
 	
-	public StoredUserInfoCache(IStoredLoginModuleConfiguration config) {
+	public StoredUserInfoCache(IStoredLoginSourceConfiguration config) {
 		IStoreConfiguration storeConfig = config.getStoreConfiguration();
 		try {
 			store = IStoreFactory.newStoreFromConfig(storeConfig);

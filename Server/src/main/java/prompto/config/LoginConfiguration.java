@@ -8,13 +8,13 @@ public class LoginConfiguration extends ILoginConfiguration.Inline {
 	
 	public LoginConfiguration(IConfigurationReader reader) {
 		this.reader = reader;
-		this.loginModuleConfiguration = ()->readLoginModuleConfiguration();
+		this.loginSourceConfiguration = ()->readLoginModuleConfiguration();
 		this.loginMethodConfiguration = ()->readLoginMethodConfiguration();
 	}
 
-	private ILoginModuleConfiguration readLoginModuleConfiguration() {
+	private ILoginSourceConfiguration readLoginModuleConfiguration() {
 		IConfigurationReader child = reader.getObject("module");
-		return child==null ? null : new LoginModuleConfiguration(child);
+		return child==null ? null : new LoginModuleSource(child);
 	}
 	
 	private ILoginMethodConfiguration readLoginMethodConfiguration() {

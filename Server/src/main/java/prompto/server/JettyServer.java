@@ -36,7 +36,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ILoginConfiguration;
-import prompto.config.ILoginModuleConfiguration;
+import prompto.config.ILoginSourceConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.security.IKeyStoreFactory;
@@ -254,8 +254,8 @@ class JettyServer extends Server {
 	}
 
 	private LoginService prepareLoginService() throws Exception {
-		ILoginModuleConfiguration login = config.getHttpConfiguration().getLoginConfiguration().getLoginModuleConfiguration();
-		String loginModuleName = login.getLoginModuleFactory().installLoginModule();
+		ILoginSourceConfiguration login = config.getHttpConfiguration().getLoginConfiguration().getLoginSourceConfiguration();
+		String loginModuleName = login.getLoginSourceFactory().installLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
 		loginService.setLoginModuleName(loginModuleName);

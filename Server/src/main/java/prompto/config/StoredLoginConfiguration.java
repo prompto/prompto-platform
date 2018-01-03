@@ -1,7 +1,7 @@
 package prompto.config;
 
 
-public class StoredLoginConfiguration extends LoginModuleConfiguration implements IStoredLoginModuleConfiguration {
+public class StoredLoginConfiguration extends LoginModuleSource implements IStoredLoginSourceConfiguration {
 
 	public StoredLoginConfiguration(IConfigurationReader reader) {
 		super(reader);

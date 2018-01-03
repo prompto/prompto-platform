@@ -7,27 +7,27 @@ import java.util.stream.Collectors;
 
 public interface ILoginConfiguration {
 	
-	ILoginModuleConfiguration getLoginModuleConfiguration();
+	ILoginSourceConfiguration getLoginSourceConfiguration();
 	ILoginMethodConfiguration getLoginMethodConfiguration();
 	Collection<String> getWhiteList();
 	
-	ILoginConfiguration withLoginModuleConfiguration(ILoginModuleConfiguration config);
+	ILoginConfiguration withLoginSourceConfiguration(ILoginSourceConfiguration config);
 	ILoginConfiguration withLoginMethodConfiguration(ILoginMethodConfiguration config);
 	ILoginConfiguration withWhiteList(Collection<String> whiteList);
 
 	public static class Inline implements ILoginConfiguration {
 
-		Supplier<ILoginModuleConfiguration> loginModuleConfiguration = ()->null;
+		Supplier<ILoginSourceConfiguration> loginSourceConfiguration = ()->null;
 		Supplier<ILoginMethodConfiguration> loginMethodConfiguration = ()->null;
 		Supplier<Collection<String>> whiteList = ()->DEFAULT_WHITE_LIST;
 		
-		@Override public ILoginModuleConfiguration getLoginModuleConfiguration() { return loginModuleConfiguration.get(); }
+		@Override public ILoginSourceConfiguration getLoginSourceConfiguration() { return loginSourceConfiguration.get(); }
 		@Override public ILoginMethodConfiguration getLoginMethodConfiguration() { return loginMethodConfiguration.get(); }
 		@Override public Collection<String> getWhiteList() { return whiteList.get(); }
 		
 		@Override
-		public ILoginConfiguration withLoginModuleConfiguration(ILoginModuleConfiguration config) {
-			loginModuleConfiguration = ()->config;
+		public ILoginConfiguration withLoginSourceConfiguration(ILoginSourceConfiguration config) {
+			loginSourceConfiguration = ()->config;
 			return this;
 		}
 		
