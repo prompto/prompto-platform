@@ -1,6 +1,7 @@
 package prompto.config;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
@@ -10,7 +11,6 @@ import prompto.security.PasswordIsUserNameLoginSourceFactory;
 import prompto.store.IStore;
 import prompto.utils.Logger;
 
-import com.google.common.base.Supplier;
 
 public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 
