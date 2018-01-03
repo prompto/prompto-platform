@@ -14,8 +14,8 @@ dataStore:
 http:
   port: 8080
   login:
-    module:
-      factory: prompto.security.PasswordIsUserNameLoginModuleFactory
+    source:
+      factory: prompto.security.PasswordIsUserNameLoginSourceFactory
     method:
       factory: prompto.security.FormLoginMethodFactory
       loginPage: /auth/loginPage.html

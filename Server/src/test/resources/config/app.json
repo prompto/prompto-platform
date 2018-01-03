@@ -1,0 +1,12 @@
+{ 
+    "category" : [
+        "Module", 
+        "Service", 
+        "WebSite"
+    ], 
+    "name" : "Test2", 
+    "description" : "Test", 
+    "serverAboutToStartMethod" : "", 
+    "homePage" : "", 
+    "authenticationSettings" : "config/auth-settings.json"
+}

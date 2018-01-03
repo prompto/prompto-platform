@@ -1,0 +1,9 @@
+{ 
+    "category" : [
+        "AuthenticationSettings"
+    ], 
+    "authenticationMethod" : "config/auth-method.json", 
+    "authenticationSource" : "config/auth-source.json", 
+    "skipAuthInDev" : false, 
+    "useTestSourceInDev" : true
+}

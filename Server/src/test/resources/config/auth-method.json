@@ -1,0 +1,9 @@
+{ 
+    "category" : [
+        "AuthenticationMethod", 
+        "FormAuthenticationMethod"
+    ], 
+    "factory" : "prompto.security.FormLoginMethodFactory",
+    "loginPage" : "Test2/loginPage.html", 
+    "errorPage" : "Test2/errorPage.html"
+}
