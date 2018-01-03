@@ -35,6 +35,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 	}
 
 	@Override
+	public Object getRawData(String fieldName) {
+		return document.getFieldValue(fieldName);
+	}
+	
+	@Override
 	public Object getData(String fieldName) throws PromptoError {
 		Object data = document.getFieldValue(fieldName);
 		return store.readFieldData(fieldName, data);

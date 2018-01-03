@@ -31,10 +31,17 @@ public class StoredDocument extends BaseDocument implements IStored {
 	}
 	
 	@Override
-	public boolean hasData(String name) {
-		return document.containsKey(name);
+	public boolean hasData(String fieldName) {
+		return document.containsKey(fieldName);
 	}
 
+	
+	@Override
+	public Object getRawData(String fieldName) {
+		return document.get(fieldName);
+	}
+	
+	
 	@Override
 	public Object getData(String fieldName) throws PromptoError {
 		Object data = document.get(fieldName);
