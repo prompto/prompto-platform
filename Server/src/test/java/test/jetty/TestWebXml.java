@@ -15,8 +15,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import prompto.security.LoginModuleBase;
-import prompto.security.PasswordIsUserNameLoginModule;
+import prompto.security.LoginSourceBase;
+import prompto.security.PasswordIsUserNameLoginSource;
 
 
 /* compare what happens when using web.xml vs embedded Jetty */
@@ -38,10 +38,10 @@ public class TestWebXml {
 		public void start() throws Throwable {
 			server = new Server(port);
 			// add login service
-			LoginModuleBase.install(PasswordIsUserNameLoginModule.class.getName(), ()->null);
+			LoginSourceBase.install(PasswordIsUserNameLoginSource.class.getName(), ()->null);
 			JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 			loginService.setIdentityService(new DefaultIdentityService());
-			loginService.setLoginModuleName(PasswordIsUserNameLoginModule.class.getName());
+			loginService.setLoginModuleName(PasswordIsUserNameLoginSource.class.getName());
 			server.addBean(loginService);
 			// add web app
 			URL resource = Thread.currentThread().getContextClassLoader().getResource("jetty/WEB-INF/web.xml");
