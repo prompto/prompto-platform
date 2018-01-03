@@ -27,14 +27,14 @@ public class MongoReplicaSetConfiguration implements IMongoReplicaSetConfigurati
 	
 	@Override
 	public Iterable<IHostConfiguration> getNodes() {
-		Collection<IConfigurationReader> nodes = reader.getObjectsArray("nodes");
+		Collection<? extends IConfigurationReader> nodes = reader.getObjectsArray("nodes");
 		if(nodes==null || nodes.isEmpty())
 			return null;
 		return new Iterable<IHostConfiguration>() {
 
 			@Override
 			public Iterator<IHostConfiguration> iterator() {
-				Iterator<IConfigurationReader> readers = nodes.iterator();
+				Iterator<? extends IConfigurationReader> readers = nodes.iterator();
 				return new Iterator<IHostConfiguration>() {
 					@Override public boolean hasNext() { return readers.hasNext(); }
 					@Override public IHostConfiguration next() { return new HostConfiguration(readers.next()); }

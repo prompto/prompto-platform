@@ -16,7 +16,7 @@ import org.junit.Test;
 import prompto.config.IHttpConfiguration;
 import prompto.config.ILoginConfiguration;
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredLoginConfiguration;
+import prompto.config.IStoredLoginModuleConfiguration;
 import prompto.memstore.MemStore;
 import prompto.server.BaseServerTest;
 import prompto.store.IStorable;
@@ -43,12 +43,12 @@ public class TestStoredLoginModule extends BaseServerTest {
 			.withPort(port)
 			.withLoginConfiguration(new ILoginConfiguration.Inline()
 				.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
-				.withLoginModuleConfiguration(new IStoredLoginConfiguration() {
+				.withLoginModuleConfiguration(new IStoredLoginModuleConfiguration() {
 
 					@Override
 					public ILoginModuleFactory getLoginModuleFactory() {
 						ILoginModuleFactory factory = new StoredPasswordDigestLoginModuleFactory();
-						factory.setLoginConfiguration(this);
+						factory.setConfiguration(this);
 						return factory;
 					}
 					

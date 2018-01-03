@@ -14,7 +14,7 @@ public class PasswordIsUserNameLoginModuleFactory implements ILoginModuleFactory
 	}
 
 	@Override
-	public void setLoginConfiguration(ILoginModuleConfiguration config) {
+	public void setConfiguration(ILoginModuleConfiguration config) {
 		this.config = config;
 	}
 

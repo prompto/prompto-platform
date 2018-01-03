@@ -5,7 +5,7 @@ import prompto.config.ILoginModuleConfiguration;
 
 public interface ILoginModuleFactory {
 
-	static ILoginModuleFactory newModuleFactory(String factoryName) throws Throwable {
+	static ILoginModuleFactory newFactory(String factoryName) throws Throwable {
 		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
 		if(!(ILoginModuleFactory.class.isAssignableFrom(klass)))
 			throw new RuntimeException("Not a login module factory: " + factoryName);
@@ -13,7 +13,7 @@ public interface ILoginModuleFactory {
 	}
 
 	ILoginModuleConfiguration newConfiguration(IConfigurationReader reader);
-	void setLoginConfiguration(ILoginModuleConfiguration config);
+	void setConfiguration(ILoginModuleConfiguration config);
 	String installLoginModule();
 
 

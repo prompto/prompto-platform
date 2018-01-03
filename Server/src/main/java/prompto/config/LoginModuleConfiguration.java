@@ -16,9 +16,9 @@ public class LoginModuleConfiguration implements ILoginModuleConfiguration {
 		if(factoryName==null)
 			throw new IllegalArgumentException("Missing login module factory!");
 		else try {
-			ILoginModuleFactory factory = ILoginModuleFactory.newModuleFactory(factoryName);
+			ILoginModuleFactory factory = ILoginModuleFactory.newFactory(factoryName);
 			ILoginModuleConfiguration config = factory.newConfiguration(reader);
-			factory.setLoginConfiguration(config);
+			factory.setConfiguration(config);
 			return factory;
 		} catch(Throwable e) {
 			throw new RuntimeException(e);

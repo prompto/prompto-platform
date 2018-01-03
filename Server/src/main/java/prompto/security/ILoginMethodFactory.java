@@ -7,7 +7,7 @@ import prompto.config.ILoginMethodConfiguration;
 
 public interface ILoginMethodFactory {
 
-	static ILoginMethodFactory newModuleFactory(String factoryName) throws Throwable {
+	static ILoginMethodFactory newFactory(String factoryName) throws Throwable {
 		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
 		if(!(ILoginMethodFactory.class.isAssignableFrom(klass)))
 			throw new RuntimeException("Not a login method factory: " + factoryName);
@@ -15,7 +15,7 @@ public interface ILoginMethodFactory {
 	}
 
 	ILoginMethodConfiguration newConfiguration(IConfigurationReader reader);
-	void setLoginMethodConfiguration(ILoginMethodConfiguration config);
+	void setConfiguration(ILoginMethodConfiguration config);
 	Authenticator newAuthenticator(boolean withXAuthorization);
 
 }

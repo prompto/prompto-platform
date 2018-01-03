@@ -18,7 +18,7 @@ public class FormLoginMethodFactory implements ILoginMethodFactory {
 	}
 
 	@Override
-	public void setLoginMethodConfiguration(ILoginMethodConfiguration config) {
+	public void setConfiguration(ILoginMethodConfiguration config) {
 		this.config = (IFormLoginMethodConfiguration)config;
 	}
 

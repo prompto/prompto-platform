@@ -1,6 +1,5 @@
 package prompto.config;
 
-
 public class HttpConfiguration extends IHttpConfiguration.Inline {
 
 	IConfigurationReader reader;
@@ -30,7 +29,18 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 	
 	private ILoginConfiguration readLoginConfiguration() {
 		IConfigurationReader child = reader.getObject("login");
-		return child==null ? null : new LoginConfiguration(child);
+		if(child==null)
+			return null;
+		String factoryName = child.getString("factory");
+		if(factoryName==null)
+			return new LoginConfiguration(child);
+		else try {
+			ILoginConfigurationFactory factory = ILoginConfigurationFactory.newFactory(factoryName);
+			return factory.newConfiguration(child);
+		} catch(Throwable e) {
+			throw new RuntimeException(e);
+		}
+			
 	}
 
 }

@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import prompto.config.CodeStoreLoginConfiguration;
 import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
@@ -91,10 +92,7 @@ public class ModuleProcess {
 		IStored stored = IDataStore.getInstance().fetchUnique(dbId);
 		if(stored==null)
 			return null;
-		ModuleProcess module = new ModuleProcess();
-		module.dbId = dbId;
-		module.module = stored.getData("name").toString();
-		module.version = stored.getData("version").toString();
+		ModuleProcess module = new ModuleProcess(stored);
 		module.start();
 		return module;
 	}
@@ -142,20 +140,36 @@ public class ModuleProcess {
 		
 	}
 
-	Object dbId;
-	String module;
-	String version;
+	IStored stored;
 	int port;
 	Process process;
+
+	public ModuleProcess(IStored stored) {
+		this.stored = stored;
+	}
 
 	public void start() throws Exception {
 		this.port = SocketUtils.findAvailablePortInRange(8080, 9090); // TODO extract from security group
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
 			.redirectError(Redirect.INHERIT)
-			.directory(Files.createTempDirectory("prompto-" + module + "-").toFile());
+			.directory(Files.createTempDirectory("prompto-" + getModuleName() + "-").toFile());
 		this.process = OutStream.waitForServerReadiness(builder);
 	}
+
+	private Object getModuleDbId() {
+		return stored.getDbId();
+	}
+	
+	private String getModuleName() {
+		return stored.getData("name").toString();
+	}
+
+
+	private String getModuleVersion() {
+		return stored.getData("version").toString();
+	}
+
 
 	public void shutDown() {
 		try {
@@ -198,9 +212,9 @@ public class ModuleProcess {
 		cmds.add("-http-port");
 		cmds.add(String.valueOf(port));
 		cmds.add("-applicationName");
-		cmds.add(module.toString());
+		cmds.add(getModuleName());
 		cmds.add("-applicationVersion");
-		cmds.add(version.toString());
+		cmds.add(getModuleVersion());
 		String origin = PromptoServlet.REGISTERED_ORIGIN.get();
 		if(origin!=null) {
 			cmds.add("-http-allowedOrigins");
@@ -236,8 +250,8 @@ public class ModuleProcess {
 
 	
 	private void writeSpecificYamlEntries(YamlDocument document) throws YamlException {
-		document.setEntry("applicationName", module.toString());
-		document.setEntry("applicationVersion", version.toString());
+		document.setEntry("applicationName", getModuleName());
+		document.setEntry("applicationVersion", getModuleVersion());
 		document.deleteEntry("webSiteRoot");
 		writeCodeStoreYamlEntries(document);
 		writeDataStoreYamlEntries(document);
@@ -266,6 +280,7 @@ public class ModuleProcess {
 		document.setEntry("codeStore", entry.getValue());
 	}
 
+	
 	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {
 		YamlEntry entry = document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
@@ -277,6 +292,10 @@ public class ModuleProcess {
 			http.setEntry("allowedOrigins", origin);
 			http.setEntry("allowsXAuthorization", true);
 		}
+		YamlMapping login = new YamlMapping();
+		login.setEntry("factory", CodeStoreLoginConfiguration.class.getName());
+		login.setEntry("dbId", getModuleDbId().toString());
+		http.setEntry("login", login);
 	}
 
 	private File createTempYamlFile() throws IOException {

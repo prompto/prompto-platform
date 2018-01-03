@@ -14,7 +14,7 @@ public class BasicLoginMethodFactory implements ILoginMethodFactory {
 	}
 
 	@Override
-	public void setLoginMethodConfiguration(ILoginMethodConfiguration config) {
+	public void setConfiguration(ILoginMethodConfiguration config) {
 		// nothing to do
 	}
 
