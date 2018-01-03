@@ -57,7 +57,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	
 	private void ensureDocument(IDbIdProvider provider) {
 		if(document==null) {
-			UUID dbId = provider==null ? null : (UUID)provider.getDbId();
+			UUID dbId = provider==null ? null : (UUID)provider.get();
 			// the scenario where we get an existing dbId is when  
 			// an instance passes a provider when calling setData
 			// in such a case, the scenario is an update scenario

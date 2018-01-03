@@ -1,6 +1,7 @@
 package prompto.config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,22 +13,21 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
-import com.esotericsoftware.yamlbeans.document.YamlDocument;
-import com.esotericsoftware.yamlbeans.document.YamlMapping;
-import com.mongodb.client.MongoCollection;
-
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Standalone;
 import prompto.security.FormLoginMethodFactory;
 import prompto.security.PasswordIsUserNameLoginSourceFactory;
-import prompto.security.StoredPasswordDigestLoginSourceFactory;
 import prompto.server.AppServer;
-import prompto.store.mongo.MongoUtils;
 import prompto.store.mongo.BaseMongoTest;
+import prompto.store.mongo.MongoUtils;
+
+import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.document.YamlDocument;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.mongodb.client.MongoCollection;
 
 public class TestCodeStoreLoginConfiguration extends BaseMongoTest {
 
