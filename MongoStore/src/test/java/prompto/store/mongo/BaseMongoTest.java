@@ -7,6 +7,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.client.MongoDatabase;
+
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import de.flapdoodle.embed.mongo.Command;
@@ -26,6 +28,7 @@ public abstract class BaseMongoTest {
 	protected int mongoPort;
 	MongodExecutable mongo;
 	protected MongoStore store;
+	protected MongoDatabase db;
 	
 	@Before
 	public void __before__() throws IOException {
@@ -61,6 +64,7 @@ public abstract class BaseMongoTest {
 
 	protected void createStore(String name) {
 		store = new MongoStore("localhost", mongoPort, name);
+		db = store.db;
 	}
 
 
