@@ -5,7 +5,7 @@ import java.util.Collections;
 import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
 
-public class PasswordIsUserNameLoginSource extends LoginSourceBase {
+public class PasswordIsUserNameAuthenticationSource extends JettyLoginModuleBase {
 
 	@Override
 	public UserInfo getUserInfo(String username) throws Exception {

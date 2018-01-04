@@ -1,8 +1,8 @@
 package prompto.config;
 
-public class FormLoginMethodConfiguration extends LoginMethodConfiguration implements IFormLoginMethodConfiguration {
+public class FormAuthenticationMethodConfiguration extends AuthenticationMethodConfiguration implements IFormAuthenticationMethodConfiguration {
 
-	public FormLoginMethodConfiguration(IConfigurationReader reader) {
+	public FormAuthenticationMethodConfiguration(IConfigurationReader reader) {
 		super(reader);
 	}
 

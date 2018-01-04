@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import prompto.config.CodeStoreLoginConfiguration;
+import prompto.config.CodeStoreAuthenticationConfiguration;
 import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
@@ -292,10 +292,10 @@ public class ModuleProcess {
 			http.setEntry("allowedOrigins", origin);
 			http.setEntry("allowsXAuthorization", true);
 		}
-		YamlMapping login = new YamlMapping();
-		login.setEntry("factory", CodeStoreLoginConfiguration.class.getName());
-		login.setEntry("dbId", getModuleDbId().toString());
-		http.setEntry("login", login);
+		YamlMapping authentication = new YamlMapping();
+		authentication.setEntry("factory", CodeStoreAuthenticationConfiguration.class.getName());
+		authentication.setEntry("dbId", getModuleDbId().toString());
+		http.setEntry("authentication", authentication);
 	}
 
 	private File createTempYamlFile() throws IOException {

@@ -14,7 +14,7 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 		this.sendsXAuthorization = ()->reader.getBooleanOrDefault("sendsXAuthorization", false);
 		this.keyStoreConfiguration = ()->readKeyStoreConfiguration();
 		this.trustStoreConfiguration = ()->readTrustStoreConfiguration();
-		this.loginConfiguration = ()->readLoginConfiguration();
+		this.authenticationConfiguration = ()->readAuthenticationConfiguration();
 	}
 	
 	private IKeyStoreConfiguration readKeyStoreConfiguration() {
@@ -27,15 +27,15 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 		return new KeyStoreConfiguration(child);
 	}
 	
-	private ILoginConfiguration readLoginConfiguration() {
-		IConfigurationReader child = reader.getObject("login");
+	private IAuthenticationConfiguration readAuthenticationConfiguration() {
+		IConfigurationReader child = reader.getObject("authentication");
 		if(child==null)
 			return null;
 		String factoryName = child.getString("factory");
 		if(factoryName==null)
-			return new LoginConfiguration(child);
+			return new AuthenticationConfiguration(child);
 		else try {
-			ILoginConfigurationFactory factory = ILoginConfigurationFactory.newFactory(factoryName);
+			IAuthenticationConfigurationFactory factory = IAuthenticationConfigurationFactory.newFactory(factoryName);
 			return factory.newConfiguration(child);
 		} catch(Throwable e) {
 			throw new RuntimeException(e);

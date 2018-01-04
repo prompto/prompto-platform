@@ -16,8 +16,8 @@ import org.junit.Test;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Standalone;
-import prompto.security.FormLoginMethodFactory;
-import prompto.security.PasswordIsUserNameLoginSourceFactory;
+import prompto.security.FormAuthenticationMethodFactory;
+import prompto.security.PasswordIsUserNameAuthenticationSourceFactory;
 import prompto.server.AppServer;
 import prompto.store.mongo.BaseMongoTest;
 import prompto.store.mongo.MongoUtils;
@@ -29,7 +29,7 @@ import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 import com.mongodb.client.MongoCollection;
 
-public class TestStoredRecordLoginConfiguration extends BaseMongoTest {
+public class TestStoredRecordAuthenticationConfiguration extends BaseMongoTest {
 
 	@Before
 	public void before() throws Exception {
@@ -56,17 +56,17 @@ public class TestStoredRecordLoginConfiguration extends BaseMongoTest {
 		assertNotNull(config);
 		IHttpConfiguration http = config.getHttpConfiguration();
 		assertNotNull(http);
-		ILoginConfiguration login = http.getLoginConfiguration();
-		assertNotNull(login);
-		ILoginMethodConfiguration method = login.getLoginMethodConfiguration();
-		assertTrue(method.getLoginMethodFactory() instanceof FormLoginMethodFactory);
-		ILoginSourceConfiguration source = login.getLoginSourceConfiguration();
-		assertTrue(source.getLoginSourceFactory() instanceof PasswordIsUserNameLoginSourceFactory);
+		IAuthenticationConfiguration auth = http.getAuthenticationConfiguration();
+		assertNotNull(auth);
+		IAuthenticationMethodConfiguration method = auth.getAuthenticationMethodConfiguration();
+		assertTrue(method.getAuthenticationMethodFactory() instanceof FormAuthenticationMethodFactory);
+		IAuthenticationSourceConfiguration source = auth.getAuthenticationSourceConfiguration();
+		assertTrue(source.getAuthenticationSourceFactory() instanceof PasswordIsUserNameAuthenticationSourceFactory);
 	}
 
 	private File generateYamlConfig(Object dbId) throws Exception {
 		YamlMapping login = new YamlMapping();
-		login.setEntry("factory", CodeStoreLoginConfigurationFactory.class.getName());
+		login.setEntry("factory", CodeStoreAuthenticationConfigurationFactory.class.getName());
 		login.setEntry("dbId", dbId.toString());
 		YamlMapping http = new YamlMapping();
 		http.setEntry("login", login);

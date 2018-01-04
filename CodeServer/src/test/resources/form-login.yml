@@ -13,7 +13,7 @@ dataStore:
 
 http:
   port: 8080
-  login:
+  authentication:
     source:
       factory: prompto.security.PasswordIsUserNameLoginSourceFactory
     method:

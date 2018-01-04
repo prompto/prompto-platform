@@ -14,9 +14,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
-import prompto.config.ILoginConfiguration;
+import prompto.config.IAuthenticationConfiguration;
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredLoginSourceConfiguration;
+import prompto.config.IStoredAuthenticationSourceConfiguration;
 import prompto.memstore.MemStore;
 import prompto.server.BaseServerTest;
 import prompto.store.IStorable;
@@ -41,13 +41,13 @@ public class TestStoredLoginSource extends BaseServerTest {
 		return new IHttpConfiguration.Inline()
 			.withProtocol("http")
 			.withPort(port)
-			.withLoginConfiguration(new ILoginConfiguration.Inline()
-				.withLoginMethodConfiguration(() -> new BasicLoginMethodFactory())
-				.withLoginSourceConfiguration(new IStoredLoginSourceConfiguration() {
+			.withAuthenticationConfiguration(new IAuthenticationConfiguration.Inline()
+				.withAuthenticationMethodConfiguration(() -> new BasicAuthenticationMethodFactory())
+				.withAuthenticationSourceConfiguration(new IStoredAuthenticationSourceConfiguration() {
 
 					@Override
-					public ILoginSourceFactory getLoginSourceFactory() {
-						ILoginSourceFactory factory = new StoredPasswordDigestLoginSourceFactory();
+					public IAuthenticationSourceFactory getAuthenticationSourceFactory() {
+						IAuthenticationSourceFactory factory = new StoredPasswordDigestAuthenticationSourceFactory();
 						factory.setConfiguration(this);
 						return factory;
 					}

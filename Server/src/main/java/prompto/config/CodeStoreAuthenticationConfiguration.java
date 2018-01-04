@@ -5,30 +5,30 @@ import java.util.function.Supplier;
 
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
-import prompto.security.BasicLoginMethodFactory;
-import prompto.security.FormLoginMethodFactory;
-import prompto.security.ILoginMethodFactory;
-import prompto.security.ILoginSourceFactory;
-import prompto.security.PasswordIsUserNameLoginSourceFactory;
-import prompto.security.StoredPasswordDigestLoginSourceFactory;
+import prompto.security.BasicAuthenticationMethodFactory;
+import prompto.security.FormAuthenticationMethodFactory;
+import prompto.security.IAuthenticationMethodFactory;
+import prompto.security.IAuthenticationSourceFactory;
+import prompto.security.PasswordIsUserNameAuthenticationSourceFactory;
+import prompto.security.StoredPasswordDigestAuthenticationSourceFactory;
 import prompto.store.IStore;
 import prompto.utils.Logger;
 
 
-public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
+public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfiguration.Inline {
 
 	static final Logger logger = new Logger();
 
 	IConfigurationReader source;
 	StoredRecordConfigurationReader reader;
-	Supplier<ILoginSourceConfiguration> storedLoginSourceConfiguration;
-	Supplier<ILoginMethodConfiguration> storedLoginMethodConfiguration;
+	Supplier<IAuthenticationSourceConfiguration> storedAuthenticationSourceConfiguration;
+	Supplier<IAuthenticationMethodConfiguration> storedAuthenticationMethodConfiguration;
 	Supplier<Collection<String>> storedWhiteList;
 	
-	public CodeStoreLoginConfiguration(IConfigurationReader reader) {
+	public CodeStoreAuthenticationConfiguration(IConfigurationReader reader) {
 		this.source = reader;
-		this.loginSourceConfiguration = ()->readLoginSourceConfiguration();
-		this.loginMethodConfiguration = ()->readLoginMethodConfiguration();
+		this.authenticationSourceConfiguration = ()->readAuthenticationSourceConfiguration();
+		this.authenticationMethodConfiguration = ()->readAuthenticationMethodConfiguration();
 		this.whiteList = ()->readWhiteList();
 	}
 	
@@ -62,18 +62,18 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		return true;
 	}
 	
-	public ILoginMethodConfiguration readLoginMethodConfiguration() {
-		if(storedLoginMethodConfiguration!=null) 
-			return storedLoginMethodConfiguration.get();
-		ILoginMethodConfiguration config = fetchLoginMethodConfiguration();
-		storedLoginMethodConfiguration = ()->config;
+	public IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {
+		if(storedAuthenticationMethodConfiguration!=null) 
+			return storedAuthenticationMethodConfiguration.get();
+		IAuthenticationMethodConfiguration config = fetchAuthenticationMethodConfiguration();
+		storedAuthenticationMethodConfiguration = ()->config;
 		return config;
 	}
 
 	static enum AuthenticationMethod {
 		NoAuthenticationMethod(null),
-		BasicAuthenticationMethod(BasicLoginMethodFactory.class.getName()),
-		FormAuthenticationMethod(FormLoginMethodFactory.class.getName());
+		BasicAuthenticationMethod(BasicAuthenticationMethodFactory.class.getName()),
+		FormAuthenticationMethod(FormAuthenticationMethodFactory.class.getName());
 		
 		private String factoryName;
 
@@ -87,7 +87,7 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 	}
 	
 
-	private ILoginMethodConfiguration fetchLoginMethodConfiguration() {
+	private IAuthenticationMethodConfiguration fetchAuthenticationMethodConfiguration() {
 		try {
 			if(!loadReader())
 				return null;
@@ -101,8 +101,8 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 			if(category==null) // not sure how that would happen
 				return null;
 			String factoryName = AuthenticationMethod.valueOf(category).getFactoryName();
-			ILoginMethodFactory factory = ILoginMethodFactory.newFactory(factoryName);
-			ILoginMethodConfiguration config = factory.newConfiguration(source);
+			IAuthenticationMethodFactory factory = IAuthenticationMethodFactory.newFactory(factoryName);
+			IAuthenticationMethodConfiguration config = factory.newConfiguration(source);
 			factory.setConfiguration(config);
 			return ()->factory; // ensure we don't try to read "factory" from the config
 		} catch(Throwable t) {
@@ -110,17 +110,17 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		}
 	}
 
-	public ILoginSourceConfiguration readLoginSourceConfiguration() {
-		if(storedLoginSourceConfiguration!=null)
-			return storedLoginSourceConfiguration.get();
-		ILoginSourceConfiguration config = fetchLoginSourceConfiguration();
-		storedLoginSourceConfiguration = ()->config;
+	public IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration() {
+		if(storedAuthenticationSourceConfiguration!=null)
+			return storedAuthenticationSourceConfiguration.get();
+		IAuthenticationSourceConfiguration config = fetchAuthenticationSourceConfiguration();
+		storedAuthenticationSourceConfiguration = ()->config;
 		return config;
 	}
 
 	static enum AuthenticationSource {
-		DataStoreAuthenticationSource(StoredPasswordDigestLoginSourceFactory.class.getName()),
-		PasswordIsLoginAuthenticationSource(PasswordIsUserNameLoginSourceFactory.class.getName());
+		DataStoreAuthenticationSource(StoredPasswordDigestAuthenticationSourceFactory.class.getName()),
+		PasswordIsLoginAuthenticationSource(PasswordIsUserNameAuthenticationSourceFactory.class.getName());
 		
 		private String factoryName;
 
@@ -133,7 +133,7 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		}
 	}
 	
-	private ILoginSourceConfiguration fetchLoginSourceConfiguration() {
+	private IAuthenticationSourceConfiguration fetchAuthenticationSourceConfiguration() {
 		try{
 			if(!loadReader())
 				return null;
@@ -142,8 +142,8 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 				return null;
 			Boolean useTestSourceInDev = reader.getBooleanOrDefault("useTestSourceInDev", Boolean.FALSE);
 			if(useTestSourceInDev) {
-				ILoginSourceConfiguration config = ()->new PasswordIsUserNameLoginSourceFactory();
-				storedLoginSourceConfiguration = ()->config;
+				IAuthenticationSourceConfiguration config = ()->new PasswordIsUserNameAuthenticationSourceFactory();
+				storedAuthenticationSourceConfiguration = ()->config;
 				return config;
 			}
 			StoredRecordConfigurationReader source = reader.getObject("authenticationSource");
@@ -155,8 +155,8 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 			String factoryName = AuthenticationSource.valueOf(category).getFactoryName();
 			if(factoryName==null)
 				return null;
-			ILoginSourceFactory factory = ILoginSourceFactory.newFactory(factoryName);
-			ILoginSourceConfiguration config = factory.newConfiguration(source);
+			IAuthenticationSourceFactory factory = IAuthenticationSourceFactory.newFactory(factoryName);
+			IAuthenticationSourceConfiguration config = factory.newConfiguration(source);
 			factory.setConfiguration(config);
 			return ()->factory; // ensure we don't try to read "factory" from the config
 		} catch(Throwable t) {

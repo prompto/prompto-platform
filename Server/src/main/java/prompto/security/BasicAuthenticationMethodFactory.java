@@ -4,17 +4,17 @@ import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.ILoginMethodConfiguration;
+import prompto.config.IAuthenticationMethodConfiguration;
 
-public class BasicLoginMethodFactory implements ILoginMethodFactory {
+public class BasicAuthenticationMethodFactory implements IAuthenticationMethodFactory {
 
 	@Override
-	public ILoginMethodConfiguration newConfiguration(IConfigurationReader reader) {
+	public IAuthenticationMethodConfiguration newConfiguration(IConfigurationReader reader) {
 		return null; // no config
 	}
 
 	@Override
-	public void setConfiguration(ILoginMethodConfiguration config) {
+	public void setConfiguration(IAuthenticationMethodConfiguration config) {
 		// nothing to do
 	}
 

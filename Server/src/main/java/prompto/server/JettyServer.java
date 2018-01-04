@@ -35,12 +35,12 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
-import prompto.config.ILoginConfiguration;
-import prompto.config.ILoginSourceConfiguration;
+import prompto.config.IAuthenticationConfiguration;
+import prompto.config.IAuthenticationSourceConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.security.IKeyStoreFactory;
-import prompto.security.ILoginMethodFactory;
+import prompto.security.IAuthenticationMethodFactory;
 import prompto.security.ISecretKeyFactory;
 import prompto.utils.Logger;
 
@@ -200,8 +200,8 @@ class JettyServer extends Server {
 	}
 
 	private void prepareSecurityHandler() {
-		ILoginConfiguration login = config.getHttpConfiguration().getLoginConfiguration();
-		if(login!=null)
+		IAuthenticationConfiguration auth = config.getHttpConfiguration().getAuthenticationConfiguration();
+		if(auth!=null)
 			securityHandler = prepareAuthSecurityHandler();
 		else
 			securityHandler = prepareNoAuthSecurityHandler();
@@ -227,7 +227,7 @@ class JettyServer extends Server {
 			ConstraintSecurityHandler security = config.getHttpConfiguration().getAllowsXAuthorization() && config.getHttpConfiguration().getAllowedOrigins()!=null ?
 				new ConstraintSecurityHandlerWithXAuthorization() :
 				new ConstraintSecurityHandler();	
-			security.setLoginService(prepareLoginService()); // where to check credentials
+			security.setLoginService(prepareJettyLoginService()); // where to check credentials
 			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
 			security.setConstraintMappings(prepareAuthConstraintMappings()); // when to require security
 			logger.info(()->"Security handler successfully prepared.");
@@ -249,13 +249,13 @@ class JettyServer extends Server {
 
 	private Authenticator prepareAuthenticator() {
 		boolean xauth = config.getHttpConfiguration().getAllowsXAuthorization();
-		ILoginMethodFactory factory = config.getHttpConfiguration().getLoginConfiguration().getLoginMethodConfiguration().getLoginMethodFactory();
+		IAuthenticationMethodFactory factory = config.getHttpConfiguration().getAuthenticationConfiguration().getAuthenticationMethodConfiguration().getAuthenticationMethodFactory();
 		return factory.newAuthenticator(xauth);
 	}
 
-	private LoginService prepareLoginService() throws Exception {
-		ILoginSourceConfiguration login = config.getHttpConfiguration().getLoginConfiguration().getLoginSourceConfiguration();
-		String loginModuleName = login.getLoginSourceFactory().installLoginModule();
+	private LoginService prepareJettyLoginService() throws Exception {
+		IAuthenticationSourceConfiguration login = config.getHttpConfiguration().getAuthenticationConfiguration().getAuthenticationSourceConfiguration();
+		String loginModuleName = login.getAuthenticationSourceFactory().installJettyLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
 		loginService.setLoginModuleName(loginModuleName);
@@ -278,7 +278,7 @@ class JettyServer extends Server {
 	
 	private Stream<ConstraintMapping> prepareAllowedConstraintMappings() {
 		Constraint allow = prepareNoAuthenticationConstraint();
-		return config.getHttpConfiguration().getLoginConfiguration().getWhiteList().stream()
+		return config.getHttpConfiguration().getAuthenticationConfiguration().getWhiteList().stream()
 				.map(path->{
 					ConstraintMapping cm = new ConstraintMapping();
 					cm.setPathSpec(path);

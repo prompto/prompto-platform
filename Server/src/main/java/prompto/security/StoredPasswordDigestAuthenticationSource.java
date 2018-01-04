@@ -7,16 +7,16 @@ import javax.security.auth.callback.CallbackHandler;
 
 import org.eclipse.jetty.jaas.spi.UserInfo;
 
-import prompto.config.IStoredLoginSourceConfiguration;
+import prompto.config.IStoredAuthenticationSourceConfiguration;
 
-public class StoredPasswordDigestLoginSource extends LoginSourceBase {
+public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBase {
 
 	StoredUserInfoCache cache;
 	
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
 		super.initialize(subject, callbackHandler, sharedState, options);
-		cache = StoredUserInfoCache.initialize((IStoredLoginSourceConfiguration) options.get("config"));
+		cache = StoredUserInfoCache.initialize((IStoredAuthenticationSourceConfiguration) options.get("config"));
 	}
 
 	@Override
