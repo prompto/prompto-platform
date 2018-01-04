@@ -24,6 +24,6 @@ public class PasswordIsUserNameLoginSourceFactory implements ILoginSourceFactory
 		LoginSourceBase.install(moduleName, config);
 		return moduleName;
 	}
-
+	
 
 }

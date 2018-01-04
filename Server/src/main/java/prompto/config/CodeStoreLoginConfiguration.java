@@ -5,9 +5,12 @@ import java.util.function.Supplier;
 
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
+import prompto.security.BasicLoginMethodFactory;
+import prompto.security.FormLoginMethodFactory;
 import prompto.security.ILoginMethodFactory;
 import prompto.security.ILoginSourceFactory;
 import prompto.security.PasswordIsUserNameLoginSourceFactory;
+import prompto.security.StoredPasswordDigestLoginSourceFactory;
 import prompto.store.IStore;
 import prompto.utils.Logger;
 
@@ -67,6 +70,23 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		return config;
 	}
 
+	static enum AuthenticationMethod {
+		NoAuthenticationMethod(null),
+		BasicAuthenticationMethod(BasicLoginMethodFactory.class.getName()),
+		FormAuthenticationMethod(FormLoginMethodFactory.class.getName());
+		
+		private String factoryName;
+
+		AuthenticationMethod(String factoryName) {
+			this.factoryName = factoryName;
+		}
+		
+		public String getFactoryName() {
+			return factoryName;
+		}
+	}
+	
+
 	private ILoginMethodConfiguration fetchLoginMethodConfiguration() {
 		try {
 			if(!loadReader())
@@ -77,11 +97,14 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 			StoredRecordConfigurationReader method = reader.getObject("authenticationMethod");
 			if(method==null)
 				return null;
-			String factoryName = method.getString("factory");
-			if(factoryName==null)
+			String category = method.readCategory();
+			if(category==null) // not sure how that would happen
 				return null;
+			String factoryName = AuthenticationMethod.valueOf(category).getFactoryName();
 			ILoginMethodFactory factory = ILoginMethodFactory.newFactory(factoryName);
-			return factory.newConfiguration(method);
+			ILoginMethodConfiguration config = factory.newConfiguration(source);
+			factory.setConfiguration(config);
+			return ()->factory; // ensure we don't try to read "factory" from the config
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}
@@ -95,7 +118,21 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 		return config;
 	}
 
+	static enum AuthenticationSource {
+		DataStoreAuthenticationSource(StoredPasswordDigestLoginSourceFactory.class.getName()),
+		PasswordIsLoginAuthenticationSource(PasswordIsUserNameLoginSourceFactory.class.getName());
+		
+		private String factoryName;
 
+		AuthenticationSource(String factoryName) {
+			this.factoryName = factoryName;
+		}
+		
+		public String getFactoryName() {
+			return factoryName;
+		}
+	}
+	
 	private ILoginSourceConfiguration fetchLoginSourceConfiguration() {
 		try{
 			if(!loadReader())
@@ -109,14 +146,19 @@ public class CodeStoreLoginConfiguration extends ILoginConfiguration.Inline {
 				storedLoginSourceConfiguration = ()->config;
 				return config;
 			}
-			IConfigurationReader source = reader.getObject("authenticationSource");
+			StoredRecordConfigurationReader source = reader.getObject("authenticationSource");
 			if(source==null)
 				return null;
-			String factoryName = source.getString("factory");
+			String category = source.readCategory();
+			if(category==null) // not sure how that would happen
+				return null;
+			String factoryName = AuthenticationSource.valueOf(category).getFactoryName();
 			if(factoryName==null)
 				return null;
 			ILoginSourceFactory factory = ILoginSourceFactory.newFactory(factoryName);
-			return factory.newConfiguration(source);
+			ILoginSourceConfiguration config = factory.newConfiguration(source);
+			factory.setConfiguration(config);
+			return ()->factory; // ensure we don't try to read "factory" from the config
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}

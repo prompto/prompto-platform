@@ -3,6 +3,5 @@
         "AuthenticationSource", 
         "DataStoreAuthenticationSource"
     ], 
-    "factory" : "prompto.security.StoredPasswordDigestLoginSourceFactory",
     "storeName" : "my-store"
 }

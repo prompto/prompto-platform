@@ -15,7 +15,12 @@ public class LoginMethodConfiguration implements ILoginMethodConfiguration {
 		String factoryName = reader.getString("factory");
 		if(factoryName==null)
 			throw new IllegalArgumentException("Missing login module factory!");
-		else try {
+		else 
+			return getLoginMethodFactory(factoryName);
+	}
+	
+	public ILoginMethodFactory getLoginMethodFactory(String factoryName) {
+		try {
 			ILoginMethodFactory factory = ILoginMethodFactory.newFactory(factoryName);
 			ILoginMethodConfiguration config = factory.newConfiguration(reader);
 			factory.setConfiguration(config);
