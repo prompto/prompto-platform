@@ -65,11 +65,11 @@ public class TestStoredRecordAuthenticationConfiguration extends BaseMongoTest {
 	}
 
 	private File generateYamlConfig(Object dbId) throws Exception {
-		YamlMapping login = new YamlMapping();
-		login.setEntry("factory", CodeStoreAuthenticationConfigurationFactory.class.getName());
-		login.setEntry("dbId", dbId.toString());
+		YamlMapping auth = new YamlMapping();
+		auth.setEntry("factory", CodeStoreAuthenticationConfigurationFactory.class.getName());
+		auth.setEntry("dbId", dbId.toString());
 		YamlMapping http = new YamlMapping();
-		http.setEntry("login", login);
+		http.setEntry("authentication", auth);
 		YamlDocument settings = new YamlMapping();
 		settings.setEntry("http", http);
 		File file = File.createTempFile("settings-", ".yml");
