@@ -8,6 +8,7 @@ import org.junit.Test;
 import prompto.config.IRuntimeConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.store.Family;
 import prompto.store.IStore;
@@ -27,7 +28,7 @@ public class TestMongoBootstrap extends BaseMongoTest {
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
 			.withLoadRuntime(false)
-			.withTestMode(true);
+			.withRuntimeMode(Mode.UNITTEST);
 	}
 
 	@Test

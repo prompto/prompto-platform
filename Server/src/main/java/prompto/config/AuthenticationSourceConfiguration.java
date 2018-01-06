@@ -2,11 +2,11 @@ package prompto.config;
 
 import prompto.security.IAuthenticationSourceFactory;
 
-public class AuthenticationModuleSource implements IAuthenticationSourceConfiguration {
+public class AuthenticationSourceConfiguration implements IAuthenticationSourceConfiguration {
 
 	IConfigurationReader reader;
 	
-	public AuthenticationModuleSource(IConfigurationReader reader) {
+	public AuthenticationSourceConfiguration(IConfigurationReader reader) {
 		this.reader = reader;
 	}
 

@@ -13,6 +13,7 @@ import prompto.config.IStoreConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStoreFactory;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.server.AppServer;
 import prompto.server.DataServlet;
@@ -27,18 +28,19 @@ public class CodeServer {
 	static Logger logger = new Logger();
 	
 	public static void main(String[] args) throws Throwable {
-		main(args, false);
+		main(args, null);
 	}
 	
-	public static void main(String[] args, boolean testMode) throws Throwable {
+	public static void main(String[] args, Mode runtimeMode) throws Throwable {
 		ICodeServerConfiguration config = loadConfiguration(args);
 		config = config
 				.withServerAboutToStartMethod("serverAboutToStart")
 				.withHttpConfiguration(config.getHttpConfiguration().withSendsXAuthorization(true))
 				.withApplicationName("dev-center")
 				.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-				.withResourceURLs(CodeServer.getResourceURLs())
-				.withTestMode(testMode);
+				.withResourceURLs(CodeServer.getResourceURLs());
+		if(runtimeMode!=null)
+			config = config.withRuntimeMode(runtimeMode);
 		AppServer.main(config, CodeServer::redirectDataServlet); 
 	}
 	

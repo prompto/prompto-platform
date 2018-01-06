@@ -21,6 +21,7 @@ import prompto.config.IServerConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.PlainSecretKeyFactory;
@@ -46,7 +47,7 @@ public abstract class BaseServerTest {
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
-			.withTestMode(true)
+			.withRuntimeMode(Mode.UNITTEST)
 			.withLoadRuntime(false);
 	}
 

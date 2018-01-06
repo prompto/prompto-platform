@@ -8,13 +8,13 @@ public class AuthenticationConfiguration extends IAuthenticationConfiguration.In
 	
 	public AuthenticationConfiguration(IConfigurationReader reader) {
 		this.reader = reader;
-		this.authenticationSourceConfiguration = ()->readAuthenticationModuleConfiguration();
+		this.authenticationSourceConfiguration = ()->readAuthenticationSourceConfiguration();
 		this.authenticationMethodConfiguration = ()->readAuthenticationMethodConfiguration();
 	}
 
-	private IAuthenticationSourceConfiguration readAuthenticationModuleConfiguration() {
-		IConfigurationReader child = reader.getObject("module");
-		return child==null ? null : new AuthenticationModuleSource(child);
+	private IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration() {
+		IConfigurationReader child = reader.getObject("source");
+		return child==null ? null : new AuthenticationSourceConfiguration(child);
 	}
 	
 	private IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {

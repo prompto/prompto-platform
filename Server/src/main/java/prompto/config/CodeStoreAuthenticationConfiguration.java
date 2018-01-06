@@ -3,8 +3,13 @@ package prompto.config;
 import java.util.Collection;
 import java.util.function.Supplier;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.esotericsoftware.yamlbeans.document.YamlSequence;
+
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
+import prompto.runtime.Mode;
 import prompto.security.BasicAuthenticationMethodFactory;
 import prompto.security.FormAuthenticationMethodFactory;
 import prompto.security.IAuthenticationMethodFactory;
@@ -25,9 +30,18 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	Supplier<IAuthenticationMethodConfiguration> storedAuthenticationMethodConfiguration;
 	Supplier<Collection<String>> storedWhiteList;
 	
-	public CodeStoreAuthenticationConfiguration(IConfigurationReader reader) {
-		this.source = reader;
-		this.authenticationSourceConfiguration = ()->readAuthenticationSourceConfiguration();
+	public CodeStoreAuthenticationConfiguration(IConfigurationReader source) {
+		this();
+		this.source = source;
+	}
+	
+	public CodeStoreAuthenticationConfiguration(StoredRecordConfigurationReader reader) {
+		this();
+		this.reader = reader.getObject("authenticationSettings");
+	}
+
+	private CodeStoreAuthenticationConfiguration() {
+		this.authenticationSourceConfiguration = ()->readAuthenticationSourceConfiguration(null);
 		this.authenticationMethodConfiguration = ()->readAuthenticationMethodConfiguration();
 		this.whiteList = ()->readWhiteList();
 	}
@@ -62,7 +76,37 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		return true;
 	}
 	
-	public IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {
+	public YamlMapping toYaml(Mode mode) throws YamlException {
+		if(!isEnabled(mode))
+			return null;
+		YamlMapping settings = new YamlMapping();
+		IAuthenticationMethodConfiguration method = readAuthenticationMethodConfiguration(); 
+		YamlMapping yaml = new YamlMapping();
+		method.getAuthenticationMethodFactory().toYaml(yaml);
+		settings.setEntry("method", yaml);
+		IAuthenticationSourceConfiguration source = readAuthenticationSourceConfiguration(mode);
+		yaml = new YamlMapping();
+		source.getAuthenticationSourceFactory().toYaml(yaml);
+		settings.setEntry("source", yaml);
+		if(!usesDefaultWhiteList()) {
+			YamlSequence list = new YamlSequence();
+			for(String w : fetchWhiteList())
+				list.addElement(w);
+			settings.setEntry("whiteList", list);
+		}
+		return settings;
+	}
+
+	public boolean isEnabled(Mode runtimeMode) {
+		if(runtimeMode!=Mode.DEVELOPMENT)
+			return true;
+		loadReader();
+		Boolean skipAuthInDev = reader.getBooleanOrDefault("skipAuthInDev", Boolean.FALSE);
+		return !skipAuthInDev;
+	}
+
+
+	private IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {
 		if(storedAuthenticationMethodConfiguration!=null) 
 			return storedAuthenticationMethodConfiguration.get();
 		IAuthenticationMethodConfiguration config = fetchAuthenticationMethodConfiguration();
@@ -91,9 +135,6 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		try {
 			if(!loadReader())
 				return null;
-			Boolean skipAuthInDev = reader.getBooleanOrDefault("skipAuthInDev", Boolean.FALSE);
-			if(skipAuthInDev)
-				return null;
 			StoredRecordConfigurationReader method = reader.getObject("authenticationMethod");
 			if(method==null)
 				return null;
@@ -110,10 +151,10 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		}
 	}
 
-	public IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration() {
+	public IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration(Mode runtimeMode) {
 		if(storedAuthenticationSourceConfiguration!=null)
 			return storedAuthenticationSourceConfiguration.get();
-		IAuthenticationSourceConfiguration config = fetchAuthenticationSourceConfiguration();
+		IAuthenticationSourceConfiguration config = fetchAuthenticationSourceConfiguration(runtimeMode);
 		storedAuthenticationSourceConfiguration = ()->config;
 		return config;
 	}
@@ -133,12 +174,9 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		}
 	}
 	
-	private IAuthenticationSourceConfiguration fetchAuthenticationSourceConfiguration() {
+	private IAuthenticationSourceConfiguration fetchAuthenticationSourceConfiguration(Mode runtimeMode) {
 		try{
 			if(!loadReader())
-				return null;
-			Boolean skipAuthInDev = reader.getBooleanOrDefault("skipAuthInDev", Boolean.FALSE);
-			if(skipAuthInDev)
 				return null;
 			Boolean useTestSourceInDev = reader.getBooleanOrDefault("useTestSourceInDev", Boolean.FALSE);
 			if(useTestSourceInDev) {
@@ -176,8 +214,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	private Collection<String> fetchWhiteList() {
 		if(!loadReader())
 			return null;
-		Boolean useDefaultWhiteList = reader.getBooleanOrDefault("useDefaultWhiteList", Boolean.FALSE);
-		if(useDefaultWhiteList)
+		if(usesDefaultWhiteList())
 			return DEFAULT_WHITE_LIST;
 		Collection<String> whiteList = reader.getArray("whiteList");
 		if(whiteList==null)
@@ -185,5 +222,10 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		else
 			return whiteList;
 	}
+
+	private boolean usesDefaultWhiteList() {
+		return reader.getBooleanOrDefault("useDefaultWhiteList", Boolean.FALSE);
+	}
+
 
 }

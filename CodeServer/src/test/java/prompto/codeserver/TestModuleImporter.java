@@ -10,6 +10,7 @@ import prompto.config.IRuntimeConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 
 public class TestModuleImporter {
@@ -25,7 +26,7 @@ public class TestModuleImporter {
 			.withApplicationName("test")
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class))
-			.withTestMode(true);
+			.withRuntimeMode(Mode.UNITTEST);
 	}
 
 	@Test

@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.security.FormAuthenticationMethodFactory;
 import prompto.security.PasswordIsUserNameAuthenticationSourceFactory;
@@ -43,7 +44,7 @@ public class TestStoredRecordAuthenticationConfiguration extends BaseMongoTest {
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
 			.withLoadRuntime(false)
-			.withTestMode(true);
+			.withRuntimeMode(Mode.UNITTEST);
 	}
 
 

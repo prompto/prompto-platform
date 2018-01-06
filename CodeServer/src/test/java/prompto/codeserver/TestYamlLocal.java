@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import de.flapdoodle.embed.mongo.MongodExecutable;
+import prompto.runtime.Mode;
 import prompto.server.AppServer;
 import prompto.store.mongo.BaseMongoTest;
 import prompto.utils.ManualTests;
@@ -21,7 +22,7 @@ public class TestYamlLocal {
 		try {
 			URL url = Thread.currentThread().getContextClassLoader().getResource("local.yml");
 			String[] args = new String[] { "yamlConfigFile", url.getFile() };
-			CodeServer.main(args, true);
+			CodeServer.main(args, Mode.UNITTEST);
 			assertTrue(AppServer.isStarted());
 		} finally {
 			BaseMongoTest.stopMongo(mongo);

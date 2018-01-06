@@ -3,6 +3,9 @@ package prompto.security;
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.config.FormAuthenticationMethodConfiguration;
 import prompto.config.IConfigurationReader;
 import prompto.config.IFormAuthenticationMethodConfiguration;
@@ -25,6 +28,13 @@ public class FormAuthenticationMethodFactory implements IAuthenticationMethodFac
 	@Override
 	public Authenticator newAuthenticator(boolean withXAuthorization) {
 		return new FormAuthenticator(config.getLoginPage(), config.getErrorPage(), true);
+	}
+	
+	@Override
+	public void toYaml(YamlMapping yaml) throws YamlException {
+		IAuthenticationMethodFactory.super.toYaml(yaml);
+		yaml.setEntry("loginPage", config.getLoginPage());
+		yaml.setEntry("errorPage", config.getErrorPage());
 	}
 
 }

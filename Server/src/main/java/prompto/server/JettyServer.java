@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,14 +34,14 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import prompto.config.IKeyStoreConfiguration;
-import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.IAuthenticationConfiguration;
 import prompto.config.IAuthenticationSourceConfiguration;
+import prompto.config.IKeyStoreConfiguration;
+import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
-import prompto.security.IKeyStoreFactory;
 import prompto.security.IAuthenticationMethodFactory;
+import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
 import prompto.utils.Logger;
 
@@ -49,6 +50,7 @@ class JettyServer extends Server {
 	static final Logger logger = new Logger();
 
 	IServerConfiguration config;
+	Supplier<IAuthenticationConfiguration> auth = null;
 	ServerConnector mainConnector;
 	ServerConnector redirectConnector;
 	ConstraintSecurityHandler securityHandler;
@@ -200,13 +202,21 @@ class JettyServer extends Server {
 	}
 
 	private void prepareSecurityHandler() {
-		IAuthenticationConfiguration auth = config.getHttpConfiguration().getAuthenticationConfiguration();
+		IAuthenticationConfiguration auth = getAuthenticationConfiguration();
 		if(auth!=null)
 			securityHandler = prepareAuthSecurityHandler();
 		else
 			securityHandler = prepareNoAuthSecurityHandler();
 	}
 	
+	private IAuthenticationConfiguration getAuthenticationConfiguration() {
+		if(auth==null) {
+			IAuthenticationConfiguration instance = config.getHttpConfiguration().getAuthenticationConfiguration();
+			auth = ()->instance;
+		}
+		return null;
+	}
+
 	private ConstraintSecurityHandler prepareNoAuthSecurityHandler() {
 		try {
 			logger.info(()->"Not using authentication!");
@@ -249,12 +259,12 @@ class JettyServer extends Server {
 
 	private Authenticator prepareAuthenticator() {
 		boolean xauth = config.getHttpConfiguration().getAllowsXAuthorization();
-		IAuthenticationMethodFactory factory = config.getHttpConfiguration().getAuthenticationConfiguration().getAuthenticationMethodConfiguration().getAuthenticationMethodFactory();
+		IAuthenticationMethodFactory factory = getAuthenticationConfiguration().getAuthenticationMethodConfiguration().getAuthenticationMethodFactory();
 		return factory.newAuthenticator(xauth);
 	}
 
 	private LoginService prepareJettyLoginService() throws Exception {
-		IAuthenticationSourceConfiguration login = config.getHttpConfiguration().getAuthenticationConfiguration().getAuthenticationSourceConfiguration();
+		IAuthenticationSourceConfiguration login = getAuthenticationConfiguration().getAuthenticationSourceConfiguration();
 		String loginModuleName = login.getAuthenticationSourceFactory().installJettyLoginModule();
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
@@ -278,7 +288,7 @@ class JettyServer extends Server {
 	
 	private Stream<ConstraintMapping> prepareAllowedConstraintMappings() {
 		Constraint allow = prepareNoAuthenticationConstraint();
-		return config.getHttpConfiguration().getAuthenticationConfiguration().getWhiteList().stream()
+		return getAuthenticationConfiguration().getWhiteList().stream()
 				.map(path->{
 					ConstraintMapping cm = new ConstraintMapping();
 					cm.setPathSpec(path);

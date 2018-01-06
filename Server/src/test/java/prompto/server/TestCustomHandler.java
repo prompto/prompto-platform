@@ -17,6 +17,7 @@ import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
 import prompto.runtime.Context;
+import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.utils.Out;
 import prompto.utils.SocketUtils;
@@ -46,7 +47,7 @@ public class TestCustomHandler {
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationName("test")
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-			.withTestMode(true);
+			.withRuntimeMode(Mode.UNITTEST);
 	}
 
 	@FunctionalInterface

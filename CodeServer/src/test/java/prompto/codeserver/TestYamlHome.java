@@ -7,6 +7,7 @@ import java.net.URL;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import prompto.runtime.Mode;
 import prompto.server.AppServer;
 import prompto.utils.ManualTests;
 
@@ -17,7 +18,7 @@ public class TestYamlHome {
 	public void testThatCodeServerRunsWithYamlHome() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("home.yml");
 		String[] args = new String[] { "yamlConfigFile", url.getFile() };
-		CodeServer.main(args, true);
+		CodeServer.main(args, Mode.UNITTEST);
 		assertTrue(AppServer.isStarted());
 	}
 }

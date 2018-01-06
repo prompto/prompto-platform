@@ -2,7 +2,7 @@ package prompto.security;
 
 import prompto.config.IConfigurationReader;
 import prompto.config.IAuthenticationSourceConfiguration;
-import prompto.config.AuthenticationModuleSource;
+import prompto.config.AuthenticationSourceConfiguration;
 
 public class PasswordIsUserNameAuthenticationSourceFactory implements IAuthenticationSourceFactory {
 
@@ -10,7 +10,7 @@ public class PasswordIsUserNameAuthenticationSourceFactory implements IAuthentic
 	
 	@Override
 	public IAuthenticationSourceConfiguration newConfiguration(IConfigurationReader reader) {
-		return new AuthenticationModuleSource(reader);
+		return new AuthenticationSourceConfiguration(reader);
 	}
 
 	@Override

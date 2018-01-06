@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import prompto.config.CodeStoreAuthenticationConfiguration;
+import prompto.config.StoredRecordConfigurationReader;
+import prompto.runtime.Mode;
 import prompto.server.AppServer;
 import prompto.server.PromptoServlet;
 import prompto.store.IDataStore;
@@ -42,7 +44,7 @@ import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 import com.esotericsoftware.yamlbeans.document.YamlEntry;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
-/* represents the process used to run a Module on the server */
+/* represents the process used to run a Module on the dev server */
 public class ModuleProcess {
 	
 	static Logger logger = new Logger();
@@ -78,7 +80,12 @@ public class ModuleProcess {
 					if(optional)
 						return -1L; // don't create it
 					module = createModuleProcess(dbId);
-					modules.put(dbId, module);
+					if(module!=null)
+						modules.put(dbId, module);
+					else {
+						logger.warn(()->"Remote server failed to start!");
+						return null; // TODO
+					}
 				}
 				return new Long(module.port);
 			} catch(Throwable t) {
@@ -94,7 +101,7 @@ public class ModuleProcess {
 			return null;
 		ModuleProcess module = new ModuleProcess(stored);
 		module.start();
-		return module;
+		return module.process.isAlive() ? module : null;
 	}
 	
 	static class OutStream {
@@ -105,7 +112,6 @@ public class ModuleProcess {
 		}
 		
 		ProcessBuilder builder;
-		Object ready = new Object();
 		
 		OutStream(ProcessBuilder builder) {
 			this.builder = builder;
@@ -113,6 +119,7 @@ public class ModuleProcess {
 		
 		Process waitForServerReadiness() throws InterruptedException, IOException {
 			logger.info(()->"Starting: " + builder.command().toString());
+			Object ready = new Object();
 			Process process = builder.start();
 			InputStream input = process.getInputStream();
 			Thread reader = new Thread(()->{
@@ -123,12 +130,15 @@ public class ModuleProcess {
 						break;
 					if(read>0) {
 						System.out.write(data, 0 , read);
-						if(new String(data, 0, read).contains(AppServer.WEB_SERVER_SUCCESSFULLY_STARTED)) synchronized (ready) {
-							ready.notify();
-						}
+						if(new String(data, 0, read).contains(AppServer.WEB_SERVER_SUCCESSFULLY_STARTED)) 
+							break;
 					}
 				} catch(IOException e) {
 					e.printStackTrace(System.err);
+				} finally {
+					synchronized (ready) {
+						ready.notify();
+					}
 				}
 			});
 			reader.start();
@@ -157,10 +167,6 @@ public class ModuleProcess {
 		this.process = OutStream.waitForServerReadiness(builder);
 	}
 
-	private Object getModuleDbId() {
-		return stored.getDbId();
-	}
-	
 	private String getModuleName() {
 		return stored.getData("name").toString();
 	}
@@ -252,6 +258,7 @@ public class ModuleProcess {
 	private void writeSpecificYamlEntries(YamlDocument document) throws YamlException {
 		document.setEntry("applicationName", getModuleName());
 		document.setEntry("applicationVersion", getModuleVersion());
+		document.setEntry("runtimeMode", Mode.DEVELOPMENT.name());
 		document.deleteEntry("webSiteRoot");
 		writeCodeStoreYamlEntries(document);
 		writeDataStoreYamlEntries(document);
@@ -292,10 +299,22 @@ public class ModuleProcess {
 			http.setEntry("allowedOrigins", origin);
 			http.setEntry("allowsXAuthorization", true);
 		}
-		YamlMapping authentication = new YamlMapping();
-		authentication.setEntry("factory", CodeStoreAuthenticationConfiguration.class.getName());
-		authentication.setEntry("dbId", getModuleDbId().toString());
-		http.setEntry("authentication", authentication);
+		YamlMapping auth = authenticationSettingsToYaml();
+		if(auth!=null)
+			http.setEntry("authentication", auth);
+	}
+
+	private boolean hasAuthenticationSettings() {
+		return stored.hasData("authenticationSettings");
+	}
+
+	private YamlMapping authenticationSettingsToYaml() throws YamlException {
+		if(hasAuthenticationSettings()) {
+			StoredRecordConfigurationReader reader = new StoredRecordConfigurationReader(IDataStore.getInstance(), stored);
+			CodeStoreAuthenticationConfiguration config = new CodeStoreAuthenticationConfiguration(reader);
+			return config.toYaml(Mode.DEVELOPMENT);
+		} else
+			return null;
 	}
 
 	private File createTempYamlFile() throws IOException {

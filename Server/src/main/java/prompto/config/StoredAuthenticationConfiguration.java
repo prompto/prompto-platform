@@ -1,7 +1,7 @@
 package prompto.config;
 
 
-public class StoredAuthenticationConfiguration extends AuthenticationModuleSource implements IStoredAuthenticationSourceConfiguration {
+public class StoredAuthenticationConfiguration extends AuthenticationSourceConfiguration implements IStoredAuthenticationSourceConfiguration {
 
 	public StoredAuthenticationConfiguration(IConfigurationReader reader) {
 		super(reader);
