@@ -121,20 +121,11 @@ public class ModuleProcess {
 			logger.info(()->"Starting: " + builder.command().toString());
 			Object ready = new Object();
 			Process process = builder.start();
-			InputStream input = process.getInputStream();
 			Thread reader = new Thread(()->{
-				byte[] data = new byte[0x10000];
-				while(process.isAlive()) try {
-					int read = input.read(data);
-					if(read<0)
-						break;
-					if(read>0) {
-						System.out.write(data, 0 , read);
-						if(new String(data, 0, read).contains(AppServer.WEB_SERVER_SUCCESSFULLY_STARTED)) 
-							break;
-					}
-				} catch(IOException e) {
-					e.printStackTrace(System.err);
+				try { 
+					waitForServerReadiness(process);
+				} catch(Throwable t) {
+					t.printStackTrace(System.err);
 				} finally {
 					synchronized (ready) {
 						ready.notify();
@@ -148,8 +139,24 @@ public class ModuleProcess {
 			return process;
 		}
 		
+		private void waitForServerReadiness(Process process) throws IOException {
+			InputStream input = process.getInputStream();
+			byte[] data = new byte[0x10000];
+			while(process.isAlive()) {
+				int read = input.read(data);
+				if(read<0)
+					break;
+				if(read>0) {
+					System.out.write(data, 0 , read);
+					if(new String(data, 0, read).contains(AppServer.WEB_SERVER_SUCCESSFULLY_STARTED)) 
+						break;
+				}
+			}
+		}
+
 	}
 
+	
 	IStored stored;
 	int port;
 	Process process;
