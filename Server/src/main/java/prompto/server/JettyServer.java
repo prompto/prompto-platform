@@ -2,6 +2,7 @@ package prompto.server;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -40,6 +41,7 @@ import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
+import prompto.runtime.Mode;
 import prompto.security.IAuthenticationMethodFactory;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
@@ -288,8 +290,10 @@ class JettyServer extends Server {
 	
 	private Stream<ConstraintMapping> prepareAllowedConstraintMappings() {
 		Constraint allow = prepareNoAuthenticationConstraint();
-		return getAuthenticationConfiguration().getWhiteList().stream()
-				.map(path->{
+		Stream<String> whiteList = getAuthenticationConfiguration().getWhiteList().stream();
+		if(config.getRuntimeMode()==Mode.DEVELOPMENT)
+			whiteList = Stream.concat(whiteList, Collections.singletonList("/ws/control/*").stream());
+		return whiteList.map(path->{
 					ConstraintMapping cm = new ConstraintMapping();
 					cm.setPathSpec(path);
 					cm.setConstraint(allow);
