@@ -214,7 +214,7 @@ class JettyServer extends Server {
 			IAuthenticationConfiguration instance = config.getHttpConfiguration().getAuthenticationConfiguration();
 			auth = ()->instance;
 		}
-		return null;
+		return auth.get();
 	}
 
 	private ConstraintSecurityHandler prepareNoAuthSecurityHandler() {
