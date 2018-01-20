@@ -204,11 +204,15 @@ class JettyServer extends Server {
 	}
 
 	private void prepareSecurityHandler() {
-		IAuthenticationConfiguration auth = getAuthenticationConfiguration();
-		if(auth!=null)
-			securityHandler = prepareAuthSecurityHandler();
+		logger.info(()->"Preparing security handler...");
+		securityHandler = config.getHttpConfiguration().getAllowsXAuthorization() && config.getHttpConfiguration().getAllowedOrigins()!=null ?
+			new ConstraintSecurityHandlerWithXAuthorization() :
+			new ConstraintSecurityHandler();	
+		if(getAuthenticationConfiguration()!=null)
+			configureSecurityHandler();
 		else
-			securityHandler = prepareNoAuthSecurityHandler();
+			logger.info(()->"Not using authentication!");
+		logger.info(()->"Security handler successfully prepared.");
 	}
 	
 	private IAuthenticationConfiguration getAuthenticationConfiguration() {
@@ -219,31 +223,11 @@ class JettyServer extends Server {
 		return auth.get();
 	}
 
-	private ConstraintSecurityHandler prepareNoAuthSecurityHandler() {
+	private void configureSecurityHandler() {
 		try {
-			logger.info(()->"Not using authentication!");
-			logger.info(()->"Preparing security handler...");
-			ConstraintSecurityHandler security = config.getHttpConfiguration().getAllowsXAuthorization() && config.getHttpConfiguration().getAllowedOrigins()!=null ?
-				new ConstraintSecurityHandlerWithXAuthorization() :
-				new ConstraintSecurityHandler();	
-			logger.info(()->"Security handler successfully prepared.");
-			return security;
-		} catch(Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private ConstraintSecurityHandler prepareAuthSecurityHandler() {
-		try {
-			logger.info(()->"Preparing security handler...");
-			ConstraintSecurityHandler security = config.getHttpConfiguration().getAllowsXAuthorization() && config.getHttpConfiguration().getAllowedOrigins()!=null ?
-				new ConstraintSecurityHandlerWithXAuthorization() :
-				new ConstraintSecurityHandler();	
-			security.setLoginService(prepareJettyLoginService()); // where to check credentials
-			security.setAuthenticator(prepareAuthenticator()); // how to request credentials
-			security.setConstraintMappings(prepareAuthConstraintMappings()); // when to require security
-			logger.info(()->"Security handler successfully prepared.");
-			return security;
+			securityHandler.setLoginService(prepareJettyLoginService()); // where to check credentials
+			securityHandler.setAuthenticator(prepareAuthenticator()); // how to request credentials
+			securityHandler.setConstraintMappings(prepareAuthConstraintMappings()); // when to require security
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -294,6 +278,7 @@ class JettyServer extends Server {
 		if(config.getRuntimeMode()==Mode.DEVELOPMENT)
 			whiteList = Stream.concat(whiteList, Collections.singletonList("/ws/control/*").stream());
 		return whiteList.map(path->{
+					logger.info(()->"Allowing free access to '" + path + "'");
 					ConstraintMapping cm = new ConstraintMapping();
 					cm.setPathSpec(path);
 					cm.setConstraint(allow);
@@ -345,6 +330,7 @@ class JettyServer extends Server {
         FilterHolder holder = newCrossOriginHandler();
         if(holder!=null)
         	handler.addFilter(holder, "/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.getSessionHandler().getSessionManager().setMaxInactiveInterval(300); // TODO make timeout configurable
 		return handler;
 	}
 	
