@@ -137,7 +137,7 @@ public class AppServer {
 	public static void callServerAboutToStart(IServerConfiguration config) {
 		final String serverAboutToStartMethod = config.getServerAboutToStartMethod();
 		if(serverAboutToStartMethod!=null) {
-			logger.info(()->"Calling startUp method " + serverAboutToStartMethod);
+			logger.info(()->"Calling startUp method '" + serverAboutToStartMethod + "'");
 			Interpreter.interpretMethod(Standalone.getGlobalContext(), new Identifier(serverAboutToStartMethod), Standalone.argsToArgValue(config.getArguments()));
 		}
 	}
@@ -171,8 +171,11 @@ public class AppServer {
 	/* used by Server.pec */
 	public static void installHandler(String path, IMethodDeclaration method) {
 		// TODO check path (must start with '/') and method prototype
+		logger.info(()->"Installing web service '" + method.getName() + "' at path '" + path + "'");
 		WebAppContext handler = jettyServer.getChildHandlerByClass(WebAppContext.class);
-		ServletHolder holder = new ServletHolder(new UserServlet(method));
+		UserServlet servlet = new UserServlet(method);
+		ServletHolder holder = new ServletHolder(servlet);
+		servlet.setHolder(holder);
         handler.addServlet(holder, path);       
 	}
 
