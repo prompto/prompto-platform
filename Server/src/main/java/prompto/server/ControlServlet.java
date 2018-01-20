@@ -9,9 +9,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import prompto.runtime.Standalone;
+import prompto.utils.Logger;
 
 @SuppressWarnings("serial")
 public class ControlServlet extends CleverServlet {
+
+	static final Logger logger = new Logger();
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
@@ -24,6 +27,7 @@ public class ControlServlet extends CleverServlet {
 			resp.setContentType("text/plain");
 			PrintWriter writer = resp.getWriter();
 			String verb = req.getPathInfo();
+			logger.info(()->"Executing control verb " + verb);
 			switch(verb) {
 				case "/exit":
 					exitServer(writer);
@@ -35,7 +39,7 @@ public class ControlServlet extends CleverServlet {
 					version(writer);
 					break;
 				default:
-					System.err.println("Invalid verb: " + verb);
+					logger.error(()->"Invalid control verb: " + verb);
 					resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		} catch(Throwable t) {
