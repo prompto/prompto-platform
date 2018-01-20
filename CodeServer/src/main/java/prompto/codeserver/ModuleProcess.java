@@ -84,13 +84,13 @@ public class ModuleProcess {
 						modules.put(dbId, module);
 					else {
 						logger.warn(()->"Remote server failed to start!");
-						return null; // TODO
+						return -1L; // TODO send error to client
 					}
 				}
 				return new Long(module.port);
 			} catch(Throwable t) {
 				t.printStackTrace();
-				return null; // TODO
+				return -1L; // TODO send error to client
 			}
 		}
 	}
@@ -183,6 +183,15 @@ public class ModuleProcess {
 		return stored.getData("version").toString();
 	}
 
+	private String getStartMethod() {
+		Object value = stored.getData("startMethod");
+		return value==null ? null : value.toString();
+	}
+
+	private String getServerAboutToStartMethod() {
+		Object value = stored.getData("serverAboutToStartMethod");
+		return value==null ? null : value.toString();
+	}
 
 	public void shutDown() {
 		try {
@@ -267,6 +276,14 @@ public class ModuleProcess {
 		document.setEntry("applicationVersion", getModuleVersion());
 		document.setEntry("runtimeMode", Mode.DEVELOPMENT.name());
 		document.deleteEntry("webSiteRoot");
+		document.deleteEntry("startMethod");
+		String method = getStartMethod();
+		if(method!=null)
+			document.setEntry("startMethod", method);
+		document.deleteEntry("serverAboutToStart");
+		method = getServerAboutToStartMethod();
+		if(method!=null)
+			document.setEntry("serverAboutToStart", method);
 		writeCodeStoreYamlEntries(document);
 		writeDataStoreYamlEntries(document);
 		writeHttpYamlEntries(document);
