@@ -1,5 +1,6 @@
 package prompto.config;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Supplier;
 
@@ -88,12 +89,10 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		yaml = new YamlMapping();
 		source.getAuthenticationSourceFactory().toYaml(yaml);
 		settings.setEntry("source", yaml);
-		if(!usesDefaultWhiteList()) {
-			YamlSequence list = new YamlSequence();
-			for(String w : fetchWhiteList())
-				list.addElement(w);
-			settings.setEntry("whiteList", list);
-		}
+		YamlSequence list = new YamlSequence();
+		for(String w : fetchWhiteList())
+			list.addElement(w);
+		settings.setEntry("whiteList", list);
 		return settings;
 	}
 
@@ -143,7 +142,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 				return null;
 			String factoryName = AuthenticationMethod.valueOf(category).getFactoryName();
 			IAuthenticationMethodFactory factory = IAuthenticationMethodFactory.newFactory(factoryName);
-			IAuthenticationMethodConfiguration config = factory.newConfiguration(source);
+			IAuthenticationMethodConfiguration config = factory.newConfiguration(method);
 			factory.setConfiguration(config);
 			return ()->factory; // ensure we don't try to read "factory" from the config
 		} catch(Throwable t) {
@@ -214,16 +213,16 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	private Collection<String> fetchWhiteList() {
 		if(!loadReader())
 			return null;
-		if(usesDefaultWhiteList())
-			return DEFAULT_WHITE_LIST;
+		Collection<String> result = new ArrayList<>();
+		if(alsoUsesDefaultWhiteList())
+			result.addAll(DEFAULT_WHITE_LIST);
 		Collection<String> whiteList = reader.getArray("whiteList");
-		if(whiteList==null)
-			return DEFAULT_WHITE_LIST;
-		else
-			return whiteList;
+		if(whiteList!=null)
+			result.addAll(whiteList);
+		return result;
 	}
 
-	private boolean usesDefaultWhiteList() {
+	private boolean alsoUsesDefaultWhiteList() {
 		return reader.getBooleanOrDefault("useDefaultWhiteList", Boolean.FALSE);
 	}
 
