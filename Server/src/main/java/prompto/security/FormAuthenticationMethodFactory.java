@@ -27,7 +27,13 @@ public class FormAuthenticationMethodFactory implements IAuthenticationMethodFac
 
 	@Override
 	public Authenticator newAuthenticator(boolean withXAuthorization) {
-		return new FormAuthenticator(config.getLoginPage(), config.getErrorPage(), true);
+		String loginPage = config.getLoginPage();
+		if(!loginPage.startsWith("/"))
+			loginPage = "/" + loginPage;
+		String errorPage = config.getErrorPage();
+		if(!errorPage.startsWith("/"))
+			errorPage = "/" + errorPage;
+		return new FormAuthenticator(loginPage, errorPage, true);
 	}
 	
 	@Override
