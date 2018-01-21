@@ -42,10 +42,10 @@ public class DataServlet extends CleverServlet {
 
 	static Logger logger = new Logger();
 	
-	static IStore dataStore;
+	static Map<String, IStore> stores;
 	
-	public static void useDataStore(IStore dataStore) {
-		DataServlet.dataStore = dataStore;
+	public static void setStores(Map<String, IStore> stores) {
+		DataServlet.stores = stores;
 	}
 	
 	@Override
@@ -66,6 +66,16 @@ public class DataServlet extends CleverServlet {
 	}
 	protected void doFetch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
+			String store = req.getParameter("store");
+			if(store==null || store.trim().isEmpty()) {
+				writeJsonResponseError("No store specified!", resp.getOutputStream());
+				return;
+			}
+			IStore dataStore = stores.get(store);
+			if(dataStore==null) {
+				writeJsonResponseError("Invalid store: " + store, resp.getOutputStream());
+				return;
+			}
 			String query = req.getParameter("query");
 			if(query==null || query.trim().isEmpty()) {
 				writeJsonResponseError("Empty query!", resp.getOutputStream());
@@ -88,7 +98,7 @@ public class DataServlet extends CleverServlet {
 				Map<String, JsonWriter> writers = new HashMap<>();
 				resp.setContentType("application/json");
 				Object fetched = fetch.fetchRaw(dataStore);
-				writeJsonResponseList(fetched, resp.getOutputStream(), writers);
+				writeJsonResponseList(fetched, resp.getOutputStream(), dataStore, writers);
 			} else
 				writeJsonResponseError("Invalid query!", resp.getOutputStream());
 		} catch(PromptoError e) {
@@ -121,18 +131,18 @@ public class DataServlet extends CleverServlet {
 		
 	}
 
-	private static void writeJsonResponseList(Object fetched, OutputStream output, Map<String, JsonWriter> writers) throws IOException, PromptoError {
+	private static void writeJsonResponseList(Object fetched, OutputStream output, IStore store, Map<String, JsonWriter> writers) throws IOException, PromptoError {
 		JsonGenerator generator = new JsonFactory().createGenerator(output);
 		generator.writeStartObject();
 		generator.writeNullField("error");
 		generator.writeFieldName("data");
-		writeJsonList(generator, fetched, writers);
+		writeJsonList(generator, fetched, store, writers);
 		generator.writeEndObject();
 		generator.flush();
 		generator.close();
 	}
 
-	private static void writeJsonList(JsonGenerator generator, Object fetched, Map<String, JsonWriter> writers) throws IOException {
+	private static void writeJsonList(JsonGenerator generator, Object fetched, IStore store, Map<String, JsonWriter> writers) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString("Any[]"); // does not matter here
@@ -144,20 +154,20 @@ public class DataServlet extends CleverServlet {
 			generator.writeNumber(1);
 			generator.writeFieldName("value");
 			generator.writeStartArray();
-			writeJsonStored(generator, (IStored)fetched, writers);
+			writeJsonStored(generator, (IStored)fetched, store, writers);
 			generator.writeEndArray();
 		} else if(fetched instanceof IStoredIterable) {
 			generator.writeNumber(((IStoredIterable)fetched).totalLength());
 			generator.writeFieldName("value");
 			generator.writeStartArray();
 			for(IStored stored : (IStoredIterable)fetched)
-				writeJsonStored(generator, stored, writers);
+				writeJsonStored(generator, stored, store, writers);
 			generator.writeEndArray();
 		} else
 			throw new InvalidParameterException("Type not supported: " + fetched.getClass().getName());
 	}
 	
-	private static void writeJsonStored(JsonGenerator generator, IStored stored, Map<String, JsonWriter> writers) throws IOException {
+	private static void writeJsonStored(JsonGenerator generator, IStored stored, IStore store, Map<String, JsonWriter> writers) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString(readCategory(stored));
@@ -168,7 +178,7 @@ public class DataServlet extends CleverServlet {
 		for(String name : stored.getNames()) {
 			if("category".equals(name) || "dbId".equals(name))
 				continue;
-			writeJsonField(generator, name, stored.getData(name), writers);
+			writeJsonField(generator, name, stored.getData(name), store, writers);
 		}
 		generator.writeEndObject();
 		generator.writeEndObject();
@@ -188,8 +198,8 @@ public class DataServlet extends CleverServlet {
 		}
 	}
 
-	private static void writeJsonField(JsonGenerator generator, String name, Object value, Map<String, JsonWriter> writers) throws IOException {
-		JsonWriter writer = writerForName(name, writers);
+	private static void writeJsonField(JsonGenerator generator, String name, Object value, IStore store, Map<String, JsonWriter> writers) throws IOException {
+		JsonWriter writer = writerForName(name, store, writers);
 		if(writer==null)
 			writer = writerForValue(value);
 		generator.writeFieldName(name);
@@ -211,11 +221,12 @@ public class DataServlet extends CleverServlet {
 			newEntry(Family.BLOB, DataServlet::writeBlob)
 		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-	private static JsonWriter writerForName(String name, Map<String, JsonWriter> writers) throws IOException {
+	
+	private static JsonWriter writerForName(String name, IStore store, Map<String, JsonWriter> writers) throws IOException {
 		JsonWriter writer = writers.get(name);
 		if(writer!=null)
 			return writer;
-		AttributeInfo info = dataStore.getAttributeInfo(name);
+		AttributeInfo info = store.getAttributeInfo(name);
 		if(info==null)
 			return null;
 		writer = familyWriters.get(info.getFamily());

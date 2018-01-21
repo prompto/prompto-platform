@@ -2,6 +2,7 @@ package prompto.codeserver;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import prompto.code.BaseCodeStore;
@@ -12,6 +13,7 @@ import prompto.config.IConfigurationReader;
 import prompto.config.IStoreConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
+import prompto.memstore.MemStore;
 import prompto.memstore.MemStoreFactory;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
@@ -41,7 +43,7 @@ public class CodeServer {
 				.withResourceURLs(CodeServer.getResourceURLs());
 		if(runtimeMode!=null)
 			config = config.withRuntimeMode(runtimeMode);
-		AppServer.main(config, CodeServer::redirectDataServlet); 
+		AppServer.main(config, CodeServer::initDataServletStores); 
 	}
 	
 	public static ICodeServerConfiguration loadConfiguration(String[] args) throws Exception {
@@ -52,24 +54,29 @@ public class CodeServer {
 	}
 
 	
-	private static void redirectDataServlet(ICodeServerConfiguration codeServerConfig) {
-		IStoreConfiguration targetStoreConfig = codeServerConfig.getDataStoreConfiguration(); 
-		if(targetStoreConfig==null)
-			targetStoreConfig = IStoreConfiguration.MEM_STORE_CONFIG;
-		redirectDataServlet(targetStoreConfig);
-	}
-
-	private static void redirectDataServlet(IStoreConfiguration targetStoreConfig) {
+	private static void initDataServletStores(ICodeServerConfiguration config) {
 		try {
-			IStoreFactory factory = IStoreFactory.newStoreFactory(targetStoreConfig.getFactory());
-			if(factory instanceof MemStoreFactory)
-				DataServlet.useDataStore(IDataStore.getInstance());
-			else {
-				IStore store = factory.newStore(targetStoreConfig);
-				DataServlet.useDataStore(store);
-			}
+			Map<String, IStore> stores = new HashMap<>();
+			stores.put("TOOLS", newStore(config, "TOOLS"));
+			stores.put("APPS", newStore(config, "APPS"));
+			stores.put("DATA", newStore(config, "DATA"));
+			stores.put("LOGIN", newStore(config, "LOGIN"));
+			DataServlet.setStores(stores);
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
+		}
+	}
+
+	private static IStore newStore(ICodeServerConfiguration cfg, String dbName) throws Throwable {
+		if(cfg==null)
+			return new MemStore();
+		else {
+			IStoreConfiguration config = cfg.getDataStoreConfiguration();
+			IStoreFactory factory = IStoreFactory.newStoreFactory(config.getFactory());
+			if(factory instanceof MemStoreFactory)
+				return new MemStore();
+			else 
+				return factory.newStore(config.withDbName(dbName));
 		}
 	}
 

@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collections;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,12 +18,20 @@ import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.memstore.MemStore;
 import prompto.store.IStorable;
+import prompto.store.IStore;
 
 public class TestDataServlet extends BaseServerTest {
 
+	IStore store;
+	
+	@Before
+	public void before() {
+		store = new MemStore();
+		DataServlet.setStores(Collections.singletonMap("DATA", this.store));
+	}
+	
 	@Test
 	public void testThatFetchAllOnEmptyStoreIsOk() throws Exception {
-		DataServlet.dataStore = new MemStore();
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		assertEquals(0, node.get("data").get("totalLength").asLong());
@@ -30,10 +39,9 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void testThatFetchAllWithAnyIsOk() throws Exception {
-		DataServlet.dataStore = new MemStore();
-		IStorable doc = DataServlet.dataStore.newStorable(Collections.singletonList("Any"), id->{});
+		IStorable doc = store.newStorable(Collections.singletonList("Any"), id->{});
 		doc.setData("name", "John");
-		DataServlet.dataStore.store(doc);
+		store.store(doc);
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");
@@ -42,15 +50,14 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void testThatFetchAllWithCategoryIsOk() throws Exception {
-		DataServlet.dataStore = new MemStore();
-		IStorable doc = DataServlet.dataStore.newStorable(Collections.singletonList("MyCategory"), id->{});
+		IStorable doc = store.newStorable(Collections.singletonList("MyCategory"), id->{});
 		doc.setData("text", "someName");
 		doc.setData("integer", 987654321L);
 		doc.setData("decimal", 987654321.654);
 		doc.setData("date", new PromptoDate(2017, 3, 14));
 		doc.setData("time", new PromptoTime(16, 32, 45, 11));
 		doc.setData("datetime", PromptoDateTime.parse("2017-03-14T16:32:45.011+08:00"));
-		DataServlet.dataStore.store(doc);
+		store.store(doc);
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");
@@ -69,7 +76,7 @@ public class TestDataServlet extends BaseServerTest {
 	
 
 	private JsonNode runQuery(String query) throws Exception {
-		URL url = new URL("http://localhost:" + port + "/ws/data/fetch?query=" + URLEncoder.encode(query, "UTF-8"));
+		URL url = new URL("http://localhost:" + port + "/ws/data/fetch?store=DATA&query=" + URLEncoder.encode(query, "UTF-8"));
 		try(InputStream input = url.openStream()) {
 			return new ObjectMapper().readTree(input);
 		}
