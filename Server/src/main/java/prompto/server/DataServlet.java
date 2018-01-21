@@ -78,6 +78,10 @@ public class DataServlet extends CleverServlet {
 				format = "list";
 			ECleverParser parser = new ECleverParser(query);
 			IFetchExpression fetch = parser.parse_fetch_store_expression();
+			if(fetch==null) {
+				writeJsonResponseError("Invalid query: " + query, resp.getOutputStream());
+				return;
+			}
 			adjustQueryRange(fetch, first, last);
 			logger.info(()->"Running query: " + fetch.toString());
 			if("list".equals(format.toLowerCase())) {
@@ -96,6 +100,7 @@ public class DataServlet extends CleverServlet {
 	}
 	
 	private void writeJsonResponseError(String error, OutputStream output) throws IOException {
+		logger.warn(()->error);
 		JsonGenerator generator = new JsonFactory().createGenerator(output);
 		generator.writeStartObject();
 		generator.writeStringField("error", error);
