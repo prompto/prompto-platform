@@ -346,6 +346,11 @@ public class MongoStore implements IStore {
 			if(query!=null) {
 				if(query.predicate!=null)
 					find = find.filter(query.predicate);
+				if(query.first!=null && query.last!=null) {
+					if(query.first > 1)
+						find = find.skip(query.first.intValue() - 1);
+					find = find.limit((int)(1 + query.last - query.first));
+				}
 			}
 			Iterator<Document> iter = find.iterator();
 
