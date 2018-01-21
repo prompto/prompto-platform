@@ -302,7 +302,7 @@ public class ModuleProcess {
 			else
 				target.setEntry(entry.getKey().getValue(), entry.getValue());
 		}
-		target.setEntry("dbName", "APPS");
+		target.setEntry("dbName", "APPS"); // TODO make this configurable
 		document.setEntry("dataStore", target);
 	}
 
