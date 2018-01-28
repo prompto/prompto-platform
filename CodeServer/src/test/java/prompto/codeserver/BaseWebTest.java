@@ -115,10 +115,8 @@ public abstract class BaseWebTest {
 		IStore store = IDataStore.getInstance();
 		store.flush();
 		IQueryBuilder builder = store.newQueryBuilder();
-		AttributeInfo info = new AttributeInfo("category", Family.TEXT, true, null);
-		builder.verify(info, MatchOp.CONTAINS, "Module");
-		info = new AttributeInfo("name", Family.TEXT, false, null);
-		builder.verify(info, MatchOp.EQUALS, name);
+		builder.verify(AttributeInfo.CATEGORY, MatchOp.CONTAINS, "Module");
+		builder.verify(AttributeInfo.NAME, MatchOp.EQUALS, name);
 		builder.and();
 		IStored stored = store.fetchOne(builder.build());
 		return stored.getDbId().toString();

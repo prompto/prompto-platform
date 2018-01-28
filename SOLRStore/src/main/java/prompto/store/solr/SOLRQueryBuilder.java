@@ -27,37 +27,42 @@ public class SOLRQueryBuilder implements IQueryBuilder {
 	}
 
 	@Override
-	public <T> void verify(AttributeInfo info, MatchOp match, T fieldValue) {
+	public <T> SOLRQueryBuilder verify(AttributeInfo info, MatchOp match, T fieldValue) {
 		if(filter==null)
 			filter = new SOLRFilterBuilder();
 		SOLRAttributeInfo solrInfo = new SOLRAttributeInfo(info);
 		filter.push(solrInfo, match, fieldValue);
+		return this;
 	}
 
 	
 	@Override
-	public void and() {
+	public SOLRQueryBuilder and() {
 		filter.and();
+		return this;
 	}
 
 	@Override
-	public void or() {
+	public SOLRQueryBuilder or() {
 		filter.or();
+		return this;
 	}
 
 	@Override
-	public void not() {
+	public SOLRQueryBuilder not() {
 		filter.not();
+		return this;
 	}
 
 	@Override
-	public void setFirst(Long first) {
+	public SOLRQueryBuilder first(Long first) {
 		if(first!=null)
 			query.setStart(first.intValue() - 1);
+		return this;
 	}
 
 	@Override
-	public void setLast(Long end) {
+	public SOLRQueryBuilder last(Long end) {
 		if(end!=null) {
 			Integer start = query.getStart();
 			if(start==null)
@@ -66,6 +71,7 @@ public class SOLRQueryBuilder implements IQueryBuilder {
 				start += 1; // was 0 based
 			query.setRows((int)((end - start)+1));
 		}
+		return this;
 	}
 
 	public void setRows(int rows) {
@@ -73,9 +79,10 @@ public class SOLRQueryBuilder implements IQueryBuilder {
 	}
 	
 	@Override
-	public void addOrderByClause(AttributeInfo attribute, boolean descending) {
+	public SOLRQueryBuilder orderBy(AttributeInfo attribute, boolean descending) {
 		SOLRAttributeInfo solrAttribute = new SOLRAttributeInfo(attribute);
 		query.addSort(solrAttribute.getFieldNameForOrderBy(), descending ? ORDER.desc : ORDER.asc);
+		return this;
 	}
 
 

@@ -79,45 +79,51 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	Long last;
 	
 	@Override
-	public <T> void verify(AttributeInfo info, MatchOp match, T fieldValue) {
+	public <T> MongoQueryBuilder verify(AttributeInfo info, MatchOp match, T fieldValue) {
 		Bson predicate = verifiers.get(match).apply(info, fieldValue);
 		stack.push(predicate);
+		return this;
 	}
 
 	@Override
-	public void and() {
+	public MongoQueryBuilder and() {
 		Bson right = stack.pop();
 		Bson left = stack.pop();
 		stack.push(Filters.and(left, right));
+		return this;
 	}
 
 	@Override
-	public void or() {
+	public MongoQueryBuilder or() {
 		Bson right = stack.pop();
 		Bson left = stack.pop();
 		stack.push(Filters.or(left, right));
+		return this;
 	}
 
 	@Override
-	public void not() {
+	public MongoQueryBuilder not() {
 		Bson top = stack.pop();
 		stack.push(Filters.not(top));
+		return this;
 	}
 
 	@Override
-	public void setFirst(Long first) {
+	public MongoQueryBuilder first(Long first) {
 		this.first = first;
+		return this;
 	}
 
 	@Override
-	public void setLast(Long last) {
+	public MongoQueryBuilder last(Long last) {
 		this.last = last;
+		return this;
 	}
 
 	@Override
-	public void addOrderByClause(AttributeInfo attribute, boolean descending) {
+	public MongoQueryBuilder orderBy(AttributeInfo attribute, boolean descending) {
 		// TODO Auto-generated method stub
-		
+		return this;
 	}
 
 	@Override
