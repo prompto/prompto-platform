@@ -2,7 +2,10 @@ package prompto.security;
 
 import java.security.Provider;
 import java.util.Collections;
+import java.util.Map;
 
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
@@ -11,8 +14,14 @@ import org.eclipse.jetty.jaas.spi.AbstractLoginModule;
 
 import prompto.config.IAuthenticationSourceConfiguration;
 
-public abstract class JettyLoginModuleBase extends AbstractLoginModule {
+public abstract class JettyLoginModuleBase extends AbstractLoginModule implements IAuthenticationSource {
 
+	@Override
+	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
+		super.initialize(subject, callbackHandler, sharedState, options);
+		IAuthenticationSource.instance.set(this);
+	}
+	
 	public static void install(final String loginModuleClassName, final IAuthenticationSourceConfiguration config) {
 		Configuration current = Configuration.getConfiguration();
 		Configuration wrapper = new Configuration() {

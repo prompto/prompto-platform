@@ -1,5 +1,7 @@
 package prompto.security;
 
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.config.IConfigurationReader;
 import prompto.config.IAuthenticationSourceConfiguration;
 import prompto.config.IStoredAuthenticationSourceConfiguration;
@@ -24,6 +26,13 @@ public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthent
 		String moduleName = StoredPasswordDigestAuthenticationSource.class.getName();
 		JettyLoginModuleBase.install(moduleName, config);
 		return moduleName;
+	}
+	
+	@Override
+	public YamlMapping toYaml() throws Throwable {
+		YamlMapping yaml = IAuthenticationSourceFactory.super.toYaml();
+		config.toYaml(yaml);
+		return yaml;
 	}
 
 

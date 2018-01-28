@@ -1,5 +1,6 @@
 package prompto.security;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import prompto.config.IStoredAuthenticationSourceConfiguration;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import prompto.store.IQueryBuilder;
+import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.IStored;
@@ -142,6 +144,21 @@ public class StoredUserInfoCache {
 			return (credentials == null || (credentials instanceof String && credentials.toString().isEmpty()));
 		}
 
+	}
+
+	public void createLogin(String login, String password) throws NoSuchAlgorithmException {
+		createLogin(store, login, password);
+	}
+	
+	public static void createLogin(IStore store, String login, String password) throws NoSuchAlgorithmException {
+		String salt = DigestMethod.newSalt();
+		IStorable storable = store.newStorable(Arrays.asList("User"), null);
+		storable.setData("login", login);
+		storable.setData("salt", salt);
+		storable.setData("method", "PBKDF2");
+		String digest = DigestMethod.forName("PBKDF2").digest(password, salt);
+		storable.setData("digest", digest);
+		store.store(storable);
 	}
 
 

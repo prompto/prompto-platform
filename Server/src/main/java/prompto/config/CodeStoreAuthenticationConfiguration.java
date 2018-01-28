@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 import com.esotericsoftware.yamlbeans.document.YamlSequence;
 
@@ -77,7 +76,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		return true;
 	}
 	
-	public YamlMapping toYaml(Mode mode) throws YamlException {
+	public YamlMapping toYaml(Mode mode) throws Throwable {
 		if(!isEnabled(mode))
 			return null;
 		YamlMapping settings = new YamlMapping();
@@ -86,8 +85,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		method.getAuthenticationMethodFactory().toYaml(yaml);
 		settings.setEntry("method", yaml);
 		IAuthenticationSourceConfiguration source = readAuthenticationSourceConfiguration(mode);
-		yaml = new YamlMapping();
-		source.getAuthenticationSourceFactory().toYaml(yaml);
+		yaml = source.getAuthenticationSourceFactory().toYaml();
 		settings.setEntry("source", yaml);
 		YamlSequence list = new YamlSequence();
 		for(String w : fetchWhiteList())

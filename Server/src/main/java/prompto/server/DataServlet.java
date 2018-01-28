@@ -48,6 +48,10 @@ public class DataServlet extends CleverServlet {
 		DataServlet.stores = stores;
 	}
 	
+	public static Map<String, IStore> getStores() {
+		return DataServlet.stores;
+	}
+	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
@@ -366,6 +370,8 @@ public class DataServlet extends CleverServlet {
 		generator.writeString("<binary>");
 		generator.writeEndObject();
 	}
+
+
 
 
 }

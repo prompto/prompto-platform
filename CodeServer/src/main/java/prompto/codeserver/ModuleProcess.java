@@ -95,7 +95,7 @@ public class ModuleProcess {
 		}
 	}
 
-	private static ModuleProcess createModuleProcess(Object dbId) throws Exception {
+	private static ModuleProcess createModuleProcess(Object dbId) throws Throwable {
 		IStored stored = IDataStore.getInstance().fetchUnique(dbId);
 		if(stored==null)
 			return null;
@@ -165,7 +165,7 @@ public class ModuleProcess {
 		this.stored = stored;
 	}
 
-	public void start() throws Exception {
+	public void start() throws Throwable {
 		this.port = SocketUtils.findAvailablePortInRange(8080, 9090); // TODO extract from security group
 		String[] args = buildCommandLineArgs();
 		ProcessBuilder builder = new ProcessBuilder(args)
@@ -203,7 +203,7 @@ public class ModuleProcess {
 	}
 	
 
-	private String[] buildCommandLineArgs() throws Exception {
+	private String[] buildCommandLineArgs() throws Throwable {
 		List<String> cmds = new ArrayList<String>();
 		cmds.add("java");
 		String debugPort = System.getenv("PROMPTO_DEBUG_TARGET_PORT");
@@ -217,7 +217,7 @@ public class ModuleProcess {
 		return cmds.toArray(new String[cmds.size()]);
 	}
 
-	private void addPromptoArgs(List<String> args) throws Exception {
+	private void addPromptoArgs(List<String> args) throws Throwable {
 		if(isYamlConfig())
 			addPromptoYamlConfigArgs(args);
 		else
@@ -251,7 +251,7 @@ public class ModuleProcess {
 		return cmdLine.contains("-yamlConfigFile");
 	}
 
-	private void addPromptoYamlConfigArgs(List<String> cmds) throws Exception {
+	private void addPromptoYamlConfigArgs(List<String> cmds) throws Throwable {
 		File currentFile = locateYamlConfigFile();
 		try(Reader reader = new FileReader(currentFile)) {
 			YamlDocument currentYaml = new YamlDocumentReader(reader).read();
@@ -271,7 +271,7 @@ public class ModuleProcess {
 	}
 
 	
-	private void writeSpecificYamlEntries(YamlDocument document) throws YamlException {
+	private void writeSpecificYamlEntries(YamlDocument document) throws Throwable {
 		document.setEntry("applicationName", getModuleName());
 		document.setEntry("applicationVersion", getModuleVersion());
 		document.setEntry("runtimeMode", Mode.DEVELOPMENT.name());
@@ -312,7 +312,7 @@ public class ModuleProcess {
 	}
 
 	
-	private void writeHttpYamlEntries(YamlDocument document) throws YamlException {
+	private void writeHttpYamlEntries(YamlDocument document) throws Throwable {
 		YamlEntry entry = document.getEntry("http");
 		YamlMapping http = (YamlMapping)entry.getValue();
 		http.setEntry("port", port);
@@ -332,7 +332,7 @@ public class ModuleProcess {
 		return stored.hasData("authenticationSettings");
 	}
 
-	private YamlMapping authenticationSettingsToYaml() throws YamlException {
+	private YamlMapping authenticationSettingsToYaml() throws Throwable {
 		if(hasAuthenticationSettings()) {
 			StoredRecordConfigurationReader reader = new StoredRecordConfigurationReader(IDataStore.getInstance(), stored);
 			CodeStoreAuthenticationConfiguration config = new CodeStoreAuthenticationConfiguration(reader);

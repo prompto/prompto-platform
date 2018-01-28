@@ -2,3 +2,7 @@ define serviceHandler as abstract method receiving Document doc
 
 define installServiceHandler as native method receiving Text path and serviceHandler doing:
     Java: $server.installHandler(path, serviceHandler);
+
+define createLogin as native method receiving login and password doing:
+    Java: $server.createLogin(login, password);
+    

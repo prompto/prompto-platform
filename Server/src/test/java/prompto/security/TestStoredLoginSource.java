@@ -7,11 +7,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IHttpConfiguration;
 import prompto.config.IAuthenticationConfiguration;
@@ -19,7 +20,6 @@ import prompto.config.IStoreConfiguration;
 import prompto.config.IStoredAuthenticationSourceConfiguration;
 import prompto.memstore.MemStore;
 import prompto.server.BaseServerTest;
-import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 
@@ -61,6 +61,11 @@ public class TestStoredLoginSource extends BaseServerTest {
 							}
 						}; 
 					}
+					
+					@Override
+					public void toYaml(YamlMapping yaml) {
+						throw new RuntimeException("Should never get there!");
+					}
 				}));
 	}
 	
@@ -68,7 +73,7 @@ public class TestStoredLoginSource extends BaseServerTest {
 	public void before() throws NoSuchAlgorithmException {
 		StoredUserInfoCache.KEEP_ALIVE_DELAY = 10;
 		store.deleteAll();
-		createUserUsingPBKDF2DigestMethod("john", "password");
+		StoredUserInfoCache.createLogin(store, "john", "password");
 	}
 
 	@Test
@@ -97,17 +102,6 @@ public class TestStoredLoginSource extends BaseServerTest {
 	public void testThatKnownUserIsRejectedWhenUsingIncorrectPassword() throws Exception {
 		int code = loadResource("john", "wrong");
 		assertEquals(401, code);
-	}
-
-	private void createUserUsingPBKDF2DigestMethod(String login, String password) throws NoSuchAlgorithmException {
-		String salt = DigestMethod.newSalt();
-		IStorable storable = store.newStorable(Arrays.asList("User"), null);
-		storable.setData("login", "john");
-		storable.setData("salt", salt);
-		storable.setData("method", "PBKDF2");
-		String digest = DigestMethod.forName("PBKDF2").digest(password, salt);
-		storable.setData("digest", digest);
-		store.store(storable);
 	}
 
 	static final String HTTP_CODE_PREFIX = "Server returned HTTP response code: ";

@@ -28,6 +28,7 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
+import prompto.security.IAuthenticationSource;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 
@@ -168,6 +169,10 @@ public class AppServer {
 		return jettyServer!=null  && jettyServer.isStarted();
 	}
 	
+	public static int getHttpPort() {
+		return jettyServer.getHttpPort();
+	}
+	
 	/* used by Server.pec */
 	public static void installHandler(String path, IMethodDeclaration method) {
 		// TODO check path (must start with '/') and method prototype
@@ -180,9 +185,9 @@ public class AppServer {
 	}
 
 	/* used by Server.pec */
-	public static int getHttpPort() {
-		return jettyServer.getHttpPort();
+	public static void createLogin(String login, String password) {
+		IAuthenticationSource source = IAuthenticationSource.instance.get();
+		if(source!=null)
+			source.createLogin(login, password);
 	}
-	
-
 }
