@@ -81,7 +81,7 @@ define EditStatus as enumerated Text with symbols:
 	DELETED with "DELETED" as value 
 	DIRTY with "DIRTY" as value
 
-define editStatus as EditStatus attribute with key index
+define editStatus as EditStatus attribute
 define stuff as Stuff attribute
 
 define EditedStuff as category with attributes editStatus and stuff
