@@ -3,7 +3,7 @@
 	"name" : "MyApp",
 	"version" : "1.0.0",
 	"description" : "A killer app!",
-	"entryPoint" : "printHelloMyApp",
+	"startMethod" : "printHelloMyApp",
 	"imageResource" : "MyApp.png",
 	"codeResource" : "MyApp.pec",
 	"dependencies" : [ { "name" : "Thesaurus", "version" : "1.0.0" } ]

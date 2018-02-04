@@ -3,7 +3,7 @@
 	"name" : "Soup",
 	"version" : "1.0.0",
 	"description" : "A supper app!",
-	"entryPoint" : "printHelloSoup",
+	"startMethod" : "printHelloSoup",
 	"imageResource" : "SoupApp.png",
 	"codeResource" : "SoupApp.pec",
 	"dependencies" : [ { "name" : "Thesaurus", "version" : "1.0.0" } ]

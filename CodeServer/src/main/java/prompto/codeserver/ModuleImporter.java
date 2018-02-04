@@ -7,8 +7,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import prompto.code.Batch;
 import prompto.code.Dependency;
-import prompto.code.WebSite;
+import prompto.code.Service;
 import prompto.code.ICodeStore;
 import prompto.code.ICodeStore.ModuleType;
 import prompto.code.Module;
@@ -54,8 +55,10 @@ public class ModuleImporter {
 		module.setName(readText(descriptor, "name"));
 		module.setVersion(PromptoVersion.parse(readText(descriptor, "version")));
 		module.setDescription(readText(descriptor, "description"));
-		if(module instanceof WebSite)
-			((WebSite)module).setEntryPoint(readText(descriptor, "entryPoint"));
+		if(module instanceof Service)
+			((Service)module).setServerAboutToStartMethod(readText(descriptor, "serverAboutToStartMethod"));
+		else if(module instanceof Batch)
+			((Batch)module).setStartMethod(readText(descriptor, "startMethod"));
 		JsonNode dependencies = descriptor.get("dependencies");
 		if(dependencies!=null)
 			module.setDependencies(populateDependencies(dependencies));

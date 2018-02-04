@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import prompto.code.Batch;
 import prompto.code.ICodeStore;
+import prompto.code.Thesaurus;
 import prompto.config.IRuntimeConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
@@ -33,39 +35,43 @@ public class TestModuleImporter {
 	public void testSales() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Sales/");
 		importer.importModule(ICodeStore.getInstance());
-		assertNotNull(importer.module);
+		assertTrue(importer.module instanceof Batch);
 		assertNotNull(importer.module.getDbId());
+		assertNotNull(((Batch)importer.module).getStartMethod());
 	}
 
 	@Test
 	public void testInventory() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Inventory/");
 		importer.importModule(ICodeStore.getInstance());
-		assertNotNull(importer.module);
+		assertTrue(importer.module instanceof Batch);
 		assertNotNull(importer.module.getDbId());
+		assertNotNull(((Batch)importer.module).getStartMethod());
 	}
 
 	@Test
 	public void testSoup() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Soup/");
 		importer.importModule(ICodeStore.getInstance());
-		assertNotNull(importer.module);
+		assertTrue(importer.module instanceof Batch);
 		assertNotNull(importer.module.getDbId());
+		assertNotNull(((Batch)importer.module).getStartMethod());
 	}
 
 	@Test
 	public void testMyApp() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/MyApp/");
 		importer.importModule(ICodeStore.getInstance());
-		assertNotNull(importer.module);
+		assertTrue(importer.module instanceof Batch);
 		assertNotNull(importer.module.getDbId());
+		assertNotNull(((Batch)importer.module).getStartMethod());
 	}
 	
 	@Test
 	public void testThesaurus() throws Exception {
 		ModuleImporter importer = new ModuleImporter("thesaurus/");
 		importer.importModule(ICodeStore.getInstance());
-		assertNotNull(importer.module);
+		assertTrue(importer.module instanceof Thesaurus);
 		assertNotNull(importer.module.getDbId());
 	}
 }

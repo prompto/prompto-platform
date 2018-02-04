@@ -38,20 +38,21 @@ define dependencies as storable Dependency[] attribute
 
 define Module as storable category with attributes name, version, description, image and dependencies
 
-define Thesaurus as storable Module
 define Library as storable Module
-define Script as storable Module
+define Thesaurus as storable Library
 
+define Application as storable Module
+define Script as storable Application
 
 define startMethod as storable Text attribute
-define Batch as storable Module with attribute startMethod
+define Batch as storable Application with attribute startMethod
 
 
 define serverAboutToStartMethod as storable Text attribute
 define Service as storable Module with attributes serverAboutToStartMethod and authenticationSettings
 
 define homePage as storable Text attribute
-define WebSite as storable Service with attribute homePage 
+define WebSite as storable Service and Application with attribute homePage 
 
 define symbols as storable Text[] attribute
 

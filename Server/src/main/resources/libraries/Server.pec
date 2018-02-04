@@ -5,4 +5,3 @@ define installServiceHandler as native method receiving Text path and serviceHan
 
 define createLogin as native method receiving login and password doing:
     Java: $server.createLogin(login, password);
-    
