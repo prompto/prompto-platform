@@ -29,7 +29,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>prompto.server.CodeServer</mainClass>
+					<mainClass>prompto.codeserver.CodeServer</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>
