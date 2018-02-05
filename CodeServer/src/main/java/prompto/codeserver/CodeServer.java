@@ -103,7 +103,7 @@ public class CodeServer {
 	}
 
 	private static URL[] getResourceURLs() {
-		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, ModuleImporter.class);
+		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, CodeServer.class);
 		return urls.toArray(new URL[urls.size()]);
 	}
 
