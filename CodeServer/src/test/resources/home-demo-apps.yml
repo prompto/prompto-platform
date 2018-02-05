@@ -9,7 +9,11 @@ mongoStore: &homeMongoStore
     
 dataStore: 
   <<: *homeMongoStore
-  dbName: TOOLS
+  dbName: DEMO-APPS
+
+targetStore:
+  <<: *homeMongoStore
+  dbName: DEMO-DATA
 
 http:
   port: 8080

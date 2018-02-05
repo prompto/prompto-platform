@@ -8,9 +8,13 @@ import java.util.Map;
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.config.CodeServerConfiguration;
+import prompto.config.IAuthenticationConfiguration;
+import prompto.config.IAuthenticationSourceConfiguration;
 import prompto.config.ICodeServerConfiguration;
 import prompto.config.IConfigurationReader;
+import prompto.config.IHttpConfiguration;
 import prompto.config.IStoreConfiguration;
+import prompto.config.IStoredAuthenticationSourceConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
@@ -28,19 +32,19 @@ import prompto.utils.Logger;
 public class CodeServer {
 
 	static Logger logger = new Logger();
+	static ICodeServerConfiguration config;
 	
 	public static void main(String[] args) throws Throwable {
 		main(args, null);
 	}
 	
 	public static void main(String[] args, Mode runtimeMode) throws Throwable {
-		ICodeServerConfiguration config = loadConfiguration(args);
-		config = config
-				.withServerAboutToStartMethod("serverAboutToStart")
-				.withHttpConfiguration(config.getHttpConfiguration().withSendsXAuthorization(true))
-				.withApplicationName("dev-center")
-				.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-				.withResourceURLs(CodeServer.getResourceURLs());
+		config = loadConfiguration(args);
+		config = config.withServerAboutToStartMethod("serverAboutToStart")
+					.withHttpConfiguration(config.getHttpConfiguration().withSendsXAuthorization(true))
+					.withApplicationName("dev-center")
+					.withApplicationVersion(PromptoVersion.parse("1.0.0"))
+					.withResourceURLs(CodeServer.getResourceURLs());
 		if(runtimeMode!=null)
 			config = config.withRuntimeMode(runtimeMode);
 		AppServer.main(config, CodeServer::initDataServletStores); 
@@ -57,26 +61,44 @@ public class CodeServer {
 	private static void initDataServletStores(ICodeServerConfiguration config) {
 		try {
 			Map<String, IStore> stores = new HashMap<>();
-			stores.put("TOOLS", newStore(config, "TOOLS"));
-			stores.put("APPS", newStore(config, "APPS"));
-			stores.put("DATA", newStore(config, "DATA"));
-			stores.put("LOGIN", newStore(config, "LOGIN"));
+			IStore store = fetchLoginStore(config);
+			if(store!=null)
+				stores.put("LOGIN", store);
+			store = IDataStore.getInstance();
+			if(store!=null)
+				stores.put("APPS", store);
+			store = newStore(config.getTargetStoreConfiguration());
+			if(store!=null)
+				stores.put("DATA", store);
 			DataServlet.setStores(stores);
 		} catch(Throwable t) {
 			throw new RuntimeException(t);
 		}
 	}
 
-	private static IStore newStore(ICodeServerConfiguration cfg, String dbName) throws Throwable {
-		if(cfg==null)
-			return new MemStore();
+	private static IStore fetchLoginStore(ICodeServerConfiguration config) throws Throwable {
+		IHttpConfiguration http = config.getHttpConfiguration();
+		if(http==null)
+			return null;
+		IAuthenticationConfiguration auth = http.getAuthenticationConfiguration();
+		if(auth==null)
+			return null;
+		IAuthenticationSourceConfiguration source = auth.getAuthenticationSourceConfiguration();
+		if(source instanceof IStoredAuthenticationSourceConfiguration)
+			return newStore(((IStoredAuthenticationSourceConfiguration)source).getStoreConfiguration());
+		else
+			return null;
+	}
+
+	private static IStore newStore(IStoreConfiguration config) throws Throwable {
+		if(config==null)
+			return null;
 		else {
-			IStoreConfiguration config = cfg.getDataStoreConfiguration();
 			IStoreFactory factory = IStoreFactory.newStoreFactory(config.getFactory());
 			if(factory instanceof MemStoreFactory)
 				return new MemStore();
 			else 
-				return factory.newStore(config.withDbName(dbName));
+				return factory.newStore(config);
 		}
 	}
 

@@ -1,0 +1,24 @@
+mongoStore: &atlasMongoStore
+  factory: prompto.store.mongo.MongoStoreFactory
+  replicaSet:
+    name: Seed-shard-0
+    nodes:
+      - host: Seed-shard-00-00-cp8j5.mongodb.net
+        port: 27017
+      - host: Seed-shard-00-01-cp8j5.mongodb.net
+        port: 27017
+      - host: Seed-shard-00-02-cp8j5.mongodb.net
+        port: 27017
+  user: admin
+  secretKey:
+    factory: prompto.security.PlainSecretKeyFactory
+    secret: Pink-floyd01
+    
+dataStore: 
+  <<: *atlasMongoStore
+  dbName: CODE
+
+http:
+  port: 8080
+webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
+  

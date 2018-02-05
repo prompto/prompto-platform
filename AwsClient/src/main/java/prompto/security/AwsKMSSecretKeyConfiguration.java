@@ -1,5 +1,6 @@
 package prompto.security;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IConfigurationReader;
@@ -27,7 +28,7 @@ public class AwsKMSSecretKeyConfiguration extends SecretKeyConfiguration impleme
 	}
 	
 	@Override
-	public YamlMapping toYaml() throws Throwable {
+	public YamlMapping toYaml() throws YamlException {
 		YamlMapping yaml = super.toYaml();
 		yaml.setEntry("awsRegion", reader.getString("awsRegion"));
 		yaml.setEntry("awsAccessKey", reader.getString("awsAccessKey"));
