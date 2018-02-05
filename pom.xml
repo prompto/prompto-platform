@@ -13,7 +13,7 @@
 		<module>MongoStore</module>
 		<module>Server</module>
 		<module>CodeServer</module>
-		<module>DataServer</module>
+		<module>AppStore</module>
 		<module>AwsClient</module>
 	</modules>
 
