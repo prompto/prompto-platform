@@ -59,7 +59,7 @@ define symbols as storable Text[] attribute
 define module as storable Module attribute
 
 define lastOpened as storable DateTime attribute
-define CodingSession as storable category with attributes user, module and lastOpened
+define CodingSession as storable category with attributes login, module and lastOpened
 define RecentSession as storable CodingSession
 
 define Stuff as storable category with attributes name, version and module
@@ -88,10 +88,10 @@ define stuff as Stuff attribute
 define EditedStuff as category with attributes editStatus and stuff
 
 define getRecentModules as method receiving Integer count doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
-	sessions = fetch RecentSession 1 to count where user = user order by lastOpened desc
+	sessions = fetch RecentSession 1 to count where login = login order by lastOpened desc
 	return session.module for each session in sessions
 
 define getAllModules as method doing:
@@ -99,20 +99,20 @@ define getAllModules as method doing:
 
 
 define getModuleDescription as method receiving dbId and Boolean register doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
 		raise NULL_REFERENCE
 	if register:
 		// use this opportunity to keep track of coding sessions
-		session = CodingSession with user as user, module as module and now as lastOpened 
+		session = CodingSession with login as login, module as module and now as lastOpened 
 		store session
 		// use this opportunity to keep track of recent projects
-		recent = fetch one mutable RecentSession where user = user and module = module
+		recent = fetch one mutable RecentSession where login = login and module = module
 		if recent is nothing:
-			recent = RecentSession with user as user, module as module and now as lastOpened 
+			recent = RecentSession with login as login, module as module and now as lastOpened 
 		else:
 			recent.lastOpened = now 
 		store recent
@@ -121,8 +121,8 @@ define getModuleDescription as method receiving dbId and Boolean register doing:
 
 
 define getModuleDeclarations as method receiving name and version doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
 	module = fetch one Module where name = name and version = version
 	if module is nothing:
@@ -131,8 +131,8 @@ define getModuleDeclarations as method receiving name and version doing:
 
 
 define getModuleDeclarations as method receiving dbId doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
@@ -141,8 +141,8 @@ define getModuleDeclarations as method receiving dbId doing:
 
 
 define getModuleResources as method receiving name and version doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
 	module = fetch one Module where name = name and version = version
 	if module is nothing:
@@ -151,8 +151,8 @@ define getModuleResources as method receiving name and version doing:
 
 
 define getModuleResources as method receiving dbId doing:
-	user = getHttpUser
-	if user is nothing:
+	login = getHttpUser
+	if login is nothing:
 		raise NULL_REFERENCE
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
