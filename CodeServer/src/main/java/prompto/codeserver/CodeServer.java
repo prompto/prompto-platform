@@ -28,6 +28,7 @@ import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
+import prompto.utils.ResourceUtils;
 
 public class CodeServer {
 
@@ -107,22 +108,38 @@ public class CodeServer {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
-	public static void createThesaurusAndImportSamples() {
+	public static void createThesaurus() {
 		try {
-			IStore dataStore = IDataStore.getInstance();
 			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
-			importer.importModule(ICodeStore.getInstance());
-			/* TODO split in 2 methods, making samples optional
-			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
-			for(URL sample : samples) {
-				importer = new ModuleImporter(sample);
-				importer.importModule(codeStore);
-			}
-			*/
-			dataStore.flush();
+			if(importer.importModule(ICodeStore.getInstance()))
+				populateToolsThesaurus(importer);
 		} catch(Throwable t) {
 			t.printStackTrace();
 		}
+	}
+	
+	
+	public static void importSamples() {
+		try {
+			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
+			for(URL sample : samples) {
+				ModuleImporter importer = new ModuleImporter(sample);
+				importer.importModule(ICodeStore.getInstance());
+			}
+		} catch(Throwable t) {
+			t.printStackTrace();
+		}
+	}
+
+	private static void populateToolsThesaurus(ModuleImporter importer) throws Exception {
+		if(!isToolsThesaurus())
+			return;
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AppStore.pec");
+		importer.storeAssociatedCode(ICodeStore.getInstance(), url);
+	}
+
+	private static boolean isToolsThesaurus() {
+		return config.getDataStoreConfiguration().getDbName().toLowerCase().contains("tools");
 	}
 
 

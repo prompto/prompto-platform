@@ -95,18 +95,19 @@ public class ModuleImporter {
 			return child.asText();
 	}
 
-	public void importModule(ICodeStore codeStore) throws Exception {
+	public boolean importModule(ICodeStore codeStore) throws Exception {
 		Module existing = codeStore.fetchModule(module.getType(), module.getName(), module.getVersion());
 		if(existing!=null)
-			return;
+			return false;
 		if(imageResource!=null)
 			module.setImage(Image.fromURL(imageResource).getStorableData());
 		codeStore.storeModule(module);	
 		if(codeResource!=null)
-			storeAssociatedCode(codeStore);
+			storeAssociatedCode(codeStore, codeResource);
+		return true;
 	}
 
-	private void storeAssociatedCode(ICodeStore codeStore) throws Exception {
+	public void storeAssociatedCode(ICodeStore codeStore, URL codeResource) throws Exception {
 		ImmutableCodeStore rcs = new ImmutableCodeStore(null, module.getType(), codeResource, module.getVersion());
 		codeStore.storeDeclarations(rcs.getDeclarations(), rcs.getModuleDialect(), module.getVersion(), module.getDbId());
 	}
