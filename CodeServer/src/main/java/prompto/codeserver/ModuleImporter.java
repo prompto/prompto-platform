@@ -27,6 +27,12 @@ public class ModuleImporter {
 	URL imageResource;
 	URL codeResource;
 	
+	public ModuleImporter(Module module, URL imageResource, URL codeResource) {
+		this.module = module;
+		this.imageResource = imageResource;
+		this.codeResource = codeResource;
+	}
+	
 	public ModuleImporter(String resourcePath) {
 		this(Thread.currentThread().getContextClassLoader().getResource(resourcePath));
 	}

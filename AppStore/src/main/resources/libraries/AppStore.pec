@@ -49,11 +49,16 @@ define homePage as storable Text attribute
 define WebSite as storable Service and Application with attribute homePage 
 
 define module as storable Module attribute
-define createThesaurusAndImportSamples as native method doing:
-	Java: prompto.codeserver.CodeServer.createThesaurusAndImportSamples();
+define demized as storable DateTime attribute
+define Release as storable category with attributes module, author, timeStamp and demized
+
+define release as storable Release attribute
+define Deployment as storable category with attributes release, url, author and timeStamp
+define createThesaurus as native method doing:
+	Java: prompto.codeserver.CodeServer.createThesaurus();
 
 define serverAboutToStart as method receiving Text{} params doing:
-	createThesaurusAndImportSamples
+	createThesaurus
 
 define lastOpened as storable DateTime attribute
 define CodingSession as storable category with attributes login, module and lastOpened

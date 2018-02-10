@@ -2,11 +2,17 @@ package prompto.codeserver;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import prompto.code.BaseCodeStore;
+import prompto.code.Dependency;
 import prompto.code.ICodeStore;
+import prompto.code.ImmutableCodeStore;
+import prompto.code.Library;
+import prompto.code.Module;
+import prompto.code.QueryableCodeStore;
 import prompto.config.CodeServerConfiguration;
 import prompto.config.IAuthenticationConfiguration;
 import prompto.config.IAuthenticationSourceConfiguration;
@@ -111,8 +117,9 @@ public class CodeServer {
 	public static void createThesaurus() {
 		try {
 			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
-			if(importer.importModule(ICodeStore.getInstance()))
-				populateToolsThesaurus(importer);
+			importer.importModule(ICodeStore.getInstance());
+			if(isToolsDataStore())
+				createToolsLibraries();
 		} catch(Throwable t) {
 			t.printStackTrace();
 		}
@@ -131,14 +138,30 @@ public class CodeServer {
 		}
 	}
 
-	private static void populateToolsThesaurus(ModuleImporter importer) throws Exception {
-		if(!isToolsThesaurus())
-			return;
-		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AppStore.pec");
-		importer.storeAssociatedCode(ICodeStore.getInstance(), url);
+	private static void createToolsLibraries() throws Exception {
+		ICodeStore runtime = ImmutableCodeStore.bootstrapRuntime(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
+		ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), runtime, null, null, null);
+		Module codeStoreLibrary = new Library();
+		codeStoreLibrary.setName("CodeStore");
+		codeStoreLibrary.setVersion(PromptoVersion.parse("1.0.0.0"));
+		codeStoreLibrary.setDescription("Code store model");
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/CodeStore.pec");
+		ModuleImporter importer = new ModuleImporter(codeStoreLibrary, null, url);
+		importer.importModule(codeStore);
+		Module appStoreLibrary = new Library();
+		appStoreLibrary.setName("AppStore");
+		appStoreLibrary.setVersion(PromptoVersion.parse("1.0.0.0"));
+		appStoreLibrary.setDescription("App store model");
+		Dependency dependency = new Dependency();
+		dependency.setName(codeStoreLibrary.getName());
+		dependency.setVersion(codeStoreLibrary.getVersion());
+		appStoreLibrary.setDependencies(Collections.singletonList(dependency));
+		url = Thread.currentThread().getContextClassLoader().getResource("libraries/AppStore.pec");
+		importer = new ModuleImporter(appStoreLibrary, null, url);
+		importer.importModule(codeStore);
 	}
 
-	private static boolean isToolsThesaurus() {
+	private static boolean isToolsDataStore() {
 		return config.getDataStoreConfiguration().getDbName().toLowerCase().contains("tools");
 	}
 
