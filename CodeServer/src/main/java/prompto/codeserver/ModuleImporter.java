@@ -15,6 +15,7 @@ import prompto.code.ICodeStore.ModuleType;
 import prompto.code.Module;
 import prompto.code.ImmutableCodeStore;
 import prompto.intrinsic.PromptoVersion;
+import prompto.utils.Logger;
 import prompto.value.Image;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +23,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ModuleImporter {
+
+	static Logger logger = new Logger();
 
 	Module module;
 	URL imageResource;
@@ -105,6 +108,7 @@ public class ModuleImporter {
 		Module existing = codeStore.fetchModule(module.getType(), module.getName(), module.getVersion());
 		if(existing!=null)
 			return false;
+		logger.info(()->"Importing module: " + module.getName() + " - " + module.getVersion());
 		if(imageResource!=null)
 			module.setImage(Image.fromURL(imageResource).getStorableData());
 		codeStore.storeModule(module);	
@@ -113,7 +117,7 @@ public class ModuleImporter {
 		return true;
 	}
 
-	public void storeAssociatedCode(ICodeStore codeStore, URL codeResource) throws Exception {
+	private void storeAssociatedCode(ICodeStore codeStore, URL codeResource) throws Exception {
 		ImmutableCodeStore rcs = new ImmutableCodeStore(null, module.getType(), codeResource, module.getVersion());
 		codeStore.storeDeclarations(rcs.getDeclarations(), rcs.getModuleDialect(), module.getVersion(), module.getDbId());
 	}
