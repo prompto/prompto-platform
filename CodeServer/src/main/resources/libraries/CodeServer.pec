@@ -45,6 +45,10 @@ define getAllModules as method doing:
 	return fetch all Module order by name
 
 
+define getAllLibraries as method doing:
+	return fetch all Library order by name, version desc
+
+
 define getModuleDescription as method receiving dbId and Boolean register doing:
 	login = getHttpUser
 	if login is nothing:
