@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.UuidCodec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
@@ -61,12 +63,13 @@ public class MongoStore implements IStore {
 	static final String AUTH_DB_NAME = "admin";
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
-		    MongoClient.getDefaultCodecRegistry(),
 		    CodecRegistries.fromCodecs(
 		    		new PromptoDateCodec(),
 		    		new PromptoTimeCodec(),
 		    		new PromptoDateTimeCodec(),
-		    		new PromptoVersionCodec())
+		    		new PromptoVersionCodec(),
+		    		new UuidCodec(UuidRepresentation.STANDARD)),
+				    MongoClient.getDefaultCodecRegistry()
 		);
 		 
 	MongoClient client;
