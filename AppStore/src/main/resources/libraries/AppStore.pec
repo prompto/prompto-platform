@@ -48,9 +48,23 @@ define Service as storable Module with attributes serverAboutToStartMethod and a
 define homePage as storable Text attribute
 define WebSite as storable Service and Application with attribute homePage 
 
+define ReleaseStatus as enumerated Text with symbols:
+    PENDING with "Pending" as value
+    CANCELLED with "Cancelled" as value
+    RELEASED with "Released" as value
+    ARCHIVED with "Archived" as value
+
 define module as storable Module attribute
-define demized as storable DateTime attribute
-define Release as storable category with attributes module, author, timeStamp and demized
+define releaseStatus as storable ReleaseStatus attribute with key index
+// not a member of Application because a given release might not succeed, so we might have multiple releases per application
+define Release as storable category with attributes module, author, timeStamp and releaseStatus
+
+define fetchReleases as method receiving releaseStatus doing:
+	return fetch all Release where releaseStatus = releaseStatus
+
+define fetchUnreleased as method doing:
+	apps = fetch all Application
+	return apps filtered with app where (fetch one Release where module = app) is nothing
 
 define release as storable Release attribute
 define Deployment as storable category with attributes release, url, author and timeStamp
@@ -99,6 +113,10 @@ define getRecentModules as method receiving Integer count doing:
 
 define getAllModules as method doing:
 	return fetch all Module order by name
+
+
+define getAllLibraries as method doing:
+	return fetch all Library order by name, version desc
 
 
 define getModuleDescription as method receiving dbId and Boolean register doing:
