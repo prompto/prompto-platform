@@ -220,6 +220,7 @@ public class DataServlet extends CleverServlet {
 			newEntry(Family.TIME, DataServlet::writePromptoTime),
 			newEntry(Family.DATETIME, DataServlet::writePromptoDateTime),
 			newEntry(Family.VERSION, DataServlet::writePromptoVersion),
+			newEntry(Family.ENUMERATED, (g,o)->g.writeString((String)o)), 
 			newEntry(Family.CATEGORY, (g,o)->g.writeString("<instance>")), 
 			newEntry(Family.IMAGE, DataServlet::writeImage),
 			newEntry(Family.BLOB, DataServlet::writeBlob)
