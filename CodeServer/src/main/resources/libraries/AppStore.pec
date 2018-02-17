@@ -55,16 +55,58 @@ define ReleaseStatus as enumerated Text with symbols:
     ARCHIVED with "Archived" as value
 
 define module as storable Module attribute
+define supersedesOlder as storable Boolean attribute
 define releaseStatus as storable ReleaseStatus attribute with key index
 // not a member of Application because a given release might not succeed, so we might have multiple releases per application
-define Release as storable category with attributes module, author, timeStamp and releaseStatus
+define Release as storable category with attributes module, supersedesOlder, author, timeStamp and releaseStatus
 
 define fetchReleases as method receiving releaseStatus doing:
 	return fetch all Release where releaseStatus = releaseStatus
 
 define fetchUnreleased as method doing:
 	apps = fetch all Application
-	return apps filtered with app where (fetch one Release where module = app) is nothing
+	return apps filtered with app where (fetch one Release where module = app and releaseStatus in [PENDING, RELEASED] ) is nothing
+
+define startRelease as method receiving dbId, supersedesOlder and Text[] signOffUsers doing:
+	module = fetch one Module where dbId = dbId
+	if module is nothing:
+		raise NULL_REFERENCE
+	author = getHttpUser
+	timeStamp = now
+	release = Release with module as module, supersedesOlder as supersedesOlder, author as author, timeStamp as timeStamp and PENDING as releaseStatus
+	store release
+
+define setReleaseStatus as method receiving dbId, releaseStatus doing:
+	release = fetch one mutable Release where dbId = dbId
+	if release is nothing:
+		raise NULL_REFERENCE
+	release.releaseStatus = releaseStatus
+	store release
+
+define coresCount as storable Integer attribute
+define memoryMegabytes as storable Integer attribute
+define storageGigabytes as storable Integer attribute
+
+define NodeSize as storable category with attributes coresCount, memoryMegabytes and storageGigabytes
+define nodeSize as storable NodeSize attribute
+define nodeCount as storable Integer attribute
+define dataCenters as storable Text[] attribute
 
 define release as storable Release attribute
-define Deployment as storable category with attributes release, url, author and timeStamp
+define Deployment as storable category with attributes release, url, nodeSize, nodeCount, dataCenters, author and timeStamp
+
+define fetchDeployed as method doing:
+	return fetch all Deployment
+
+define fetchUndeployed as method doing:
+	releases = fetchReleases with RELEASED as releaseStatus
+	return releases filtered with release where (fetch one Deployment where release = release) is nothing
+
+define deployRelease as method receiving dbId, nodeSize, nodeCount and dataCenters doing:
+	release = fetch one Release where dbId = dbId
+	if release is nothing:
+		raise NULL_REFERENCE
+	author = getHttpUser
+	timeStamp = now
+	deployment = Deployment with release as release, nodeSize as nodeSize, nodeCount as nodeCount, dataCenters as dataCenters, author as author and timeStamp as timeStamp
+	store deployment
