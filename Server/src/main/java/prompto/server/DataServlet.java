@@ -222,6 +222,7 @@ public class DataServlet extends CleverServlet {
 			newEntry(Family.VERSION, DataServlet::writePromptoVersion),
 			newEntry(Family.ENUMERATED, (g,o)->g.writeString((String)o)), 
 			newEntry(Family.CATEGORY, (g,o)->g.writeString("<instance>")), 
+			newEntry(Family.RESOURCE, (g,o)->g.writeString("<instance>")), 
 			newEntry(Family.IMAGE, DataServlet::writeImage),
 			newEntry(Family.BLOB, DataServlet::writeBlob)
 		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

@@ -87,10 +87,13 @@ define coresCount as storable Integer attribute
 define memoryMegabytes as storable Integer attribute
 define storageGigabytes as storable Integer attribute
 
+define DataCenter as storable category with attribute name 
+define dataCenter as storable DataCenter attribute
+define dataCenters as storable DataCenter[] attribute
+
 define NodeSize as storable category with attributes coresCount, memoryMegabytes and storageGigabytes
 define nodeSize as storable NodeSize attribute
 define nodeCount as storable Integer attribute
-define dataCenters as storable Text[] attribute
 
 define release as storable Release attribute
 define Deployment as storable category with attributes release, url, nodeSize, nodeCount, dataCenters, author and timeStamp

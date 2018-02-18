@@ -12,6 +12,6 @@ dataStore:
   dbName: TOOLS
 
 http:
-  port: 8080
+  port: 8081
 webSiteRoot: ../../prompto-app-launcher/AppLauncher/src/main/resources/
   
