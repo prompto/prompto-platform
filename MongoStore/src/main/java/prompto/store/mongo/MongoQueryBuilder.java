@@ -25,7 +25,8 @@ public class MongoQueryBuilder implements IQueryBuilder {
 		verifiers.put(MatchOp.EQUALS, MongoQueryBuilder::verifyEQUALS);
 		verifiers.put(MatchOp.ROUGHLY, MongoQueryBuilder::verifyROUGHLY);
 		verifiers.put(MatchOp.CONTAINS, MongoQueryBuilder::verifyCONTAINS);
-		verifiers.put(MatchOp.CONTAINED, MongoQueryBuilder::verifyCONTAINED);
+		verifiers.put(MatchOp.HAS, MongoQueryBuilder::verifyHAS);
+		verifiers.put(MatchOp.IN, MongoQueryBuilder::verifyIN);
 		verifiers.put(MatchOp.GREATER, MongoQueryBuilder::verifyGREATER);
 		verifiers.put(MatchOp.LESSER, MongoQueryBuilder::verifyLESSER);
 	}
@@ -47,9 +48,14 @@ public class MongoQueryBuilder implements IQueryBuilder {
 		else
 			return Filters.eq(getAttributeName(info), value);
 	}
+	
+	static Bson verifyHAS(AttributeInfo info, Object value) {
+		return Filters.eq(getAttributeName(info), value);
+	}
+
 
 	@SuppressWarnings("unchecked")
-	static Bson verifyCONTAINED(AttributeInfo info, Object value) {
+	static Bson verifyIN(AttributeInfo info, Object value) {
 		if(value instanceof Collection)
 			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(getAttributeName(info), v)).collect(Collectors.toList()));
 		else

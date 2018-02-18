@@ -37,17 +37,20 @@ class SOLRFilterBuilder {
 		case ROUGHLY:
 			pushExact(sb, info, operator, fieldValue);
 			break;
+		case CONTAINS:
+			pushContains(sb, info, operator, fieldValue);
+			break;
+		case HAS:
+			pushHas(sb, info, operator, fieldValue);
+			break;
+		case IN:
+			pushIn(sb, info, operator, fieldValue);
+			break;
 		case GREATER:
 			pushGreater(sb, info, operator, fieldValue);
 			break;
 		case LESSER:
 			pushLesser(sb, info, operator, fieldValue);
-			break;
-		case CONTAINS:
-			pushContains(sb, info, operator, fieldValue);
-			break;
-		case CONTAINED:
-			pushContained(sb, info, operator, fieldValue);
 			break;
 		}
 		stack.push(sb.toString());
@@ -63,7 +66,7 @@ class SOLRFilterBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void pushContained(StringBuilder sb, SOLRAttributeInfo info, MatchOp operator, Object fieldValue) {
+	private void pushIn(StringBuilder sb, SOLRAttributeInfo info, MatchOp operator, Object fieldValue) {
 		if(fieldValue instanceof Collection) {
 			sb.append('(');
 			((Collection<Object>)fieldValue).forEach((value)->{
@@ -89,6 +92,10 @@ class SOLRFilterBuilder {
 	}
 
 	private void pushExact(StringBuilder sb, SOLRAttributeInfo info, MatchOp operator, Object fieldValue) {
+		escape(sb, fieldValue);
+	}
+
+	private void pushHas(StringBuilder sb, SOLRAttributeInfo info, MatchOp operator, Object fieldValue) {
 		escape(sb, fieldValue);
 	}
 

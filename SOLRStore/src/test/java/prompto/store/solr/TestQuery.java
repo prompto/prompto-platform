@@ -249,7 +249,7 @@ public class TestQuery extends BaseSOLRTest {
 		store.addDocuments(doc);
 		store.flush();
 		// Test the basics
-		String query = "fetch one where aliases contains \"Jim\"";
+		String query = "fetch one where aliases has \"Jim\"";
 		IStored result = fetchOne(query);
 		assertNotNull(result);
 		assertEquals("John", result.getData("name"));

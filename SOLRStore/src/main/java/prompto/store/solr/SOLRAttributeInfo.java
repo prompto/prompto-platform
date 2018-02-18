@@ -51,17 +51,20 @@ class SOLRAttributeInfo extends AttributeInfo {
 		case ROUGHLY:
 			addFieldNameForRoughly(sb);
 			break;
+		case CONTAINS:
+			addFieldNameForContains(sb);
+			break;
+		case HAS:
+			addFieldNameForHas(sb);
+			break;
+		case IN:
+			addFieldNameForIn(sb);
+			break;
 		case LESSER:
 			addFieldNameForLesser(sb);
 			break;
 		case GREATER:
 			addFieldNameForGreater(sb);
-			break;
-		case CONTAINS:
-			addFieldNameForContains(sb);
-			break;
-		case CONTAINED:
-			addFieldNameForContained(sb);
 			break;
 		default:
 			throw new InvalidParameterException(operator.name());
@@ -135,7 +138,12 @@ class SOLRAttributeInfo extends AttributeInfo {
 		addTextFieldNameSuffix(sb, this::appendValue, this::appendKey, this::appendWords);
 	}
 	
-	private void addFieldNameForContained(StringBuilder sb) {
+	public void addFieldNameForHas(StringBuilder sb) {
+		sb.append(name);
+		addTextFieldNameSuffix(sb, this::appendValue, this::appendKey, this::appendWords);
+	}
+	
+	private void addFieldNameForIn(StringBuilder sb) {
 		sb.append(name);
 		addTextFieldNameSuffix(sb, this::appendKey, this::appendValue, this::appendWords);
 	}

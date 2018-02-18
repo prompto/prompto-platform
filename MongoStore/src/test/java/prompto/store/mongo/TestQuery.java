@@ -172,6 +172,22 @@ public class TestQuery extends BaseMongoTest {
 		assertNotNull(result);
 		assertEquals("John", result.getData("name"));
 	}
+	
+	@Test
+	public void testFetchListHas() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("aliases", Arrays.asList("John", "Janet"));
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where aliases has \"John\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
 
 	@Test
 	public void testFetchTextLesser() throws Exception {
