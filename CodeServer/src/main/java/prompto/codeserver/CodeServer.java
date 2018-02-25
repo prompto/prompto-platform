@@ -116,31 +116,39 @@ public class CodeServer {
 
 	public static void createThesaurus() {
 		try {
-			ModuleImporter importer = new ModuleImporter(Thread.currentThread().getContextClassLoader().getResource("thesaurus/"));
-			importer.importModule(ICodeStore.getInstance());
+			ICodeStore codeStore = codeStoreUsingDataStore();
+			URL url = Thread.currentThread().getContextClassLoader().getResource("thesaurus/");
+			doImportModule(codeStore, url);
 			if(isToolsDataStore())
-				createToolsLibraries();
+				createToolsLibraries(codeStore);
 		} catch(Throwable t) {
 			t.printStackTrace();
 		}
 	}
 	
 	
+	private static ICodeStore codeStoreUsingDataStore() {
+		ICodeStore runtime = ImmutableCodeStore.bootstrapRuntime(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
+		return new QueryableCodeStore(IDataStore.getInstance(), runtime, null, null, null);
+	}
+
+	private static void doImportModule(ICodeStore codeStore, URL url) throws Exception {
+		ModuleImporter importer = new ModuleImporter(url);
+		importer.importModule(codeStore);
+	}
+
 	public static void importSamples() {
 		try {
+			ICodeStore codeStore = codeStoreUsingDataStore();
 			Collection<URL> samples = ResourceUtils.listResourcesAt("samples/", null);
-			for(URL sample : samples) {
-				ModuleImporter importer = new ModuleImporter(sample);
-				importer.importModule(ICodeStore.getInstance());
-			}
+			for(URL sample : samples)
+				doImportModule(codeStore, sample);
 		} catch(Throwable t) {
 			t.printStackTrace();
 		}
 	}
 
-	private static void createToolsLibraries() throws Exception {
-		ICodeStore runtime = ImmutableCodeStore.bootstrapRuntime(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
-		ICodeStore codeStore = new QueryableCodeStore(IDataStore.getInstance(), runtime, null, null, null);
+	private static void createToolsLibraries(ICodeStore codeStore) throws Exception {
 		Module codeStoreLibrary = new Library();
 		codeStoreLibrary.setName("CodeStore");
 		codeStoreLibrary.setVersion(PromptoVersion.parse("1.0.0.0"));
