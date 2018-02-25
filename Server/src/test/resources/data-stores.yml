@@ -1,0 +1,26 @@
+mongoStore: &homeMongoStore
+   factory: prompto.store.mongo.MongoStoreFactory
+   host: 192.168.1.11
+   port: 27017
+   user: prompto
+   secretKey: 
+      factory: prompto.security.PlainSecretKeyFactory
+      secret: prompto
+dataStore: 
+   factory: prompto.store.mongo.MongoStoreFactory
+   host: 192.168.1.11
+   port: 27017
+   dbName: APPS
+   user: prompto
+   secretKey: 
+      factory: prompto.security.PlainSecretKeyFactory
+      secret: prompto
+http: 
+   port: 8171
+applicationName: Data stores
+applicationVersion: 0.0.1
+runtimeMode: DEVELOPMENT
+serverAboutToStart: main_Data_stores
+codeStore: 
+   <<: *homeMongoStore
+   dbName: TOOLS
