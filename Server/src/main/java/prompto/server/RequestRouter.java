@@ -127,7 +127,7 @@ public class RequestRouter {
 		}
 	}
 
-	private IValue interpretMethod(Context context2, Identifier methodName, ArgumentAssignmentList assignments, boolean main) {
+	private IValue interpretMethod(Context context, Identifier methodName, ArgumentAssignmentList assignments, boolean main) {
 		if(assignments.isEmpty() && main) {
 			Interpreter.interpretMainNoArgs(context, methodName);
 			return null;
