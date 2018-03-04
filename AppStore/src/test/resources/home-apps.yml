@@ -9,13 +9,9 @@ mongoStore: &homeMongoStore
     
 dataStore: 
   <<: *homeMongoStore
-  dbName: TOOLS
-
-targetStore:
-  <<: *homeMongoStore
   dbName: APPS
 
 http:
-  port: 8080
-webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
+  port: 8282
+webSiteRoot: ../../prompto-app-launcher/AppLauncher/src/main/resources/
   
