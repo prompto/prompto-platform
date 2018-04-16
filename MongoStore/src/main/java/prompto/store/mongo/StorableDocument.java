@@ -21,8 +21,8 @@ import com.mongodb.client.model.WriteModel;
 public class StorableDocument extends BaseDocument implements IStorable {
 
 	Document document;
-	IDbIdListener listener;
 	List<String> categories;
+	IDbIdListener listener;
 	boolean isUpdate; // partial updates require operations instead of values
 	
 	public StorableDocument(List<String> categories, IDbIdListener listener) {
@@ -51,6 +51,12 @@ public class StorableDocument extends BaseDocument implements IStorable {
 			ensureDocument(null);
 	}
 
+	@Override
+	public boolean isDirty() {
+		return document!=null;
+	}
+
+
 	public Document getDocument() {
 		return document;
 	}
@@ -71,11 +77,6 @@ public class StorableDocument extends BaseDocument implements IStorable {
 				document.put("category", categories); 
 				
 		}
-	}
-
-	@Override
-	public boolean isDirty() {
-		return document!=null;
 	}
 
 	@Override
