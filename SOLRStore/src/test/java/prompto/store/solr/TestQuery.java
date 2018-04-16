@@ -20,6 +20,7 @@ import prompto.grammar.Identifier;
 import prompto.parser.ECleverParser;
 import prompto.parser.EPromptoBuilder;
 import prompto.runtime.Context;
+import prompto.store.Family;
 import prompto.store.IQuery;
 import prompto.store.IStorable;
 import prompto.store.IStore;
@@ -43,10 +44,10 @@ public class TestQuery extends BaseSOLRTest {
 		registerAliasesAttribute();
 		registerQuantityAttribute();
 		registerQuantitiesAttribute();
-		createField("name", "text", false);
-		createField("aliases", "text", true);
-		createField("quantity", "integer", false);
-		createField("quantities", "integer", true);
+		createField("name", Family.TEXT, false);
+		createField("aliases", Family.TEXT, true);
+		createField("quantity", Family.INTEGER, false);
+		createField("quantities", Family.INTEGER, true);
 	}
 	
 	private void registerDbIdAttribute() throws SyntaxError {

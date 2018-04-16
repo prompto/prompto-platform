@@ -2,10 +2,12 @@ package prompto.store.solr;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
 import org.junit.After;
+
+import prompto.store.AttributeInfo;
+import prompto.store.Family;
 
 public abstract class BaseSOLRTest {
 	
@@ -24,19 +26,9 @@ public abstract class BaseSOLRTest {
 		store.shutdownContainer();
 	}
 	
-	protected void createField(String name, String type, boolean multi) {
-		Map<String, Object> options = new HashMap<>();
-		options.put("indexed", !"text".equals(type));
-		options.put("stored", true);
-		options.put("multiValued", multi);
-		store.addField(name, type, options);
-		if("text".equals(type)) {
-			options = new HashMap<>(options);
-			options.put("indexed", true);
-			options.put("stored", false);
-			store.addCopyField(name + "-key", type + "-key", options, name);
-			store.addCopyField(name + "-value", type + "-value", options, name);
-		}
+	protected void createField(String name, Family family, boolean collection) {
+		AttributeInfo info = new AttributeInfo(name, family, collection, false, false, false);
+		store.createOrUpdateAttributes(Collections.singletonList(info));
 	}
 
 

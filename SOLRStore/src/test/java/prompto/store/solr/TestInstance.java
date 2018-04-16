@@ -31,6 +31,7 @@ import prompto.literal.IntegerLiteral;
 import prompto.literal.TextLiteral;
 import prompto.literal.TimeLiteral;
 import prompto.runtime.Context;
+import prompto.store.Family;
 import prompto.store.IDataStore;
 import prompto.store.IQuery;
 import prompto.store.IStorable;
@@ -67,7 +68,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void before() throws Exception {
 		createStore("TestInstance");
 		store.startServerWithEmptyCore();
-		createField("category", "text", true);
+		createField("category", Family.TEXT, true);
 		IDataStore.setInstance(store);
 		context = Context.newGlobalContext();
 	}
@@ -75,9 +76,8 @@ public class TestInstance extends BaseSOLRTest {
 	@Test
 	public void testStoreTextField() throws Exception {
 		String fieldName = "msg";
-		String fieldType = "text";
 		String fieldValue = "hello";
-		createField(fieldName, fieldType, false);
+		createField(fieldName, Family.TEXT, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, TextType.instance());
 		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
 		store.store(instance.getStorable());
@@ -91,7 +91,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreIntegerField() throws Exception {
 		String fieldName = "int";
 		long fieldValue = 123;
-		createField(fieldName, "integer", false);
+		createField(fieldName, Family.INTEGER, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, IntegerType.instance());
 		instance.setMember(context, new Identifier(fieldName), new Integer(fieldValue));
 		store.store(instance.getStorable());
@@ -105,7 +105,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreDecimalField() throws Exception {
 		String fieldName = "decimal";
 		double fieldValue = 123.0;
-		createField(fieldName, "decimal", false);
+		createField(fieldName, Family.DECIMAL, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, IntegerType.instance());
 		instance.setMember(context, new Identifier(fieldName), new Decimal(fieldValue));
 		store.store(instance.getStorable());
@@ -119,7 +119,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreBooleanField() throws Exception {
 		String fieldName = "bool";
 		boolean fieldValue = true;
-		createField(fieldName, "boolean", false);
+		createField(fieldName, Family.BOOLEAN, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, BooleanType.instance());
 		instance.setMember(context, new Identifier(fieldName), Boolean.valueOf(fieldValue));
 		store.store(instance.getStorable());
@@ -133,7 +133,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreDateField() throws Exception {
 		String fieldName = "date";
 		PromptoDate fieldValue = PromptoDate.parse("2015-03-12");
-		createField(fieldName, "date", false);
+		createField(fieldName, Family.DATE, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, DateType.instance());
 		instance.setMember(context, new Identifier(fieldName), new Date(fieldValue));
 		store.store(instance.getStorable());
@@ -147,7 +147,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreTimeField() throws Exception {
 		String fieldName = "time";
 		PromptoTime fieldValue = PromptoTime.parse("13:15:16.012");
-		createField(fieldName, "time", false);
+		createField(fieldName, Family.TIME, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, TimeType.instance());
 		instance.setMember(context, new Identifier(fieldName), new Time(fieldValue));
 		store.store(instance.getStorable());
@@ -161,7 +161,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreDateTimeField() throws Exception {
 		String fieldName = "datetime";
 		PromptoDateTime fieldValue = PromptoDateTime.parse("2015-03-12T13:15:16.012Z");
-		createField(fieldName, "datetime", false);
+		createField(fieldName, Family.DATETIME, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, DateTimeType.instance());
 		instance.setMember(context, new Identifier(fieldName), new prompto.value.DateTime(fieldValue));
 		store.store(instance.getStorable());
@@ -175,7 +175,7 @@ public class TestInstance extends BaseSOLRTest {
 	public void testStoreUUIDField() throws Exception {
 		String fieldName = "uuid";
 		UUID fieldValue = UUID.randomUUID();
-		createField(fieldName, "uuid", false);
+		createField(fieldName, Family.UUID, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, UUIDType.instance());
 		instance.setMember(context, new Identifier(fieldName), new prompto.value.UUIDValue(fieldValue));
 		store.store(instance.getStorable());
@@ -208,8 +208,8 @@ public class TestInstance extends BaseSOLRTest {
 		String fieldValue = "textValue";
 		String childValue = "childValue";
 		String childName = "childField";
-		createField(fieldName, "text", false);
-		createField(childName, "db-ref", false);
+		createField(fieldName, Family.TEXT, false);
+		createField(childName, Family.CATEGORY, false);
 		IInstance parent = createInstanceWith2Attributes(fieldName, TextType.instance(), childName, type);
 		dumpDbIds("parent", parent);
 		ConcreteCategoryDeclaration cd = context.getRegisteredDeclaration(
