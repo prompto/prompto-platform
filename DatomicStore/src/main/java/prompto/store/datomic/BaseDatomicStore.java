@@ -1,8 +1,10 @@
 package prompto.store.datomic;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,7 +17,9 @@ import java.util.stream.Stream;
 import datomic.Connection;
 import datomic.Database;
 import datomic.Datom;
+import datomic.Entity;
 import datomic.Peer;
+import datomic.QueryRequest;
 import prompto.error.InternalError;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
@@ -33,15 +37,6 @@ import prompto.store.datomic.Constants.DbCardinality;
 
 public abstract class BaseDatomicStore implements IStore {
 
-	static Map<Family, String> familyTypes = new HashMap<>();
-	static Map<String, Family> typeFamilies = new HashMap<>();
-	
-	static {
-		familyTypes.put(Family.TEXT, ":db.type/string");
-		
-		familyTypes.forEach((f,t)->typeFamilies.put(t, f));
-	}
-			
 	String uri;
 	Connection cnx;
 	Map<Object, AttributeInfo> attributesByDbId = new HashMap<>();
@@ -79,9 +74,12 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	public void createOrUpdateAttributes(Collection<AttributeInfo> attributes) throws PromptoError {
-		List<Object> data = attributes.stream()
-				.map(this::createOrUpdateAttribute)
+		Stream<List<Object>> builtins = collectBuiltinAttributesFacts();
+		Stream<List<Object>> custom = attributes.stream()
+				.map(this::collectCustomAttributeFacts);
+		List<Object> data = Stream.concat(builtins,  custom)
 				.filter(Objects::nonNull)
+				.flatMap(List::stream)
 				.collect(Collectors.toList());
 		if(!data.isEmpty()) try {
 			cnx.transact(data).get();
@@ -90,6 +88,20 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 	}
 	
+	private Stream<List<Object>> collectBuiltinAttributesFacts() {
+		List<List<Object>> builtins = new ArrayList<>();
+		builtins.add(getFamilyAttributes());
+		return builtins.stream();
+	}
+
+	private List<Object> getFamilyAttributes() {
+		Map<String, Object> type = new HashMap<>();
+		type.put(Db.IDENT.dbName(), ":prompto/family");
+		type.put(Db.VALUETYPE.dbName(), ":db.type/string");
+		type.put(Db.CARDINALITY.dbName(), DbCardinality.ONE.dbName());
+		return Collections.singletonList(type);
+	}
+
 	public void dumpFacts(PrintStream output) {
 		Iterable<Datom> data = cnx.db().datoms(Database.EAVT);
 		Iterator<Datom> iter = data.iterator();
@@ -99,15 +111,12 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 	}
 
-	public Object createOrUpdateAttribute(AttributeInfo attribute) {
+	public List<Object> collectCustomAttributeFacts(AttributeInfo attribute) {
 		AttributeInfo info = getAttributeInfo(attribute.getName());
 		if(attribute.equals(info))
-			return null;
-		Map<String, Object> facts = new HashMap<>();
-		facts.put(Db.IDENT.dbName(), ":" + attribute.getName());
-		facts.put(Db.VALUETYPE.dbName(), familyTypes.get(attribute.getFamily()));
-		facts.put(Db.CARDINALITY.dbName(), attribute.isCollection() ? DbCardinality.MANY.dbName() : DbCardinality.ONE.dbName());
-		return facts;
+			return Collections.emptyList();
+		FamilyHelper helper = FamilyHelper.HELPERS.get(attribute.getFamily());
+		return helper.collectAttributeFacts(attribute);
 	}
 
 	public IStorable newStorable(List<String> categories, IDbIdListener listener) {
@@ -160,12 +169,29 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	public IStored fetchOne(IQuery query) throws PromptoError {
-		throw new UnsupportedOperationException();
+		Collection<Collection<Object>> all = fetch(query);
+		Iterator<Collection<Object>> iter = all.iterator();
+		if(!iter.hasNext())
+			return null;
+		Collection<Object> one = iter.next();
+		Object dbId = one.iterator().next();
+		Entity entity = cnx.db().entity(dbId);
+		return new StoredDocument(entity);
 	}
 
 	public IStoredIterable fetchMany(IQuery query) throws PromptoError {
 		throw new UnsupportedOperationException();
 	}
+
+	private Collection<Collection<Object>> fetch(IQuery query) {
+		DatomicQuery d = (DatomicQuery)query;
+		Object q = d.getQuery();
+		List<Object> inputs = d.getInputs();
+		inputs.set(0, cnx.db());
+		QueryRequest r = QueryRequest.create(q, inputs.toArray());
+		return Peer.query(r);
+	}
+
 
 	public void flush() throws PromptoError {
 		// no action required

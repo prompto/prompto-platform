@@ -1,13 +1,19 @@
 package prompto.store.datomic;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
-import datomic.Peer;
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDate;
+import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoTime;
+import prompto.store.Family;
 import prompto.store.IStorable;
 import prompto.store.datomic.Constants.DbPart;
+import datomic.Peer;
 
 public class StorableDocument implements IStorable  {
 
@@ -54,10 +60,30 @@ public class StorableDocument implements IStorable  {
 	@Override
 	public void setData(String name, Object value) throws PromptoError {
 		ensureFacts(null);
-		// TODO PromptoBinary
-		/* if(value instanceof PromptoBinary)
-			value = toBytes((PromptoBinary)value); */
-		facts.add(name, value);
+		if(value instanceof PromptoDate) {
+			facts.add(name + "/family", Family.DATE.name());
+			value = ((PromptoDate)value).toJavaTime();
+			facts.add(name, value);
+		} else if(value instanceof PromptoTime) {
+			facts.add(name + "/family", Family.TIME.name());
+			value = ((PromptoTime)value).getNativeMillisOfDay();
+			facts.add(name, value);
+		} else if(value instanceof PromptoDateTime) {
+			facts.add(name + "/family", Family.DATETIME.name());
+			String zone = ((PromptoDateTime)value).getTzName();
+			if(zone!=null)
+				facts.add(name + "/zone", zone);
+			else {
+				Long offset = ((PromptoDateTime)value).getTzOffset();
+				if(offset!=null)
+					facts.add(name + "/offset", offset);
+			}
+			value = new Date(((PromptoDateTime)value).toJavaTime());
+			facts.add(name, value);
+		} else if(value instanceof PromptoBinary) {
+			// TODO PromptoBinary value = toBytes((PromptoBinary)value);
+		} else
+			facts.add(name, value);
 	}
 
 	

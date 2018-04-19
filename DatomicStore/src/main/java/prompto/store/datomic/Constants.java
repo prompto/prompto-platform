@@ -7,6 +7,7 @@ public class Constants {
 		ID,
 		IDENT,
 		VALUETYPE("valueType"),
+		COMPONENT("isComponent"),
 		CARDINALITY,
 		INDEX,
 		FULLTEXT,

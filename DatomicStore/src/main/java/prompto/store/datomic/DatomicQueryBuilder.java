@@ -1,8 +1,8 @@
 package prompto.store.datomic;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 import java.util.Queue;
 
 import prompto.store.AttributeInfo;
@@ -11,18 +11,22 @@ import prompto.store.IQueryBuilder;
 
 public class DatomicQueryBuilder implements IQueryBuilder {
 
-	Map<String, Object> variables = new HashMap<>();
+	List<Object> values = new ArrayList<>();
 	Queue<String> clauses = new LinkedList<>();
-			
-	public <T> String addVariable(T value) {
-		String id = "v" + (1 + variables.size());
-		variables.put(id,  value);
+	
+	public DatomicQueryBuilder() {
+		values.add(null); // placeholder for db
+	}
+	
+	public <T> String addValue(T value) {
+		String id = "v" + values.size();
+		values.add(value);
 		return id;
 	}
 	
 	@Override
 	public <T> IQueryBuilder verify(AttributeInfo info, MatchOp match, T fieldValue) {
-		String id = addVariable(fieldValue);
+		String id = addValue(fieldValue);
 		String clause = "[?e :" + info.getName() + " ?" + id + "]";
 		clauses.offer(clause);
 		return this;
@@ -66,7 +70,8 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 
 	@Override
 	public IQuery build() {
-		return new DatomicQuery();
+		String query = "[:find ?e :in $ :where " + clauses.poll() + "]"; 
+		return new DatomicQuery(query, values);
 	}
 
 }
