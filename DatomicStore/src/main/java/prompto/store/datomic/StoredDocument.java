@@ -17,8 +17,7 @@ public class StoredDocument implements IStored {
 
 	@Override
 	public Object getDbId() {
-		// TODO Auto-generated method stub
-		return null;
+		return entity.get(Constants.Db.ID.dbName());
 	}
 
 	@Override

@@ -14,26 +14,26 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import prompto.error.InternalError;
+import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoBinary;
+import prompto.store.AttributeInfo;
+import prompto.store.IQuery;
+import prompto.store.IQueryBuilder;
+import prompto.store.IStorable;
+import prompto.store.IStorable.IDbIdListener;
+import prompto.store.IStore;
+import prompto.store.IStored;
+import prompto.store.IStoredIterable;
+import prompto.store.datomic.Constants.Db;
+import prompto.store.datomic.Constants.DbCardinality;
 import datomic.Connection;
 import datomic.Database;
 import datomic.Datom;
 import datomic.Entity;
 import datomic.Peer;
 import datomic.QueryRequest;
-import prompto.error.InternalError;
-import prompto.error.PromptoError;
-import prompto.intrinsic.PromptoBinary;
-import prompto.store.AttributeInfo;
-import prompto.store.Family;
-import prompto.store.IQuery;
-import prompto.store.IQueryBuilder;
-import prompto.store.IStorable;
-import prompto.store.IStore;
-import prompto.store.IStored;
-import prompto.store.IStoredIterable;
-import prompto.store.IStorable.IDbIdListener;
-import prompto.store.datomic.Constants.Db;
-import prompto.store.datomic.Constants.DbCardinality;
+import datomic.query.EntityMap;
 
 public abstract class BaseDatomicStore implements IStore {
 
@@ -161,7 +161,10 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	public IStored fetchUnique(Object dbId) throws PromptoError {
-		throw new UnsupportedOperationException();
+		if(dbId instanceof EntityMap)
+			dbId = ((EntityMap)dbId).valAt(Constants.Db.ID.dbName());
+		Entity entity = cnx.db().entity(dbId);
+		return new StoredDocument(entity);
 	}
 
 	public IQueryBuilder newQueryBuilder() {

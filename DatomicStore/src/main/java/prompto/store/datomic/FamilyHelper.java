@@ -35,6 +35,7 @@ public interface FamilyHelper {
 		helpers.put(Family.DATE, new DateHelper());
 		helpers.put(Family.TIME, new TimeHelper());
 		helpers.put(Family.DATETIME, new DateTimeHelper());
+		helpers.put(Family.CATEGORY, new CategoryHelper());
 		return helpers;
 	}
 
@@ -218,10 +219,27 @@ public interface FamilyHelper {
 			} else
 				return null;
 		}
+		
+	}
+
+	static class CategoryHelper implements FamilyHelper {
+		
+		@Override
+		public List<Object> collectAttributeFacts(AttributeInfo attribute) {
+			Map<String, Object> valueFacts = new HashMap<>();
+			valueFacts.put(Db.IDENT.dbName(), ":" + attribute.getName());
+			valueFacts.put(Db.VALUETYPE.dbName(), ":db.type/ref");
+			valueFacts.put(Db.CARDINALITY.dbName(), attribute.isCollection() ? DbCardinality.MANY.dbName() : DbCardinality.ONE.dbName());
+			return Collections.singletonList(valueFacts);
+		}
+		
+		@Override
+		public Object nativeToPrompto(Entity entity, String fieldName) {
+			return entity.get(":" + fieldName);
+		}
 
 			
 		
 	}
-
 
 }

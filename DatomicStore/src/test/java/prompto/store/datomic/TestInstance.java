@@ -193,9 +193,9 @@ public class TestInstance extends BaseDatomicTest {
 			Object dbId = value==null ? null : value.getStorableData();
 			System.err.print(which + ": ivalue: " + String.valueOf(dbId));
 			IStorable storable = instance.getStorable();
-			/*SolrInputDocument document = storable==null ? null : ((StorableDocument)storable).getDocument();
-			dbId = document == null ? null : document.getFieldValue("dbId");
-			System.err.println(", dbvalue: " + String.valueOf(dbId));*/
+			DatomicFacts facts = storable==null ? null : ((StorableDocument)storable).facts;
+			dbId = facts == null ? null : facts.getDbId();
+			System.err.println(", dbvalue: " + String.valueOf(dbId));
 		}
 	}
 	
