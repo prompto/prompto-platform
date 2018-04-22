@@ -3,6 +3,8 @@ package prompto.store.datomic;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import prompto.error.PromptoError;
@@ -97,9 +99,11 @@ public class StorableDocument implements IStorable  {
 			if(dbId==null)
 				dbId = Peer.tempid(DbPart.USER.dbName());
 			facts = new DatomicFacts(dbId);
-			if(categories!=null && !isUpdate)
+			if(categories!=null && !isUpdate) {
 				facts.add("category", categories); 
-				
+				final AtomicInteger counter = new AtomicInteger(0);
+				facts.add("category/ordered", categories.stream().map(c->"" + counter.incrementAndGet() + ":" + c).collect(Collectors.toSet())); 
+			}
 		}
 	}
 	

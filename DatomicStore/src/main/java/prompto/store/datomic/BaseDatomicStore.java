@@ -90,16 +90,20 @@ public abstract class BaseDatomicStore implements IStore {
 	
 	private Stream<List<Object>> collectBuiltinAttributesFacts() {
 		List<List<Object>> builtins = new ArrayList<>();
-		builtins.add(getFamilyAttributes());
+		builtins.add(getCategoryAttributes());
 		return builtins.stream();
 	}
 
-	private List<Object> getFamilyAttributes() {
-		Map<String, Object> type = new HashMap<>();
-		type.put(Db.IDENT.dbName(), ":prompto/family");
-		type.put(Db.VALUETYPE.dbName(), ":db.type/string");
-		type.put(Db.CARDINALITY.dbName(), DbCardinality.ONE.dbName());
-		return Collections.singletonList(type);
+	private List<Object> getCategoryAttributes() {
+		Map<String, Object> unordered = new HashMap<>();
+		unordered.put(Db.IDENT.dbName(), ":category");
+		unordered.put(Db.VALUETYPE.dbName(), ":db.type/string");
+		unordered.put(Db.CARDINALITY.dbName(), DbCardinality.MANY.dbName());
+		Map<String, Object> ordered = new HashMap<>();
+		ordered.put(Db.IDENT.dbName(), ":category/ordered");
+		ordered.put(Db.VALUETYPE.dbName(), ":db.type/string");
+		ordered.put(Db.CARDINALITY.dbName(), DbCardinality.MANY.dbName());
+		return Arrays.asList(unordered, ordered);
 	}
 
 	public void dumpFacts(PrintStream output) {

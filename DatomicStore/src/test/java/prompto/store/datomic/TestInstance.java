@@ -66,7 +66,6 @@ public class TestInstance extends BaseDatomicTest {
 	
 	@Before
 	public void before() throws Exception {
-		createField("category", Family.TEXT, true);
 		IDataStore.setInstance(store);
 		context = Context.newGlobalContext();
 	}

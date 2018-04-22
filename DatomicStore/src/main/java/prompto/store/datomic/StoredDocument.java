@@ -1,11 +1,14 @@
 package prompto.store.datomic;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import datomic.Entity;
 import prompto.error.PromptoError;
 import prompto.store.Family;
 import prompto.store.IStored;
+import datomic.Entity;
 
 public class StoredDocument implements IStored {
 
@@ -19,6 +22,21 @@ public class StoredDocument implements IStored {
 	public Object getDbId() {
 		return entity.get(Constants.Db.ID.dbName());
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> getCategories() {
+		Object categories = entity.get(":category/ordered");
+		if(categories instanceof Collection)
+			return ((Collection<String>)categories).stream()
+						.map(OrderedCategory::new)
+						.sorted()
+						.map(OrderedCategory::category)
+						.collect(Collectors.toList());
+		else 
+			throw new RuntimeException("Can't read categoies from " + categories.getClass().getName());
+	}
+
 
 	@Override
 	public boolean hasData(String fieldName) {

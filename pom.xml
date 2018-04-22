@@ -11,6 +11,7 @@
 		<module>SOLRFields</module>
 		<module>SOLRStore</module>
 		<module>MongoStore</module>
+		<module>DatomicStore</module>
 		<module>Server</module>
 		<module>CodeServer</module>
 		<module>AppStore</module>
