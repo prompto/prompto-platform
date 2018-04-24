@@ -33,6 +33,12 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	}
 	
 	@Override
+	public void setDbId(Object dbId) {
+		ensureDocument(null);
+		document.setField(IStore.dbIdName, dbId);
+	}
+	
+	@Override
 	public UUID getOrCreateDbId() {
 		ensureDocument(null);
 		SolrInputField dbIdField = document.getField(IStore.dbIdName);

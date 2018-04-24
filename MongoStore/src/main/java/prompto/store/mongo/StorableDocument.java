@@ -35,6 +35,14 @@ public class StorableDocument extends BaseDocument implements IStorable {
 		this.categories = Arrays.asList(categories);
 	}
 	
+	
+	@Override
+	public void setDbId(Object dbId) {
+		ensureDocument(null);
+		document.put("_id", dbId);
+		// TODO call listener
+	}
+	
 	@Override
 	public UUID getOrCreateDbId() {
 		ensureDocument(null);
