@@ -149,7 +149,31 @@ public abstract class BaseDatomicStore implements IStore {
 					.flatMap(Function.identity());
 		List<Object> list = all.collect(Collectors.toList());
 		if(!list.isEmpty()) try {
-			cnx.transact(list).get();
+			@SuppressWarnings("rawtypes")
+			Map result = cnx.transact(list).get();
+			if(storables!=null) {
+				Database dbAfter = (Database)result.get(Connection.DB_AFTER);
+				Object tempids = result.get(Connection.TEMPIDS);
+				for(IStorable storable : storables)
+					storable.setDbId(Peer.resolveTempid(dbAfter, tempids, storable.getOrCreateDbId()));
+			}
+		} catch(Exception e) {
+			throw new InternalError(e);
+		}
+	}
+	
+	public void storeFacts(DatomicFacts ... storables) throws PromptoError {
+		List<Object> list = Stream.of(storables)
+				.map(DatomicFacts::getAddedFacts)
+				.flatMap(Function.identity())
+				.collect(Collectors.toList());
+		try {
+			@SuppressWarnings("rawtypes")
+			Map result = cnx.transact(list).get();
+			Database dbAfter = (Database)result.get(Connection.DB_AFTER);
+			Object tempids = result.get(Connection.TEMPIDS);
+			for(DatomicFacts storable : storables)
+				storable.setDbId(Peer.resolveTempid(dbAfter, tempids, storable.getDbId()));
 		} catch(Exception e) {
 			throw new InternalError(e);
 		}
@@ -187,16 +211,68 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	public IStoredIterable fetchMany(IQuery query) throws PromptoError {
-		throw new UnsupportedOperationException();
+		return new StoredIterable((DatomicQuery)query);
 	}
+	
+	class StoredIterable implements IStoredIterable {
+
+		DatomicQuery query;
+		Collection<Collection<Object>> entities;
+		Long totalCount = null;
+		
+		StoredIterable(DatomicQuery query) {
+			this.query = query;
+			this.entities = fetch(query);
+		}
+		
+		@Override
+		public Iterator<IStored> iterator() {
+			Iterator<Collection<Object>> iter = entities.iterator();
+
+			return new Iterator<IStored>() {
+				@Override
+				public boolean hasNext() {
+					return iter.hasNext();
+				}
+				
+				@Override
+				public IStored next() {
+					Collection<Object> one = iter.next();
+					Object dbId = one.iterator().next();
+					Entity entity = cnx.db().entity(dbId);
+					return new StoredDocument(entity);
+				}
+			};
+		}
+		
+		@Override
+		public long totalLength() {
+			/* if(totalCount==null) {
+				if(query==null || query.predicate==null)
+					totalCount = collection.count();
+				else
+					totalCount = collection.count(query.predicate);
+			} */
+			return totalCount;
+		}
+		
+		@Override
+		public long length() {
+			return entities.size();
+		}
+	};
 
 	private Collection<Collection<Object>> fetch(IQuery query) {
-		DatomicQuery d = (DatomicQuery)query;
-		Object q = d.getQuery();
-		List<Object> inputs = d.getInputs();
-		inputs.set(0, cnx.db());
-		QueryRequest r = QueryRequest.create(q, inputs.toArray());
-		return Peer.query(r);
+		if(query==null)
+			return Peer.query("[:find ?e :in $ :where [?e :category _]]", cnx.db());
+		else {
+			DatomicQuery d = (DatomicQuery)query;
+			Object q = d.getQuery();
+			List<Object> inputs = d.getInputs();
+			inputs.set(0, cnx.db());
+			QueryRequest r = QueryRequest.create(q, inputs.toArray());
+			return Peer.query(r);
+		}
 	}
 
 

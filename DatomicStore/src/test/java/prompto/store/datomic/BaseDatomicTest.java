@@ -2,13 +2,17 @@ package prompto.store.datomic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collections;
+import java.util.Iterator;
 
 import org.junit.After;
 import org.junit.Before;
 
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
+import datomic.Database;
+import datomic.Datom;
 import datomic.Peer;
 
 public abstract class BaseDatomicTest {
@@ -35,5 +39,14 @@ public abstract class BaseDatomicTest {
 	}
 	
 
+	public void dumpFacts(PrintStream output) {
+		Iterable<Datom> data  = store.cnx.db().datoms(Database.EAVT);
+		Iterator<Datom> iter = data.iterator();
+		while(iter.hasNext()) {
+			Datom d = iter.next();
+			if(d.a().equals(10))
+				output.println(d.e().toString() + " " + d.a().toString() + " " + d.v().toString());
+		}
+	}
 	
 }

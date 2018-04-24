@@ -32,6 +32,12 @@ public class StorableDocument implements IStorable  {
 	public void setCategories(String[] categories) throws PromptoError {
 		this.categories = Arrays.asList(categories);
 	}
+	
+	@Override
+	public void setDbId(Object dbId) {
+		ensureFacts(null);
+		facts.setDbId(dbId);
+	}
 
 	@Override
 	public Object getOrCreateDbId() {
