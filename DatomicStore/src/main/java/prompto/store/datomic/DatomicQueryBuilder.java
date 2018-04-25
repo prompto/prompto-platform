@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
@@ -157,11 +156,8 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 	}
 
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public IQueryBuilder verify(AttributeInfo info, MatchOp match, Object fieldValue) {
-		List<String> inputs;
-		List<IPredicate> clauses;
 		IPredicate predicate;
 		switch(match) {
 			case CONTAINS:
@@ -172,6 +168,7 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 							"[(.contains ^String ?" + info.getName() + " ?" + addInput(fieldValue) + ")]");
 				break;
 			case EQUALS:
+			case IN:
 				predicate = new SingleMatchPredicate("[?e :" + info.getName() + " ?" + addInput(fieldValue) + "]");
 				break;
 			case ROUGHLY:
@@ -190,17 +187,6 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 						"[?e :" + info.getName() + " ?" + info.getName() + "]",
 						"[(< ?" + info.getName() + " ?" + addInput(fieldValue) + ")]"
 						);
-				break;
-			case IN:
-				inputs = new ArrayList<>();
-				inputs.add("e");
-				clauses = ((Collection<Object>)fieldValue).stream()
-							.map(v->{
-								String input =  addInput(v);
-								inputs.add(input);
-								return new SingleMatchPredicate("[?e :" + info.getName() + " ?" + input + "]");
-							}).collect(Collectors.toList());
-				predicate = new OrJoinPredicate(inputs, clauses);
 				break;
 			default:
 				throw new UnsupportedOperationException(match.name());
@@ -256,9 +242,15 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 		// TODO use Map instead of String to avoid reparsing by Datomic
 		StringBuilder sb = new StringBuilder("[:find ?e :in $ ");
 		for(int i=2;i<=inputs.size();i++) {
-			sb.append("?v");
-			sb.append(i-1);
-			sb.append(' ');
+			if(inputs.get(i-1) instanceof Collection) {
+				sb.append("[?v");
+				sb.append(i-1);
+				sb.append(" ...]");
+			} else {
+				sb.append("?v");
+				sb.append(i-1);
+				sb.append(' ');
+			}
 		}
 		sb.append(":where ");
 		IPredicate predicate = predicates.poll();
