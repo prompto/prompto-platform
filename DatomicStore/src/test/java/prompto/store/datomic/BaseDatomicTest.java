@@ -9,6 +9,8 @@ import java.util.Iterator;
 import org.junit.After;
 import org.junit.Before;
 
+import prompto.config.TempDirectories;
+import prompto.runtime.Mode;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import datomic.Database;
@@ -21,13 +23,15 @@ public abstract class BaseDatomicTest {
 	BaseDatomicStore store;
 	
 	@Before
-	public final void __before__() {
+	public final void __before__() throws IOException {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 		store = new FreeDatomicStore(this.getClass().getSimpleName());
 		store.connect();
 	}
 	
 	@After
-	public void after() throws IOException {
+	public final void __after__() throws IOException {
 		store.disconnect();
 		Peer.deleteDatabase(store.uri);
 	}

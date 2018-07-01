@@ -51,7 +51,8 @@ public abstract class BaseServerTest {
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
-			.withLoadRuntime(false);
+			.withLoadRuntime(false)
+			.withRuntimeMode(Mode.UNITTEST);
 	}
 
 	protected IHttpConfiguration getHttpsConfiguration() {

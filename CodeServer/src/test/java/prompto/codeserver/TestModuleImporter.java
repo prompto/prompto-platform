@@ -9,6 +9,7 @@ import prompto.code.Batch;
 import prompto.code.ICodeStore;
 import prompto.code.Thesaurus;
 import prompto.config.IRuntimeConfiguration;
+import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
@@ -19,6 +20,8 @@ public class TestModuleImporter {
 
 	@Before
 	public void before() throws Exception {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 		Standalone.bootstrapCodeStore(new MemStore(), newRuntimeConfig());
 
 	}

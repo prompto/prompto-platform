@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import com.mongodb.client.MongoDatabase;
 
+import prompto.config.TempDirectories;
+import prompto.runtime.Mode;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import de.flapdoodle.embed.mongo.Command;
@@ -35,6 +37,8 @@ public abstract class BaseMongoTest {
 		if(mongoPort==0)
 			mongoPort = Network.getFreeServerPort();
 		mongo = startMongo(mongoPort);
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 	}
 	
 	public static MongodExecutable startMongo(int mongoPort) throws IOException {

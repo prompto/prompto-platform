@@ -38,8 +38,7 @@ public class TestSOLRBootstrap {
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
-			.withLoadRuntime(false)
-			.withRuntimeMode(Mode.UNITTEST);
+			.withLoadRuntime(false);
 	}
 
 	private EmbeddedSOLRStore newEmbeddedStore() {

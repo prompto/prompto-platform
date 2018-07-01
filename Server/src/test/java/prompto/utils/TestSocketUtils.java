@@ -8,10 +8,21 @@ import java.net.ServerSocket;
 
 import javax.net.ServerSocketFactory;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import prompto.config.TempDirectories;
+import prompto.runtime.Mode;
 
 public class TestSocketUtils {
 
+	@Before
+	public void __before__() throws Throwable {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
+	}
+	
+	
 	@Test
 	public void testThatAValidPortIsReturned() throws IOException {
 		int port = SocketUtils.findAvailablePortInRange(8080,  9090);

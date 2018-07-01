@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.HttpConfiguration;
@@ -14,11 +15,19 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
+import prompto.config.TempDirectories;
 import prompto.config.YamlConfigurationReader;
+import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 
 public class TestConfig {
 	
+	@Before
+	public final void __before__() throws IOException {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
+	}
+
 	@Test
 	public void testFullYamlConfig() throws IOException {
 		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.yml")) {
