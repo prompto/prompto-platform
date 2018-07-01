@@ -10,8 +10,9 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.util.resource.PathResource;
 import org.eclipse.jetty.util.resource.Resource;
 
+import prompto.config.TempDirectories;
+import prompto.runtime.Mode;
 import prompto.transpiler.HtmlGenerator;
-import prompto.transpiler.Transpiler;
 import prompto.utils.Logger;
 import prompto.utils.YamlUtils;
 
@@ -27,8 +28,10 @@ public class TranspilerServlet extends CodeStoreServlet {
 	@Override
 	protected Resource getResource(HttpServletRequest request, String path) {
 		File htmlFile = getTranspiledHtmlFile(path);
+		// always rebuild in DEV/TEST mode
+		if(htmlFile.exists() && Mode.get().ordinal()>=Mode.DEVELOPMENT.ordinal()) 
+			htmlFile.delete();
 		if(htmlFile.exists()) 
-			// TODO skip in dev mode
 			return new PathResource(htmlFile);
 		try {
 			transpile(request, path, htmlFile);
@@ -36,12 +39,11 @@ public class TranspilerServlet extends CodeStoreServlet {
 		} catch(Throwable t) {
 			logger.error(()->"While transpiling '" + path + "'", t);
 			return null;
-			
 		}
 	}
 
 	private File getTranspiledHtmlFile(String path) {
-		File file = new File(Transpiler.getTranspiledDir(), path.replace(".page", ".html"));
+		File file = new File(TempDirectories.getTranspiledDir(), path.replace(".page", ".html"));
 		File parent = file.toPath().getParent().toFile();
 		if(!parent.exists()) {
 			parent.mkdirs();
