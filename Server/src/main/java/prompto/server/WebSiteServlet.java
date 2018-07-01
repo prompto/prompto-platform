@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -27,7 +29,7 @@ public class WebSiteServlet extends ResourceServlet {
 
 
 	@Override
-	protected Resource getResource(String path) {
+	protected Resource getResource(HttpServletRequest request, String path) {
 	   	final String realPath = URIUtil.canonicalPath(path);
         try {
             Resource resource = base.addPath(realPath);

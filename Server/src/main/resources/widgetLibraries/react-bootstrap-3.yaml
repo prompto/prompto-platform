@@ -1,0 +1,5 @@
+htmlEngine: react-16
+uiFramework: bootstrap-3
+javaScripts:
+  - https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.5/react-bootstrap.js
+  

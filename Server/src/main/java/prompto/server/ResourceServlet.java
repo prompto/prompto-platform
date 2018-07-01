@@ -44,7 +44,7 @@ public abstract class ResourceServlet extends CleverServlet {
     	builtIns = getBuiltInsResource();
 	}
     
-	protected abstract Resource getResource(String resourcePath);
+	protected abstract Resource getResource(HttpServletRequest request, String resourcePath);
 
 	
 	@Override
@@ -107,7 +107,7 @@ public abstract class ResourceServlet extends CleverServlet {
         if(resource!=null)
         	return resource;
         else
-        	return getResource(pathInContext);
+        	return getResource(request, pathInContext);
 	}
 
         

@@ -3,11 +3,15 @@ localMongoStore: &localMongoStore
   host: localhost
   port: 27017
 
+codeStore: 
+  <<: *localMongoStore
+  dbName: ROOT
+
 dataStore: 
   <<: *localMongoStore
-  dbName: TOOLS
+  dbName: CODE
 
 http:
-  port: 0
+  port: 8080
 webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   

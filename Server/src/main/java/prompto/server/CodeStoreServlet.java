@@ -1,5 +1,7 @@
 package prompto.server;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.jetty.util.resource.Resource;
 
 import prompto.code.ICodeStore;
@@ -13,7 +15,7 @@ public class CodeStoreServlet extends ResourceServlet {
 	}
 
 	@Override
-	protected Resource getResource(String path) {
+	protected Resource getResource(HttpServletRequest request, String path) {
 		try {
 			if(path.startsWith("/"))
 				path = path.substring(1);
