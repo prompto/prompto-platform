@@ -36,6 +36,7 @@ public abstract class BaseServerTest {
 	@Before
 	public void __before__() throws Throwable {
 		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
 		IServerConfiguration config = getServerConfig();
 		Mode.set(config.getRuntimeMode());
@@ -50,7 +51,6 @@ public abstract class BaseServerTest {
 			.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")
 			.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class))
-			.withRuntimeMode(Mode.UNITTEST)
 			.withLoadRuntime(false);
 	}
 

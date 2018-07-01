@@ -34,6 +34,7 @@ public class TestStoredRecordAuthenticationConfiguration extends BaseMongoTest {
 
 	@Before
 	public void before() throws Exception {
+		TempDirectories.create();
 		createStore("APPS");
 		Standalone.bootstrapCodeStore(store, newRuntimeConfig());
 	}

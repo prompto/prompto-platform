@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IRuntimeConfiguration;
+import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Mode;
@@ -24,6 +25,8 @@ public class TestSOLRBootstrap {
 	
 	@Before
 	public void before() throws Exception {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 		store = newEmbeddedStore();
 		((EmbeddedSOLRStore)store).startContainer();
 		((EmbeddedSOLRStore)store).startServerWithEmptyCore();
