@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IRuntimeConfiguration;
+import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Mode;
@@ -18,6 +19,8 @@ public class TestMongoBootstrap extends BaseMongoTest {
 	
 	@Before
 	public void before() throws Exception {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
 		createStore("APPS");
 		Standalone.bootstrapCodeStore(store, newRuntimeConfig());
 	}

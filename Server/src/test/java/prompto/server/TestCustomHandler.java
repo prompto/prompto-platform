@@ -2,16 +2,19 @@ package prompto.server;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.junit.Before;
 import org.junit.Test;
 
 import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
+import prompto.config.TempDirectories;
 import prompto.declaration.DeclarationList;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
@@ -24,6 +27,12 @@ import prompto.utils.SocketUtils;
 
 public class TestCustomHandler {
 
+	@Before
+	public void before() throws IOException {
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
+	}
+	
 	@Test
 	public void testParseAndCheck() throws Throwable {
 		int port = SocketUtils.findAvailablePortInRange(8000, 9000);
