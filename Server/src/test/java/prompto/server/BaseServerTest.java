@@ -18,6 +18,7 @@ import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
+import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.memstore.MemStore;
@@ -34,8 +35,10 @@ public abstract class BaseServerTest {
 	
 	@Before
 	public void __before__() throws Throwable {
+		TempDirectories.create();
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
 		IServerConfiguration config = getServerConfig();
+		Mode.set(config.getRuntimeMode());
 		bootstrapCodeStore(config);
 		AppServer.startServer(config, this::prepareHandlers, null);
 		assertTrue(AppServer.isStarted());
