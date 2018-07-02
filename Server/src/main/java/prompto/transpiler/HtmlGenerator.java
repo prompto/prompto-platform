@@ -69,7 +69,7 @@ public class HtmlGenerator {
 		printer.println("<head>");
 		generateTitle(printer);
 		generateIcon(printer);
-		generatePromptoscripts(printer);
+		generatePromptoScripts(printer);
 		generateLibraries(printer);
 		String widgetName = generateWidgetScript(printer);
 		if(widgetName!=null)
@@ -128,7 +128,7 @@ public class HtmlGenerator {
 		printer.println("</script>");
 	}
 
-	private void generatePromptoscripts(PrintWriter printer) {
+	private void generatePromptoScripts(PrintWriter printer) {
 		printer.println("<script src=\"https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js\"></script>");
 	}
 
