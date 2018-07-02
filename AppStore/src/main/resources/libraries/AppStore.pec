@@ -129,6 +129,7 @@ define storable as storable Boolean attribute
 define Declaration as storable Stuff with attributes dialect, storable and body 
 define AttributeDeclaration as storable Declaration
 define CategoryDeclaration as storable Declaration
+define WidgetDeclaration as storable CategoryDeclaration
 define symbols as storable Text[] attribute
 define EnumeratedDeclaration as storable Declaration with attribute symbols
 define MethodDeclaration as storable Declaration with attribute prototype
