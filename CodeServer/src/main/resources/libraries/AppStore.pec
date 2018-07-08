@@ -48,6 +48,11 @@ define Service as storable Module with attributes serverAboutToStartMethod and a
 define homePage as storable Text attribute
 define WebSite as storable Service and Application with attribute homePage 
 
+define widgetLibrary as storable Text attribute
+define htmlEngine as storable Text attribute
+define uiFramework as storable Text attribute
+define WebLibrary as storable Library with attributes widgetLibrary, htmlEngine and uiFramework
+
 define ReleaseStatus as enumerated Text with symbols:
     PENDING with "Pending" as value
     CANCELLED with "Cancelled" as value
