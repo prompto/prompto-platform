@@ -4,17 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
-import prompto.code.Batch;
-import prompto.code.Dependency;
-import prompto.code.Service;
 import prompto.code.ICodeStore;
-import prompto.code.ICodeStore.ModuleType;
-import prompto.code.Module;
 import prompto.code.ImmutableCodeStore;
-import prompto.intrinsic.PromptoVersion;
+import prompto.code.Module;
+import prompto.code.ModuleType;
 import prompto.utils.Logger;
 import prompto.value.Image;
 
@@ -60,32 +54,16 @@ public class ModuleImporter {
 			this.codeResource = new URL(url, descriptor.get("codeResource").asText());
 	}
 
-	private void populateModule(Module module, JsonNode descriptor) {
-		module.setName(readText(descriptor, "name"));
-		module.setVersion(PromptoVersion.parse(readText(descriptor, "version")));
-		module.setDescription(readText(descriptor, "description"));
-		if(module instanceof Service)
-			((Service)module).setServerAboutToStartMethod(readText(descriptor, "serverAboutToStartMethod"));
-		else if(module instanceof Batch)
-			((Batch)module).setStartMethod(readText(descriptor, "startMethod"));
-		JsonNode dependencies = descriptor.get("dependencies");
-		if(dependencies!=null)
-			module.setDependencies(populateDependencies(dependencies));
+	private void populateModule(Module module, JsonNode descriptor) throws Exception {
+		ModulePopulator populator = ModulePopulator.forType(module);
+		populator.populate(module, descriptor);
 	}
-
-	private List<Dependency> populateDependencies(JsonNode descriptor) {
-		List<Dependency> items = new ArrayList<>();
-		for(JsonNode node : descriptor) {
-			Dependency item = new Dependency();
-			item.setName(readText(node, "name"));
-			item.setVersion(PromptoVersion.parse(readText(node, "version")));
-			items.add(item);
-		}
-		return items;
-	}
+	
+	
 
 	private Module createModule(JsonNode descriptor) throws InstantiationException, IllegalAccessException {
-		ModuleType type = ModuleType.valueOf(readText(descriptor, "type"));
+		String typeName = descriptor.get("type").asText();
+		ModuleType type = ModuleType.valueOf(typeName);
 		return type.getModuleClass().newInstance();
 	}
 
@@ -94,14 +72,6 @@ public class ModuleImporter {
 		try(InputStream input = json.openStream()) {
 			return new ObjectMapper().readTree(input);
 		}
-	}
-
-	private String readText(JsonNode descriptor, String fieldName) {
-		JsonNode child = descriptor.get(fieldName);
-		if(child==null)
-			return null;
-		else
-			return child.asText();
 	}
 
 	public boolean importModule(ICodeStore codeStore) throws Exception {

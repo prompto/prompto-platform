@@ -8,6 +8,7 @@ import org.junit.Test;
 import prompto.code.Batch;
 import prompto.code.ICodeStore;
 import prompto.code.Thesaurus;
+import prompto.code.WebLibrary;
 import prompto.config.IRuntimeConfiguration;
 import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
@@ -35,7 +36,7 @@ public class TestModuleImporter {
 	}
 
 	@Test
-	public void testSales() throws Exception {
+	public void salesAppIsImported() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Sales/");
 		importer.importModule(ICodeStore.getInstance());
 		assertTrue(importer.module instanceof Batch);
@@ -44,7 +45,7 @@ public class TestModuleImporter {
 	}
 
 	@Test
-	public void testInventory() throws Exception {
+	public void inventoryAppIsImported() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Inventory/");
 		importer.importModule(ICodeStore.getInstance());
 		assertTrue(importer.module instanceof Batch);
@@ -53,7 +54,7 @@ public class TestModuleImporter {
 	}
 
 	@Test
-	public void testSoup() throws Exception {
+	public void soupAppIsImported() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/Soup/");
 		importer.importModule(ICodeStore.getInstance());
 		assertTrue(importer.module instanceof Batch);
@@ -62,7 +63,7 @@ public class TestModuleImporter {
 	}
 
 	@Test
-	public void testMyApp() throws Exception {
+	public void myAppIsImported() throws Exception {
 		ModuleImporter importer = new ModuleImporter("samples/MyApp/");
 		importer.importModule(ICodeStore.getInstance());
 		assertTrue(importer.module instanceof Batch);
@@ -71,10 +72,21 @@ public class TestModuleImporter {
 	}
 	
 	@Test
-	public void testThesaurus() throws Exception {
+	public void thesaurusIsImported() throws Exception {
 		ModuleImporter importer = new ModuleImporter("thesaurus/");
 		importer.importModule(ICodeStore.getInstance());
 		assertTrue(importer.module instanceof Thesaurus);
 		assertNotNull(importer.module.getDbId());
+	}
+	
+	@Test
+	public void reactBootstrapIsImported() throws Exception {
+		ModuleImporter importer = new ModuleImporter("react-bootstrap-3/");
+		importer.importModule(ICodeStore.getInstance());
+		assertTrue(importer.module instanceof WebLibrary);
+		assertNotNull(importer.module.getDbId());
+		assertNotNull(((WebLibrary)importer.module).getWidgetLibrary());
+		assertNull(((WebLibrary)importer.module).getHtmlEngine());
+		assertNull(((WebLibrary)importer.module).getUIFramework());
 	}
 }

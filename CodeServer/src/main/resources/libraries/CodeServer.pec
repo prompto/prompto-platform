@@ -1,8 +1,8 @@
-define createThesaurus as native method doing:
-	Java: prompto.codeserver.CodeServer.createThesaurus();
+define createLibraries as native method doing:
+	Java: prompto.codeserver.CodeServer.createLibraries();
 
 define serverAboutToStart as method receiving Text{} params doing:
-	createThesaurus
+	createLibraries
 
 define lastOpened as storable DateTime attribute
 define CodingSession as storable category with attributes login, module and lastOpened

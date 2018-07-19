@@ -1,0 +1,9 @@
+{
+	"type" : "WEBLIBRARY",
+	"name" : "React-Bootstrap-3",
+	"version" : "1.0.0",
+	"description" : "React-bootstrap-3 widgets",
+	"widgetLibrary" : "react-bootstrap-3",
+	"codeResource" : "React-Bootstrap-3.pec",
+	"dependencies" : [ { "name" : "Thesaurus", "version" : "1.0.0" } ]
+}

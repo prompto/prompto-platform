@@ -114,11 +114,10 @@ public class CodeServer {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
-	public static void createThesaurus() {
+	public static void createLibraries() {
 		try {
 			ICodeStore codeStore = codeStoreUsingDataStore();
-			URL url = Thread.currentThread().getContextClassLoader().getResource("thesaurus/");
-			doImportModule(codeStore, url);
+			createResourceLibraries(codeStore, "thesaurus/", "react-bootstrap-3/");
 			if(isToolsDataStore())
 				createToolsLibraries(codeStore);
 		} catch(Throwable t) {
@@ -127,6 +126,13 @@ public class CodeServer {
 	}
 	
 	
+	private static void createResourceLibraries(ICodeStore codeStore, String ... resources) throws Exception {
+		for(String resource : resources) {
+			URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
+			doImportModule(codeStore, url);
+		}
+	}
+
 	private static ICodeStore codeStoreUsingDataStore() {
 		ICodeStore runtime = ImmutableCodeStore.bootstrapRuntime(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
 		return new QueryableCodeStore(IDataStore.getInstance(), runtime, null, null, null);

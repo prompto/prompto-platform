@@ -1,0 +1,6 @@
+define Button as native widget with bindings:
+	define category bindings as:
+		JavaScript: Button from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
