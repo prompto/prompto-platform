@@ -4,3 +4,80 @@ define Button as native widget with bindings:
 and methods:
 	define render as method returning Html doing:
 		JavaScript: return this.render();
+
+define Checkbox as native widget with bindings:
+	define category bindings as:
+		JavaScript: Checkbox from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define InputGroup as native widget with bindings:
+	define category bindings as:
+		JavaScript: InputGroup from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define FormGroup as native widget with bindings:
+	define category bindings as:
+		JavaScript: FormGroup from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define FormControl as native widget with bindings:
+	define category bindings as:
+		JavaScript: FormControl from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define ControlLabel as native widget with bindings:
+	define category bindings as:
+		JavaScript: ControlLabel from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define HelpBlock as native widget with bindings:
+	define category bindings as:
+		JavaScript: HelpBlock from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
+define Modal as native widget with bindings:
+	define category bindings as:
+		JavaScript: Modal from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+		
+define ModalHeader as native widget with bindings:
+	define category bindings as:
+		JavaScript: Modal.Header from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+		
+define ModalFooter as native widget with bindings:
+	define category bindings as:
+		JavaScript: Modal.Footer from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+		
+define ModalBody as native widget with bindings:
+	define category bindings as:
+		JavaScript: Modal.Body from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+		
+define ModalTitle as native widget with bindings:
+	define category bindings as:
+		JavaScript: Modal.Title from module: ReactBootstrap
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
