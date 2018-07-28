@@ -213,26 +213,29 @@ define deleteModule as method receiving dbId doing:
 	flush
 
 
+define getModuleTypeName as method receiving module doing:
+	// TODO use reflection once available
+	if module is a Batch:
+		return "Batch"
+	else if module is a Script:
+		return "Script"
+	else if module is a WebSite:
+		return "WebSite"
+	else if module is a Service:
+		return "Service"
+	else if module is a Library:
+		return "Library"
+	else if module is a WebLibrary:
+		return "WebLibrary"
+	else
+		return "<unknown>"
+
 define exportModule as method receiving dbId doing:
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
 		raise NULL_REFERENCE
-	// TODO use reflection once available
-	type = ""
-	if module is a Batch:
-		type = "Batch"
-	else if module is a Script:
-		type = "Script"
-	else if module is a WebSite:
-		type = "WebSite"
-	else if module is a Service:
-		type = "Service"
-	else if module is a Library:
-		type = "Library"
-	else if module is a WebLibrary:
-		type = "WebLibrary"
 	doc = Document
-	doc.type = type
+	doc.type = getModuleTypeName module
 	doc.name = module.name
 	doc.version = module.version
 	doc.description = module.description

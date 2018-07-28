@@ -48,6 +48,11 @@ define Service as storable Module with attributes serverAboutToStartMethod and a
 define homePage as storable Text attribute
 define WebSite as storable Service and Application with attribute homePage 
 
+define widgetLibrary as storable Text attribute
+define htmlEngine as storable Text attribute
+define uiFramework as storable Text attribute
+define WebLibrary as storable Library with attributes widgetLibrary, htmlEngine and uiFramework
+
 define ReleaseStatus as enumerated Text with symbols:
     PENDING with "Pending" as value
     CANCELLED with "Cancelled" as value
@@ -113,11 +118,11 @@ define deployRelease as method receiving dbId, nodeSize, nodeCount and dataCente
 	timeStamp = now
 	deployment = Deployment with release as release, nodeSize as nodeSize, nodeCount as nodeCount, dataCenters as dataCenters, author as author and timeStamp as timeStamp
 	store deployment
-define createThesaurus as native method doing:
-	Java: prompto.codeserver.CodeServer.createThesaurus();
+define createLibraries as native method doing:
+	Java: prompto.codeserver.CodeServer.createLibraries();
 
 define serverAboutToStart as method receiving Text{} params doing:
-	createThesaurus
+	createLibraries
 
 define lastOpened as storable DateTime attribute
 define CodingSession as storable category with attributes login, module and lastOpened
@@ -174,12 +179,12 @@ define getModuleDescription as method receiving dbId and Boolean register doing:
 		raise NULL_REFERENCE
 	if register:
 		// use this opportunity to keep track of coding sessions
-		session = CodingSession with login as login, module as module and now as lastOpened 
+		session = CodingSession with login, module and now as lastOpened 
 		store session
 		// use this opportunity to keep track of recent projects
 		recent = fetch one mutable RecentSession where login = login and module = module
 		if recent is nothing:
-			recent = RecentSession with login as login, module as module and now as lastOpened 
+			recent = RecentSession with login, module and now as lastOpened 
 		else:
 			recent.lastOpened = now 
 		store recent
@@ -240,8 +245,9 @@ define storeEdited as method receiving EditedStuff[] edited doing:
 define createScript as method receiving name, description = nothing doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
-	deps = [Dependency from lib]
-	module = Script with name as name, 'v0.0.1' as version, description as description and deps as dependencies
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = Script with name, version, description and dependencies
 	store module
 	flush
 
@@ -249,8 +255,19 @@ define createScript as method receiving name, description = nothing doing:
 define createLibrary as method receiving name, description = nothing doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
-	deps = [Dependency from lib]
-	module = Library with name as name, 'v0.0.1' as version, description as description and deps as dependencies
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = Library with name, version, description and dependencies
+	store module
+	flush
+
+
+define createWebLibrary as method receiving name, description = nothing, widgetLibrary, htmlEngine and uiFramework doing:
+	// at minimal, all modules depend on Thesaurus
+	lib = fetch one Library where name = "Thesaurus"
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = WebLibrary with name, version, description, widgetLibrary, htmlEngine, uiFramework and dependencies
 	store module
 	flush
 
@@ -258,9 +275,10 @@ define createLibrary as method receiving name, description = nothing doing:
 define createBatch as method receiving name, description = nothing and startMethod doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
-	deps = [Dependency from lib]
-	module = Batch with name as name, 'v0.0.1' as version, description as description, startMethod as startMethod and deps as dependencies
-	decl = createStartMethod with module as module and startMethod as name
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = Batch with name, version, description, startMethod and dependencies
+	decl = createStartMethod with module and startMethod as name
 	store decl, module
 	flush
 
@@ -268,9 +286,10 @@ define createBatch as method receiving name, description = nothing and startMeth
 define createService as method receiving name, description = nothing and serverAboutToStartMethod doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
-	deps = [Dependency from lib]
-	module = Service with name as name, 'v0.0.1' as version, description as description, serverAboutToStartMethod as serverAboutToStartMethod and deps as dependencies
-	decl = createStartMethod with module as module and serverAboutToStartMethod as name
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = Service with name, version, description, serverAboutToStartMethod and dependencies
+	decl = createStartMethod with module and serverAboutToStartMethod as name
 	store decl, module
 	flush
 
@@ -278,10 +297,11 @@ define createService as method receiving name, description = nothing and serverA
 define createWebSite as method receiving name, description = nothing, image = nothing, serverAboutToStartMethod and homePage doing:
 	// at minimal, all modules depend on Thesaurus
 	lib = fetch one Library where name = "Thesaurus"
-	deps = [Dependency from lib]
-	module = WebSite with name as name, 'v0.0.1' as version, description as description, image as image, serverAboutToStartMethod as serverAboutToStartMethod, homePage as homePage and deps as dependencies
-	decl = createStartMethod with module as module and serverAboutToStartMethod as name
-	page = createHomePage with module as module and homePage as name
+	dependencies = [Dependency from lib]
+	version = 'v0.0.1'
+	module = WebSite with name, version, description, image, serverAboutToStartMethod, homePage and dependencies
+	decl = createStartMethod with module and serverAboutToStartMethod as name
+	page = createHomePage with module and homePage as name
 	store decl, page, module
 	flush
 
@@ -289,13 +309,13 @@ define createWebSite as method receiving name, description = nothing, image = no
 define createStartMethod as method receiving module and name doing:
 	body = "define " + name + " as method receiving Text{} options doing:\n"
 	body = body + "\tprint \"Hello " + module.name + "\"\n" 
-	decl = MethodDeclaration with name as name, 'v0.0.1' as version, "E" as dialect, "Text{}" as prototype, body as body and module as module
+	decl = MethodDeclaration with name, 'v0.0.1' as version, "E" as dialect, "Text{}" as prototype, body and module
 	return decl 
 
 
 define createHomePage as method receiving module and name doing:
 	body = "<!DOCTYPE html>\n<html>\n\t<head>\n\t</head>\n\t<body>\n\t\tHello!\n\t</body>\n</html>"
-	page = TextResource with name as name, 'v0.0.1' as version, "text/html" as mimeType, body as body and module as module
+	page = TextResource with name, 'v0.0.1' as version, "text/html" as mimeType, body and module
 	return page
 
 
@@ -313,24 +333,29 @@ define deleteModule as method receiving dbId doing:
 	flush
 
 
+define getModuleTypeName as method receiving module doing:
+	// TODO use reflection once available
+	if module is a Batch:
+		return "Batch"
+	else if module is a Script:
+		return "Script"
+	else if module is a WebSite:
+		return "WebSite"
+	else if module is a Service:
+		return "Service"
+	else if module is a Library:
+		return "Library"
+	else if module is a WebLibrary:
+		return "WebLibrary"
+	else
+		return "<unknown>"
+
 define exportModule as method receiving dbId doing:
 	module = fetch one Module where dbId = dbId
 	if module is nothing:
 		raise NULL_REFERENCE
-	// TODO use reflection once available
-	type = ""
-	if module is a Batch:
-		type = "batch"
-	else if module is a Script:
-		type = "script"
-	else if module is a WebSite:
-		type = "website"
-	else if module is a Service:
-		type = "service"
-	else if module is a Library:
-		type = "library"
 	doc = Document
-	doc.type = type
+	doc.type = getModuleTypeName module
 	doc.name = module.name
 	doc.version = module.version
 	doc.description = module.description
@@ -341,8 +366,13 @@ define exportModule as method receiving dbId doing:
 		doc.serverAboutToStartMethod = module.serverAboutToStartMethod
 	if module is a WebSite:
 		doc.homePage = module.homePage
+	if module is a WebLibrary:
+		doc.widgetLibrary = module.widgetLibrary
+		doc.htmlEngine = module.htmlEngine
+		doc.uiFramework = module.uiFramework
 	components = [] as Stuff[]
 	fetched = fetch all mutable Stuff where module = module
+	// don't re-export module itself
 	for each component in fetched:
 		component.module = Nothing 
 		components = components + [component]
