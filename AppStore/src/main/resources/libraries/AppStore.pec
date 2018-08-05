@@ -347,7 +347,7 @@ define getModuleTypeName as method receiving module doing:
 		return "Library"
 	else if module is a WebLibrary:
 		return "WebLibrary"
-	else
+	else:
 		return "<unknown>"
 
 define exportModule as method receiving dbId doing:
