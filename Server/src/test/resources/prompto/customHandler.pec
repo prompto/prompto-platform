@@ -9,7 +9,7 @@ define gitHandler as method receiving Document doc doing:
 define ec2Handler as method receiving Document doc doing:
 	print "" + doc.data + ", " + doc.doto
 
-define serverAboutToStart as method receiving Text{} args doing:
+define serverAboutToStart as method receiving Text<:> args doing:
 	installServiceHandler with "/git/*" as path and gitHandler as serviceHandler
 	installServiceHandler with "/ec2/*" as path and ec2Handler as serviceHandler
 	invoke: isRunningOnEC2
