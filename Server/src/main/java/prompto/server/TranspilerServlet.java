@@ -12,6 +12,7 @@ import org.eclipse.jetty.util.resource.Resource;
 
 import prompto.config.TempDirectories;
 import prompto.runtime.Mode;
+import prompto.runtime.Standalone;
 import prompto.transpiler.HtmlGenerator;
 import prompto.utils.Logger;
 import prompto.utils.YamlUtils;
@@ -63,7 +64,7 @@ public class TranspilerServlet extends CodeStoreServlet {
 			String userAgent = request.getHeader(HttpHeader.USER_AGENT.asString());
 			Map<String, Object> pageConfig = YamlUtils.readResource(()->resource.getInputStream());
 			HtmlGenerator generator = new HtmlGenerator(userAgent, pageConfig);
-			generator.generate(htmlFile);
+			generator.generate(Standalone.getGlobalContext(), htmlFile);
 		}
 	}
 

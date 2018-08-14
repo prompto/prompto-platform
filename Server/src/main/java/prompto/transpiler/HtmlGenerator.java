@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import prompto.code.ICodeStore;
+import prompto.declaration.CategoryDeclaration;
+import prompto.declaration.WrappingWidgetDeclaration;
 import prompto.declaration.IDeclaration;
 import prompto.declaration.IWidgetDeclaration;
 import prompto.runtime.Context;
@@ -31,19 +33,19 @@ public class HtmlGenerator {
 		this.pageConfig = pageConfig;
 	}
 
-	public void generate(File htmlFile) throws IOException {
+	public void generate(Context context, File htmlFile) throws IOException {
 		try(OutputStream output = new FileOutputStream(htmlFile) ) {
 			try(Writer writer = new OutputStreamWriter(output)) {
 				try(PrintWriter printer = new PrintWriter(writer)) {
-					generate(printer);
+					generate(context, printer);
 				}
 			}
 		}
 	}
 
-	private void generate(PrintWriter printer) throws IOException {
+	private void generate(Context context, PrintWriter printer) throws IOException {
 		generateProlog(printer);
-		generateHeader(printer);
+		generateHeader(context, printer);
 		generateBody(printer);
 		generateEpilog(printer);
 	}
@@ -65,19 +67,19 @@ public class HtmlGenerator {
 		printer.println("<html>");
 	}
 
-	private void generateHeader(PrintWriter printer) throws IOException {
+	private void generateHeader(Context context, PrintWriter printer) throws IOException {
 		printer.println("<head>");
 		generateTitle(printer);
 		generateIcon(printer);
 		generatePromptoScripts(printer);
 		generateLibraries(printer);
-		String widgetName = generateWidgetScript(printer);
+		String widgetName = generateWidgetScript(context, printer);
 		if(widgetName!=null)
 			generateRenderBody(printer, widgetName);
 		printer.println("</head>");
 	}
 
-	private String generateWidgetScript(PrintWriter printer) {
+	private String generateWidgetScript(Context context, PrintWriter printer) {
 		Map<String, Object> body = getBodyConfig();
 		if(body==null)
 			return null;
@@ -86,7 +88,7 @@ public class HtmlGenerator {
 			logger.warn(()->"Expected a 'widget' key");
 			return null;
 		} else if(value instanceof String)
-			return generateWidgetScript(printer, (String)value);
+			return generateWidgetScript(context, printer, (String)value);
 		else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 			return null;
@@ -95,7 +97,7 @@ public class HtmlGenerator {
 	
 	
 	
-	private String generateWidgetScript(PrintWriter printer, String widgetName) {
+	private String generateWidgetScript(Context context, PrintWriter printer, String widgetName) {
 		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchLatestDeclarations(widgetName);
 		if(decls==null) {
 			logger.warn(()->"No such declaration '"+ widgetName + "'!");
@@ -107,16 +109,17 @@ public class HtmlGenerator {
 			return null;
 		}
 		IDeclaration decl = iter.next();
-		if(!(decl instanceof IWidgetDeclaration)) {
+		if(decl instanceof CategoryDeclaration && !((CategoryDeclaration)decl).isAWidget(context)) {
 			logger.warn(()->"Not a widget '"+ widgetName + "'!");
 			return null;
 		}
-		generateWidgetScript(printer, (IWidgetDeclaration)decl);
+		IWidgetDeclaration widget = decl instanceof IWidgetDeclaration ? (IWidgetDeclaration)decl : new WrappingWidgetDeclaration((CategoryDeclaration)decl);
+		generateWidgetScript(printer, widget);
 		return widgetName;
 	}
 
 
-
+	
 
 	private void generateWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
