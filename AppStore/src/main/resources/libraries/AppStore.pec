@@ -121,7 +121,7 @@ define deployRelease as method receiving dbId, nodeSize, nodeCount and dataCente
 define createLibraries as native method doing:
 	Java: prompto.codeserver.CodeServer.createLibraries();
 
-define serverAboutToStart as method receiving Text{} params doing:
+define serverAboutToStart as method receiving Text<:> params doing:
 	createLibraries
 
 define lastOpened as storable DateTime attribute
@@ -307,9 +307,9 @@ define createWebSite as method receiving name, description = nothing, image = no
 
 
 define createStartMethod as method receiving module and name doing:
-	body = "define " + name + " as method receiving Text{} options doing:\n"
+	body = "define " + name + " as method receiving Text<:> options doing:\n"
 	body = body + "\tprint \"Hello " + module.name + "\"\n" 
-	decl = MethodDeclaration with name, 'v0.0.1' as version, "E" as dialect, "Text{}" as prototype, body and module
+	decl = MethodDeclaration with name, 'v0.0.1' as version, "E" as dialect, "Text<:>" as prototype, body and module
 	return decl 
 
 
