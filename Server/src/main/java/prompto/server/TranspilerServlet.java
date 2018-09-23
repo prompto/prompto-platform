@@ -59,7 +59,7 @@ public class TranspilerServlet extends CodeStoreServlet {
 			if(htmlFile.exists())
 				return;
 			Resource resource = super.getResource(request, path);
-			if(!resource.exists())
+			if(resource==null || !resource.exists())
 				return;
 			String userAgent = request.getHeader(HttpHeader.USER_AGENT.asString());
 			Map<String, Object> pageConfig = YamlUtils.readResource(()->resource.getInputStream());
