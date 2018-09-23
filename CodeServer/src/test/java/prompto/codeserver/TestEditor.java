@@ -2,49 +2,13 @@ package prompto.codeserver;
 
 import static org.junit.Assert.*;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import prompto.server.AppServer;
-
 @Category(SeleniumTests.class)
-public class TestEditor extends BaseWebTest {
-
-	@BeforeClass
-	public static void startCodeServer() throws Throwable {
-		String[] args = {
-				"-testMode",
-				"true",
-				"-http-port",
-				"-1",
-				"-codeStore-factory",
-				"prompto.store.solr.SOLRStoreFactory",
-				"-codeStore-root",
-				"target/test-classes/solr-test",
-				"-codeStore-dbName",
-				"APPS",
-				"-dataStore-factory",
-				"prompto.store.solr.SOLRStoreFactory",
-				"-dataStore-root",
-				"target/test-classes/solr-test",
-				"-codeStore-dbName",
-				"DATA"
-		};
-		CodeServer.main(args);
-		HTTP_PORT = AppServer.getHttpPort();
-	}
-	
-	@AfterClass
-	public static void stopCodeServer() throws Exception {
-		AppServer.stop();
-	}
-	
-	
-	static int HTTP_PORT;
+public class TestEditor extends BaseUITest {
 
 	static final String editorURL(String dbId, String name) {
 		return "http://localhost:" + HTTP_PORT + "/ide/index.html?"

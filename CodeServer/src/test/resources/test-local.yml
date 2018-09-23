@@ -1,0 +1,17 @@
+localMongoStore: &localMongoStore
+  factory: prompto.store.mongo.MongoStoreFactory
+  host: localhost
+  port: 27018
+
+codeStore: 
+  <<: *localMongoStore
+  dbName: ROOT
+
+dataStore: 
+  <<: *localMongoStore
+  dbName: CODE
+
+http:
+  port: 8888
+webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
+  

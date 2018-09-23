@@ -1,0 +1,11 @@
+widget ButtonOnClickCallbackIsCalledPage {
+
+    method buttonClicked(ClickEvent event) {
+        print("ok!");
+    }
+    
+	Html method render () {
+		return <Button onClick={buttonClicked} >Hello "Button"!</Button>;
+	}
+	
+}

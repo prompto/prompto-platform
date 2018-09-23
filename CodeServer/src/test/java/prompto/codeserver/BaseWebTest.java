@@ -21,7 +21,6 @@ import prompto.expression.UnresolvedIdentifier;
 import prompto.grammar.EqOp;
 import prompto.grammar.Identifier;
 import prompto.literal.TextLiteral;
-import prompto.selenium.HtmlUnitWebDriverFactory;
 import prompto.selenium.WebDriverFactory;
 import prompto.server.AppServer;
 import prompto.store.AttributeInfo;
@@ -49,7 +48,7 @@ public abstract class BaseWebTest {
 	
 	@SuppressWarnings("unchecked")
 	static void loadWebDriver() throws Exception {
-		String className = properties.getProperty("web-driver-factory", HtmlUnitWebDriverFactory.class.getName());
+		String className = properties.getProperty("web-driver-factory");
 		Class<? extends WebDriverFactory> klass = (Class<? extends WebDriverFactory>)Class.forName(className);
 		webDriver = klass.newInstance().newDriver(properties);
 		webDriver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
@@ -119,7 +118,7 @@ public abstract class BaseWebTest {
 		builder.verify(AttributeInfo.NAME, MatchOp.EQUALS, name);
 		builder.and();
 		IStored stored = store.fetchOne(builder.build());
-		return stored.getDbId().toString();
+		return stored!=null ? stored.getDbId().toString() : null;
 	}
 
 	

@@ -1,0 +1,5 @@
+header:
+  widgetLibrary: react-bootstrap-3
+
+body:
+  widget: ButtonOnClickCallbackIsCalledPage
