@@ -2,7 +2,7 @@ native method log(Text value) {
 	JavaScript: document.getElementById("out").appendChild(document.createTextNode(value));
 }
 
-widget ButtonOnClickCallbackIsCalledPage {
+widget ButtonOnClickCallbackIsCalledPage extends ReactWidget {
 
     method buttonClicked(ClickEvent event) {
         log("ok!");
