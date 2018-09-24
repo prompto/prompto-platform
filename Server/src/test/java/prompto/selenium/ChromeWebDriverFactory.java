@@ -5,11 +5,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Properties;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+
+import prompto.utils.ResourceUtils;
 
 public class ChromeWebDriverFactory implements WebDriverFactory {
 
@@ -36,15 +39,28 @@ public class ChromeWebDriverFactory implements WebDriverFactory {
 	}
 
 	private static File locateChromeDriver(String osName) {
-		URL url = Thread.currentThread().getContextClassLoader().getResource("prompto/selenium/drivers/" + osName + "/chromedriver");
-		if("file".equals(url.getProtocol())) try {
+		String resourceName = "prompto/selenium/drivers/" + osName + "/chromedriver";
+		URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
+		if("file".equals(url.getProtocol())) 
+			return driverFile(url);
+		else if("jar".equals(url.getProtocol())) try {
+			Path temp = Files.createTempFile("chromedriver_", "");
+			ResourceUtils.copyResourceToFile(url, temp);
+			return driverFile(temp.toUri().toURL());
+		} catch(IOException e) {
+			throw new UnsupportedOperationException(e.getMessage());
+		} else
+			throw new UnsupportedOperationException("Unsupported protocol: " + url.getProtocol());
+	}
+
+	private static File driverFile(URL url) {
+		try {
 			File file = new File(url.toURI());
 			Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rwxr-xr-x"));
 			return file;
 		} catch(URISyntaxException | IOException e) {
 			throw new RuntimeException(e);
-		} else
-			throw new UnsupportedOperationException("Unsupported protocol: " + url.getProtocol());
+		}
 	}
 
 	@Override

@@ -11,29 +11,18 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import prompto.expression.EqualsExpression;
-import prompto.expression.IPredicateExpression;
-import prompto.expression.UnresolvedIdentifier;
-import prompto.grammar.EqOp;
-import prompto.grammar.Identifier;
-import prompto.literal.TextLiteral;
 import prompto.selenium.WebDriverFactory;
-import prompto.server.AppServer;
 import prompto.store.AttributeInfo;
-import prompto.store.Family;
 import prompto.store.IDataStore;
 import prompto.store.IQueryBuilder;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStore;
 import prompto.store.IStored;
-import prompto.type.CategoryType;
 
-@SuppressWarnings("unused")
-public abstract class BaseWebTest {
+public abstract class BaseBrowserTest {
 
 	protected static WebDriver webDriver;
 	protected static Properties properties;

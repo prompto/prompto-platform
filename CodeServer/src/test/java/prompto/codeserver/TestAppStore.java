@@ -11,7 +11,7 @@ import org.openqa.selenium.WebElement;
 
 import prompto.server.AppServer;
 
-public class TestAppStore extends BaseWebTest {
+public class TestAppStore extends BaseBrowserTest {
 
 	@BeforeClass
 	public static void startCodeServer() throws Throwable {
