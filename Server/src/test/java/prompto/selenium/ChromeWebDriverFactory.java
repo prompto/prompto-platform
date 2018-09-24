@@ -41,7 +41,9 @@ public class ChromeWebDriverFactory implements WebDriverFactory {
 	private static File locateChromeDriver(String osName) {
 		String resourceName = "prompto/selenium/drivers/" + osName + "/chromedriver";
 		URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
-		if("file".equals(url.getProtocol())) 
+		if(url==null)
+			throw new UnsupportedOperationException("Driver not found: " + resourceName);
+		else if("file".equals(url.getProtocol())) 
 			return driverFile(url);
 		else if("jar".equals(url.getProtocol())) try {
 			Path temp = Files.createTempFile("chromedriver_", "");
