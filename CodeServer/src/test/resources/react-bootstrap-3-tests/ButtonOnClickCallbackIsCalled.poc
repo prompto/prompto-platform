@@ -1,11 +1,18 @@
+native method log(Text value) {
+	JavaScript: document.getElementById("out").appendChild(document.createTextNode(value));
+}
+
 widget ButtonOnClickCallbackIsCalledPage {
 
     method buttonClicked(ClickEvent event) {
-        print("ok!");
+        log("ok!");
     }
     
 	Html method render () {
-		return <Button onClick={buttonClicked} >Hello "Button"!</Button>;
+		return <div>
+			<div id="out"></div>
+			<Button id="button" onClick={buttonClicked} >Hello "Button"!</Button>
+			</div>;
 	}
 	
 }

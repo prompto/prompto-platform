@@ -1,11 +1,15 @@
 package prompto.codeserver;
 
+import static org.junit.Assert.*;
+
 import java.net.URL;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
@@ -49,6 +53,10 @@ public class TestReactBootstrap3 extends BaseUITest {
 	public void buttonOnClickCallbackIsCalled() throws Exception {
 		linkResources("ButtonOnClickCallbackIsCalled", Dialect.O);
 		loadPage("ButtonOnClickCallbackIsCalled");
+		WebElement button = waitElement(By.id("button"), 2);
+		button.click();
+		WebElement out = waitElement(By.id("out"), 2);
+		assertEquals("ok!", out.getText());
 	}
 	
 

@@ -51,7 +51,7 @@ public class TestAppStore extends BaseWebTest {
 		webDriver.get(ROOT_URL + HTTP_PORT + "/");
 		webDriver.switchTo().frame("content-frame");
 		String dbId = getDbIdForModule("Inventory");
-		WebElement we = waitElement(By.id(dbId));
+		WebElement we = waitElement(By.id(dbId), 2);
 		assertTrue(we.getText().startsWith("Inventory"));
 	}
 

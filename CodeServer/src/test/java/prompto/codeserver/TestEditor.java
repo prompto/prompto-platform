@@ -36,10 +36,10 @@ public class TestEditor extends BaseUITest {
 		String url = editorURL(dbId, "Sales");
 		webDriver.get(url);
 		// hide core declarations
-		WebElement we = waitElement(By.id("show-libs"));
+		WebElement we = waitElement(By.id("show-libs"), 2);
 		if(we.isSelected())
 			we.click();
-		we = waitElement(By.id("method_printHelloSales"));
+		we = waitElement(By.id("method_printHelloSales"), 2);
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class TestEditor extends BaseUITest {
 		assertTrue(content.startsWith("define"));
 		// press the New button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// ensure code is cleared
 		content = getEditorContent();
@@ -71,7 +71,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("attribute_dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// press the newly created attribute link
 		we = waitObjectLink("attribute_dummy");
@@ -91,7 +91,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		assertEquals("", getEditorContent());
 		// ensure the newly created attribute was deleted
@@ -109,7 +109,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("category_Dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// press the newly created category link
 		we = waitObjectLink("category_Dummy");
@@ -129,7 +129,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 500);
 		assertEquals("", getEditorContent());
 		// ensure the newly created category was deleted
@@ -148,7 +148,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("enumeration_Dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// press the newly created enumeration link
 		we = waitObjectLink("enumeration_Dummy");
@@ -168,7 +168,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 500);
 		assertEquals("", getEditorContent());
 		// ensure the newly created enumeration was deleted
@@ -189,7 +189,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("test_dummy_test");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// press the newly created category link
 		we = waitObjectLink("test_dummy_test");
@@ -212,7 +212,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 50);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		assertEquals("", getEditorContent());
 		// ensure the newly created test was deleted
@@ -231,7 +231,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("method_dummyMethod");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// press the newly created method link
 		we = waitObjectLink("method_dummyMethod");
@@ -250,7 +250,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("method_dummyMethod");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// create a method with same name but different proto
 		we = getEditorInput();
@@ -261,7 +261,7 @@ public class TestEditor extends BaseUITest {
 		we = waitProtoLink("method_dummyMethod", "proto_description");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// press the newly created method link
 		we = waitProtoLink("method_dummyMethod", "proto_name");
@@ -286,7 +286,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 50);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 500);
 		assertEquals("", getEditorContent());
 		// ensure the newly created method was deleted
@@ -307,7 +307,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 50);
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// create a method with same name but different proto
 		we = getEditorInput();
@@ -319,7 +319,7 @@ public class TestEditor extends BaseUITest {
 		click(we, 50);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 500);
 		assertEquals("", getEditorContent());
 		// ensure the newly created method was deleted
@@ -340,7 +340,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("attribute_dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// create a category
 		we = getEditorInput();
@@ -350,7 +350,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("category_Dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// create a method
 		we = getEditorInput();
@@ -361,7 +361,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("method_dummyMethod");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// create a test
 		we = getEditorInput();
@@ -374,11 +374,11 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("test_dummy_test");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 50);
 		// press the revert button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		click(we, 500);
 		assertEquals("", getEditorContent());
 		// ensure the newly created objects were deleted
@@ -388,7 +388,7 @@ public class TestEditor extends BaseUITest {
 		assertEquals(0, webDriver.findElements(By.id("method_dummyMethod")).size());
 		assertEquals(0, webDriver.findElements(By.id("test_dummy_test")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 	
 	@Test
@@ -403,10 +403,10 @@ public class TestEditor extends BaseUITest {
 		we.click();
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the newly created objects still exist, and delete them
@@ -415,21 +415,21 @@ public class TestEditor extends BaseUITest {
 		we.click();
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		we.click();
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the objects were deleted
 		webDriver.switchTo().defaultContent();
 		assertEquals(0, webDriver.findElements(By.id("attribute_dummy")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 	
 	@Test
@@ -444,10 +444,10 @@ public class TestEditor extends BaseUITest {
 		we.sendKeys(code);
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the newly created objects still exist, and delete them
@@ -456,21 +456,21 @@ public class TestEditor extends BaseUITest {
 		we.click();
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		we.click();
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the objects were deleted
 		webDriver.switchTo().defaultContent();
 		assertEquals(0, webDriver.findElements(By.id("category_Dummy")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 	
 	@Test
@@ -488,10 +488,10 @@ public class TestEditor extends BaseUITest {
 		we.sendKeys(code);
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the newly created objects still exist, and delete them
@@ -500,21 +500,21 @@ public class TestEditor extends BaseUITest {
 		we.click();
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		we.click();
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the objects were deleted
 		webDriver.switchTo().defaultContent();
 		assertEquals(0, webDriver.findElements(By.id("test_dummy_test")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 	
 	@Test
@@ -529,10 +529,10 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("method_dummyMethod");
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the newly created objects still exist, and delete them
@@ -541,21 +541,21 @@ public class TestEditor extends BaseUITest {
 		we.click();
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		we.click();
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		we.click();
 		Thread.sleep(1000); // need to wait for the new WebElements
 		// ensure the objects were deleted
 		webDriver.switchTo().defaultContent();
 		assertEquals(0, webDriver.findElements(By.id("method_dummyMethod")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 	
 	
@@ -570,7 +570,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("attribute_dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 500);
 		// create a category
 		we = getEditorInput();
@@ -580,7 +580,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("category_Dummy");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 500);
 		// create a method
 		we = getEditorInput();
@@ -591,7 +591,7 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("method_dummyMethod");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 500);
 		// create a test
 		we = getEditorInput();
@@ -604,14 +604,14 @@ public class TestEditor extends BaseUITest {
 		we = waitObjectLink("test_dummy_test");
 		// press the New button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnNew"));
+		we = waitElement(By.id("btnNew"), 2);
 		click(we, 100);
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		click(we, 100);
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		click(we, 100);
 		assertEquals("", getEditorContent());
 		Thread.sleep(1000); // need to wait for the new WebElements
@@ -621,35 +621,35 @@ public class TestEditor extends BaseUITest {
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		// next element
 		we = waitObjectLink("category_Dummy");
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		// next element
 		we = waitObjectLink("method_dummyMethod");
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		// next element
 		we = waitObjectLink("test_dummy_test");
 		click(we, 100);
 		// press the Delete button to clear the editor
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnDelete"));
+		we = waitElement(By.id("btnDelete"), 2);
 		click(we, 100);
 		// press the commit button
 		webDriver.switchTo().defaultContent();
-		we = waitElement(By.id("btnCommit"));
+		we = waitElement(By.id("btnCommit"), 2);
 		click(we, 100);
 		Thread.sleep(1000); // need to wait for the commit to be effective
-		we = waitElement(By.id("btnRevert"));
+		we = waitElement(By.id("btnRevert"), 2);
 		click(we, 100);
 		assertEquals("", getEditorContent());
 		Thread.sleep(1000); // need to wait for the new WebElements
@@ -660,27 +660,27 @@ public class TestEditor extends BaseUITest {
 		assertEquals(0, webDriver.findElements(By.id("method_dummyMethod")).size());
 		assertEquals(0, webDriver.findElements(By.id("test_dummy_test")).size());
 		// ensure the main method still exists
-		waitElement(By.id("method_printHelloSales"));
+		waitElement(By.id("method_printHelloSales"), 2);
 	}
 
 	private WebElement getEditorInput() throws Exception {
 		webDriver.switchTo().defaultContent();
 		webDriver.switchTo().frame("editor");
-		WebElement we = waitElement(By.tagName("textarea"));
+		WebElement we = waitElement(By.tagName("textarea"), 2);
 		return we;
 	}
 	
 	private WebElement waitObjectLink(String id) throws Exception {
 		webDriver.switchTo().defaultContent();
-		WebElement we = waitElement(By.id(id));
+		WebElement we = waitElement(By.id(id), 2);
 		we = we.findElement(By.tagName("a"));
 		return we;
 	}
 
 	private WebElement waitProtoLink(String method, String proto) throws Exception {
 		webDriver.switchTo().defaultContent();
-		WebElement we = waitElement(By.id(method));
-		we = waitElement(we, By.id(proto));
+		WebElement we = waitElement(By.id(method), 2);
+		we = waitElement(we, By.id(proto), 2);
 		we = we.findElement(By.tagName("a"));
 		return we;
 	}
@@ -689,7 +689,7 @@ public class TestEditor extends BaseUITest {
 	private String getEditorContent() {
 		webDriver.switchTo().defaultContent();
 		webDriver.switchTo().frame("editor");
-		WebElement we = waitElement(By.className("ace_content"));
+		WebElement we = waitElement(By.className("ace_content"), 2);
 		return we.getText();
 	}
 
