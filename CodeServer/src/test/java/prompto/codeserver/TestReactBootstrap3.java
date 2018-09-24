@@ -18,7 +18,7 @@ import prompto.code.ModuleType;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
 
-@Category(SeleniumTests.class)
+@Category(HeadlessTests.class)
 public class TestReactBootstrap3 extends BaseUITest {
 
 	BaseCodeStore tail;
@@ -46,7 +46,6 @@ public class TestReactBootstrap3 extends BaseUITest {
 		}
 		return null;
 	}
-
 
 
 	@Test

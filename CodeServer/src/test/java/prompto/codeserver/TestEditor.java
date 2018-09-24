@@ -32,6 +32,7 @@ public class TestEditor extends BaseUITest {
 	}
 
 	private void loadSalesAppAndHideLibraries() throws Exception {
+		CodeServer.importSamples();
 		String dbId = getDbIdForModule("Sales");
 		String url = editorURL(dbId, "Sales");
 		webDriver.get(url);
@@ -39,13 +40,13 @@ public class TestEditor extends BaseUITest {
 		WebElement we = waitElement(By.id("show-libs"), 2);
 		if(we.isSelected())
 			we.click();
-		we = waitElement(By.id("method_printHelloSales"), 2);
 	}
 
 	@Test
 	public void testNewButton() throws Exception { 
 		loadSalesAppAndHideLibraries();
 		// locate method item
+		showMethods();
 		WebElement we = waitObjectLink("method_printHelloSales");
 		assertEquals("printHelloSales", we.getText());
 		click(we, 100);
@@ -59,6 +60,12 @@ public class TestEditor extends BaseUITest {
 		// ensure code is cleared
 		content = getEditorContent();
 		assertEquals("", content);
+	}
+
+	private void showMethods() throws Exception {
+		WebElement we = waitElement(By.id("methods"), 2);
+		we = waitElement(we, By.tagName("label"), 2);
+		click(we, 100);
 	}
 
 	@Test
