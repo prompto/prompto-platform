@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import prompto.utils.ResourceUtils;
 
@@ -67,7 +68,13 @@ public class ChromeWebDriverFactory implements WebDriverFactory {
 
 	@Override
 	public WebDriver newDriver(Properties props) {
-		return new ChromeDriver();
+		ChromeOptions chromeOptions = new ChromeOptions();
+		if(isRunningInCI()) {
+			chromeOptions.addArguments("--headless");
+			chromeOptions.addArguments("--no-sandbox");
+		}
+		return new ChromeDriver(chromeOptions);
 	}
+
 
 }
