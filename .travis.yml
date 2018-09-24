@@ -1,4 +1,6 @@
-sudo: true
+sudo: required
+addons:
+  chrome: stable
 language: java
 jdk:
   - oraclejdk8
