@@ -1,3 +1,6 @@
 [submodule "prompto-java"]
 	path = prompto-java
 	url = https://ericvergnaud@github.com/prompto/prompto-java.git
+[submodule "prompto-dev-center"]
+	path = prompto-dev-center
+url=https://github.com/prompto/prompto-dev-center.git
