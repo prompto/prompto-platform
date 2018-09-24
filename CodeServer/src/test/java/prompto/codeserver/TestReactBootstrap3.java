@@ -4,13 +4,11 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -19,23 +17,18 @@ import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlReader;
-import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
-import com.esotericsoftware.yamlbeans.document.YamlDocument;
-import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
-import com.esotericsoftware.yamlbeans.document.YamlElement;
-import com.esotericsoftware.yamlbeans.document.YamlEntry;
-
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
-import prompto.utils.ResourceUtils;
-import prompto.utils.YamlUtils;
+
+import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.document.YamlDocument;
+import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 
 @Category(HeadlessTests.class)
 public class TestReactBootstrap3 extends BaseUITest {
@@ -78,6 +71,15 @@ public class TestReactBootstrap3 extends BaseUITest {
 		assertEquals("ok!", out.getText());
 	}
 	
+	
+	@Test
+	public void buttonIsDisabled() throws Exception {
+		linkResources("ButtonIsDisabled", Dialect.O);
+		loadPage("ButtonIsDisabled");
+		WebElement button = waitElement(By.id("button"), 2);
+		assertFalse(button.isEnabled());
+	}
+
 
 	private void loadPage(String pageName) {
 		String url = "http://localhost:" + HTTP_PORT + "/" + pageName + ".page";
