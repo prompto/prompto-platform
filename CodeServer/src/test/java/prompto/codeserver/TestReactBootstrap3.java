@@ -94,6 +94,28 @@ public class TestReactBootstrap3 extends BaseUITest {
 		assertTrue(klass.contains("active"));
 	}
 
+	@Test
+	public void checkboxOnClickCallbackIsCalled() throws Exception {
+		linkResources("CheckboxOnClickCallbackIsCalled", Dialect.O);
+		loadPage("CheckboxOnClickCallbackIsCalled");
+		WebElement checkbox = waitElement(By.id("checkbox"), 2);
+		assertFalse(checkbox.isSelected());
+		checkbox.click();
+		assertTrue(checkbox.isSelected());
+	}
+
+	
+	@Test
+	public void checkboxIsDisabled() throws Exception {
+		linkResources("CheckboxIsDisabled", Dialect.O);
+		loadPage("CheckboxIsDisabled");
+		WebElement checkbox = waitElement(By.id("checkbox"), 2);
+		assertTrue(checkbox.isEnabled());
+		click(checkbox, 100);
+		assertFalse(checkbox.isEnabled());
+	}
+
+
 	
 	private void loadPage(String pageName) {
 		String url = "http://localhost:" + HTTP_PORT + "/" + pageName + ".page";

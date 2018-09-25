@@ -1,7 +1,3 @@
-native method log(Text value) {
-	JavaScript: document.getElementById("out").appendChild(document.createTextNode(value));
-}
-
 widget ButtonIsDisabledPage extends ReactWidget {
 
 	method getInitialState() {
