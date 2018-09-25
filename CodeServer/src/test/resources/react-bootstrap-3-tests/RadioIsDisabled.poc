@@ -1,0 +1,18 @@
+widget RadioIsDisabledPage extends ReactWidget {
+
+	method getInitialState() {
+		return { disabled: false };
+	}
+	
+    method radioClicked(ClickEvent event) {
+        setState({ disabled: true });
+    }
+    
+	Html method render () {
+		state = getState();
+		return <div>
+			<Radio id="radio" disabled={state.disabled} onClick={radioClicked} >Hello "Radio"!</Checkbox>
+			</div>;
+	}
+	
+}

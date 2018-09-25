@@ -12,6 +12,13 @@ and methods:
 	define render as method returning Html doing:
 		JavaScript: return this.render();
 
+define Radio as native widget with bindings:
+	define category bindings as:
+		JavaScript: ReactBootstrap.Radio
+and methods:
+	define render as method returning Html doing:
+		JavaScript: return this.render();
+
 define InputGroup as native widget with bindings:
 	define category bindings as:
 		JavaScript: ReactBootstrap.InputGroup

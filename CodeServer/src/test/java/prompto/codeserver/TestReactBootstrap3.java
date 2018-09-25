@@ -102,6 +102,8 @@ public class TestReactBootstrap3 extends BaseUITest {
 		assertFalse(checkbox.isSelected());
 		checkbox.click();
 		assertTrue(checkbox.isSelected());
+		checkbox.click();
+		assertFalse(checkbox.isSelected());
 	}
 
 	
@@ -116,7 +118,47 @@ public class TestReactBootstrap3 extends BaseUITest {
 	}
 
 
+	@Test
+	public void radioIsDisabled() throws Exception {
+		linkResources("RadioIsDisabled", Dialect.O);
+		loadPage("RadioIsDisabled");
+		WebElement radio = waitElement(By.id("radio"), 2);
+		assertTrue(radio.isEnabled());
+		click(radio, 100);
+		assertFalse(radio.isEnabled());
+	}
+
 	
+	@Test
+	public void radiosAreGrouped() throws Exception {
+		linkResources("RadiosAreGrouped", Dialect.O);
+		loadPage("RadiosAreGrouped");
+		WebElement radio1 = waitElement(By.id("radio1"), 2);
+		WebElement radio2 = waitElement(By.id("radio2"), 2);
+		assertFalse(radio1.isSelected());
+		assertFalse(radio2.isSelected());
+		click(radio1, 100);
+		assertTrue(radio1.isSelected());
+		assertFalse(radio2.isSelected());
+		click(radio2, 100);
+		assertFalse(radio1.isSelected());
+		assertTrue(radio2.isSelected());
+	}
+	
+	@Test
+	public void radioOnChangeCallbackIsCalled() throws Exception {
+		linkResources("RadioOnChangeCallbackIsCalled", Dialect.O);
+		loadPage("RadioOnChangeCallbackIsCalled");
+		WebElement radio1 = waitElement(By.id("radio1"), 2);
+		WebElement radio2 = waitElement(By.id("radio2"), 2);
+		WebElement out = waitElement(By.id("out"), 2);
+		assertEquals("", out.getText());
+		click(radio1, 100);
+		assertEquals("radio1", out.getText());
+		click(radio2, 100);
+		assertEquals("radio1radio2", out.getText());
+	}
+
 	private void loadPage(String pageName) {
 		String url = "http://localhost:" + HTTP_PORT + "/" + pageName + ".page";
 		webDriver.get(url);
