@@ -20,5 +20,4 @@ dataStore:
 
 http:
   port: 8080
-webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   

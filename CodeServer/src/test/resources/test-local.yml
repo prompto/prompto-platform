@@ -8,5 +8,4 @@ dataStore:
 
 http:
   port: 8888
-webSiteRoot: ../prompto-dev-center/DevCenter/src/main/resources/
   

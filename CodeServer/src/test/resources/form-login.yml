@@ -20,6 +20,4 @@ http:
       factory: prompto.security.FormLoginMethodFactory
       loginPage: /auth/loginPage.html
       errorPage: /auth/errorPage.html
-
-webSiteRoot: ../../prompto-dev-center/DevCenter/src/main/resources/
   
