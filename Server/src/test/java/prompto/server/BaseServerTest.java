@@ -21,11 +21,11 @@ import prompto.config.IServerConfiguration;
 import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
-import prompto.memstore.MemStore;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.PlainSecretKeyFactory;
+import prompto.store.memory.MemStore;
 import prompto.utils.SocketUtils;
 
 public abstract class BaseServerTest {

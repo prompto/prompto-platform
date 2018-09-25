@@ -1,14 +1,9 @@
-localMongoStore: &localMongoStore
-  factory: prompto.store.mongo.MongoStoreFactory
-  host: localhost
-  port: 27018
-
 codeStore: 
-  <<: *localMongoStore
+  factory: prompto.store.memory.MemStoreFactory
   dbName: ROOT
 
 dataStore: 
-  <<: *localMongoStore
+  factory: prompto.store.memory.MemStoreFactory
   dbName: CODE
 
 http:

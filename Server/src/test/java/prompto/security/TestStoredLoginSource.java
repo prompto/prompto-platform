@@ -18,10 +18,10 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IAuthenticationConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.IStoredAuthenticationSourceConfiguration;
-import prompto.memstore.MemStore;
 import prompto.server.BaseServerTest;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
+import prompto.store.memory.MemStore;
 
 public class TestStoredLoginSource extends BaseServerTest {
 

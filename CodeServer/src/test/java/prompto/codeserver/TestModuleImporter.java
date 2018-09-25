@@ -13,9 +13,9 @@ import prompto.config.IRuntimeConfiguration;
 import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
-import prompto.memstore.MemStore;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
+import prompto.store.memory.MemStore;
 
 public class TestModuleImporter {
 

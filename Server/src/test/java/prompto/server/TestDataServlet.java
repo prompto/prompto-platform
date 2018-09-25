@@ -16,9 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
-import prompto.memstore.MemStore;
 import prompto.store.IStorable;
 import prompto.store.IStore;
+import prompto.store.memory.MemStore;
 
 public class TestDataServlet extends BaseServerTest {
 
