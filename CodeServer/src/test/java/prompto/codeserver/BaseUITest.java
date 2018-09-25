@@ -10,7 +10,6 @@ public abstract class BaseUITest extends BaseBrowserTest {
 
 	@BeforeClass
 	public static void startCodeServer() throws Throwable {
-		LocalMongo.startMongoForUnitTests();
 		String[] args = {
 				"-yamlConfigFile",
 				"test-local.yml"
