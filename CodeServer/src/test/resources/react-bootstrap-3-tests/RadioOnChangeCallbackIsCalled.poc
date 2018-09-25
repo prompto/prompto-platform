@@ -4,7 +4,7 @@ native method log(Text value) {
 
 widget RadioOnChangeCallbackIsCalledPage extends ReactWidget {
 
-	method radioChanged(RadioEvent e) {
+	method radioChanged(RadioChangedEvent e) {
 		log(e.getSelectedRadio());
 	}
 	

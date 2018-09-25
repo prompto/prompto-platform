@@ -63,8 +63,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 
 	@Test
 	public void buttonOnClickCallbackIsCalled() throws Exception {
-		linkResources("ButtonOnClickCallbackIsCalled", Dialect.O);
-		loadPage("ButtonOnClickCallbackIsCalled");
+		linkResourcesAndLoadPage("ButtonOnClickCallbackIsCalled", Dialect.O);
 		WebElement button = waitElement(By.id("button"), 2);
 		button.click();
 		WebElement out = waitElement(By.id("out"), 2);
@@ -74,8 +73,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 	
 	@Test
 	public void buttonIsDisabled() throws Exception {
-		linkResources("ButtonIsDisabled", Dialect.O);
-		loadPage("ButtonIsDisabled");
+		linkResourcesAndLoadPage("ButtonIsDisabled", Dialect.O);
 		WebElement button = waitElement(By.id("button"), 2);
 		assertTrue(button.isEnabled());
 		click(button, 100);
@@ -84,8 +82,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 
 	@Test
 	public void buttonIsActive() throws Exception {
-		linkResources("ButtonIsActive", Dialect.O);
-		loadPage("ButtonIsActive");
+		linkResourcesAndLoadPage("ButtonIsActive", Dialect.O);
 		WebElement button = waitElement(By.id("button"), 2);
 		String klass = button.getAttribute("className");
 		assertFalse(klass.contains("active"));
@@ -96,8 +93,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 
 	@Test
 	public void checkboxOnClickCallbackIsCalled() throws Exception {
-		linkResources("CheckboxOnClickCallbackIsCalled", Dialect.O);
-		loadPage("CheckboxOnClickCallbackIsCalled");
+		linkResourcesAndLoadPage("CheckboxOnClickCallbackIsCalled", Dialect.O);
 		WebElement checkbox = waitElement(By.id("checkbox"), 2);
 		assertFalse(checkbox.isSelected());
 		checkbox.click();
@@ -109,8 +105,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 	
 	@Test
 	public void checkboxIsDisabled() throws Exception {
-		linkResources("CheckboxIsDisabled", Dialect.O);
-		loadPage("CheckboxIsDisabled");
+		linkResourcesAndLoadPage("CheckboxIsDisabled", Dialect.O);
 		WebElement checkbox = waitElement(By.id("checkbox"), 2);
 		assertTrue(checkbox.isEnabled());
 		click(checkbox, 100);
@@ -120,8 +115,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 
 	@Test
 	public void radioIsDisabled() throws Exception {
-		linkResources("RadioIsDisabled", Dialect.O);
-		loadPage("RadioIsDisabled");
+		linkResourcesAndLoadPage("RadioIsDisabled", Dialect.O);
 		WebElement radio = waitElement(By.id("radio"), 2);
 		assertTrue(radio.isEnabled());
 		click(radio, 100);
@@ -131,8 +125,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 	
 	@Test
 	public void radiosAreGrouped() throws Exception {
-		linkResources("RadiosAreGrouped", Dialect.O);
-		loadPage("RadiosAreGrouped");
+		linkResourcesAndLoadPage("RadiosAreGrouped", Dialect.O);
 		WebElement radio1 = waitElement(By.id("radio1"), 2);
 		WebElement radio2 = waitElement(By.id("radio2"), 2);
 		assertFalse(radio1.isSelected());
@@ -147,8 +140,7 @@ public class TestReactBootstrap3 extends BaseUITest {
 	
 	@Test
 	public void radioOnChangeCallbackIsCalled() throws Exception {
-		linkResources("RadioOnChangeCallbackIsCalled", Dialect.O);
-		loadPage("RadioOnChangeCallbackIsCalled");
+		linkResourcesAndLoadPage("RadioOnChangeCallbackIsCalled", Dialect.O);
 		WebElement radio1 = waitElement(By.id("radio1"), 2);
 		WebElement radio2 = waitElement(By.id("radio2"), 2);
 		WebElement out = waitElement(By.id("out"), 2);
@@ -158,14 +150,34 @@ public class TestReactBootstrap3 extends BaseUITest {
 		click(radio2, 100);
 		assertEquals("radio1radio2", out.getText());
 	}
+	
+	@Test
+	public void inputIsDisabled() throws Exception {
+		linkResourcesAndLoadPage("InputIsDisabled", Dialect.O);
+		WebElement input = waitElement(By.id("input"), 2);
+		assertTrue(input.isEnabled());
+		WebElement button = waitElement(By.id("button"), 2);
+		click(button, 100);
+		assertFalse(input.isEnabled());
+	}
 
-	private void loadPage(String pageName) {
-		String url = "http://localhost:" + HTTP_PORT + "/" + pageName + ".page";
-		webDriver.get(url);
+	
+	@Test
+	public void inputOnChangeCallbackIsCalled() throws Exception {
+		linkResourcesAndLoadPage("InputOnChangeCallbackIsCalled", Dialect.O);
+		WebElement input = waitElement(By.id("input"), 2);
+		WebElement out = waitElement(By.id("out"), 2);
+		assertEquals("", out.getText());
+		sendKeys(input, "H", 100);
+		assertEquals("", out.getText());
+		assertEquals("H", input.getAttribute("value"));
+		sendKeys(input, "i", 100);
+		assertEquals("H", out.getText());
+		assertEquals("Hi", input.getAttribute("value"));
 	}
 
 
-	private void linkResources(String resourceName, Dialect dialect) throws Exception {
+	private void linkResourcesAndLoadPage(String resourceName, Dialect dialect) throws Exception {
 		URL bootstrapURL = Thread.currentThread().getContextClassLoader().getResource("react-bootstrap-3/React-Bootstrap-3.pec");
 		ImmutableCodeStore bootstrapResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, bootstrapURL, PromptoVersion.LATEST);
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("react-bootstrap-3-tests/" + resourceName + ".p" + dialect.name().toLowerCase() + "c");
@@ -175,6 +187,8 @@ public class TestReactBootstrap3 extends BaseUITest {
 			pageResourceURL = createTempPage(resourceName);
 		ImmutableCodeStore pageResource = new ImmutableCodeStore(codeResource, ModuleType.LIBRARY, pageResourceURL, PromptoVersion.LATEST);
 		tail.setNext(pageResource);
+		String url = "http://localhost:" + HTTP_PORT + "/" + resourceName + ".page";
+		webDriver.get(url);
 	}
 
 
