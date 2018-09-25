@@ -54,10 +54,10 @@ public class HtmlGenerator {
 		printer.println("<script>");
 		printer.println("function renderBody() {");
 		// TODO call htmlEngine
-		printer.print("var widget = new ");
+		printer.print("var pageWidget = React.createElement( ");
 		printer.print(widgetName); 
-		printer.println("();");
-		printer.print("ReactDOM.render(widget.render(), document.getElementById('body'));");
+		printer.println(");");
+		printer.print("ReactDOM.render(pageWidget, document.getElementById('body'));");
 		printer.println("}");
 		printer.println("</script>");
 	}
@@ -98,28 +98,34 @@ public class HtmlGenerator {
 	
 	
 	private String generateWidgetScript(Context context, PrintWriter printer, String widgetName) {
-		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchLatestDeclarations(widgetName);
-		if(decls==null) {
-			logger.warn(()->"No such declaration '"+ widgetName + "'!");
+		IWidgetDeclaration widget = fetchWidgetDeclaration(context, widgetName);
+		if(widget==null) {
+			printer.println("<script>alert(\"No such widget '" + widgetName + "'\");</script>");
 			return null;
+		} else {
+			generateWidgetScript(printer, widget);
+			return widgetName;
 		}
-		Iterator<IDeclaration> iter = decls.iterator();
-		if(!iter.hasNext()) {
-			logger.warn(()->"No such declaration '"+ widgetName + "'!");
-			return null;
-		}
-		IDeclaration decl = iter.next();
-		if(decl instanceof CategoryDeclaration && !((CategoryDeclaration)decl).isAWidget(context)) {
-			logger.warn(()->"Not a widget '"+ widgetName + "'!");
-			return null;
-		}
-		IWidgetDeclaration widget = decl instanceof IWidgetDeclaration ? (IWidgetDeclaration)decl : new WrappingWidgetDeclaration((CategoryDeclaration)decl);
-		generateWidgetScript(printer, widget);
-		return widgetName;
 	}
 
 
 	
+
+	private IWidgetDeclaration fetchWidgetDeclaration(Context context, String widgetName) {
+		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchLatestDeclarations(widgetName);
+		if(decls==null)
+			return null;
+		Iterator<IDeclaration> iter = decls.iterator();
+		if(!iter.hasNext())
+			return null;
+		IDeclaration decl = iter.next();;
+		if(!(decl instanceof CategoryDeclaration))
+			return null;
+		if(!((CategoryDeclaration)decl).isAWidget(context))
+			return null;
+		return decl instanceof IWidgetDeclaration ? (IWidgetDeclaration)decl : new WrappingWidgetDeclaration((CategoryDeclaration)decl);
+		
+	}
 
 	private void generateWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
