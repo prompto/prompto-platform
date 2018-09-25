@@ -59,6 +59,21 @@
 		<mongo-version>3.4.2</mongo-version>
   	</properties>
   
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<excludes>
+						<exclude>**/.*</exclude>
+						<exclude>**/.*/**/*.*</exclude>
+					</excludes>
+				</configuration>				
+			</plugin>
+		</plugins>
+	</build>
+	
 	<profiles>
 		<profile>
 			<id>deploy</id>
