@@ -2,20 +2,20 @@ native method log(Text value) {
 	JavaScript: document.getElementById("out").appendChild(document.createTextNode(value));
 }
 
-widget ButtonIsDisabledPage extends ReactWidget {
+widget ButtonIsActivePage extends ReactWidget {
 
 	method getInitialState() {
-		return { disabled: false };
+		return { active: false };
 	}
 	
     method buttonClicked(ClickEvent event) {
-        setState({ disabled: true });
+        setState({ active: true });
     }
     
 	Html method render () {
 		state = getState();
 		return <div>
-			<Button id="button" disabled={state.disabled} onClick={buttonClicked} >Hello "Button"!</Button>
+			<Button id="button" active={state.active} onClick={buttonClicked} >Hello "Button"!</Button>
 			</div>;
 	}
 	

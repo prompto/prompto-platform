@@ -77,10 +77,24 @@ public class TestReactBootstrap3 extends BaseUITest {
 		linkResources("ButtonIsDisabled", Dialect.O);
 		loadPage("ButtonIsDisabled");
 		WebElement button = waitElement(By.id("button"), 2);
+		assertTrue(button.isEnabled());
+		click(button, 100);
 		assertFalse(button.isEnabled());
 	}
 
+	@Test
+	public void buttonIsActive() throws Exception {
+		linkResources("ButtonIsActive", Dialect.O);
+		loadPage("ButtonIsActive");
+		WebElement button = waitElement(By.id("button"), 2);
+		String klass = button.getAttribute("className");
+		assertFalse(klass.contains("active"));
+		click(button, 100);
+		klass = button.getAttribute("className");
+		assertTrue(klass.contains("active"));
+	}
 
+	
 	private void loadPage(String pageName) {
 		String url = "http://localhost:" + HTTP_PORT + "/" + pageName + ".page";
 		webDriver.get(url);
