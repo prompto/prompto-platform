@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import static org.junit.Assert.*;
 
@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+
+import prompto.codefactory.Application;
 
 @Category(SeleniumTests.class)
 public class TestEditor extends BaseUITest {
@@ -32,7 +34,7 @@ public class TestEditor extends BaseUITest {
 	}
 
 	private void loadSalesAppAndHideLibraries() throws Exception {
-		CodeServer.importSamples();
+		Application.importSamples();
 		String dbId = getDbIdForModule("Sales");
 		String url = editorURL(dbId, "Sales");
 		webDriver.get(url);

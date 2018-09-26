@@ -1,8 +1,10 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+
+import prompto.codefactory.ModuleProcess;
 
 public class TestModuleProcess {
 

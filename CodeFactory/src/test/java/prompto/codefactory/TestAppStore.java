@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import static org.junit.Assert.*;
 
@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import prompto.codefactory.Application;
 import prompto.server.AppServer;
 
 public class TestAppStore extends BaseBrowserTest {
@@ -33,7 +34,7 @@ public class TestAppStore extends BaseBrowserTest {
 				"-codeStore-dbName",
 				"DATA"
 		};
-		CodeServer.main(args);
+		Application.main(args);
 		HTTP_PORT = AppServer.getHttpPort();
 	}
 	

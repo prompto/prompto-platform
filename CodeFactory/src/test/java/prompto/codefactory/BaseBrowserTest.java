@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import java.io.IOException;
 import java.io.InputStream;

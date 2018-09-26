@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import java.nio.file.Files;
 import java.util.concurrent.ExecutorService;

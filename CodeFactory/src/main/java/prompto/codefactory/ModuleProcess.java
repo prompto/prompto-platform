@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -292,7 +292,7 @@ public class ModuleProcess {
 	}
 
 	private void writeDataStoreYamlEntries(YamlDocument document) throws YamlException {
-		IStoreConfiguration config = CodeServer.config.getTargetStoreConfiguration();
+		IStoreConfiguration config = Application.config.getTargetStoreConfiguration();
 		if(config!=null)
 			document.setEntry("dataStore", config.toYaml());
 		else {

@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import java.net.URL;
 import java.util.Collection;
@@ -36,7 +36,7 @@ import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 import prompto.utils.ResourceUtils;
 
-public class CodeServer {
+public class Application {
 
 	static Logger logger = new Logger();
 	static ICodeServerConfiguration config;
@@ -51,10 +51,10 @@ public class CodeServer {
 					.withHttpConfiguration(config.getHttpConfiguration().withSendsXAuthorization(true))
 					.withApplicationName("dev-center")
 					.withApplicationVersion(PromptoVersion.parse("1.0.0"))
-					.withResourceURLs(CodeServer.getResourceURLs());
+					.withResourceURLs(Application.getResourceURLs());
 		if(runtimeMode!=null)
 			config = config.withRuntimeMode(runtimeMode);
-		AppServer.main(config, CodeServer::initDataServletStores); 
+		AppServer.main(config, Application::initDataServletStores); 
 	}
 	
 	public static ICodeServerConfiguration loadConfiguration(String[] args) throws Exception {
@@ -110,7 +110,7 @@ public class CodeServer {
 	}
 
 	private static URL[] getResourceURLs() {
-		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, CodeServer.class);
+		Collection<URL> urls = Libraries.getPromptoLibraries(BaseCodeStore.class, Application.class);
 		return urls.toArray(new URL[urls.size()]);
 	}
 

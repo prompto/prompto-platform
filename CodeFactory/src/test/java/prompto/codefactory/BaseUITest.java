@@ -1,8 +1,9 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import prompto.codefactory.Application;
 import prompto.runtime.Mode;
 import prompto.server.AppServer;
 
@@ -14,7 +15,7 @@ public abstract class BaseUITest extends BaseBrowserTest {
 				"-yamlConfigFile",
 				"test-local.yml"
 		};
-		CodeServer.main(args, Mode.UNITTEST);
+		Application.main(args, Mode.UNITTEST);
 		HTTP_PORT = AppServer.getHttpPort();
 	}
 	

@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import java.util.ArrayList;
 import java.util.List;

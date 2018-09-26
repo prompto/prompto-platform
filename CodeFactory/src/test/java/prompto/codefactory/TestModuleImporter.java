@@ -1,4 +1,4 @@
-package prompto.codeserver;
+package prompto.codefactory;
 
 import static org.junit.Assert.*;
 
@@ -9,6 +9,7 @@ import prompto.code.Batch;
 import prompto.code.ICodeStore;
 import prompto.code.Thesaurus;
 import prompto.code.WebLibrary;
+import prompto.codefactory.ModuleImporter;
 import prompto.config.IRuntimeConfiguration;
 import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
