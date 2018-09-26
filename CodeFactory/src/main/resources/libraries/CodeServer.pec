@@ -1,5 +1,5 @@
 define createLibraries as native method doing:
-	Java: prompto.codeserver.CodeServer.createLibraries();
+	Java: prompto.codefactory.Application.createLibraries();
 
 define serverAboutToStart as method receiving Text<:> params doing:
 	createLibraries
