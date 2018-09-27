@@ -35,16 +35,16 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import prompto.config.IAuthenticationConfiguration;
-import prompto.config.IAuthenticationSourceConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.runtime.Mode;
-import prompto.security.IAuthenticationMethodFactory;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
+import prompto.security.auth.method.IAuthenticationMethodFactory;
 import prompto.utils.Logger;
 
 class JettyServer extends Server {

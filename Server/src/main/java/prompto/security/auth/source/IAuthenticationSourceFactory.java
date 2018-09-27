@@ -1,9 +1,9 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
-import prompto.config.IAuthenticationSourceConfiguration;
 import prompto.config.IConfigurationReader;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 
 public interface IAuthenticationSourceFactory {
 

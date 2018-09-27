@@ -24,9 +24,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import prompto.config.CodeStoreAuthenticationConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.StoredRecordConfigurationReader;
+import prompto.config.auth.CodeStoreAuthenticationConfiguration;
 import prompto.runtime.Mode;
 import prompto.server.AppServer;
 import prompto.server.PromptoServlet;

@@ -1,9 +1,12 @@
-package prompto.config;
+package prompto.config.auth;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 
 public interface IAuthenticationConfiguration {
 	

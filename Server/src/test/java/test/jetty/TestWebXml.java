@@ -15,8 +15,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import prompto.security.JettyLoginModuleBase;
-import prompto.security.PasswordIsUserNameAuthenticationSource;
+import prompto.security.auth.JettyLoginModuleBase;
+import prompto.security.auth.source.PasswordIsUserNameAuthenticationSource;
 
 
 /* compare what happens when using web.xml vs embedded Jetty */

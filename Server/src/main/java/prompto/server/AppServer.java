@@ -28,7 +28,7 @@ import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
-import prompto.security.IAuthenticationSource;
+import prompto.security.auth.source.IAuthenticationSource;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 

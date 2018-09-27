@@ -1,4 +1,6 @@
-package prompto.config;
+package prompto.config.auth.method;
+
+import prompto.config.IConfigurationReader;
 
 public class FormAuthenticationMethodConfiguration extends AuthenticationMethodConfiguration implements IFormAuthenticationMethodConfiguration {
 

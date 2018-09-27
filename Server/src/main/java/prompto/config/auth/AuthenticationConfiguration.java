@@ -1,8 +1,13 @@
-package prompto.config;
+package prompto.config.auth;
 
 import java.util.Collection;
 
-import prompto.security.BasicAuthenticationMethodFactory;
+import prompto.config.IConfigurationReader;
+import prompto.config.auth.method.AuthenticationMethodConfiguration;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
+import prompto.config.auth.source.AuthenticationSourceConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
+import prompto.security.auth.method.BasicAuthenticationMethodFactory;
 
 public class AuthenticationConfiguration extends IAuthenticationConfiguration.Inline {
 

@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.method;
 
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
@@ -6,10 +6,10 @@ import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
-import prompto.config.FormAuthenticationMethodConfiguration;
 import prompto.config.IConfigurationReader;
-import prompto.config.IFormAuthenticationMethodConfiguration;
-import prompto.config.IAuthenticationMethodConfiguration;
+import prompto.config.auth.method.FormAuthenticationMethodConfiguration;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
+import prompto.config.auth.method.IFormAuthenticationMethodConfiguration;
 
 public class FormAuthenticationMethodFactory implements IAuthenticationMethodFactory {
 

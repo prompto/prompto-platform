@@ -1,8 +1,9 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.IAuthenticationSourceConfiguration;
-import prompto.config.AuthenticationSourceConfiguration;
+import prompto.config.auth.source.AuthenticationSourceConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
+import prompto.security.auth.JettyLoginModuleBase;
 
 public class PasswordIsUserNameAuthenticationSourceFactory implements IAuthenticationSourceFactory {
 

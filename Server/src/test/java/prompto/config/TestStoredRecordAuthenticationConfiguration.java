@@ -13,12 +13,16 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 
+import prompto.config.auth.CodeStoreAuthenticationConfigurationFactory;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
-import prompto.security.FormAuthenticationMethodFactory;
-import prompto.security.PasswordIsUserNameAuthenticationSourceFactory;
+import prompto.security.auth.method.FormAuthenticationMethodFactory;
+import prompto.security.auth.source.PasswordIsUserNameAuthenticationSourceFactory;
 import prompto.server.AppServer;
 import prompto.store.mongo.BaseMongoTest;
 import prompto.store.mongo.MongoUtils;

@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth;
 
 import java.security.Provider;
 import java.util.Collections;
@@ -12,7 +12,8 @@ import javax.security.auth.login.Configuration;
 
 import org.eclipse.jetty.jaas.spi.AbstractLoginModule;
 
-import prompto.config.IAuthenticationSourceConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
+import prompto.security.auth.source.IAuthenticationSource;
 
 public abstract class JettyLoginModuleBase extends AbstractLoginModule implements IAuthenticationSource {
 

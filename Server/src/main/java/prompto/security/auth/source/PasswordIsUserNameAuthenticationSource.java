@@ -1,9 +1,11 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import java.util.Collections;
 
 import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
+
+import prompto.security.auth.JettyLoginModuleBase;
 
 public class PasswordIsUserNameAuthenticationSource extends JettyLoginModuleBase {
 

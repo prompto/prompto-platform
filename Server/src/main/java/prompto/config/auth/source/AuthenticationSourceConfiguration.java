@@ -1,6 +1,7 @@
-package prompto.config;
+package prompto.config.auth.source;
 
-import prompto.security.IAuthenticationSourceFactory;
+import prompto.config.IConfigurationReader;
+import prompto.security.auth.source.IAuthenticationSourceFactory;
 
 public class AuthenticationSourceConfiguration implements IAuthenticationSourceConfiguration {
 

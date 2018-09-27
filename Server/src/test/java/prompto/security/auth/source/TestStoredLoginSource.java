@@ -1,12 +1,12 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import org.junit.Before;
@@ -15,9 +15,13 @@ import org.junit.Test;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IHttpConfiguration;
-import prompto.config.IAuthenticationConfiguration;
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredAuthenticationSourceConfiguration;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.security.auth.StoredUserInfoCache;
+import prompto.security.auth.method.BasicAuthenticationMethodFactory;
+import prompto.security.auth.source.IAuthenticationSourceFactory;
+import prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory;
 import prompto.server.BaseServerTest;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
@@ -70,8 +74,10 @@ public class TestStoredLoginSource extends BaseServerTest {
 	}
 	
 	@Before
-	public void before() throws NoSuchAlgorithmException {
-		StoredUserInfoCache.KEEP_ALIVE_DELAY = 10;
+	public void before() throws Exception {
+		Field field = StoredUserInfoCache.class.getDeclaredField("KEEP_ALIVE_DELAY");
+		field.setAccessible(true);
+		field.set(null, 10l);
 		store.deleteAll();
 		StoredUserInfoCache.createLogin(store, "john", "password");
 	}

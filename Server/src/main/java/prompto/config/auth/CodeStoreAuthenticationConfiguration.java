@@ -1,4 +1,4 @@
-package prompto.config;
+package prompto.config.auth;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,13 +9,17 @@ import com.esotericsoftware.yamlbeans.document.YamlSequence;
 
 import prompto.code.ICodeStore;
 import prompto.code.QueryableCodeStore;
+import prompto.config.IConfigurationReader;
+import prompto.config.StoredRecordConfigurationReader;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.runtime.Mode;
-import prompto.security.BasicAuthenticationMethodFactory;
-import prompto.security.FormAuthenticationMethodFactory;
-import prompto.security.IAuthenticationMethodFactory;
-import prompto.security.IAuthenticationSourceFactory;
-import prompto.security.PasswordIsUserNameAuthenticationSourceFactory;
-import prompto.security.StoredPasswordDigestAuthenticationSourceFactory;
+import prompto.security.auth.method.BasicAuthenticationMethodFactory;
+import prompto.security.auth.method.FormAuthenticationMethodFactory;
+import prompto.security.auth.method.IAuthenticationMethodFactory;
+import prompto.security.auth.source.IAuthenticationSourceFactory;
+import prompto.security.auth.source.PasswordIsUserNameAuthenticationSourceFactory;
+import prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory;
 import prompto.store.IStore;
 import prompto.utils.Logger;
 

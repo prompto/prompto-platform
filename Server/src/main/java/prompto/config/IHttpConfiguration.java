@@ -2,6 +2,8 @@ package prompto.config;
 
 import java.util.function.Supplier;
 
+import prompto.config.auth.IAuthenticationConfiguration;
+
 public interface IHttpConfiguration {
 
 	String getProtocol();

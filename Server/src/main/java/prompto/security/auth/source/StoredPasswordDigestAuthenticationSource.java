@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import java.util.Map;
 
@@ -7,7 +7,9 @@ import javax.security.auth.callback.CallbackHandler;
 
 import org.eclipse.jetty.jaas.spi.UserInfo;
 
-import prompto.config.IStoredAuthenticationSourceConfiguration;
+import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.security.auth.JettyLoginModuleBase;
+import prompto.security.auth.StoredUserInfoCache;
 
 public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBase {
 

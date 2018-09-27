@@ -1,6 +1,7 @@
-package prompto.config;
+package prompto.config.auth.method;
 
-import prompto.security.IAuthenticationMethodFactory;
+import prompto.config.IConfigurationReader;
+import prompto.security.auth.method.IAuthenticationMethodFactory;
 
 public class AuthenticationMethodConfiguration implements IAuthenticationMethodConfiguration {
 

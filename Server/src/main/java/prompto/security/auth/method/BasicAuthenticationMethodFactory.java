@@ -1,10 +1,10 @@
-package prompto.security;
+package prompto.security.auth.method;
 
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.IAuthenticationMethodConfiguration;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
 
 public class BasicAuthenticationMethodFactory implements IAuthenticationMethodFactory {
 

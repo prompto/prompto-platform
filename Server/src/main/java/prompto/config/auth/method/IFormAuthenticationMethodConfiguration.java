@@ -1,4 +1,5 @@
-package prompto.config;
+package prompto.config.auth.method;
+
 
 public interface IFormAuthenticationMethodConfiguration extends IAuthenticationMethodConfiguration {
 

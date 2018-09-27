@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.method;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;

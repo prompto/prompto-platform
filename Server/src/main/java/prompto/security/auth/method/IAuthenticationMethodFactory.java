@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.method;
 
 import org.eclipse.jetty.security.Authenticator;
 
@@ -6,7 +6,7 @@ import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.IAuthenticationMethodConfiguration;
+import prompto.config.auth.method.IAuthenticationMethodConfiguration;
 
 public interface IAuthenticationMethodFactory {
 

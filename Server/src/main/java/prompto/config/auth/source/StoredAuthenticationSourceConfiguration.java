@@ -1,7 +1,10 @@
-package prompto.config;
+package prompto.config.auth.source;
 
 import java.io.ByteArrayInputStream;
 
+import prompto.config.IConfigurationReader;
+import prompto.config.IStoreConfiguration;
+import prompto.config.YamlConfigurationReader;
 import prompto.store.AttributeInfo;
 import prompto.store.IDataStore;
 import prompto.store.IQuery;
@@ -12,18 +15,23 @@ import prompto.store.IStored;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 
-public class StoredAuthenticationConfiguration extends AuthenticationSourceConfiguration implements IStoredAuthenticationSourceConfiguration {
+public class StoredAuthenticationSourceConfiguration extends AuthenticationSourceConfiguration implements IStoredAuthenticationSourceConfiguration {
 
-	public StoredAuthenticationConfiguration(IConfigurationReader reader) {
+	public StoredAuthenticationSourceConfiguration(IConfigurationReader reader) {
 		super(reader);
 	}
 
 	@Override
 	public IStoreConfiguration getStoreConfiguration() {
-		return loadStoreConfiguration(IDataStore.getInstance());
+		if(reader.hasKey("storeName"))
+			return fetchStoreConfigurationFromStoredRecord(IDataStore.getInstance());
+		else if(reader.hasKey("store"))
+			return reader.readStoreConfiguration("store");
+		else
+			return null;
 	}
 	
-	private IStoreConfiguration loadStoreConfiguration(IStore store) { 
+	private IStoreConfiguration fetchStoreConfigurationFromStoredRecord(IStore store) { 
 		String storeName = reader.getString("storeName");
 		IStored stored = fetchStoreRecord(store, storeName);
 		String dbName = (String)stored.getData("dbName");

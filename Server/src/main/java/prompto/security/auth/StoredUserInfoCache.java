@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -15,7 +15,8 @@ import org.eclipse.jetty.jaas.spi.UserInfo;
 import org.eclipse.jetty.util.security.Credential;
 
 import prompto.config.IStoreConfiguration;
-import prompto.config.IStoredAuthenticationSourceConfiguration;
+import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.security.auth.method.DigestMethod;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
 import prompto.store.IQueryBuilder;

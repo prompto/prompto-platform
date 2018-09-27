@@ -1,4 +1,6 @@
-package prompto.config;
+package prompto.config.auth;
+
+import prompto.config.IConfigurationReader;
 
 public interface IAuthenticationConfigurationFactory {
 

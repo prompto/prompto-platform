@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.method;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

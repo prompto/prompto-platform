@@ -1,11 +1,12 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IConfigurationReader;
-import prompto.config.IAuthenticationSourceConfiguration;
-import prompto.config.IStoredAuthenticationSourceConfiguration;
-import prompto.config.StoredAuthenticationConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
+import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.config.auth.source.StoredAuthenticationSourceConfiguration;
+import prompto.security.auth.JettyLoginModuleBase;
 
 public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthenticationSourceFactory {
 
@@ -13,7 +14,7 @@ public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthent
 	
 	@Override
 	public IAuthenticationSourceConfiguration newConfiguration(IConfigurationReader reader) {
-		return new StoredAuthenticationConfiguration(reader);
+		return new StoredAuthenticationSourceConfiguration(reader);
 	}
 
 	@Override

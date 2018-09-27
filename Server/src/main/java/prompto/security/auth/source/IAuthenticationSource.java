@@ -1,4 +1,4 @@
-package prompto.security;
+package prompto.security.auth.source;
 
 import prompto.utils.Instance;
 

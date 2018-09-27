@@ -1,4 +1,6 @@
-package prompto.config;
+package prompto.config.auth.source;
+
+import prompto.config.IStoreConfiguration;
 
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 

@@ -1,5 +1,9 @@
 package prompto.config;
 
+import prompto.config.auth.AuthenticationConfiguration;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.IAuthenticationConfigurationFactory;
+
 public class HttpConfiguration extends IHttpConfiguration.Inline {
 
 	IConfigurationReader reader;
