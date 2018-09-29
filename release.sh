@@ -1,5 +1,5 @@
 #!/bin/bash
-read -p "version to publish:" version
+read -p "version to publish: " version
 cd prompto-java
 mvn versions:set -DnewVersion=$version -DgenerateBackupPoms=false
 mvn clean deploy -P deploy -DskipTests=true
