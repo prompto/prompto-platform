@@ -89,7 +89,7 @@
 				<directory>src/main/resources</directory>
 			</resource>
 			<resource>
-				<directory>../prompto-dev-center/DevCenter/src/main/resources</directory>
+				<directory>../prompto-dev-center/DevCenter</directory>
 			</resource>
 		</resources>
 	</build>
