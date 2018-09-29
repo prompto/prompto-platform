@@ -16,7 +16,7 @@ mongoStore: &atlasMongoStore
     
 dataStore: 
   <<: *atlasMongoStore
-  dbName: CODE
+  dbName: SEED-TOOLS
 
 http:
   port: 8080
