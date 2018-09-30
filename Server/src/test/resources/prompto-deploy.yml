@@ -1,0 +1,12 @@
+applicationName: AwsDeployer
+applicationVersion: 0.0.30
+serverAboutToStart: onServerStart
+resourceURLs:
+  - file:///Users/ericvergnaud/Development/prompto/prompto-deploy/aws/prompto-deploy/AwsDeployer.pec
+
+addOnURLs:
+  - file:///Users/ericvergnaud/Development/prompto/prompto-platform/AwsClient/target/AwsClient-0.0.16.jar
+
+http:
+  protocol: http
+  port: 8080
