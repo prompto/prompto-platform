@@ -8,8 +8,8 @@ and methods:
 	define listInstances as method returning Document[] doing:
 		Java: return this.listInstances();
 		
-	define runInstance as method receiving Text imageId, Text instanceType, Text keyName, Text[] securityGroupNames and Text userData returning Text doing:
-		Java: return this.runInstance(imageId, instanceType, keyName, securityGroupNames, userData);
+	define runInstance as method receiving Text imageId, Text instanceType, Text keyName, Text roleName, Text[] securityGroupNames and Text userData returning Text doing:
+		Java: return this.runInstance(imageId, instanceType, keyName, roleName, securityGroupNames, userData);
 		
 	define setInstanceName as method receiving Text instanceId and name doing:
 		Java: this.setInstanceName(instanceId, name);
@@ -66,7 +66,7 @@ and verifying:
 define "ec2 instance can be created, named and dropped" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
 	nodeId = ec2.runInstance with "ami-d2c924b2" as imageId, "t2.micro" as instanceType,
-		"prompto-admin" as keyName, ["default"] as securityGroupNames and "some data" as userData
+		"prompto-admin" as keyName, "deployer" as roleName, ["default"] as securityGroupNames and "some data" as userData
 	ec2.setInstanceName with nodeId as instanceId and "TEST-INSTANCE" as name
 	ec2.dropInstance nodeId
 and verifying:

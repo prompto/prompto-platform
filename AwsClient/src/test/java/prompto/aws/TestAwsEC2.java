@@ -13,35 +13,35 @@ public class TestAwsEC2 {
 	@Test
 	public void testEC2ClientCanBeCreated() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 client can be created\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 client can be created\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 	
 	@Test
 	public void testEC2instancesCanBeListed() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 instances can be listed\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 instances can be listed\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 
 	@Test
 	public void testEC2InstanceCanBeCreatedNamedAndDropped() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 instance can be created, named and dropped\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 instance can be created, named and dropped\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 	
 	@Test
 	public void testEC2AddressesCanBeListed() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 addresses can be listed\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 addresses can be listed\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 	
 	@Test
 	public void testEC2AddressCanBeFoundByIP() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 address can be found by ip\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 address can be found by ip\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 
@@ -49,7 +49,7 @@ public class TestAwsEC2 {
 	@Test
 	public void testEC2AddressCanBeCreatedAssociatedDissociatedAndDropped() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-test", "\"ec2 address can be created, associated, dissociated and dropped\"", "-resources", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 address can be created, associated, dissociated and dropped\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 }

@@ -19,6 +19,7 @@ import com.amazonaws.services.ec2.model.DescribeAddressesRequest;
 import com.amazonaws.services.ec2.model.DescribeAddressesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
+import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
@@ -48,17 +49,20 @@ public class EC2 {
 		this.ec2 = ec2;
 	}
 	
-	public String runInstance(String imageId, String instanceType, String keyName, PromptoList<String> securityGroups, String userData) {
+	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, PromptoList<String> securityGroups, String userData) {
+		IamInstanceProfileSpecification iamProfile = new IamInstanceProfileSpecification()
+			.withName(iamRoleName);
 		userData = Base64.getEncoder().encodeToString(userData.getBytes());
 		RunInstancesRequest runRequest = new RunInstancesRequest()
 			.withImageId(imageId)
 			.withInstanceType(instanceType)
+			.withUserData(userData)
 			.withMinCount(1)
             .withMaxCount(1)
-            .withKeyName(keyName)
+            .withIamInstanceProfile(iamProfile)
             .withSecurityGroups(securityGroups)
-            .withUserData(userData);
-		RunInstancesResult runResult = ec2.runInstances(runRequest);
+            .withKeyName(keyName);
+ 		RunInstancesResult runResult = ec2.runInstances(runRequest);
 		return runResult.getReservation().getInstances().get(0).getInstanceId();
 
 	}
