@@ -8,6 +8,3 @@
 travis.yml
 /target/
 /.settings/
-seed.yml
-chromedriver_linux64.zip
-chromedriver_mac64.zip
