@@ -13,7 +13,6 @@
 		<module>MongoStore</module>
 		<module>DatomicStore</module>
 		<module>Server</module>
-		<module>CodeFactory</module>
 		<module>AppStore</module>
 		<module>AwsClient</module>
 	</modules>
