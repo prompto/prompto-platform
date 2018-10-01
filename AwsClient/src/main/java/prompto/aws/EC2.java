@@ -50,8 +50,6 @@ public class EC2 {
 	}
 	
 	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, PromptoList<String> securityGroups, String userData) {
-		IamInstanceProfileSpecification iamProfile = new IamInstanceProfileSpecification()
-			.withName(iamRoleName);
 		userData = Base64.getEncoder().encodeToString(userData.getBytes());
 		RunInstancesRequest runRequest = new RunInstancesRequest()
 			.withImageId(imageId)
@@ -59,10 +57,13 @@ public class EC2 {
 			.withUserData(userData)
 			.withMinCount(1)
             .withMaxCount(1)
-            .withIamInstanceProfile(iamProfile)
             .withSecurityGroups(securityGroups)
             .withKeyName(keyName);
- 		RunInstancesResult runResult = ec2.runInstances(runRequest);
+		if(iamRoleName!=null && !iamRoleName.isEmpty()) {
+			IamInstanceProfileSpecification iamProfile = (iamRoleName==null || iamRoleName.isEmpty()) ? null : new IamInstanceProfileSpecification().withName(iamRoleName);
+			runRequest = runRequest.withIamInstanceProfile(iamProfile);
+		}
+		RunInstancesResult runResult = ec2.runInstances(runRequest);
 		return runResult.getReservation().getInstances().get(0).getInstanceId();
 
 	}
