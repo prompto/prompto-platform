@@ -118,8 +118,9 @@ define deployRelease as method receiving dbId, nodeSize, nodeCount and dataCente
 	timeStamp = now
 	deployment = Deployment with release as release, nodeSize as nodeSize, nodeCount as nodeCount, dataCenters as dataCenters, author as author and timeStamp as timeStamp
 	store deployment
+	
 define createLibraries as native method doing:
-	Java: prompto.codeserver.CodeServer.createLibraries();
+	Java: prompto.codefactory.Application.createLibraries();
 
 define serverAboutToStart as method receiving Text<:> params doing:
 	createLibraries
@@ -232,7 +233,7 @@ define getModuleResources as method receiving dbId doing:
 	return fetch all Resource where module = module
 
 define getModulePort as native method receiving dbId and Boolean optional returning Integer doing:
-	Java: return prompto.codeserver.ModuleProcess.launchIfNeeded(dbId, optional);
+	Java: return prompto.codefactory.ModuleProcess.launchIfNeeded(dbId, optional);
 
 define storeEdited as method receiving EditedStuff[] edited doing:
 	deleted = d1.stuff for each d1 in edited filtered with d where d.editStatus = DELETED
