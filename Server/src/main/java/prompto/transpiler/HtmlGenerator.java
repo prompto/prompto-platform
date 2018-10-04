@@ -132,6 +132,8 @@ public class HtmlGenerator {
 		Context context = Standalone.getGlobalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
 		declaration.declare(transpiler);
+		if(transpiler.requires("DataStore"))
+			transpiler.require("RemoteStore");
 		printer.println("<script id='transpiled'>");
 		transpiler.print(printer);
 		printer.println("</script>");
