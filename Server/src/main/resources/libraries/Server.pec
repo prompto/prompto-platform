@@ -19,4 +19,4 @@ define getHttpSession as native method returning Document doing:
 	Python2: return getHttpSession() from module: prompto.server.Server
 	Python3: return getHttpSession() from module: prompto.server.Server
 	JavaScript: return getHttpSession(); from module: prompto/server/Server.js
-    
+

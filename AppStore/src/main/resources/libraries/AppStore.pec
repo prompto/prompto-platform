@@ -118,7 +118,6 @@ define deployRelease as method receiving dbId, nodeSize, nodeCount and dataCente
 	timeStamp = now
 	deployment = Deployment with release as release, nodeSize as nodeSize, nodeCount as nodeCount, dataCenters as dataCenters, author as author and timeStamp as timeStamp
 	store deployment
-	
 define createLibraries as native method doing:
 	Java: prompto.codefactory.Application.createLibraries();
 
@@ -302,8 +301,8 @@ define createWebSite as method receiving name, description = nothing, image = no
 	version = 'v0.0.1'
 	module = WebSite with name, version, description, image, serverAboutToStartMethod, homePage and dependencies
 	decl = createStartMethod with module and serverAboutToStartMethod as name
-	page = createHomePage with module and homePage as name
-	store decl, page, module
+	resources = createHomeHtmlOrPageResources with module and homePage as name
+	store decl, resources, module
 	flush
 
 
@@ -314,10 +313,36 @@ define createStartMethod as method receiving module and name doing:
 	return decl 
 
 
-define createHomePage as method receiving module and name doing:
+define createHomeHtmlOrPageResources as method receiving module and name doing:
+	if name.endsWith ".page":
+		return createHomePageResources with module and name
+	else:
+		return createHomeHtmlResources with module and name
+
+		
+define createHomeHtmlResources as method receiving module and name doing:
 	body = "<!DOCTYPE html>\n<html>\n\t<head>\n\t</head>\n\t<body>\n\t\tHello!\n\t</body>\n</html>"
 	page = TextResource with name, 'v0.0.1' as version, "text/html" as mimeType, body and module
-	return page
+	return [page]
+
+
+define createHomePageResources as method receiving module and name doing:
+	start = name.indexOf "/"
+	widgetName = name[start + 1:-6].toCapitalized + "Page"
+	body = "@PageWidgetOf(\"" + name + "\")\n"
+	body = body + "widget " + widgetName + " {\n\n"
+	body = body + "\tHtml method render() {\n"
+	body = body + "\t\treturn <div>Hello \"" + module.name + "\"!</div>;\n"
+	body = body + "\t}\n\n}\n" 
+	decl = WidgetDeclaration with widgetName as name, 'v0.0.1' as version, "O" as dialect, body and module
+	body = "header:\n"
+	body = body + "  title: " + module.name + "\n"
+	body = body + "  icon: favicon.ico\n"
+	body = body + "  widgetLibrary: react-bootstrap-3\n"
+	body = body + "body:\n"
+	body = body + "  widget: " + widgetName + "\n"
+	page = TextResource with name, 'v0.0.1' as version, "text/page" as mimeType, body and module
+	return [decl, page]
 
 
 define storeModule as method receiving module doing:
