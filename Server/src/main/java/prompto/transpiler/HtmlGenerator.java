@@ -10,12 +10,14 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import prompto.code.ICodeStore;
 import prompto.declaration.CategoryDeclaration;
 import prompto.declaration.WrappingWidgetDeclaration;
 import prompto.declaration.IDeclaration;
 import prompto.declaration.IWidgetDeclaration;
+import prompto.error.SyntaxError;
 import prompto.runtime.Context;
 import prompto.runtime.Standalone;
 import prompto.utils.Logger;
@@ -45,12 +47,12 @@ public class HtmlGenerator {
 
 	private void generate(Context context, PrintWriter printer) throws IOException {
 		generateProlog(printer);
-		generateHeader(context, printer);
-		generateBody(printer);
+		Consumer<PrintWriter> bodyWriter = generateHeader(context, printer);
+		bodyWriter.accept(printer);
 		generateEpilog(printer);
 	}
 
-	private void generateRenderBody(PrintWriter printer, String widgetName) {
+	private void generateRenderScript(PrintWriter printer, String widgetName) {
 		printer.println("<script>");
 		printer.println("function renderBody() {");
 		// TODO call htmlEngine
@@ -67,48 +69,62 @@ public class HtmlGenerator {
 		printer.println("<html>");
 	}
 
-	private void generateHeader(Context context, PrintWriter printer) throws IOException {
+	private Consumer<PrintWriter> generateHeader(Context context, PrintWriter printer) throws IOException {
 		printer.println("<head>");
 		generateTitle(printer);
 		generateIcon(printer);
 		generatePromptoScripts(printer);
 		generateLibraries(printer);
-		String widgetName = generateWidgetScript(context, printer);
-		if(widgetName!=null)
-			generateRenderBody(printer, widgetName);
+		Consumer<PrintWriter> bodyWriter = generateWidgetScript(context, printer);
 		printer.println("</head>");
+		return bodyWriter;
+	}
+	private Consumer<PrintWriter> generateWidgetScript(Context context, PrintWriter printer) {
+		try {
+			String widgetName = getWidgetName();
+			generateWidgetScript(context, printer, widgetName);
+			return this::generateBody;
+		} catch(SyntaxError e) {
+			return p->generateSyntaxError(p, e);
+		} catch(Exception e) {
+			return p->generateException(p, e);
+		}
+	}
+	
+	private void generateException(PrintWriter printer, Exception e) {
+		printer.println("<body>");
+		e.printStackTrace(printer);
+		printer.println("</body>");
 	}
 
-	private String generateWidgetScript(Context context, PrintWriter printer) {
+	
+	private void generateSyntaxError(PrintWriter printer, SyntaxError e) {
+		printer.println("<body>");
+		printer.println("Syntax error '" + e.getMessage() + "'");
+		printer.println("</body>");
+	}
+
+	
+	private String getWidgetName() {
 		Map<String, Object> body = getBodyConfig();
 		if(body==null)
-			return null;
+			throw new SyntaxError("Missing 'body' section in page descriptor");
 		Object value = body.get("widget");
-		if(value==null) {
-			logger.warn(()->"Expected a 'widget' key");
-			return null;
-		} else if(value instanceof String)
-			return generateWidgetScript(context, printer, (String)value);
-		else {
-			logger.warn(()->"Expected a String, got " + value.getClass().getName());
-			return null;
-		}
+		if(value instanceof String)
+			return (String)value;
+		if(value==null) 
+			throw new SyntaxError("Missing 'widget' entry in 'body' section of page descriptor");
+		else
+			throw new SyntaxError("Expected a String for 'widget', got " + value.getClass().getName());
 	}
-	
-	
-	
-	private String generateWidgetScript(Context context, PrintWriter printer, String widgetName) {
+
+	private void generateWidgetScript(Context context, PrintWriter printer, String widgetName) {
 		IWidgetDeclaration widget = fetchWidgetDeclaration(context, widgetName);
-		if(widget==null) {
-			printer.println("<script>alert(\"No such widget '" + widgetName + "'\");</script>");
-			return null;
-		} else {
-			generateWidgetScript(printer, widget);
-			return widgetName;
-		}
+		if(widget==null)
+			throw new SyntaxError("No such widget '" + widgetName + "'");
+		generateWidgetScript(printer, widget);
+		generateRenderScript(printer, widgetName);
 	}
-
-
 	
 
 	private IWidgetDeclaration fetchWidgetDeclaration(Context context, String widgetName) {
