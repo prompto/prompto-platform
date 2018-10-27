@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import prompto.code.ICodeStore;
@@ -20,6 +21,7 @@ import prompto.declaration.IWidgetDeclaration;
 import prompto.error.SyntaxError;
 import prompto.runtime.Context;
 import prompto.runtime.Standalone;
+import prompto.store.DataStore;
 import prompto.utils.Logger;
 import prompto.utils.YamlUtils;
 
@@ -148,8 +150,11 @@ public class HtmlGenerator {
 		Context context = Standalone.getGlobalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
 		declaration.declare(transpiler);
-		if(transpiler.requires("DataStore"))
+		if(transpiler.requires("DataStore")) {
 			transpiler.require("RemoteStore");
+			if(DataStore.getInstance().getDbIdClass()==UUID.class)
+				transpiler.require("UUID");
+		}
 		printer.println("<script id='transpiled'>");
 		transpiler.print(printer);
 		printer.println("</script>");

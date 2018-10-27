@@ -6,7 +6,7 @@ import prompto.config.IConfigurationReader;
 import prompto.config.IStoreConfiguration;
 import prompto.config.YamlConfigurationReader;
 import prompto.store.AttributeInfo;
-import prompto.store.IDataStore;
+import prompto.store.DataStore;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStore;
@@ -24,7 +24,7 @@ public class StoredAuthenticationSourceConfiguration extends AuthenticationSourc
 	@Override
 	public IStoreConfiguration getStoreConfiguration() {
 		if(reader.hasKey("storeName"))
-			return fetchStoreConfigurationFromStoredRecord(IDataStore.getInstance());
+			return fetchStoreConfigurationFromStoredRecord(DataStore.getInstance());
 		else if(reader.hasKey("store"))
 			return reader.readStoreConfiguration("store");
 		else

@@ -19,7 +19,7 @@ import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
 import prompto.statement.MethodCall;
-import prompto.store.IDataStore;
+import prompto.store.DataStore;
 import prompto.store.IStore;
 import prompto.store.memory.MemStore;
 import prompto.value.BinaryValue;
@@ -61,8 +61,8 @@ public class RequestRouter {
 	
 	private void executeTest(Identifier testName, HttpServletResponse response) throws Exception {
 		PrintStream oldOut = System.out;
-		IStore oldStore = IDataStore.getInstance();
-		IDataStore.setInstance(new MemStore());
+		IStore oldStore = DataStore.getInstance();
+		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
 		try {
@@ -71,15 +71,15 @@ public class RequestRouter {
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
 		} finally {
-			IDataStore.setInstance(oldStore);
+			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}
 
 	private void interpretTest(Identifier testName, HttpServletResponse response) throws IOException {
 		PrintStream oldOut = System.out;
-		IStore oldStore = IDataStore.getInstance();
-		IDataStore.setInstance(new MemStore());
+		IStore oldStore = DataStore.getInstance();
+		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
 		try {
@@ -88,7 +88,7 @@ public class RequestRouter {
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
 		} finally {
-			IDataStore.setInstance(oldStore);
+			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}

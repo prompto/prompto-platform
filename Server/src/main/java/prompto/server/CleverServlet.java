@@ -3,6 +3,7 @@ package prompto.server;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import prompto.utils.Logger;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SuppressWarnings("serial")
 public class CleverServlet extends HttpServlet {
@@ -49,6 +51,18 @@ public class CleverServlet extends HttpServlet {
 		generator.flush();
 		generator.close();
 	}
+	
+	protected void writeJSONResult(Object result, ServletOutputStream output) throws IOException {
+		JsonGenerator generator = new JsonFactory().createGenerator(output);
+		generator.setCodec(new ObjectMapper());
+		generator.writeStartObject();
+		generator.writeNullField("error");
+		generator.writeObjectField("data", result);
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
+	}
+
 
 
 	protected Map<String, byte[]> readParts(HttpServletRequest req) throws ServletException, IOException {
@@ -73,6 +87,17 @@ public class CleverServlet extends HttpServlet {
 				return output.toByteArray();
 			}
 		}
+	}
+
+	protected void writeJsonResponseError(String error, OutputStream output) throws IOException {
+		logger.warn(()->error);
+		JsonGenerator generator = new JsonFactory().createGenerator(output);
+		generator.writeStartObject();
+		generator.writeStringField("error", error);
+		generator.writeNullField("data");
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
 	}
 
 	

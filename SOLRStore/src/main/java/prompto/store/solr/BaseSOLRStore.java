@@ -155,6 +155,12 @@ abstract class BaseSOLRStore implements IStore {
 		return UUID.class;
 	}
 	
+	
+	@Override
+	public Object newDbId() {
+		return UUID.randomUUID();
+	}
+	
 	@Override
 	public UUID convertToDbId(Object dbId) {
 		if(dbId instanceof UUID)

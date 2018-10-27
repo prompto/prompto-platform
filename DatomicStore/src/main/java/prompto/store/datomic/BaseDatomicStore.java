@@ -60,14 +60,22 @@ public abstract class BaseDatomicStore implements IStore {
 		return cnx!=null;
 	}
 
+	@Override
 	public Class<?> getDbIdClass() {
 		return Object.class;
 	}
 
+	@Override
+	public Object newDbId() {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
 	public Object convertToDbId(Object dbId) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public AttributeInfo getAttributeInfo(String name) throws PromptoError {
 		// TODO Auto-generated method stub
 		return null;

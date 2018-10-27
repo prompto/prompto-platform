@@ -186,6 +186,12 @@ public class MongoStore implements IStore {
 		return UUID.class;
 	}
 
+	
+	@Override
+	public Object newDbId() {
+		return UUID.randomUUID();
+	}
+	
 	@Override
 	public Object convertToDbId(Object dbId) {
 		return UUID.fromString(String.valueOf(dbId));

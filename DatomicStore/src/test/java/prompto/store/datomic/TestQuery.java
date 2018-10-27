@@ -18,7 +18,7 @@ import prompto.parser.ECleverParser;
 import prompto.parser.EPromptoBuilder;
 import prompto.runtime.Context;
 import prompto.store.Family;
-import prompto.store.IDataStore;
+import prompto.store.DataStore;
 import prompto.store.IQuery;
 import prompto.store.IStorable;
 import prompto.store.IStore;
@@ -36,7 +36,7 @@ public class TestQuery extends BaseDatomicTest {
 	
 	@Before
 	public void before() throws Exception {
-		IDataStore.setInstance(store);
+		DataStore.setInstance(store);
 		context = Context.newGlobalContext();
 		registerDbIdAttribute();
 		registerNameAttribute();

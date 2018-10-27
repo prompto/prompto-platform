@@ -1,7 +1,6 @@
 package prompto.server;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +17,6 @@ import prompto.parser.ECleverParser;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.utils.Logger;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 
 @SuppressWarnings("serial")
 public class DataServlet extends CleverServlet {
@@ -98,17 +94,6 @@ public class DataServlet extends CleverServlet {
 		}
 	}
 	
-	private void writeJsonResponseError(String error, OutputStream output) throws IOException {
-		logger.warn(()->error);
-		JsonGenerator generator = new JsonFactory().createGenerator(output);
-		generator.writeStartObject();
-		generator.writeStringField("error", error);
-		generator.writeNullField("data");
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
-	}
-
 	private static void adjustQueryRange(IFetchExpression fetch, String first, String last) {
 		if(fetch instanceof FetchManyExpression) {
 			FetchManyExpression many = (FetchManyExpression)fetch;
