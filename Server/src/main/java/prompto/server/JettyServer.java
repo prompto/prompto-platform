@@ -326,6 +326,7 @@ class JettyServer extends Server {
 		handler.addServlet(new ControlServlet(), "/ws/control/*");
 		handler.addServlet(new BinaryServlet(), "/ws/bin/*");
 		handler.addServlet(new DataServlet(), "/ws/data/*");   
+		handler.addServlet(new StoreServlet(), "/ws/store/*");   
         boolean sendsXAutorization = config.getHttpConfiguration().getSendsXAuthorization();
         handler.addServlet(new PromptoServlet(sendsXAutorization), "/ws/run/*");  
         FilterHolder holder = newCrossOriginHandler();
