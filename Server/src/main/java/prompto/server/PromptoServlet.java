@@ -1,26 +1,18 @@
 package prompto.server;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
 import prompto.grammar.Identifier;
 import prompto.runtime.Standalone;
 import prompto.utils.Logger;
 import prompto.value.Document;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 
 @SuppressWarnings("serial")
 public class PromptoServlet extends CleverServlet {
@@ -86,17 +78,6 @@ public class PromptoServlet extends CleverServlet {
 	}
 	
 	
-	private void writeJSONError(String message, ServletOutputStream output) throws IOException {
-		JsonGenerator generator = new JsonFactory().createGenerator(output);
-		generator.writeStartObject();
-		generator.writeStringField("error", message);
-		generator.writeNullField("data");
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
-	}
-
-	
 	private void readSession(HttpServletRequest req) {
 		Document doc = (Document)req.getSession(true).getAttribute("__prompto_http_session__");
 		if(doc==null) {
@@ -137,20 +118,14 @@ public class PromptoServlet extends CleverServlet {
 		resp.getOutputStream().close();
 	}
 
-	private Identifier readMethod(HttpServletRequest req) {
-		String method = req.getPathInfo();
-		logger.info(()-> "Executing Prompto method: " + method);
-		return new Identifier(method.substring(1));
+	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
 	}
 
-	private ExecutionMode readMode(HttpServletRequest req) {
-		String mode = req.getParameter("mode");
-		if(mode!=null)
-			return ExecutionMode.valueOf(mode.toUpperCase());
-		else
-			return ExecutionMode.INTERPRET;
+	private void doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
 	}
-	
+
 	private boolean readMain(HttpServletRequest req) {
 		String main = req.getParameter("main");
 		if(main!=null)
@@ -160,36 +135,18 @@ public class PromptoServlet extends CleverServlet {
 	}
 
 
-
-	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendError(415);
+	protected Identifier readMethod(HttpServletRequest req) {
+		String method = req.getPathInfo();
+		logger.info(()-> "Executing Prompto method: " + method);
+		return new Identifier(method.substring(1));
 	}
 
-	private void doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendError(415);
+	protected ExecutionMode readMode(HttpServletRequest req) {
+		String mode = req.getParameter("mode");
+		if(mode!=null)
+			return ExecutionMode.valueOf(mode.toUpperCase());
+		else
+			return ExecutionMode.INTERPRET;
 	}
 
-	private Map<String, byte[]> readParts(HttpServletRequest req) throws ServletException, IOException {
-		Map<String, byte[]> parts = new HashMap<>();
-		for(Part part : req.getParts())
-			parts.put(part.getName(), readPartData(part));
-		return parts;
-	}
-
-	private byte[] readPartData(Part part) throws IOException {
-		try(InputStream input = part.getInputStream()) {
-			try(ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-				byte[] buffer = new byte[4096];
-				while(true) {
-					int read = input.read(buffer);
-					if(read<0)
-						break;
-					if(read>0)
-						output.write(buffer, 0, read);
-				}
-				output.flush();
-				return output.toByteArray();
-			}
-		}
-	}
 }
