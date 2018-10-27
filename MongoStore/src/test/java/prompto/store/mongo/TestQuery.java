@@ -98,7 +98,7 @@ public class TestQuery extends BaseMongoTest {
 		store.flush();
 		IStoredIterable many = store.fetchMany(null);
 		assertNotNull(many);
-		assertEquals(1L, many.length());
+		assertEquals(1L, many.count());
 	}
 
 	@Test

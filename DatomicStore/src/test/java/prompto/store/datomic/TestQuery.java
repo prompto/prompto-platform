@@ -99,7 +99,7 @@ public class TestQuery extends BaseDatomicTest {
 		store.flush();
 		IStoredIterable many = store.fetchMany(null);
 		assertNotNull(many);
-		assertEquals(1L, many.length());
+		assertEquals(1L, many.count());
 	}
 
 	@Test

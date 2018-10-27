@@ -341,18 +341,18 @@ abstract class BaseSOLRStore implements IStore {
 					
 					@Override
 					public boolean hasNext() {
-						return current < length();
+						return current < count();
 					}
 				};
 			}
 			
 			@Override
-			public long length() {
+			public long count() {
 				return response.getResults().size();
 			}
 			
 			@Override
-			public long totalLength() {
+			public long totalCount() {
 				return response.getResults().getNumFound();
 			}
 		};

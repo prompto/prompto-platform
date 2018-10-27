@@ -246,7 +246,7 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 		
 		@Override
-		public long totalLength() {
+		public long totalCount() {
 			/* if(totalCount==null) {
 				if(query==null || query.predicate==null)
 					totalCount = collection.count();
@@ -257,7 +257,7 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 		
 		@Override
-		public long length() {
+		public long count() {
 			return entities.size();
 		}
 	};

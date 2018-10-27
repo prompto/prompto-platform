@@ -371,7 +371,7 @@ public class MongoStore implements IStore {
 		}
 		
 		@Override
-		public long totalLength() {
+		public long totalCount() {
 			if(totalCount==null) {
 				if(query==null || query.predicate==null)
 					totalCount = collection.count();
@@ -382,14 +382,14 @@ public class MongoStore implements IStore {
 		}
 		
 		@Override
-		public long length() {
+		public long count() {
 			if(count==null) {
 				if(query!=null && query.first!=null && query.last!=null) {
 					count = 1 + query.last - query.first;
-					if(count > totalLength())
-						count = totalLength();
+					if(count > totalCount())
+						count = totalCount();
 				} else
-					count = totalLength();
+					count = totalCount();
 			}
 			return count;
 		}
