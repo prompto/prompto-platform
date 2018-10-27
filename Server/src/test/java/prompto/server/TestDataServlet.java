@@ -34,7 +34,7 @@ public class TestDataServlet extends BaseServerTest {
 	public void testThatFetchAllOnEmptyStoreIsOk() throws Exception {
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
-		assertEquals(0, node.get("data").get("totalLength").asLong());
+		assertEquals(0, node.get("data").get("totalCount").asLong());
 	}
 	
 	@Test
@@ -45,7 +45,7 @@ public class TestDataServlet extends BaseServerTest {
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");
-		assertEquals(1, node.get("totalLength").asLong());
+		assertEquals(1, node.get("totalCount").asLong());
 	}
 	
 	@Test
@@ -61,7 +61,7 @@ public class TestDataServlet extends BaseServerTest {
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		node = node.get("data");
-		assertEquals(1, node.get("totalLength").asLong());
+		assertEquals(1, node.get("totalCount").asLong());
 		node = node.get("value").get(0);
 		assertEquals("MyCategory", node.get("type").asText());	
 		node = node.get("value");
