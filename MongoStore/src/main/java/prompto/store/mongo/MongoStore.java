@@ -54,6 +54,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 
@@ -360,6 +361,8 @@ public class MongoStore implements IStore {
 						find = find.skip(query.first.intValue() - 1);
 					find = find.limit((int)(1 + query.last - query.first));
 				}
+				if(query.orderBys!=null)
+					find = find.sort(Sorts.orderBy(query.orderBys));
 			}
 			Iterator<Document> iter = find.iterator();
 
