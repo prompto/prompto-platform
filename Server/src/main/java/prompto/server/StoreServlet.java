@@ -18,6 +18,7 @@ import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
+import prompto.store.IStore;
 import prompto.store.IStoredIterable;
 import prompto.utils.Logger;
 
@@ -95,17 +96,42 @@ public class StoreServlet extends CleverServlet {
 	private IStorable jsonToStorable(JsonNode node, Map<Long, Object> updatedDbIds) {
 		List<String> categories = readJsonCategories(node);
 		IStorable storable = DataStore.getInstance().newStorable(categories, null);
-		populateFields(node, storable, updatedDbIds);
+		populateStorable(node, storable, updatedDbIds);
 		return storable;
 	}
 	
-	private void populateFields(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
+	private void populateStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
+		if(isRecordUpdate(record))
+			populateExistingStorable(record, storable, updatedDbIds);
+		else
+			populateNewStorable(record, storable, updatedDbIds);
+	}
+	
+	
+	private boolean isRecordUpdate(JsonNode record) {
+		JsonNode dbIdField = record.get(IStore.dbIdName);
+		return dbIdField!=null && !dbIdField.has("tempDbId");
+	}
+
+	private void populateExistingStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
+		Object dbId = DataStore.getInstance().convertToDbId(record.get(IStore.dbIdName).asText());
+		Iterator<String> fieldNames = record.fieldNames();
+		while(fieldNames.hasNext()) {
+			String fieldName = fieldNames.next();
+			if(IStore.dbIdName.equals(fieldName))
+				continue;
+			Object value = readJsonValue(record.get(fieldName), updatedDbIds);
+			storable.setData(fieldName, value, ()->dbId);
+		}
+	}
+
+	private void populateNewStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			Object value = readJsonValue(record.get(fieldName), updatedDbIds);
-			if("dbId".equals(fieldName))
-				storable.setDbId(value);
+			if(IStore.dbIdName.equals(fieldName))
+				storable.setDbId(DataStore.getInstance().convertToDbId(value));
 			else
 				storable.setData(fieldName, value);
 		}
@@ -201,9 +227,11 @@ public class StoreServlet extends CleverServlet {
 		writer.writeRecords(fetched);
 	}
 	
-	private void readOrderBysJson(IQueryBuilder builder, JsonNode jsonNode) {
-		// TODO Auto-generated method stub
-		
+	private void readOrderBysJson(IQueryBuilder builder, JsonNode orderBys) {
+		for(JsonNode orderBy : orderBys) {
+			AttributeInfo info = DataStore.getInstance().getAttributeInfo(orderBy.get("info").get("name").asText());
+			builder.orderBy(info, orderBy.get("descending").asBoolean());
+		}
 	}
 	
 	private void readPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
