@@ -89,19 +89,30 @@ public abstract class BaseWebTest {
 				}
 			});
 		} catch(Throwable t) {
-			System.err.println(webDriver.getPageSource());
+			String source = webDriver.getPageSource();
+			if(source==null || source.isEmpty())
+				source = "<empty source>";
+			System.out.println(source);
 			throw t;
 		}
 	}
 
 	protected WebElement waitElement(WebElement start, By by, int seconds) {
-		WebDriverWait wait = new WebDriverWait(webDriver, seconds);
-		return wait.until( new ExpectedCondition<WebElement>() {
-
-			@Override public WebElement apply(WebDriver input) {
-				return start.findElement(by);
-			}
-		});
+		try {
+			WebDriverWait wait = new WebDriverWait(webDriver, seconds);
+			return wait.until( new ExpectedCondition<WebElement>() {
+	
+				@Override public WebElement apply(WebDriver input) {
+					return start.findElement(by);
+				}
+			});
+		} catch(Throwable t) {
+			String source = webDriver.getPageSource();
+			if(source==null || source.isEmpty())
+				source = "<empty source>";
+			System.out.println(source);
+			throw t;
+		}
 	}
 
 	protected String getDbIdForModule(String name) throws Exception {
