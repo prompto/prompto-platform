@@ -35,6 +35,7 @@ import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
 import prompto.server.BaseUITest;
+import prompto.store.memory.MemStore;
 
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
@@ -45,7 +46,7 @@ public class TestRemoteStore extends BaseUITest {
 	@Before
 	public void before() {
 		tail = getCodeStoreTail();
-		DataStore.getInstance().deleteAll();
+		DataStore.setGlobal(new MemStore());
 	}
 	
 	
