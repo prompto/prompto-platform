@@ -52,14 +52,14 @@ public abstract class BaseWebTest {
 	}
 
 	@BeforeClass
-	public static void beforeClass() throws Exception {
+	public static void __beforeClass__() throws Exception {
 		readProperties();
 		loadWebDriver();
 	}
 	
 	
 	@AfterClass
-	public static void afterClass() {
+	public static void __afterClass__() {
 		closeWebDriver();
 	}
 	
