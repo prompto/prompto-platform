@@ -80,13 +80,18 @@ public abstract class BaseWebTest {
 	}
 	
 	protected WebElement waitElement(By by, int seconds) {
-		WebDriverWait wait = new WebDriverWait(webDriver, seconds);
-		return wait.until( new ExpectedCondition<WebElement>() {
-
-			@Override public WebElement apply(WebDriver input) {
-				return webDriver.findElement(by);
-			}
-		});
+		try {
+			WebDriverWait wait = new WebDriverWait(webDriver, seconds);
+			return wait.until( new ExpectedCondition<WebElement>() {
+	
+				@Override public WebElement apply(WebDriver input) {
+					return webDriver.findElement(by);
+				}
+			});
+		} catch(Throwable t) {
+			System.err.println(webDriver.getPageSource());
+			throw t;
+		}
 	}
 
 	protected WebElement waitElement(WebElement start, By by, int seconds) {

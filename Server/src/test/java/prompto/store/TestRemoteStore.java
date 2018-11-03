@@ -77,7 +77,6 @@ public class TestRemoteStore extends BaseUITest {
 		tail.setNext(pageResource);
 		String url = "http://localhost:" + HTTP_PORT + "/" + resourceName + ".page";
 		webDriver.get(url);
-		Thread.sleep(2000);
 	}
 
 	private URL createTempPage(String resourceName) throws Exception {
