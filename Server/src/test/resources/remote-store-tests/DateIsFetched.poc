@@ -1,0 +1,15 @@
+storable attribute value: Date;
+storable category Stuff(value);
+
+widget DateIsFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value='2016-02-25');
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == '2016-02-25' );
+		return <div id="root">{stuff.value.text}</div>;
+	}
+}

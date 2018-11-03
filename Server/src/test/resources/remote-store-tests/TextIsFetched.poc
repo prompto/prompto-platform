@@ -1,0 +1,15 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget TextIsFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value="John");
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == "John" );
+		return <div id="root">{stuff.value}</div>;
+	}
+}

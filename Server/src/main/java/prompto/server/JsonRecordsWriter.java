@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,19 +33,37 @@ public class JsonRecordsWriter {
 	}
 	
 	JsonGenerator generator;
+	Function<String, AttributeInfo> fetcher;
 	IStore store;
+	boolean loadChildren;
 	Map<String, JsonWriter> writers = new HashMap<>();
 	
-	public JsonRecordsWriter(OutputStream output, IStore store) throws IOException {
+	public JsonRecordsWriter(OutputStream output, Function<String, AttributeInfo> fetcher, IStore store, boolean loadChildren) throws IOException {
 		this.generator = new JsonFactory().createGenerator(output);
+		this.fetcher = fetcher;
 		this.store = store;
+		this.loadChildren = loadChildren;
 	}
 
 	public void writeRecords(Object fetched) throws IOException {
-		writeJsonListRecord(fetched);
+		writeJsonListRecords(fetched);
 	}
 	
-	private void writeJsonListRecord(Object fetched) throws IOException {
+	public void writeRecord(IStored fetched) throws IOException {
+		generator.writeStartObject();
+		generator.writeNullField("error");
+		if(fetched==null)
+			generator.writeNullField("data");
+		else {
+			generator.writeFieldName("data");
+			writeJsonRecord(fetched);
+		}
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
+	}
+
+	private void writeJsonListRecords(Object fetched) throws IOException {
 		generator.writeStartObject();
 		generator.writeNullField("error");
 		generator.writeFieldName("data");
@@ -71,7 +90,7 @@ public class JsonRecordsWriter {
 			generator.writeNumber(1);
 			generator.writeFieldName("value");
 			generator.writeStartArray();
-			writeJsonStored((IStored)fetched);
+			writeJsonRecord((IStored)fetched);
 			generator.writeEndArray();
 		} else if(fetched instanceof IStoredIterable) {
 			generator.writeFieldName("count");
@@ -81,13 +100,13 @@ public class JsonRecordsWriter {
 			generator.writeFieldName("value");
 			generator.writeStartArray();
 			for(IStored stored : (IStoredIterable)fetched)
-				writeJsonStored(stored);
+				writeJsonRecord(stored);
 			generator.writeEndArray();
 		} else
 			throw new InvalidParameterException("Type not supported: " + fetched.getClass().getName());
 	}
 
-	private void writeJsonStored(IStored stored) throws IOException {
+	private void writeJsonRecord(IStored stored) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
 		generator.writeString(DataServlet.readCategory(stored));
@@ -128,10 +147,14 @@ public class JsonRecordsWriter {
 		JsonWriter writer = writers.get(name);
 		if(writer!=null)
 			return writer;
-		AttributeInfo info = store.getAttributeInfo(name);
+		AttributeInfo info = fetcher.apply(name);
 		if(info==null)
 			return null;
-		writer = familyWriters.get(info.getFamily());
+		Family family = info.getFamily();
+		if(loadChildren && (family==Family.CATEGORY || family==Family.RESOURCE))
+			writer = this::writeChild;
+		else
+			writer = familyWriters.get(family);
 		if(writer==null)
 			throw new IOException("No writer for " + info.getFamily().name());
 		if(info.isCollection())
@@ -149,7 +172,7 @@ public class JsonRecordsWriter {
 			newEntry(Family.INTEGER, (g,o)->g.writeNumber(((Number)o).longValue())),
 			newEntry(Family.DECIMAL, (g,o)->g.writeNumber(((Number)o).doubleValue())),
 			newEntry(Family.TEXT, (g,o)->g.writeString((String)o)),
-			newEntry(Family.UUID, JsonRecordsWriter::writeUUID),
+			newEntry(Family.UUID, JsonRecordsWriter::writeUuid),
 			newEntry(Family.DATE, JsonRecordsWriter::writePromptoDate),
 			newEntry(Family.TIME, JsonRecordsWriter::writePromptoTime),
 			newEntry(Family.DATETIME, JsonRecordsWriter::writePromptoDateTime),
@@ -167,7 +190,7 @@ public class JsonRecordsWriter {
 			newEntry(Long.class, (g,o)->g.writeNumber(((Number)o).longValue())),
 			newEntry(Double.class, (g,o)->g.writeNumber(((Number)o).doubleValue())),
 			newEntry(String.class, (g,o)->g.writeString((String)o)),
-			newEntry(UUID.class, JsonRecordsWriter::writeUUID),
+			newEntry(UUID.class, JsonRecordsWriter::writeUuid),
 			newEntry(PromptoDate.class, JsonRecordsWriter::writePromptoDate),
 			newEntry(PromptoTime.class, JsonRecordsWriter::writePromptoTime),
 			newEntry(PromptoDateTime.class, JsonRecordsWriter::writePromptoDateTime),
@@ -192,10 +215,18 @@ public class JsonRecordsWriter {
 	}
 	
 
-	private static void writeUUID(JsonGenerator generator, Object value) throws IOException {
+	private void writeChild(JsonGenerator generator, Object value) throws IOException {
+		IStored stored = store.fetchUnique(value);
+		if(stored==null)
+			generator.writeNull();
+		else
+			writeJsonRecord(stored);
+	}
+	
+	private static void writeUuid(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
-		generator.writeString("UUID");
+		generator.writeString("Uuid");
 		generator.writeFieldName("value");
 		generator.writeString(value.toString());
 		generator.writeEndObject();

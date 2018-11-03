@@ -82,7 +82,7 @@ public class DataServlet extends CleverServlet {
 			if("list".equals(format.toLowerCase())) {
 				resp.setContentType("application/json");
 				Object fetched = fetch.fetchRaw(dataStore);
-				JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), dataStore);
+				JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), dataStore::getAttributeInfo, dataStore, false);
 				writer.writeRecords(fetched);
 			} else
 				writeJsonResponseError("Invalid query!", resp.getOutputStream());

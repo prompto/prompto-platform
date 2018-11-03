@@ -1,10 +1,32 @@
 function readJSONValue(value) {
-	switch(value.type) {
-	case "UUID":
-		return UUID.fromString(value.value);
-	default:
-		throw new Error("Unsupported " + value.type);
-	}	
+	if(value==null)
+		return null;
+	else if(Array.isArray(value)) {
+		var items = value.map(readJSONValue);
+		return new List(false, items);
+	} else if(typeof(value)==typeof({})) {
+		switch(value.type) {
+			case "Uuid":
+				return UUID.fromString(value.value);
+			case "Date":
+				return LocalDate.parse(value.value);
+			case "Time":
+				return LocalTime.parse(value.value);
+			case "DateTime":
+				return DateTime.parse(value.value);
+			default:
+				return readJSONInstance(value);
+			}	
+	} else
+		return value;
+}
+
+function readJSONInstance(value) {
+	var fct = eval(value.type);
+	if(typeof(fct)!=='function')
+		throw new Error("Unsupported: " + value.type);
+	var stored = recordToStored(value);
+	return new fct(null, stored, false);
 }
 
 function getTypeName(value) {
@@ -98,6 +120,16 @@ StorableDocument.prototype.setData = function(name, value) {
 };
 
 
+function recordToStored(record) {
+	var stored = new StoredDocument([record.type]);
+	Object.getOwnPropertyNames(record.value)
+		.forEach(function(name) {
+			var value = record.value[name];
+			stored[name] = readJSONValue(value);
+		});
+	return stored;
+};
+
 function StoredIterable(records) {
 	this.index = 0;
 	this.count = function() { return records.count; };
@@ -105,15 +137,7 @@ function StoredIterable(records) {
 	this.hasNext = function() { return this.index < records.count; };
 	this.next = function() { 
 		var record = records.value[this.index++];
-		var stored = new StoredDocument([record.type]);
-		Object.getOwnPropertyNames(record.value)
-			.forEach(function(name) {
-				var value = record.value[name];
-				if(typeof(value)==typeof({}))
-					value = readJSONValue(value)
-				stored[name] = value;
-			});
-		return stored;
+		return recordToStored(record);
 	};
 	return this;
 }
@@ -153,6 +177,10 @@ function RemoteStore() {
 		if(toStore)
 			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
 		this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
+	};
+	this.fetchOne = function(query) {
+		var response = this.fetchSync("/ws/store/fetchOne", JSON.stringify(query));
+		return recordToStored(response.data);
 	};
 	this.fetchMany = function(query) {
 		var response = this.fetchSync("/ws/store/fetchMany", JSON.stringify(query));
@@ -231,9 +259,9 @@ function OrPredicate(left, right) {
     return this;
 }
 
-function NotPredicate(pred) {
+function NotPredicate(predicate) {
 	this.type = "NotPredicate";
-    this.pred = pred;
+    this.predicate = predicate;
     return this;
 }
 
@@ -241,7 +269,7 @@ function MatchPredicate(info, matchOp, value) {
 	this.type = "MatchPredicate";
     this.info = info;
     this.matchOp = MatchOp[matchOp.name];
-    this.value = value;
+    this.value = writeJSONValue(value);
     return this;
 }
 

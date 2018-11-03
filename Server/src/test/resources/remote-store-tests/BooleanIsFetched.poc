@@ -1,0 +1,15 @@
+storable attribute value: Boolean;
+storable category Stuff(value);
+
+widget BooleanIsFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value=true);
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == true );
+		return <div id="root">{stuff.value.text}</div>;
+	}
+}

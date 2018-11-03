@@ -14,9 +14,11 @@ import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlWriter;
@@ -28,25 +30,35 @@ import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
+import prompto.runtime.Standalone;
 import prompto.server.HeadlessTests;
+import prompto.server.StoreServlet;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
 import prompto.server.BaseUITest;
+import prompto.store.memory.MemStore;
 
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
 
+	@BeforeClass
+	public static void beforeClass() {
+		StoreServlet.FORCE_GLOBAL_STORE = true;
+	}
+	
+	
 	BaseCodeStore tail;
-	Path tempDir;
-	
-	
+	Path tempDir;	
+
 	@Before
-	public void before() {
+	public void before() throws Exception {
+		Standalone.clearGlobalContext();
+		DataStore.setGlobal(new MemStore());
+		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 		tail = getCodeStoreTail();
-		DataStore.getInstance().deleteAll();
 	}
 	
 	
@@ -113,6 +125,14 @@ public class TestRemoteStore extends BaseUITest {
 	}
 
 	@Test
+	public void nullIsFetched() throws Exception {
+		linkResourcesAndLoadPage("NullIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("null", elem.getText());
+	}
+
+	
+	@Test
 	public void booleanIsStored() throws Exception {
 		linkResourcesAndLoadPage("BooleanIsStored", Dialect.O);
 		waitElement(By.id("root"), 3);
@@ -121,6 +141,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals(true, stored.getRawData("value"));
 	}
 
+	
+	@Test
+	public void booleanIsFetched() throws Exception {
+		linkResourcesAndLoadPage("BooleanIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("true", elem.getText());
+	}
+
+	
 	@Test
 	public void textIsStored() throws Exception {
 		linkResourcesAndLoadPage("TextIsStored", Dialect.O);
@@ -129,6 +158,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertNotNull(stored);
 		assertEquals("John", stored.getRawData("value"));
 	}
+	
+	
+	@Test
+	public void textIsFetched() throws Exception {
+		linkResourcesAndLoadPage("TextIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+	
 	
 	@Test
 	public void integerIsStored() throws Exception {
@@ -141,6 +179,14 @@ public class TestRemoteStore extends BaseUITest {
 
 	
 	@Test
+	public void integerIsFetched() throws Exception {
+		linkResourcesAndLoadPage("IntegerIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("123", elem.getText());
+	}
+	
+
+	@Test
 	public void decimalIsStored() throws Exception {
 		linkResourcesAndLoadPage("DecimalIsStored", Dialect.O);
 		waitElement(By.id("root"), 3);
@@ -149,6 +195,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals(123.2d, stored.getRawData("value"));
 	}
 
+
+	@Test
+	public void decimalIsFetched() throws Exception {
+		linkResourcesAndLoadPage("DecimalIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("123.4", elem.getText());
+	}
+
+	
 	@Test
 	public void uuidIsStored() throws Exception {
 		linkResourcesAndLoadPage("UuidIsStored", Dialect.O);
@@ -157,6 +212,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertNotNull(stored);
 		assertEquals(UUID.fromString("d5622e5d-9232-48de-bb47-77fc41005f5a"), stored.getRawData("value"));
 	}
+	
+	
+	@Test
+	public void uuidIsFetched() throws Exception {
+		linkResourcesAndLoadPage("UuidIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("d5622e5d-9232-48de-bb47-77fc41005f5a", elem.getText());
+	}
+
 	
 	@Test
 	public void dateIsStored() throws Exception {
@@ -167,6 +231,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals(PromptoDate.parse("2016-02-25"), stored.getRawData("value"));
 	}
 	
+	
+	@Test
+	public void dateIsFetched() throws Exception {
+		linkResourcesAndLoadPage("DateIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("2016-02-25", elem.getText());
+	}
+
+	
 	@Test
 	public void timeIsStored() throws Exception {
 		linkResourcesAndLoadPage("TimeIsStored", Dialect.O);
@@ -176,6 +249,16 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals(PromptoTime.parse("18:15:03"), stored.getRawData("value"));
 	}
 	
+
+	@Test
+	public void timeIsFetched() throws Exception {
+		linkResourcesAndLoadPage("TimeIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("18:15:03.000", elem.getText());
+	}
+
+	
+
 	@Test
 	public void dateTimeIsStored() throws Exception {
 		linkResourcesAndLoadPage("DateTimeIsStored", Dialect.O);
@@ -186,6 +269,13 @@ public class TestRemoteStore extends BaseUITest {
 	}
 
 	@Test
+	public void dateTimeIsFetched() throws Exception {
+		linkResourcesAndLoadPage("DateTimeIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("2016-02-25T18:15:03.000Z", elem.getText());
+	}
+
+	@Test
 	public void listIsStored() throws Exception {
 		linkResourcesAndLoadPage("ListIsStored", Dialect.O);
 		waitElement(By.id("root"), 3);
@@ -193,6 +283,15 @@ public class TestRemoteStore extends BaseUITest {
 		assertNotNull(stored);
 		assertEquals(Arrays.asList("John", "Gielgud"), stored.getRawData("value"));
 	}
+	
+	
+	@Test
+	public void listIsFetched() throws Exception {
+		linkResourcesAndLoadPage("ListIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("[John, Gielgud]", elem.getText());
+	}
+
 	
 	@Test
 	public void childIsStored() throws Exception {
@@ -206,5 +305,13 @@ public class TestRemoteStore extends BaseUITest {
 		assertNotNull(stored);
 		assertEquals("John", stored.getRawData("value"));
 	}
+	
+	@Test
+	public void childIsFetched() throws Exception {
+		linkResourcesAndLoadPage("ChildIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+
 	
 }

@@ -1,0 +1,16 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget NullIsFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value=null);
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == null );
+		text = stuff.value is null ? "null" : stuff.value;
+		return <div id="root">{text}</div>;
+	}
+}

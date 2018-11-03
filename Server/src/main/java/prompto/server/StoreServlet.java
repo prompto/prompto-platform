@@ -2,6 +2,7 @@ package prompto.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,15 +15,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.declaration.AttributeDeclaration;
+import prompto.error.SyntaxError;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
+import prompto.runtime.Context;
+import prompto.runtime.Standalone;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
 import prompto.store.IStore;
+import prompto.store.IStored;
 import prompto.store.IStoredIterable;
 import prompto.utils.Logger;
 
@@ -33,6 +39,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class StoreServlet extends CleverServlet {
 
 	static Logger logger = new Logger();
+	
+	public static boolean FORCE_GLOBAL_STORE = false;
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -45,15 +53,20 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	protected void doStuff(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		if(FORCE_GLOBAL_STORE)
+			DataStore.useGlobal();
 		String path = req.getPathInfo();
 		if(path!=null) switch(path) {
-		case "/fetchMany":
-			fetchMany(req, resp);
-			break;
-		case "/deleteAndStore":
-			store(req, resp);
-		default:
-			resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+			case "/fetchOne":
+				fetchOne(req, resp);
+				break;
+			case "/fetchMany":
+				fetchMany(req, resp);
+				break;
+			case "/deleteAndStore":
+				store(req, resp);
+			default:
+				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
 
@@ -247,11 +260,49 @@ public class StoreServlet extends CleverServlet {
 			readOrderBysJson(builder, json.get("orderBys"));
 		resp.setContentType("application/json");
 		IStoredIterable fetched = DataStore.getInstance().fetchMany(builder.build());
-		resp.setContentType("application/json");
-		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), DataStore.getInstance());
+		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), this::fetchAttributeInfo, DataStore.getInstance(), true);
 		writer.writeRecords(fetched);
 	}
 	
+	
+	protected void fetchOne(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		try {
+			String contentType = req.getContentType();
+			if(contentType.startsWith("application/json"))
+				fetchOneJson(req, resp);
+			else if(contentType.startsWith("application/x-www-form-urlencoded"))
+				fetchOneUrlEncoded(req, resp);
+			else if(contentType.startsWith("multipart/form-data"))
+				fetchOneMultipart(req, resp);
+			else
+				resp.sendError(415);
+		} catch(Throwable t) {
+			t.printStackTrace();
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			writeJSONError(t.getMessage(), resp.getOutputStream());
+		}
+	}
+	
+	private void fetchOneMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
+	}
+	
+	private void fetchOneUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
+	}
+	
+	
+	private void fetchOneJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		JsonNode json = readJsonStream(req);
+		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
+		if(json.has("predicate") && !json.get("predicate").isNull())
+			readPredicateJson(builder, json.get("predicate"));
+		resp.setContentType("application/json");
+		IStored fetched = DataStore.getInstance().fetchOne(builder.build());
+		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), this::fetchAttributeInfo, DataStore.getInstance(), true);
+		writer.writeRecord(fetched);
+	}
+
 	private void readOrderBysJson(IQueryBuilder builder, JsonNode orderBys) {
 		for(JsonNode orderBy : orderBys) {
 			AttributeInfo info = DataStore.getInstance().getAttributeInfo(orderBy.get("info").get("name").asText());
@@ -265,6 +316,15 @@ public class StoreServlet extends CleverServlet {
 		case "MatchPredicate":
 			readMatchPredicateJson(builder, jsonNode);
 			break;
+		case "AndPredicate":
+			readAndPredicateJson(builder, jsonNode);
+			break;
+		case "OrPredicate":
+			readOrPredicateJson(builder, jsonNode);
+			break;
+		case "NotPredicate":
+			readNotPredicateJson(builder, jsonNode);
+			break;
 		default:
 			throw new UnsupportedOperationException(type);
 		}
@@ -272,11 +332,44 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	private void readMatchPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
-		AttributeInfo info = DataStore.getInstance().getAttributeInfo(jsonNode.get("info").get("name").asText());
+		String name = jsonNode.get("info").get("name").asText();
+		AttributeInfo info = fetchAttributeInfo(name);
 		MatchOp matchOp = MatchOp.valueOf(jsonNode.get("matchOp").get("name").asText());
 		Object value = readJsonValue(jsonNode.get("value"), new HashMap<>());
 		builder.verify(info, matchOp, value);
 	}
+	
+	private AttributeInfo fetchAttributeInfo(String name) {
+		AttributeInfo info = DataStore.getInstance().getAttributeInfo(name);	
+		// in some scenarios, the attribute might not be registered yet
+		if(info==null) {
+			Context context = Standalone.getGlobalContext();
+			AttributeDeclaration decl = context.findAttribute(name);
+			if(decl==null)
+				throw new SyntaxError("Unkown attribute: " + name);
+			info = decl.getAttributeInfo(context);
+			DataStore.getInstance().createOrUpdateAttributes(Arrays.asList(info));
+		}
+		return info;
+	}
+
+	private void readAndPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
+		readPredicateJson(builder, jsonNode.get("left"));
+		readPredicateJson(builder, jsonNode.get("right"));
+		builder.and();
+	}	
+	
+
+	private void readOrPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
+		readPredicateJson(builder, jsonNode.get("left"));
+		readPredicateJson(builder, jsonNode.get("right"));
+		builder.or();
+	}	
+
+	private void readNotPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
+		readPredicateJson(builder, jsonNode.get("predicate"));
+		builder.not();
+	}	
 
 	private JsonNode readJsonStream(HttpServletRequest req) throws IOException {
 		try(InputStream input = req.getInputStream()) {

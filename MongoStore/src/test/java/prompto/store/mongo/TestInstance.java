@@ -46,7 +46,7 @@ import prompto.type.IType;
 import prompto.type.IntegerType;
 import prompto.type.TextType;
 import prompto.type.TimeType;
-import prompto.type.UUIDType;
+import prompto.type.UuidType;
 import prompto.utils.IdentifierList;
 import prompto.value.Boolean;
 import prompto.value.ConcreteInstance;
@@ -199,11 +199,11 @@ public class TestInstance extends BaseMongoTest {
 		String fieldName = "uuid";
 		UUID fieldValue = UUID.randomUUID();
 		createField(fieldName, Family.UUID, false);
-		IInstance instance = createInstanceWith1Attribute(fieldName, UUIDType.instance());
-		instance.setMember(context, new Identifier(fieldName), new prompto.value.UUIDValue(fieldValue));
+		IInstance instance = createInstanceWith1Attribute(fieldName, UuidType.instance());
+		instance.setMember(context, new Identifier(fieldName), new prompto.value.UuidValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
-		IStored stored = fetchOne(fieldName, new ExpressionValue(UUIDType.instance(), new prompto.value.UUIDValue(fieldValue)));
+		IStored stored = fetchOne(fieldName, new ExpressionValue(UuidType.instance(), new prompto.value.UuidValue(fieldValue)));
 		assertNotNull(stored);
 		assertEquals(fieldValue, stored.getData(fieldName));
 	}

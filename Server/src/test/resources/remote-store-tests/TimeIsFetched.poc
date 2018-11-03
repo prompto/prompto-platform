@@ -1,0 +1,15 @@
+storable attribute value: Time;
+storable category Stuff(value);
+
+widget TimeIsFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value='18:15:03');
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == '18:15:03' );
+		return <div id="root">{stuff.value.text}</div>;
+	}
+}
