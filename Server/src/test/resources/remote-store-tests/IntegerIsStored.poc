@@ -1,0 +1,14 @@
+storable attribute value: Integer;
+storable category Stuff(value);
+
+widget IntegerIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value=123);
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

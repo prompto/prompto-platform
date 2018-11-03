@@ -17,12 +17,26 @@ function getTypeName(value) {
 function writeJSONValue(value) {
 	if(value==null)
 		return value;
-	var typeName = getTypeName(value);
-	switch(typeName) {
-	case "UUID":
-		return value.hex;
-	default:	
-		return value;
+	else {
+		var typeName = getTypeName(value);
+		switch(typeName) {
+		case "UUID":
+			return { type: "Uuid", value: value.hex };
+		case "LocalDate":
+			return { type: "Date", value: value.toString() };
+		case "LocalTime":
+			return { type: "Time", value: value.toString() };
+		case "DateTime":
+			return { type: "DateTime", value: value.toString() };
+		case "List":
+			return value.map(writeJSONValue);
+		default:	
+			if(value instanceof $Root) {
+				var dbId = value.storable.getOrCreateDbId();
+				return { type: "%dbRef%", value: writeJSONValue(dbId) };
+			} else
+				return value;
+		}
 	}
 	
 }

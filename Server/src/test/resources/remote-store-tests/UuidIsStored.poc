@@ -1,0 +1,14 @@
+storable attribute value: Uuid;
+storable category Stuff(value);
+
+widget UuidIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value='d5622e5d-9232-48de-bb47-77fc41005f5a');
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

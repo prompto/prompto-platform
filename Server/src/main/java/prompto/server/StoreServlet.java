@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -13,6 +14,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.intrinsic.PromptoDate;
+import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoTime;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
@@ -150,7 +154,9 @@ public class StoreServlet extends CleverServlet {
 			return fieldValue.asText();
 		else if(fieldValue.isNull())
 			return null;
-		else if(fieldValue.isArray())
+		else if(fieldValue.isObject()) {
+			return readJsonValue(fieldValue.get("type").asText(), fieldValue.get("value"), updatedDbIds);
+		} else if(fieldValue.isArray())
 			return StreamSupport.stream(fieldValue.spliterator(), false)
 					.map(node->readJsonValue(node, updatedDbIds))
 					.collect(Collectors.toList());
@@ -158,6 +164,25 @@ public class StoreServlet extends CleverServlet {
 			throw new UnsupportedOperationException(fieldValue.getNodeType().name());
 	}
 
+	private Object readJsonValue(String type, JsonNode fieldValue, Map<Long, Object> updatedDbIds) {
+		switch(type) {
+		case "Uuid":
+			return UUID.fromString(fieldValue.asText());
+		case "Date":
+			return PromptoDate.parse(fieldValue.asText());
+		case "Time":
+			return PromptoTime.parse(fieldValue.asText());
+		case "DateTime":
+			return PromptoDateTime.parse(fieldValue.asText());
+		case "%dbRef%":
+			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, updatedDbIds));
+		default:
+			throw new UnsupportedOperationException(type);
+			
+		}
+	}
+	
+	
 	private List<String> readJsonCategories(JsonNode node) {
 		return StreamSupport.stream(node.get("category").spliterator(), false)
 			.map(JsonNode::asText)

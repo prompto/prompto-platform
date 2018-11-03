@@ -1,0 +1,14 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget TextIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value="John");
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

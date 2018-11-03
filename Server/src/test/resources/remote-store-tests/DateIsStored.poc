@@ -1,0 +1,14 @@
+storable attribute value: Date;
+storable category Stuff(value);
+
+widget DateIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value='2016-02-25');
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

@@ -1,0 +1,14 @@
+storable attribute value: Decimal;
+storable category Stuff(value);
+
+widget DecimalIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value=123.2);
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

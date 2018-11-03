@@ -1,0 +1,11 @@
+codeStore: 
+  factory: prompto.store.memory.MemStoreFactory
+  dbName: ROOT
+
+dataStore: 
+  factory: prompto.store.memory.MemStoreFactory
+  dbName: CODE
+
+http:
+  port: 8888
+  
