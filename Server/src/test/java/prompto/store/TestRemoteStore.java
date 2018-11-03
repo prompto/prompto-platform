@@ -44,12 +44,6 @@ import prompto.store.memory.MemStore;
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
 
-	@BeforeClass
-	public static void beforeClass() {
-		StoreServlet.FORCE_GLOBAL_STORE = true;
-	}
-	
-	
 	BaseCodeStore tail;
 	Path tempDir;	
 

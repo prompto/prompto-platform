@@ -40,8 +40,6 @@ public class StoreServlet extends CleverServlet {
 
 	static Logger logger = new Logger();
 	
-	public static boolean FORCE_GLOBAL_STORE = false;
-	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		doStuff(req, resp);
@@ -53,8 +51,6 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	protected void doStuff(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		if(FORCE_GLOBAL_STORE)
-			DataStore.useGlobal();
 		String path = req.getPathInfo();
 		if(path!=null) switch(path) {
 			case "/fetchOne":
