@@ -63,10 +63,9 @@ function writeJSONValue(value) {
 	
 }
 
-function StoredDocument(categories, dbId) {
+function StoredDocument(categories) {
 	// use reserved keyword explicitly
 	this.category = categories;
-    this.dbId = dbId;
     return this;
 }
 
@@ -82,11 +81,12 @@ StoredDocument.prototype.matches = function(predicate) {
         return predicate.matches(this);
 };
 
-function StorableDocument(categories) {
+function StorableDocument(categories, dbIdListener) {
     if(!categories)
         throw new Error("!!!");
-    // use reserved keyword explicitly
+    // use 'category' reserved keyword voluntarily
     this.category = categories;
+    this.dbIdListener = dbIdListener;
     this.document = null;
     return this;
 }
@@ -97,17 +97,25 @@ Object.defineProperty(StorableDocument.prototype, "dirty", {
     },
     set : function(value) {
         if (value) {
-            if(!this.document)
-                this.document = new StoredDocument(this.category, DataStore.instance.nextDbId());
+            if(!this.document) {
+                this.document = new StoredDocument(this.category);
+                this.document.dbId = this.getOrCreateDbId();
+            }
         } else
             this.document = null;
     }
 });
 
+StorableDocument.prototype.getDbId = function() {
+	return this.document ? (this.document.dbId || null) : null;
+};
+
+
 StorableDocument.prototype.getOrCreateDbId = function() {
-    var dbId = this.document ? (this.document["dbId"] || null) : null;
-    if (dbId == null) {
-        dbId = DataStore.instance.nextDbId();
+	var dbId = this.getDbId();
+	if(dbId==null) {
+       	dbId = DataStore.instance.nextDbId();
+        this.dbIdListener(dbId);
         this.setData("dbId", dbId);
     }
     return dbId;
@@ -117,6 +125,18 @@ StorableDocument.prototype.getOrCreateDbId = function() {
 StorableDocument.prototype.setData = function(name, value) {
     this.dirty = true;
     this.document[name] = writeJSONValue(value);
+};
+
+StorableDocument.prototype.updateDbIds = function(dbIds) {
+	Object.getOwnPropertyNames(this.document).forEach(function(name) {
+		var value = this.document[name];
+		if(value && value.tempDbId && dbIds[value.tempDbId]) {
+			var dbId = dbIds[value.tempDbId];
+			this.document[name] = dbId;
+			if(name==="dbId")
+				this.dbIdListener(dbId);
+		}
+	}, this);
 };
 
 
@@ -147,8 +167,8 @@ function RemoteStore() {
 	this.nextDbId = function() {
 		return { tempDbId: --this.lastDbId };
 	};
-	this.newStorableDocument = function(categories) {
-		return new StorableDocument(categories);
+	this.newStorableDocument = function(categories, dbIdListener) {
+		return new StorableDocument(categories, dbIdListener);
 	};
 	this.newQueryBuilder = function() {
 		return new RemoteQueryBuilder();
@@ -176,7 +196,8 @@ function RemoteStore() {
 			data.toDelete = toDel;
 		if(toStore)
 			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
-		this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
+		var response = this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
+		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
 	this.fetchOne = function(query) {
 		var response = this.fetchSync("/ws/store/fetchOne", JSON.stringify(query));

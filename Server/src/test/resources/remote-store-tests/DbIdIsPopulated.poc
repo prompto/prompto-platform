@@ -1,0 +1,18 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget DbIdIsPopulatedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		stuff = Stuff(value="John");
+		store(stuff);
+		stuff = fetch one( mutable Stuff ) where ( dbId == stuff.dbId );
+		stuff.value = "Gielgud";
+		store(stuff);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value == "Gielgud" );
+		return <div id="root">{stuff.value}</div>;
+	}
+}

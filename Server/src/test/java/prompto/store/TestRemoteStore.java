@@ -1,6 +1,8 @@
 package prompto.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,32 +16,30 @@ import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
-import com.esotericsoftware.yamlbeans.document.YamlDocument;
-import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
-
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
-import prompto.runtime.Standalone;
-import prompto.server.HeadlessTests;
-import prompto.server.StoreServlet;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
+import prompto.runtime.Standalone;
 import prompto.server.BaseUITest;
+import prompto.server.HeadlessTests;
 import prompto.store.memory.MemStore;
+
+import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.document.YamlDocument;
+import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
@@ -307,5 +307,11 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals("John", elem.getText());
 	}
 
+	@Test
+	public void dbIdIsPopulated() throws Exception {
+		linkResourcesAndLoadPage("DbIdIsPopulated", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Gielgud", elem.getText());
+	}
 	
 }
