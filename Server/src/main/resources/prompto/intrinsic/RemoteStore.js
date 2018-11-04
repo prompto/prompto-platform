@@ -189,7 +189,24 @@ function RemoteStore() {
 		};
 		request.send(body);
 		return response;
-	}
+	};
+	this.fetchAsync = function(url, body, onLoad) {
+		var request  = new XMLHttpRequest();
+		request.open("POST", url, true);
+		request.setRequestHeader("Content-type", "application/json; charset=utf-8");
+		request.onload = function() { 
+			if (this.status == 200) {
+				response = JSON.parse(this.responseText); 
+				onLoad(response);
+			}
+			else
+				throw new Error(this.statusText);
+		};
+		request.onerror = function() {
+			throw this.error;
+		};
+		request.send(body);
+	};
 	this.store = function(toDel, toStore) {
 		var data = {};
 		if(toDel)
@@ -198,6 +215,17 @@ function RemoteStore() {
 			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
 		var response = this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
 		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+	};
+	this.storeAsync = function(toDel, toStore, andThen) {
+		var data = {};
+		if(toDel)
+			data.toDelete = toDel;
+		if(toStore)
+			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
+		this.fetchAsync("/ws/store/deleteAndStore", JSON.stringify(data), function(response) {
+			toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+			andThen();
+		});
 	};
 	this.fetchOne = function(query) {
 		var response = this.fetchSync("/ws/store/fetchOne", JSON.stringify(query));

@@ -314,4 +314,11 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals("Gielgud", elem.getText());
 	}
 	
+	@Test
+	public void textIsStoredAsync() throws Exception {
+		linkResourcesAndLoadPage("TextIsStoredAsync", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
 }

@@ -1,0 +1,23 @@
+storable attribute value: Text;
+storable category User(value);
+
+widget TextIsStoredAsyncPage extends ReactWidget {
+	
+	method getInitialState() {
+		return {user: User(value="Albert")};
+	}
+	
+	
+	method componentWillMount() {
+		user = User(value="John");
+		store (user) then {
+			setState({user: user});
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		user = (User)state.user;
+		return <div id="root">{user.value}</div>;
+	}
+}
