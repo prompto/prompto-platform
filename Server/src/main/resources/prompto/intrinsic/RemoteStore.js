@@ -231,6 +231,13 @@ function RemoteStore() {
 		var response = this.fetchSync("/ws/store/fetchOne", JSON.stringify(query));
 		return recordToStored(response.data);
 	};
+	this.fetchOneAsync = function(query, andThen) {
+		this.fetchAsync("/ws/store/fetchOne", JSON.stringify(query), function(response) {
+			record = recordToStored(response.data);
+			andThen(record);
+		});
+
+	};
 	this.fetchMany = function(query) {
 		var response = this.fetchSync("/ws/store/fetchMany", JSON.stringify(query));
 		return new StoredIterable(response.data);

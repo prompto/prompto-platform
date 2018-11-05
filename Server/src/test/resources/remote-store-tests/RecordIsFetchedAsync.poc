@@ -1,0 +1,24 @@
+storable attribute value: Text;
+storable category User(value);
+
+widget RecordIsFetchedAsyncPage extends ReactWidget {
+	
+	method getInitialState() {
+		return {user: User(value="Albert")};
+	}
+	
+	
+	method componentWillMount() {
+		user = User(value="John");
+		store (user);
+		fetch one( User ) where ( value == "John" ) then with record {
+			setState({user: record});
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		user = (User)state.user;
+		return <div id="root">{user.value}</div>;
+	}
+}

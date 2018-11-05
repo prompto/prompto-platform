@@ -83,7 +83,7 @@ public class TestQuery extends BaseSOLRTest {
 	private IStored fetchOne(String query) throws Exception {
 		ECleverParser parser = new ECleverParser(query);
 		parser.getLexer().setAddLF(false);
-		ParseTree tree = parser.fetch_store_expression();
+		ParseTree tree = parser.fetch_expression();
 		EPromptoBuilder builder = new EPromptoBuilder(parser);
 		ParseTreeWalker walker = new ParseTreeWalker();
 		walker.walk(builder, tree);

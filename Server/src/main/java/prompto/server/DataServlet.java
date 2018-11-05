@@ -72,7 +72,7 @@ public class DataServlet extends CleverServlet {
 			if(format==null)
 				format = "list";
 			ECleverParser parser = new ECleverParser(query);
-			IFetchExpression fetch = parser.parse_fetch_store_expression();
+			IFetchExpression fetch = parser.parse_fetch_expression();
 			if(fetch==null) {
 				writeJsonResponseError("Invalid query: " + query, resp.getOutputStream());
 				return;

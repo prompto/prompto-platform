@@ -315,8 +315,16 @@ public class TestRemoteStore extends BaseUITest {
 	}
 	
 	@Test
-	public void textIsStoredAsync() throws Exception {
-		linkResourcesAndLoadPage("TextIsStoredAsync", Dialect.O);
+	public void recordIsStoredAsync() throws Exception {
+		linkResourcesAndLoadPage("RecordIsStoredAsync", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+	
+	@Test
+	public void recordIsFetchedAsync() throws Exception {
+		linkResourcesAndLoadPage("RecordIsFetchedAsync", Dialect.O);
 		Thread.sleep(100);
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John", elem.getText());
