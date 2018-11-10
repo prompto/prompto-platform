@@ -1,0 +1,23 @@
+storable attribute value: Text;
+storable category User(value);
+
+widget RecordsAreFetchedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return {users: (User[])[]};
+	}
+	
+	
+	method componentWillMount() {
+		store (User(value="John"), User(value="Gielgud"));
+		records = fetch all( User );
+		setState({users: records.toList()});
+	}
+	
+	Html method render() {
+		state = getState();
+		users = (User[])state.users;
+		values = user.value for each (user in users);
+		return <div id="root">{values.text}</div>;
+	}
+}

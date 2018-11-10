@@ -238,10 +238,19 @@ function RemoteStore() {
 		});
 
 	};
-	this.fetchMany = function(query) {
+	this.fetchMany = function(query, mutable) {
 		var response = this.fetchSync("/ws/store/fetchMany", JSON.stringify(query));
-		return new StoredIterable(response.data);
+		var iterable = new StoredIterable(response.data);
+		return new Cursor(mutable, iterable);
 	};
+	this.fetchManyAsync = function(query, mutable, andThen) {
+		var response = this.fetchSync("/ws/store/fetchMany", JSON.stringify(query));
+		var iterable = new StoredIterable(response.data);
+		var cursor = new Cursor(mutable, iterable);
+		andThen(cursor);
+	};
+	
+	
 	return this; 
 }
 

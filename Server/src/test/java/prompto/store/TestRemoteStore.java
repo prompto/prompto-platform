@@ -329,4 +329,21 @@ public class TestRemoteStore extends BaseUITest {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John", elem.getText());
 	}
+	
+	@Test
+	public void recordsAreFetched() throws Exception {
+		linkResourcesAndLoadPage("RecordsAreFetched", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John, Gielgud", elem.getText());
+	}
+	
+	
+	@Test
+	public void recordsAreFetchedAsync() throws Exception {
+		linkResourcesAndLoadPage("RecordsAreFetchedAsync", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John, Gielgud", elem.getText());
+	}
 }
