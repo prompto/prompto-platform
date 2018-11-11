@@ -1,4 +1,4 @@
-package prompto.store;
+package prompto.server;
 
 import static org.junit.Assert.*;
 
@@ -24,8 +24,7 @@ import prompto.code.ModuleType;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
 import prompto.runtime.Standalone;
-import prompto.server.BaseUITest;
-import prompto.server.HeadlessTests;
+import prompto.store.DataStore;
 import prompto.store.memory.MemStore;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;

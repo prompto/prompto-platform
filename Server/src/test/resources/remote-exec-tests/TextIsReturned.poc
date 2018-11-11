@@ -16,6 +16,9 @@ widget TextIsReturnedPage extends ReactWidget {
 	
 	Html method render() {
 		state = getState();
-		return <div id="root">{state.status}</div>;
+		if(state.status=="INITIAL")
+			return <div>INITIAL</div>;
+		else
+			return <div id="root">{state.status}</div>;
 	}
 }
