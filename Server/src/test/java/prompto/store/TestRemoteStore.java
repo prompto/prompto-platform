@@ -82,6 +82,7 @@ public class TestRemoteStore extends BaseUITest {
 			pageResourceURL = createTempPage(resourceName);
 		ImmutableCodeStore pageResource = new ImmutableCodeStore(codeResource, ModuleType.LIBRARY, pageResourceURL, PromptoVersion.LATEST);
 		tail.setNext(pageResource);
+		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 		String url = "http://localhost:" + HTTP_PORT + "/" + resourceName + ".page";
 		webDriver.get(url);
 	}

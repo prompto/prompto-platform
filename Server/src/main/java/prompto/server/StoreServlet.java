@@ -2,7 +2,6 @@ package prompto.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,13 +14,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import prompto.declaration.AttributeDeclaration;
-import prompto.error.SyntaxError;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
-import prompto.runtime.Context;
-import prompto.runtime.Standalone;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
@@ -336,17 +331,7 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	private AttributeInfo fetchAttributeInfo(String name) {
-		AttributeInfo info = DataStore.getInstance().getAttributeInfo(name);	
-		// in some scenarios, the attribute might not be registered yet
-		if(info==null) {
-			Context context = Standalone.getGlobalContext();
-			AttributeDeclaration decl = context.findAttribute(name);
-			if(decl==null)
-				throw new SyntaxError("Unkown attribute: " + name);
-			info = decl.getAttributeInfo(context);
-			DataStore.getInstance().createOrUpdateAttributes(Arrays.asList(info));
-		}
-		return info;
+		return DataStore.getInstance().getAttributeInfo(name);	
 	}
 
 	private void readAndPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
