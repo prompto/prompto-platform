@@ -1,0 +1,20 @@
+method voidMethod() {
+}
+
+widget VoidIsExecutedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { status: "INITIAL" };
+	}
+	
+	method componentWillMount() {
+		voidMethod() then {
+			setState({ status: "EXECUTED" });
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		return <div id="root">{state.status}</div>;
+	}
+}

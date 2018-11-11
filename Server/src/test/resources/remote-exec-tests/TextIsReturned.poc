@@ -1,0 +1,21 @@
+method returnText() {
+	return "RETURNED";
+}
+
+widget TextIsReturnedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { status: "INITIAL" };
+	}
+	
+	method componentWillMount() {
+		returnText() then with result {
+			setState({ status: result });
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		return <div id="root">{state.status}</div>;
+	}
+}
