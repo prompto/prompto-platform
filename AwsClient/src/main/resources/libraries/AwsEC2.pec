@@ -52,19 +52,27 @@ define newAwsEC2WithLocalCredentials as method receiving Text awsRegion returnin
 	return newAwsEC2 with awsRegion as awsRegion, login as login and password as password
 
 define "ec2 client can be created" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 and verifying:
 	ec2 is not Nothing
 
 define "ec2 instances can be listed" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	docs = ec2.listInstances
 	names = doc["Name"] as Text for each doc in docs
 and verifying:
-	"prompto-deployer-001" in names
+	"prompto-deploy-021" in names
+
+define "ec2 instances can be filtered" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	docs = ec2.listInstances filtered with doc where "prompto-deploy-" in doc.Name as Text
+	names = doc["Name"] as Text for each doc in docs
+and verifying:
+	"prompto-deploy-021" in names
+
 
 define "ec2 instance can be created, named and dropped" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	nodeId = ec2.runInstance with "ami-d2c924b2" as imageId, "t2.micro" as instanceType,
 		"prompto-admin" as keyName, "deployer" as roleName, ["default"] as securityGroupNames and "some data" as userData
 	ec2.setInstanceName with nodeId as instanceId and "TEST-INSTANCE" as name
@@ -73,20 +81,20 @@ and verifying:
 	nodeId is not Nothing
 	
 define "ec2 addresses can be listed" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	docs = ec2.listAddresses
 	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
 	"35.166.112.187" in ips
 
 define "ec2 address can be found by ip" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	name = ec2.getAddressIdForIpAddress "35.166.112.187"
 and verifying:
 	"eipalloc-dc98c1bb" = name
 
 define "ec2 address can be created, associated, dissociated and dropped" as test method doing:
-	ec2 = newAwsEC2WithLocalCredentials with "us-west-2" as awsRegion
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	doc = ec2.createIpAddress
 	addressId = doc.allocationId as Text
 	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId
