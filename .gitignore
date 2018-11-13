@@ -8,3 +8,5 @@
 travis.yml
 /target/
 /.settings/
+/password.txt
+release.json
