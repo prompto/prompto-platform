@@ -121,6 +121,8 @@ public class EC2 {
 				.orElse(null);
 		if(tag!=null)
 			doc.put("Name", tag.getValue());
+		else
+			doc.put("Name", "<anonymous>");
 	}
 
 	@SuppressWarnings("unchecked")
