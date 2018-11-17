@@ -139,6 +139,7 @@ public class MongoStore implements IStore {
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
+		logger.info(()->"Connected to database @" + mcu.getOptions().getRequiredReplicaSetName());
 	}
 	
 	public MongoStore(String host, int port, String database) {
@@ -171,6 +172,7 @@ public class MongoStore implements IStore {
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
+		logger.info(()->"Connected to '" + dbName + "' database");
 	}
 
 	@Override
