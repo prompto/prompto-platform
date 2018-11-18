@@ -122,7 +122,8 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	private void populateExistingStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
-		Object dbId = DataStore.getInstance().convertToDbId(record.get(IStore.dbIdName).asText());
+		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), updatedDbIds);
+		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
