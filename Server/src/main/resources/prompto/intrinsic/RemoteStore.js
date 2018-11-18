@@ -179,13 +179,12 @@ function RemoteStore() {
 		return new Cursor(mutable, iterable);
 	};
 	this.fetchManyAsync = function(query, mutable, andThen) {
-		var response = this.fetchSync("/ws/store/fetchMany", JSON.stringify(query));
-		var iterable = new StoredIterable(response.data);
-		var cursor = new Cursor(mutable, iterable);
-		andThen(cursor);
+		this.fetchAsync("/ws/store/fetchMany", JSON.stringify(query), function(response) {
+			var iterable = new StoredIterable(response.data);
+			var cursor = new Cursor(mutable, iterable);
+			andThen(cursor);
+		});
 	};
-	
-	
 	return this; 
 }
 
