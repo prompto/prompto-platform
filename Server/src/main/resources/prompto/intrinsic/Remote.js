@@ -22,11 +22,13 @@ function readJSONValue(value) {
 }
 
 function readJSONInstance(value) {
-	var fct = eval(value.type);
-	if(typeof(fct)!=='function')
+	var type = eval(value.type);
+	if(typeof(type)!=='function')
 		throw new Error("Unsupported: " + value.type);
 	var stored = recordToStored(value);
-	return new fct(null, stored, false);
+    var result = new type(null, {}, false);
+    result.fromStored(stored);
+    return result;
 }
 
 function getTypeName(value) {
