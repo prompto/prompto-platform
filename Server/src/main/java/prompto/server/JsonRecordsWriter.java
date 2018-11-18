@@ -298,10 +298,14 @@ public class JsonRecordsWriter {
 	@SuppressWarnings("unchecked")
 	static JsonWriter listJsonWriterFor(JsonWriter writer) {
 		return (g,o)->{
-			g.writeStartArray();
-			for(Object i : ((Collection<Object>)o))
-				writer.accept(g, i);
-			g.writeEndArray();
+			if(o==null)
+				g.writeNull();
+			else {
+				g.writeStartArray();
+				for(Object i : ((Collection<Object>)o))
+					writer.accept(g, i);
+				g.writeEndArray();
+			}
 		};
 	}
 
