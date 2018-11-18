@@ -46,12 +46,8 @@ public class StorableDocument implements IStorable  {
 	}
 
 	@Override
-	public void setDirty(boolean dirty) {
-		if(!dirty)
-			facts = null;
-		else 
-			ensureFacts(null);
-		
+	public void clear() {
+		facts = null;
 	}
 
 	@Override

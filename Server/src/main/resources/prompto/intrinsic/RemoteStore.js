@@ -52,6 +52,12 @@ StorableDocument.prototype.getOrCreateDbId = function() {
 };
 
 
+StorableDocument.prototype.setDbId = function(dbId) {
+	if(this.document)
+		this.document.dbId  = writeJSONValue(dbId);
+};
+
+
 StorableDocument.prototype.setData = function(name, value, dbId) {
     if(!this.document) {
         this.document = new StoredDocument(this.category);

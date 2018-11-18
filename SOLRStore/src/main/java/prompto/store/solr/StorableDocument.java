@@ -46,12 +46,9 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	}
 	
 	@Override
-	public void setDirty(boolean set) {
-		if(!set) {
-			document = null;
-			isUpdate = false;
-		} else 
-			ensureDocument(null);
+	public void clear() {
+		document = null;
+		isUpdate = false;
 	}
 
 	public SolrInputDocument getDocument() {
