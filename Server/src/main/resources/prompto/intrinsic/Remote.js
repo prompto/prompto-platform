@@ -56,7 +56,7 @@ function writeJSONValue(value) {
 			return value.map(writeJSONValue);
 		default:	
 			if(value instanceof $Root) {
-				var dbId = value.storable.getOrCreateDbId();
+				var dbId = value.getOrCreateDbId();
 				return { type: "%dbRef%", value: writeJSONValue(dbId) };
 			} else
 				return value;

@@ -26,20 +26,14 @@ function StorableDocument(categories, dbIdListener) {
     return this;
 }
 
-Object.defineProperty(StorableDocument.prototype, "dirty", {
-    get : function() {
-        return this.document != null;
-    },
-    set : function(value) {
-        if (value) {
-            if(!this.document) {
-                this.document = new StoredDocument(this.category);
-                this.document.dbId = this.getOrCreateDbId();
-            }
-        } else
-            this.document = null;
-    }
-});
+
+StorableDocument.prototype.isDirty = function() {
+    return this.document!=null;
+};
+
+StorableDocument.prototype.clear = function() {
+    this.document = null;
+};
 
 StorableDocument.prototype.getDbId = function() {
 	return this.document ? (this.document.dbId || null) : null;
@@ -50,15 +44,19 @@ StorableDocument.prototype.getOrCreateDbId = function() {
 	var dbId = this.getDbId();
 	if(dbId==null) {
        	dbId = DataStore.instance.nextDbId();
-        this.dbIdListener(dbId);
-        this.setData("dbId", dbId);
+        if(this.dbIdListener)
+        	this.dbIdListener(dbId);
+        this.setData("dbId", dbId, dbId);
     }
     return dbId;
 };
 
 
-StorableDocument.prototype.setData = function(name, value) {
-    this.dirty = true;
+StorableDocument.prototype.setData = function(name, value, dbId) {
+    if(!this.document) {
+        this.document = new StoredDocument(this.category);
+        this.document.dbId = dbId? dbId : this.getOrCreateDbId();
+    }
     this.document[name] = writeJSONValue(value);
 };
 
