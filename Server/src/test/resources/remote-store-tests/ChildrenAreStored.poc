@@ -1,0 +1,18 @@
+storable attribute value: Text;
+storable category Child(value);
+storable attribute children: Child[];
+storable category Parent(children);
+
+widget ChildrenAreStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		john = Child(value="John");
+		jane = Child(value="Jane");
+		user = Parent(children=[john, jane]);
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}

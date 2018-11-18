@@ -1,0 +1,26 @@
+storable attribute value: Text;
+storable category User(value);
+
+widget RecordIsUpdatedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return {user: User(value="initial")};
+	}
+	
+	
+	method componentWillMount() {
+		user = User(value="John");
+		store (user);
+		user = fetch one ( mutable User ) where ( value == "John" );
+		user.value = "Gielgud";
+		store (user) then {
+			setState({user: user});
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		user = (User)state.user;
+		return <div id="root">{user.value}</div>;
+	}
+}

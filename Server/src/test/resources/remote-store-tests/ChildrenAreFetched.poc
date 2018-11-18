@@ -1,0 +1,20 @@
+storable attribute value: Text;
+storable category Child(value);
+storable attribute children: Child[];
+storable category Parent(children, value);
+
+widget ChildrenAreFetchedPage extends ReactWidget {
+	
+	method componentWillMount() {
+		john = Child(value="John");
+		jane = Child(value="Jane");
+		user = Parent(children=[john, jane], value="Gielgud");
+		store(user);
+	}
+	
+	Html method render() {
+		stuff = fetch one( Parent ) where ( value == "Gielgud" );
+		values = child.value for each (child in stuff.children);
+		return <div id="root">{values.text}</div>;
+	}
+}

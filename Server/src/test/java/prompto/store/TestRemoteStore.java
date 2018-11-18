@@ -12,6 +12,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.After;
@@ -301,11 +302,36 @@ public class TestRemoteStore extends BaseUITest {
 		assertEquals("John", stored.getRawData("value"));
 	}
 	
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void childrenAreStored() throws Exception {
+		linkResourcesAndLoadPage("ChildrenAreStored", Dialect.O);
+		waitElement(By.id("root"), 3);
+		IStored stored = DataStore.getInstance().fetchMany(null).iterator().next();
+		assertNotNull(stored);
+		Object children = stored.getRawData("children");
+		assertTrue(children instanceof List);
+		stored = DataStore.getInstance().fetchUnique(((List<Object>)children).get(0));
+		assertNotNull(stored);
+		assertEquals("John", stored.getRawData("value"));
+		stored = DataStore.getInstance().fetchUnique(((List<Object>)children).get(1));
+		assertNotNull(stored);
+		assertEquals("Jane", stored.getRawData("value"));
+	}
+	
 	@Test
 	public void childIsFetched() throws Exception {
 		linkResourcesAndLoadPage("ChildIsFetched", Dialect.O);
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John", elem.getText());
+	}
+
+	@Test
+	public void childrenAreFetched() throws Exception {
+		linkResourcesAndLoadPage("ChildrenAreFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John, Jane", elem.getText());
 	}
 
 	@Test
@@ -347,4 +373,13 @@ public class TestRemoteStore extends BaseUITest {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John, Gielgud", elem.getText());
 	}
+	
+	@Test
+	public void recordIsUpdated() throws Exception {
+		linkResourcesAndLoadPage("RecordIsUpdated", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Gielgud", elem.getText());
+	}
+
 }
