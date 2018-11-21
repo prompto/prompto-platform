@@ -54,9 +54,9 @@ public class TestAwsEC2 {
 
 
 	@Test
-	public void testEC2AddressCanBeCreatedAssociatedDissociatedAndDropped() throws Throwable {
+	public void testEC2AddressCanBeCreatedNamedAssociatedDissociatedAndDropped() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-testMethod", "\"ec2 address can be created, associated, dissociated and dropped\"", "-resourceURLs", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"ec2 address can be created, named, associated, dissociated and dropped\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 }

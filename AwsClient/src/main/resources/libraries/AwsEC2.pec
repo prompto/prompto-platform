@@ -23,11 +23,14 @@ and methods:
 	define dropInstance as method receiving Text instanceId doing:
 		Java: this.dropInstance(instanceId);
 	
-	define listAddresses as method returning Document[] doing:
-		Java: return this.listAddresses();
+	define listIpAddresses as method returning Document[] doing:
+		Java: return this.listIpAddresses();
 
 	define createIpAddress as method returning Document doing:
 		Java: return this.createIpAddress();
+
+	define setIpAddressName as method receiving Text addressId and Text name doing:
+		Java: this.setIpAddressName(addressId, name);
 
 	define getAddressIdForIpAddress	as method receiving Text ipAddress returning Text doing:
 		Java: return this.getAddressIdForIpAddress(ipAddress);
@@ -82,7 +85,7 @@ and verifying:
 	
 define "ec2 addresses can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	docs = ec2.listAddresses
+	docs = ec2.listIpAddresses
 	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
 	"35.166.112.187" in ips
@@ -93,10 +96,11 @@ define "ec2 address can be found by ip" as test method doing:
 and verifying:
 	"eipalloc-dc98c1bb" = name
 
-define "ec2 address can be created, associated, dissociated and dropped" as test method doing:
+define "ec2 address can be created, named, associated, dissociated and dropped" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	doc = ec2.createIpAddress
 	addressId = doc.allocationId as Text
+	ec2.setIpAddressName with addressId as addressId and "TEST-ADDRESS" as name
 	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId
 	ec2.dissociateIPAddress assocId
 	ec2.dropIPAddress addressId

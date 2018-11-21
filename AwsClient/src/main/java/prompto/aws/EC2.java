@@ -73,7 +73,6 @@ public class EC2 {
 			.withResources(instanceId)
 			.withTags(new Tag("Name", name));
 		ec2.createTags(tagsRequest);
-		
 	}
 	
 	public void startInstance(String instanceId) {
@@ -126,7 +125,7 @@ public class EC2 {
 	}
 
 	@SuppressWarnings("unchecked")
-	public PromptoList<PromptoDocument<String, Object>> listAddresses() {
+	public PromptoList<PromptoDocument<String, Object>> listIpAddresses() {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
 		DescribeAddressesResult result = ec2.describeAddresses();
 		result.getAddresses().forEach((a)->{
@@ -157,6 +156,14 @@ public class EC2 {
 		doc.put("domain", newResult.getDomain());
 		return doc;
 	}
+	
+	public void setIpAddressName(String addressId, String name) {
+		CreateTagsRequest tagsRequest = new CreateTagsRequest()
+			.withResources(addressId)
+			.withTags(new Tag("Name", name));
+		ec2.createTags(tagsRequest);
+	}
+
 	
 	public String associateIPAddress(String instanceId, String addressId) {
 		AssociateAddressRequest assocRequest = new AssociateAddressRequest()
