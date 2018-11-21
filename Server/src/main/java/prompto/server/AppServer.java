@@ -49,7 +49,7 @@ public class AppServer {
 		main(config, afterStart);
 	}
 
-	public static <T extends IServerConfiguration>void main(T config, Consumer<T> afterStart) throws Throwable {
+	public static <T extends IServerConfiguration> void main(T config, Consumer<T> afterStart) throws Throwable {
 		installCloudJARs();
 		initialize(config);
 		run(config);
