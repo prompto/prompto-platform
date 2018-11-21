@@ -22,6 +22,8 @@ import com.amazonaws.services.kms.model.DecryptResult;
 import com.amazonaws.services.kms.model.EncryptRequest;
 import com.amazonaws.services.kms.model.EncryptResult;
 import com.amazonaws.services.kms.model.ListAliasesResult;
+import com.amazonaws.services.route53.AmazonRoute53;
+import com.amazonaws.services.route53.AmazonRoute53ClientBuilder;
 
 public abstract class AWSTestBase {
 
@@ -29,6 +31,7 @@ public abstract class AWSTestBase {
 	public static String MASTER_KEY_ALIAS = "prompto/seed";
 			
 	AmazonEC2 ec2;
+	AmazonRoute53 route53;
 	AWSKMS kms;
 	Properties props = new Properties();
 	
@@ -46,6 +49,10 @@ public abstract class AWSTestBase {
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
 		kms = AWSKMSClientBuilder.standard()
+				.withRegion(Regions.US_EAST_1)
+				.withCredentials(new AWSStaticCredentialsProvider(credentials))
+				.build();
+		route53 = AmazonRoute53ClientBuilder.standard()
 				.withRegion(Regions.US_EAST_1)
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
