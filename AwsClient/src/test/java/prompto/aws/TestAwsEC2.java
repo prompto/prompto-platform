@@ -59,4 +59,11 @@ public class TestAwsEC2 {
 		String[] args = new String[] { "-testMethod", "\"ec2 address can be created, named, associated, dissociated and dropped\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
+	
+	@Test
+	public void testOwnedAMIsCanBeListed() throws Throwable {
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
+		String[] args = new String[] { "-testMethod", "\"owned AMIs can be listed\"", "-resourceURLs", url.toString() };
+		Standalone.main(args);
+	}
 }

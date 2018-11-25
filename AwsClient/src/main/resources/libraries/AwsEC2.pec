@@ -44,6 +44,10 @@ and methods:
 	define dropIPAddress as method receiving Text addressId doing:
 		Java: this.dropIPAddress(addressId);
 
+	define listOwnedAMIs as method returning Document[] doing:
+		Java: this.listOwnedAMIs();
+
+
 define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
 	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
 
@@ -108,3 +112,12 @@ and verifying:
 	addressId is not Nothing
 	assocId is not Nothing
 
+
+define "owned AMIs can be listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	amis = ec2.listOwnedAMIs
+and verifying:
+	amis is not Nothing
+	amis.count > 0
+	(amis[1]["Name"] as Text).startsWith "centos-prompto"
+	

@@ -1,6 +1,7 @@
 package prompto.aws;
 
 import java.util.Base64;
+import java.util.List;
 
 import prompto.intrinsic.PromptoConverter;
 import prompto.intrinsic.PromptoDocument;
@@ -17,6 +18,8 @@ import com.amazonaws.services.ec2.model.AssociateAddressResult;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeAddressesRequest;
 import com.amazonaws.services.ec2.model.DescribeAddressesResult;
+import com.amazonaws.services.ec2.model.DescribeImagesRequest;
+import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
@@ -106,15 +109,15 @@ public class EC2 {
 				Object prompto = PromptoConverter.nodeToPrompto(json);
 				assert (prompto instanceof PromptoDocument);
 				PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
-				promoteNameTag(i, doc);
+				promoteNameTag(i.getTags(), doc);
 				list.add(doc); 
 			});
 		});
 		return list;
 	}
 
-	private void promoteNameTag(Instance instance, PromptoDocument<String, Object> doc) {
-		Tag tag = instance.getTags().stream()
+	private void promoteNameTag(List<Tag> tags, PromptoDocument<String, Object> doc) {
+		Tag tag = tags.stream()
 				.filter((t)->"Name".equals(t.getKey()))
 				.findFirst()
 				.orElse(null);
@@ -183,6 +186,23 @@ public class EC2 {
 		ReleaseAddressRequest dropRequest = new ReleaseAddressRequest()
 			.withAllocationId(addressId);
 		ec2.releaseAddress(dropRequest);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public PromptoList<PromptoDocument<String, Object>> listOwnedAMIs() {
+		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
+		DescribeImagesRequest request = new DescribeImagesRequest()
+		.withOwners("self");
+		DescribeImagesResult result = ec2.describeImages(request);
+		result.getImages().forEach((i)->{
+			JsonNode json = new ObjectMapper().valueToTree(i);
+			Object prompto = PromptoConverter.nodeToPrompto(json);
+			assert (prompto instanceof PromptoDocument);
+			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
+			promoteNameTag(i.getTags(), doc);
+			list.add(doc); 
+		});
+		return list;
 	}
 	
 }
