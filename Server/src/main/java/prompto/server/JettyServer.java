@@ -65,32 +65,33 @@ class JettyServer extends Server {
 	
 	public JettyServer(IServerConfiguration config) {
 		this.config = config;
+		this.setStopAtShutdown(true);
 	}
 
-	void jettyStart(Runnable serverStopped) throws Throwable  {
+	void jettyStart(Runnable onServerStopped) throws Throwable  {
 		serverThrowable = null;
 		startComplete = false;
-		Object sync = new Object();
+		Object startFlag = new Object();
 		serverThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				logger.info(()->"Web server about to start...");
 				try {
 					try {
-						AppServer.jettyServer.start();
+						start();
 						logger.info(()->"Web server started...");
 					} finally {
 						logger.info(()->"Signaling start completion...");
-						synchronized (sync) {
+						synchronized (startFlag) {
 							startComplete = true;
-							sync.notify();
+							startFlag.notify();
 						}
 					}
-					logger.info(()->"Web server thread waiting for completion...");
-					AppServer.jettyServer.join();
-					logger.info(()->"Web server thread complete.");
-					if(serverStopped!=null)
-						serverStopped.run();
+					logger.info(()->"Web server waiting ready...");
+					join();
+					logger.info(()->"Web server stop complete.");
+					if(onServerStopped!=null)
+						onServerStopped.run();
 				} catch(Throwable t) {
 					serverThrowable = t;
 				} finally {
@@ -100,9 +101,9 @@ class JettyServer extends Server {
 		}, "HTTP Server");
 		serverThread.start();
 		logger.info(()->"Waiting for start completion signal...");
-		synchronized (sync) {
+		synchronized (startFlag) {
 			while(!startComplete)
-				sync.wait();
+				startFlag.wait();
 		}
 		logger.info(()->"Start completion signalled...");
 		if(serverThrowable!=null) {
@@ -115,9 +116,7 @@ class JettyServer extends Server {
 	void jettyStop() throws Exception {
 		logger.info(()->"Stopping web server...");
 		stop();
-		logger.info(()->"Web server stopped, waiting for completion...");
-		join();
-		logger.info(()->"Web server stop complete.");
+		// don't join here since it would create a deadlock
 	}
 
 	public void prepare(BiConsumer<JettyServer, HandlerList> handler) throws Exception {
@@ -158,14 +157,14 @@ class JettyServer extends Server {
 			http.setSecurePort(config.getHttpConfiguration().getPort());
 			http.setSecureScheme("https");
 			http.addCustomizer(new SecureRequestCustomizer());
-		    ServerConnector sc = new ServerConnector(AppServer.jettyServer, new HttpConnectionFactory(http));
+		    ServerConnector sc = new ServerConnector(this, new HttpConnectionFactory(http));
 			sc.setPort(config.getHttpConfiguration().getRedirectFrom());
 			return sc;
 		}
 	}
 
 	private ServerConnector prepareHttpConnector() {
-		return new ServerConnector(AppServer.jettyServer);
+		return new ServerConnector(this);
 	}
 
 
@@ -255,7 +254,7 @@ class JettyServer extends Server {
 		JAASLoginService loginService = new JAASLoginService("prompto.login.service");
 		loginService.setIdentityService(prepareIdentityService());
 		loginService.setLoginModuleName(loginModuleName);
-		AppServer.jettyServer.addBean(loginService);
+		addBean(loginService);
 		return loginService;
 	}
 
