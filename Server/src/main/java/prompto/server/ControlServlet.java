@@ -58,17 +58,18 @@ public class ControlServlet extends CleverServlet {
 	}
 
 	private void exitServer(PrintWriter writer) {
-		Thread thread = new Thread(()->{
-			try {
-				logger.info(()->"Trying to stop server...");
-				AppServer.stop();
-			} catch(Throwable t) {
-				logger.error(()->t.getMessage(), t);
-			}
-		});
-		thread.start();
-		writer.write("Exit command received");
+		
+		writer.write("Exit command received\n");
+		logger.info(()->"Trying to stop server...");
 		writer.flush();
+		writer.close();
+		try {
+			AppServer.stop();
+			logger.info(()->"Exit command succeeded\n");
+		} catch(Exception e) {
+			logger.error(()->"Error while stopping server...", e);
+		}
+		Runtime.getRuntime().exit(0);
 	}
 
 }
