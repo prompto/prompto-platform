@@ -231,8 +231,11 @@ define getModuleResources as method receiving dbId doing:
 		raise NULL_REFERENCE
 	return fetch all Resource where module = module
 
-define getModulePort as native method receiving dbId and Boolean optional returning Integer doing:
-	Java: return prompto.codefactory.ModuleProcess.launchIfNeeded(dbId, optional);
+define getModulePort as native method receiving dbId returning Integer doing:
+	Java: return prompto.codefactory.ModuleProcess.launchIfNeeded(dbId);
+
+define killModule as native method receiving dbId doing:
+	Java: prompto.codefactory.ModuleProcess.shutDown(dbId);
 
 define storeEdited as method receiving EditedStuff[] edited doing:
 	deleted = d1.stuff for each d1 in edited filtered with d where d.editStatus = DELETED
