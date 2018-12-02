@@ -15,13 +15,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TestDescribeInstances extends AWSTestBase {
 
 	@Test
-	public void testThatDescribeInstancesReturnsData() throws Exception {
+	public void describeInstancesReturnsData() throws Exception {
 		DescribeInstancesResult result = ec2.describeInstances();
 		System.out.println(result.toString());
 	}
 	
 	@Test
-	public void testInstanceTag() throws Exception {
+	public void tagsAreAddedToInstance() throws Exception {
 		Instance instance = new Instance()
 			.withTags(new Tag().withKey("k").withValue("v"));
 		JsonNode node = new ObjectMapper().valueToTree(instance);

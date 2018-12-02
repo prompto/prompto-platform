@@ -21,7 +21,7 @@ import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 public class TestRunInstance extends AWSTestBase {
 
 	@Test
-	public void testThatRunInstanceSucceeds() throws Exception {
+	public void canRunInstance() throws Exception {
 		String userData = Base64.getEncoder().encodeToString("{\"prompto-role\":\"prompto-web-site\"}".getBytes());
 		RunInstancesRequest runRequest = new RunInstancesRequest()
 			.withImageId("ami-d2c924b2")

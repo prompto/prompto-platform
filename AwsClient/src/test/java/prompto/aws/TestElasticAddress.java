@@ -18,7 +18,7 @@ import com.amazonaws.services.ec2.model.ReleaseAddressResult;
 public class TestElasticAddress extends AWSTestBase {
 
 	@Test
-	public void testDescribeAddresses() throws Exception {
+	public void describeAddressesReturnsData() throws Exception {
 		DescribeAddressesRequest req = new DescribeAddressesRequest()
 			.withPublicIps("35.166.112.187");
 		DescribeAddressesResult res = ec2.describeAddresses(req);
@@ -26,7 +26,7 @@ public class TestElasticAddress extends AWSTestBase {
 	}
 	
 	@Test
-	public void testCreateAssignAndDropElasticAddress() throws Exception {
+	public void canCreateAssignAndDropElasticAddress() throws Exception {
 		AllocateAddressRequest newRequest = new AllocateAddressRequest();
 		AllocateAddressResult newResult = ec2.allocateAddress(newRequest);
 		System.out.println(newResult.toString());
@@ -46,7 +46,7 @@ public class TestElasticAddress extends AWSTestBase {
 	}
 	
 	@Test
-	public void testAssociateElasticAddress() throws Exception {
+	public void canAssociateElasticAddress() throws Exception {
 		AssociateAddressRequest assocRequest = new AssociateAddressRequest()
 		.withAllocationId("eipalloc-dc98c1bb")
 		.withInstanceId("i-0acb2373bb25ce373");

@@ -15,6 +15,8 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AllocateAddressResult;
 import com.amazonaws.services.ec2.model.AssociateAddressRequest;
 import com.amazonaws.services.ec2.model.AssociateAddressResult;
+import com.amazonaws.services.ec2.model.CreateImageRequest;
+import com.amazonaws.services.ec2.model.CreateImageResult;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeAddressesRequest;
 import com.amazonaws.services.ec2.model.DescribeAddressesResult;
@@ -202,6 +204,38 @@ public class EC2 {
 			list.add(doc); 
 		});
 		return list;
+	}
+	
+	public String createAMI(String instanceId, String name, boolean waitForAvailability) {
+		CreateImageRequest request = new CreateImageRequest()
+			.withInstanceId(instanceId)
+			.withName(name);
+		CreateImageResult result = ec2.createImage(request);
+		String imageId = result.getImageId();
+		CreateTagsRequest tagsRequest = new CreateTagsRequest()
+			.withResources(imageId)
+			.withTags(new Tag("Name","prompto-test-ami"));
+		ec2.createTags(tagsRequest);
+		if(waitForAvailability) {
+			DescribeImagesRequest describeRequest = new DescribeImagesRequest()
+				.withImageIds(imageId);
+			String state = "pending";
+			long start = System.currentTimeMillis();
+			while(!"available".equals(state) && (System.currentTimeMillis() - start < 3*60*1000)) {
+				unsafeSleep(1000);
+				DescribeImagesResult describeResult = ec2.describeImages(describeRequest);
+				state = describeResult.getImages().get(0).getState();
+			}
+		}
+		return imageId;
+	}
+	
+	public static void unsafeSleep(long millis) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

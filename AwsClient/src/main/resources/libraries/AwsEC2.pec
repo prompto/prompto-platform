@@ -35,7 +35,7 @@ and methods:
 	define getAddressIdForIpAddress	as method receiving Text ipAddress returning Text doing:
 		Java: return this.getAddressIdForIpAddress(ipAddress);
 
-	define associateIPAddress as method receiving Text instanceId, Text addressId returning Text doing:
+	define associateIPAddress as method receiving Text instanceId and Text addressId returning Text doing:
 		Java: return this.associateIPAddress(instanceId, addressId);
 
 	define dissociateIPAddress as method receiving Text addressId doing:
@@ -47,6 +47,8 @@ and methods:
 	define listOwnedAMIs as method returning Document[] doing:
 		Java: this.listOwnedAMIs();
 
+	define createAMI as method receiving Text instanceId, Text name and Boolean waitForAvailability returning Text doing:
+		Java: this.createAMI(instanceId, name, waitForAvailability);
 
 define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
 	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
@@ -112,7 +114,6 @@ and verifying:
 	addressId is not Nothing
 	assocId is not Nothing
 
-
 define "owned AMIs can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	amis = ec2.listOwnedAMIs
@@ -120,4 +121,10 @@ and verifying:
 	amis is not Nothing
 	amis.count > 0
 	(amis[1]["Name"] as Text).startsWith "centos-prompto"
+	
+define "AMI can be created" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	amiId = ec2.createAMI with "i-0295d2ed128657bff" as instanceId, "test-ami" as name and true as waitForAvailability
+and verifying:
+	amiId is not Nothing
 	
