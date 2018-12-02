@@ -61,16 +61,31 @@ public class TestAwsEC2 {
 	}
 	
 	@Test
-	public void OwnedAMIsCanBeListed() throws Throwable {
+	public void ownedAMIsCanBeListed() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
 		String[] args = new String[] { "-testMethod", "\"owned AMIs can be listed\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 	
 	@Test
+	public void latestAMIIsIdentified() throws Throwable {
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
+		String[] args = new String[] { "-testMethod", "\"latest AMI is identified\"", "-resourceURLs", url.toString() };
+		Standalone.main(args);
+	}
+
+	@Test
 	public void AMICanBeCreated() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
 		String[] args = new String[] { "-testMethod", "\"AMI can be created\"", "-resourceURLs", url.toString() };
+		Standalone.main(args);
+	}
+
+	
+	@Test
+	public void AMIVersionIsExtracted() throws Throwable {
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
+		String[] args = new String[] { "-testMethod", "\"AMI version is extracted\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 
