@@ -67,20 +67,27 @@ public abstract class ResourceServlet extends CleverServlet {
                 super.service(request, response);
                 return;
 		}
+		
+		boolean tryGzip = writeBody && acceptsGzip(request);
 
-		Resource resource = getResource(request);
+		Resource resource = getResource(request, tryGzip);
                	
         if (resource==null || !resource.exists()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
-       }
+        }
         response.setStatus(HttpServletResponse.SC_OK);
         writeHeaders(response, resource);
         if(writeBody)
         	writeBody(request, response, resource);
 	}
 	
-	protected Resource getResource(HttpServletRequest request) {
+	private boolean acceptsGzip(HttpServletRequest request) {
+		String accept = request.getHeader(HttpHeader.ACCEPT_ENCODING.asString());
+ 		return accept!=null && accept.contains("gzip");
+	}
+
+	protected Resource getResource(HttpServletRequest request, boolean tryGzip) {
         String servletPath;
         String pathInfo;
         Boolean included = request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI) != null;
@@ -103,7 +110,12 @@ public abstract class ResourceServlet extends CleverServlet {
         String pathInContext = URIUtil.addPaths(servletPath, pathInfo);
         if(pathInContext=="/" && welcomePage!=null)
         	pathInContext = welcomePage;
-        Resource resource = getClassPathResource(pathInContext);
+        Resource resource = null;
+        if(tryGzip)
+        	resource = getClassPathResource(pathInContext + ".gz");
+        if(resource!=null)
+        	return resource;
+    	resource = getClassPathResource(pathInContext);
         if(resource!=null)
         	return resource;
         else
@@ -190,9 +202,18 @@ public abstract class ResourceServlet extends CleverServlet {
 	protected void writeHeaders(HttpServletResponse response, Resource resource) {
 		writeContentType(response, resource);
 		writeContentLength(response, resource);
+		writeContentEncoding(response, resource);
 		writeCacheControl(response, resource);
 		writeEtags(response, resource);
      }
+
+	private void writeContentEncoding(HttpServletResponse response, Resource resource) {
+		if(resource.getName().endsWith(".gz")) {
+			response.setHeader(HttpHeader.CONTENT_ENCODING.asString(), "gzip");
+			if(resource.getName().endsWith(".js.gz"))
+				response.setContentType("application/javascript");
+		}
+	}
 
 	private void writeContentType(HttpServletResponse response, Resource resource) {
 		if(resource instanceof MimeTypeProvider) {
