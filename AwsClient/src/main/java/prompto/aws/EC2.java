@@ -214,7 +214,7 @@ public class EC2 {
 		String imageId = result.getImageId();
 		CreateTagsRequest tagsRequest = new CreateTagsRequest()
 			.withResources(imageId)
-			.withTags(new Tag("Name","prompto-test-ami"));
+			.withTags(new Tag("Name", name));
 		ec2.createTags(tagsRequest);
 		if(waitForAvailability) {
 			DescribeImagesRequest describeRequest = new DescribeImagesRequest()
