@@ -5,7 +5,7 @@ resourceURLs:
   - file:///Users/ericvergnaud/Development/prompto/prompto-deploy/aws/prompto-deploy/AwsDeployer.pec
 
 addOnURLs:
-  - file:///Users/ericvergnaud/Development/prompto/prompto-platform/AwsClient/target/AwsClient-0.0.17.jar
+  - file:///Users/ericvergnaud/Development/prompto/prompto-platform/AwsClient/target/AwsClient-0.0.24.jar
 
 http:
   protocol: http
