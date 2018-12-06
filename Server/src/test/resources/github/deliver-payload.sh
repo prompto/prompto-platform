@@ -1,1 +1,0 @@
-curl -vX POST http://localhost:8080/git/release -d @prompto-factory-released.json -H "Content-Type: application/json"

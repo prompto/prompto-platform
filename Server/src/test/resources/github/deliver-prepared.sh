@@ -1,0 +1,1 @@
+curl "http://localhost:8080/ec2/prepared?instanceId=i-0cd6b5840b89e216f&component=prompto-platform&version=v0.0.24"
