@@ -128,7 +128,7 @@
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-    function require(identifier, callback, compiler) {
+    function require(identifier, callback, compiler, resolver) {
         if (identifier instanceof Array) {
             var modules = new Array();
             var modcount = identifier.length;
@@ -144,7 +144,8 @@
         }
 
         compiler = compiler!==undefined ? compiler : requireCompiler;
-        var descriptor = resolve(identifier);
+        resolver = resolver!==undefined ? resolver : resolve;
+        var descriptor = resolver(identifier);
         var cacheid = '$'+descriptor.id;
 
         if (cache[cacheid]) {

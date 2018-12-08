@@ -6,8 +6,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
@@ -26,6 +27,7 @@ import org.eclipse.jetty.util.resource.PathResource;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 
+import prompto.libraries.Libraries;
 import prompto.utils.Logger;
 import prompto.utils.ObjectUtils;
 
@@ -288,22 +290,18 @@ public abstract class ResourceServlet extends CleverServlet {
 
 
 	private Resource getBuiltInsResource() throws Exception {
-		List<Resource> resources = ObjectUtils.getClassesInCallStack().stream()
+		Stream<Class<?>> classes = Stream.concat(ObjectUtils.getClassesInCallStack().stream(), Stream.of(AppServer.class, Libraries.class));
+		Set<Resource> resources = classes
 				.filter(c->c.getName().startsWith("prompto"))
 				.map(this::getClassResource)
-				.collect(Collectors.toList());
-		if(resources.isEmpty()) {
-			return getClassResource(AppServer.class); // happens with JUnit
-		} else if(resources.size()==1)
-			return resources.get(0);
-		else
-			return new ResourceCollection(resources.toArray(new Resource[resources.size()]));
+				.collect(Collectors.toSet());
+		resources.forEach(res->logger.info(()->"Adding resource root: " + res.toString()));
+		return new ResourceCollection(resources.toArray(new Resource[resources.size()]));
 	}
 	
 	private Resource getClassResource(Class<?> klass) {
 		try {
 			URL root = getClassResourceURL(klass);
-			logger.info(()->"Adding resource root: " + root.toExternalForm());
 			return Resource.newResource(root);
 		} catch(Exception e) {
 			logger.error(()->"Unable to load resources from " + klass.getName(), e);

@@ -161,7 +161,8 @@ public class HtmlGenerator {
 	}
 
 	private void generatePromptoScripts(PrintWriter printer) {
-		printer.println("<script src=\"https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js\"></script>");
+		printer.println("<script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js'></script>");
+		printer.println("<script src='/js/lib/require.js'></script>");
 	}
 
 	private void generateLibraries(PrintWriter printer) throws IOException {
