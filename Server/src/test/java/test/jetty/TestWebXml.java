@@ -53,6 +53,7 @@ public class TestWebXml {
 			webapp.setContextPath("/");
 			server.setHandler(webapp);
 			Thread thread = new Thread(new Runnable() {
+				@Override
 				public void run() {
 					try {
 						server.start();

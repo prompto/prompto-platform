@@ -56,6 +56,7 @@ public abstract class BaseDatomicStore implements IStore {
 		this.cnx = null;
 	}
 
+	@Override
 	public boolean checkConnection() {
 		return cnx!=null;
 	}
@@ -81,6 +82,7 @@ public abstract class BaseDatomicStore implements IStore {
 		return null;
 	}
 
+	@Override
 	public void createOrUpdateAttributes(Collection<AttributeInfo> attributes) throws PromptoError {
 		Stream<List<Object>> builtins = collectBuiltinAttributesFacts();
 		Stream<List<Object>> custom = attributes.stream()
@@ -131,10 +133,12 @@ public abstract class BaseDatomicStore implements IStore {
 		return helper.collectAttributeFacts(attribute);
 	}
 
+	@Override
 	public IStorable newStorable(List<String> categories, IDbIdListener listener) {
 		return new StorableDocument(categories, listener);
 	}
 
+	@Override
 	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
 		Stream<Object> retractions = null;
 		Stream<Object> additions = null;
@@ -187,15 +191,18 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 	}
 
+	@Override
 	public void deleteAll() throws PromptoError {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public PromptoBinary fetchBinary(Object dbId, String attr)
 			throws PromptoError {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public IStored fetchUnique(Object dbId) throws PromptoError {
 		if(dbId instanceof EntityMap)
 			dbId = ((EntityMap)dbId).valAt(Constants.Db.ID.dbName());
@@ -203,10 +210,12 @@ public abstract class BaseDatomicStore implements IStore {
 		return new StoredDocument(entity);
 	}
 
+	@Override
 	public IQueryBuilder newQueryBuilder() {
 		return new DatomicQueryBuilder();
 	}
 
+	@Override
 	public IStored fetchOne(IQuery query) throws PromptoError {
 		Collection<Collection<Object>> all = fetch(query);
 		Iterator<Collection<Object>> iter = all.iterator();
@@ -218,6 +227,7 @@ public abstract class BaseDatomicStore implements IStore {
 		return new StoredDocument(entity);
 	}
 
+	@Override
 	public IStoredIterable fetchMany(IQuery query) throws PromptoError {
 		return new StoredIterable((DatomicQuery)query);
 	}
@@ -284,6 +294,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 
+	@Override
 	public void flush() throws PromptoError {
 		// no action required
 	}

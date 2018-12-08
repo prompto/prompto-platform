@@ -10,6 +10,7 @@ public class KeyStoreConfiguration implements IKeyStoreConfiguration {
 		this.reader = reader;
 	}
 	
+	@Override
 	public IKeyStoreFactoryConfiguration getKeyStoreFactoryConfiguration() {
 		return reader.readKeyStoreFactoryConfiguration("provider");
 	};

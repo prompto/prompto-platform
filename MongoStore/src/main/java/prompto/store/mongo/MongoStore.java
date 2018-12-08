@@ -121,6 +121,7 @@ public class MongoStore implements IStore {
 		// we use 'admin' for default connection
 		final String dbName = config.getDbName()==null ? "admin" : config.getDbName();
 		MongoClientURI mcu = new MongoClientURI(config.getReplicaSetURI()) {
+			@Override
 			public MongoCredential getCredentials() {
 				if(password==null)
 					return null;

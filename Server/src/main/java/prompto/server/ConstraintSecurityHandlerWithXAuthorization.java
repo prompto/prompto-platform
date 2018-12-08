@@ -10,6 +10,7 @@ final class ConstraintSecurityHandlerWithXAuthorization extends ConstraintSecuri
 
 	static final Logger logger = new Logger();
 
+	@Override
 	protected boolean checkSecurity(Request request) {
 		// when using XAuthorization, skip authentication during CORS pre-flight
 		boolean test = super.checkSecurity(request) && !"OPTIONS".equals(request.getMethod());
@@ -17,6 +18,7 @@ final class ConstraintSecurityHandlerWithXAuthorization extends ConstraintSecuri
 		return test;
 	}
 
+	@Override
 	public void handle(String pathInContext, 
 			org.eclipse.jetty.server.Request baseRequest, 
 			javax.servlet.http.HttpServletRequest request, 
