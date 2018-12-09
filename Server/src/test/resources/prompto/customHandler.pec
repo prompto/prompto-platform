@@ -6,8 +6,9 @@ define installServiceHandler as native method receiving Text path and serviceHan
 define gitHandler as method receiving Document doc doing:
 	print "received!"
 	
-define ec2Handler as method receiving Document doc doing:
+define ec2Handler as method receiving Document doc returning Text doing:
 	print "" + doc.data + ", " + doc.doto
+	return "received!"
 
 define serverAboutToStart as method receiving Text<:> args doing:
 	installServiceHandler with "/git/*" as path and gitHandler as serviceHandler

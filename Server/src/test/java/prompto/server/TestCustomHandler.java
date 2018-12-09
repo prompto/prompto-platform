@@ -2,9 +2,12 @@ package prompto.server;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -22,6 +25,7 @@ import prompto.parser.ECleverParser;
 import prompto.runtime.Context;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
+import prompto.utils.Instance;
 import prompto.utils.Out;
 import prompto.utils.SocketUtils;
 
@@ -66,19 +70,25 @@ public class TestCustomHandler {
 
 	@Test
 	public void testInterpret_GET() throws Throwable {
+		Instance<String> result = new Instance<>();
 		testInterpret((port)->{
-		URL url = new URL("http://localhost:" + port + "/ws/ec2/stuff?data=abc&doto=i-efg");
-		try(InputStream data = url.openStream()) {}
-			String out  = Out.read();
-			assertTrue(out.contains("abc"));
-			assertTrue(out.contains("i-efg"));
+		URL url = new URL("http://localhost:" + port + "/ec2/stuff?data=abc&doto=i-efg");
+		try(InputStream data = url.openStream()) {
+			Reader reader = new InputStreamReader(data);
+			BufferedReader buffered = new BufferedReader(reader);
+			result.set(buffered.readLine());
+		}
+		assertTrue(result.get().startsWith("received!"));
+		String out  = Out.read();
+		assertTrue(out.contains("abc"));
+		assertTrue(out.contains("i-efg"));
 		});
 	}	
 	
 	@Test
 	public void testInterpret_POST_JSON() throws Throwable {
 		testInterpret((port)->{
-			URL url = new URL("http://localhost:" + port + "/ws/git/stuff");
+			URL url = new URL("http://localhost:" + port + "/git/stuff");
 			HttpURLConnection cnx = (HttpURLConnection)url.openConnection();
 			cnx.setRequestMethod("POST");
 			cnx.setDoInput(true);

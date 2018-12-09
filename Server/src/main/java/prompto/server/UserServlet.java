@@ -18,12 +18,14 @@ import prompto.reader.JSONReader;
 import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
+import prompto.runtime.VoidResult;
 import prompto.statement.MethodCall;
 import prompto.type.DocumentType;
 import prompto.type.TextType;
 import prompto.utils.Logger;
 import prompto.value.Document;
 import prompto.value.ExpressionValue;
+import prompto.value.IValue;
 import prompto.value.ListValue;
 import prompto.value.Text;
 
@@ -51,18 +53,20 @@ public class UserServlet extends CleverServlet {
 			logger.info(()->"Processing GET " + req.getRequestURI());
 			Context context = Standalone.getGlobalContext();
 			Document document = paramsToDocument(context, req.getParameterMap());
-			interpret(context, document);
+			IValue value = interpret(context, document);
+			if(value!=null)
+				sendValue(req, resp, value);
 		} catch(Throwable t) {
 			logger.error(()->"While processing GET " + req.getRequestURI(), t);
 			resp.setStatus(500);
 		}
 	}
 	
-	private void interpret(Context context, Document document) {
+	private IValue interpret(Context context, Document document) {
 		IExpression args = new ExpressionValue(DocumentType.instance(), document);
 		ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
 		MethodCall call = new MethodCall(new MethodSelector(method.getId()), assignments);
-		call.interpret(context);	
+		return call.interpret(context);	
 	}
 
 	private Document paramsToDocument(Context context, Map<String, String[]> params) {
@@ -85,39 +89,54 @@ public class UserServlet extends CleverServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			logger.info(()->"Processing POST " + req.getRequestURI());
+			IValue value = null;
 			String contentType = req.getContentType();
 			if(contentType.startsWith("application/json"))
-				doPostJson(req, resp);
+				value = doPostJson(req, resp);
 			else if(contentType.startsWith("application/x-www-form-urlencoded"))
-				doPostUrlEncoded(req, resp);
+				value = doPostUrlEncoded(req, resp);
 			else if(contentType.startsWith("multipart/form-data"))
-				doPostMultipart(req, resp);
+				value = doPostMultipart(req, resp);
 			else
 				resp.sendError(415);
+			if(value!=null)
+				sendValue(req, resp, value);
 		} catch(Throwable t) {
 			logger.error(()->"While processing POST " + req.getRequestURI(), t);
 			resp.setStatus(500);
 		}
 	}
 
-	private void doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendError(415);
+	private void sendValue(HttpServletRequest req, HttpServletResponse resp, IValue value) throws IOException {
+		if(value==null || value==VoidResult.instance())
+			return;
+		if(value instanceof Text)
+			resp.getWriter().write(((Text)value).getStorableData());
+		else
+			resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
 	}
 
-	private void doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private IValue doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendError(415);
+		return null;
+	}
+
+	private IValue doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Context context = Standalone.getGlobalContext();
 		Document document = paramsToDocument(context, req.getParameterMap());
-		interpret(context, document);
+		return interpret(context, document);
 	}
 
-	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private IValue doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Object object = JSONReader.read(req.getInputStream());
 		if(object instanceof PromptoDocument) {
 			Context context = Standalone.getGlobalContext();
 			Document document = new Document(context, (PromptoDocument<?,?>)object);
-			interpret(context, document);
-		} else
+			return interpret(context, document);
+		} else {
 			resp.sendError(415);
+			return null;
+		}
 	}
 	
 }
