@@ -31,6 +31,7 @@ import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
+import prompto.value.Document;
 
 public class AppServer {
 	
@@ -169,7 +170,8 @@ public class AppServer {
 		return jettyServer!=null  && jettyServer.isStarted();
 	}
 	
-	public static int getHttpPort() {
+	/* used by Server.pec */
+	public static long getHttpPort() {
 		return jettyServer.getHttpPort();
 	}
 	
@@ -189,5 +191,27 @@ public class AppServer {
 		IAuthenticationSource source = IAuthenticationSource.instance.get();
 		if(source!=null)
 			source.createLogin(login, password);
+	}
+	
+	static ThreadLocal<String> httpUser = new ThreadLocal<>();
+	
+	/* used by Server.pec */
+	public static String getHttpUser() {
+		return httpUser.get();
+	}
+	
+	public static void setHttpUser(String user) {
+		httpUser.set(user);
+	}
+	
+	static ThreadLocal<Document> httpSession = new ThreadLocal<>();
+
+	/* used by Server.pec */
+	public static Document getHttpSession() {
+		return httpSession.get();
+	}
+	
+	public static void setHttpSession(Document session) {
+		httpSession.set(session);
 	}
 }

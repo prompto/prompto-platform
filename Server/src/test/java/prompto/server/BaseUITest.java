@@ -24,7 +24,7 @@ public abstract class BaseUITest extends BaseWebTest {
 				"test-local.yml"
 		};
 		TestServer.main(args);
-		HTTP_PORT = AppServer.getHttpPort();
+		HTTP_PORT = (int)AppServer.getHttpPort();
 	}
 	
 	@AfterClass

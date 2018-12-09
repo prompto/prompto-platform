@@ -84,7 +84,7 @@ public class PromptoServlet extends CleverServlet {
 			doc = new Document();
 			req.getSession(true).setAttribute("__prompto_http_session__", doc);
 		}
-		Server.setHttpSession(doc);
+		AppServer.setHttpSession(doc);
 	}
 
 	@Override

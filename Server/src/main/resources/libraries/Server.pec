@@ -7,15 +7,10 @@ define createLogin as native method receiving login and password doing:
     Java: $server.createLogin(login, password);
 
 define getHttpUser as native method returning Text doing:
-	Java: return prompto.server.Server.getHttpUser();
-	C#: return prompto.server.Server.getHttpUser();
-	Python2: return getHttpUser() from module: prompto.server.Server
-	Python3: return getHttpUser() from module: prompto.server.Server
-	JavaScript: return getHttpUser(); from module: prompto/server/Server.js
+	Java: return $server.getHttpUser();
 
 define getHttpSession as native method returning Document doing:
-	Java: return prompto.server.Server.getHttpSession();
-	C#: return prompto.server.Server.getHttpSession();
-	Python2: return getHttpSession() from module: prompto.server.Server
-	Python3: return getHttpSession() from module: prompto.server.Server
-	JavaScript: return getHttpSession(); from module: prompto/server/Server.js
+	Java: return $server.getHttpSession();
+
+define getHttpPort as native method returning Integer doing:
+    Java: return $server.getHttpPort();
