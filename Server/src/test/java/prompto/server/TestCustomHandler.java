@@ -73,16 +73,16 @@ public class TestCustomHandler {
 		Instance<String> result = new Instance<>();
 		testInterpret((port)->{
 		URL url = new URL("http://localhost:" + port + "/ec2/stuff?data=abc&doto=i-efg");
-		try(InputStream data = url.openStream()) {
-			Reader reader = new InputStreamReader(data);
-			BufferedReader buffered = new BufferedReader(reader);
-			result.set(buffered.readLine());
-		}
+			try(InputStream data = url.openStream()) {
+				Reader reader = new InputStreamReader(data);
+				BufferedReader buffered = new BufferedReader(reader);
+				result.set(buffered.readLine());
+			}
+		});
 		assertTrue(result.get().startsWith("received!"));
 		String out  = Out.read();
 		assertTrue(out.contains("abc"));
 		assertTrue(out.contains("i-efg"));
-		});
 	}	
 	
 	@Test
@@ -102,8 +102,8 @@ public class TestCustomHandler {
 			}
 			try(InputStream data = cnx.getInputStream()) {
 			}
-			assertTrue(Out.read().endsWith("received!"));			
 		});
+		assertTrue(Out.read().endsWith("received!"));			
 	}		
 
 	
