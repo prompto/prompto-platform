@@ -156,8 +156,11 @@ public class HtmlGenerator {
 				transpiler.require("UUID");
 		}
 		printer.println("<script id='transpiled'>");
-		transpiler.print(printer);
-		printer.println("</script>");
+		try {
+			transpiler.print(printer);
+		} finally {
+			printer.println("</script>");
+		}
 	}
 
 	private void generatePromptoScripts(PrintWriter printer) {
