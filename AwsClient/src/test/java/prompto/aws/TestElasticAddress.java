@@ -20,7 +20,7 @@ public class TestElasticAddress extends AWSTestBase {
 	@Test
 	public void describeAddressesReturnsData() throws Exception {
 		DescribeAddressesRequest req = new DescribeAddressesRequest()
-			.withPublicIps("35.166.112.187");
+			.withPublicIps("34.234.147.231");
 		DescribeAddressesResult res = ec2.describeAddresses(req);
 		System.out.println(res.toString());
 	}

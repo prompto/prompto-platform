@@ -151,6 +151,7 @@ public class EC2 {
 			Object prompto = PromptoConverter.nodeToPrompto(json);
 			assert (prompto instanceof PromptoDocument);
 			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
+			promoteNameTag(a.getTags(), doc);
 			list.add(doc); 
 		});
 		return list;

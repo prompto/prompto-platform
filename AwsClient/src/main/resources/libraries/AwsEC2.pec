@@ -92,9 +92,10 @@ and verifying:
 define "ec2 addresses can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	docs = ec2.listIpAddresses
+	print docs
 	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
-	"35.166.112.187" in ips
+	"34.234.147.231" in ips
 
 define "ec2 address can be found by ip" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
