@@ -50,18 +50,18 @@ public class Route53 {
 			.withChangeBatch(new ChangeBatch(Collections.singletonList(new Change()
 				.withAction(ChangeAction.CREATE)
 				.withResourceRecordSet(new ResourceRecordSet()
-					.withName("test-user.prompto.org")
+					.withName(domainPrefix + domainName)
 					.withType(RRType.A)
 					.withTTL(300L)
-					.withResourceRecords(new ResourceRecord("222.222.222.222"))
+					.withResourceRecords(new ResourceRecord(ipAddress))
 				))));
 		ChangeResourceRecordSetsResult result = route53.changeResourceRecordSets(request);
 		return result.getChangeInfo().getStatus();
 	}
 	
-	public PromptoDocument<String, Object> readARecord(String domainName, String domainPrefix) {
-		domainPrefix = domainPrefix.endsWith(".") ? domainPrefix : domainPrefix + ".";
-		domainName = domainName.endsWith(".") ? domainName : domainName + ".";
+	public PromptoDocument<String, Object> readARecord(String domainName_, String domainPrefix_) {
+		String domainPrefix = domainName_.endsWith(".") ? domainName_ : domainName_ + ".";
+		String domainName = domainName_.endsWith(".") ? domainName_ : domainName_ + ".";
 		String zoneId = getZoneId(domainName);
 		ListResourceRecordSetsRequest listRequest = new ListResourceRecordSetsRequest()
 			.withHostedZoneId(zoneId)
@@ -71,14 +71,17 @@ public class Route53 {
 		List<ResourceRecordSet> recordSets = listResult.getResourceRecordSets();
 		if(recordSets.isEmpty())
 			return null;
-		ResourceRecordSet recordSet = recordSets.get(0);
+		ResourceRecordSet recordSet = recordSets.stream()
+				.filter(rs->rs.getName().startsWith(domainPrefix))
+				.findFirst()
+				.orElse(null);
+		if(recordSet==null)
+			return null;
 		PromptoDocument<String, Object> result = new PromptoDocument<>();
 		result.put("name", recordSet.getName());
 		result.put("ttl", recordSet.getTTL());
 		result.put("ipAddress", recordSet.getResourceRecords().get(0).getValue());
 		return result;
-
-		
 	}
 	
 	public String deleteARecord(String domainName, String domainPrefix) {
