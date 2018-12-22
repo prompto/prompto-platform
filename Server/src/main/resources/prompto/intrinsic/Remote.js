@@ -38,7 +38,7 @@ function getTypeName(value) {
 	return name;
 }
 
-function writeJSONValue(value) {
+function writeJSONValue(value, useDbRefs) {
 	if(value==null)
 		return value;
 	else {
@@ -53,11 +53,21 @@ function writeJSONValue(value) {
 		case "DateTime":
 			return { type: "DateTime", value: value.toString() };
 		case "List":
-			return value.map(writeJSONValue);
+			return value.map(function(value) {
+				return writeJSONValue(value, useDbRefs);
+			});
 		default:	
 			if(value instanceof $Root) {
-				var dbId = value.getOrCreateDbId();
-				return { type: "%dbRef%", value: writeJSONValue(dbId) };
+				if(useDbRefs) {
+					var dbId = value.getOrCreateDbId();
+					return { type: "%dbRef%", value: writeJSONValue(dbId, useDbRefs) };
+				} else {
+					var result = {};
+					value.getAttributeNames().forEach(function(attr) {
+						result[attr] = writeJSONValue(value[attr], useDbRefs);
+					});
+					return { type: typeName, value: result};
+				}
 			} else
 				return value;
 		}

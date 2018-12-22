@@ -54,7 +54,7 @@ StorableDocument.prototype.getOrCreateDbId = function() {
 
 StorableDocument.prototype.setDbId = function(dbId) {
 	if(this.document)
-		this.document.dbId  = writeJSONValue(dbId);
+		this.document.dbId  = writeJSONValue(dbId, true);
 };
 
 
@@ -63,7 +63,7 @@ StorableDocument.prototype.setData = function(name, value, dbId) {
         this.document = new StoredDocument(this.category);
         this.document.dbId = dbId? dbId : this.getOrCreateDbId();
     }
-    this.document[name] = writeJSONValue(value);
+    this.document[name] = writeJSONValue(value, true);
 };
 
 StorableDocument.prototype.updateDbIds = function(dbIds) {
@@ -272,7 +272,7 @@ function MatchPredicate(info, matchOp, value) {
 	this.type = "MatchPredicate";
     this.info = info;
     this.matchOp = MatchOp[matchOp.name];
-    this.value = writeJSONValue(value);
+    this.value = writeJSONValue(value, true);
     return this;
 }
 
