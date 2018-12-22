@@ -13,6 +13,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AllocateAddressResult;
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.AssociateAddressRequest;
 import com.amazonaws.services.ec2.model.AssociateAddressResult;
 import com.amazonaws.services.ec2.model.CreateImageRequest;
@@ -73,10 +74,23 @@ public class EC2 {
 	}
 	
 	public void setInstanceName(String instanceId, String name) {
-		CreateTagsRequest tagsRequest = new CreateTagsRequest()
-			.withResources(instanceId)
-			.withTags(new Tag("Name", name));
-		ec2.createTags(tagsRequest);
+		// this is typically called immediately after creating an instance
+		// however, the instance may not exist yet, see
+		// so try in a loop with a sleep period 
+		for(int i=0;i<10;i++) {
+			try {
+				CreateTagsRequest tagsRequest = new CreateTagsRequest()
+				.withResources(instanceId)
+				.withTags(new Tag("Name", name));
+				ec2.createTags(tagsRequest);
+				return;
+			} catch(AmazonEC2Exception e) {
+				if("InvalidInstanceID.NotFound".equals(e.getErrorCode()))
+					unsafeSleep(500);
+				else
+					throw e;
+			}
+		}
 	}
 	
 	public void startInstance(String instanceId) {
