@@ -10,7 +10,6 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,9 +127,9 @@ public class TestStoredLoginSource extends BaseServerTest {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
-		JsonNode node = runRemotely("checkHasLogin", Collections.singletonList(paramAsMap("login", "login", "john")));
+		JsonNode node = runRemotely("checkHasLogin", param("login", "login", "john"));
 		assertTrue(node.get("data").asBoolean());
-		node = runRemotely("checkHasLogin", Collections.singletonList(paramAsMap("login", "login", "Eric")));
+		node = runRemotely("checkHasLogin", param("login", "login", "Eric"));
 		assertFalse(node.get("data").asBoolean());
 	}
 	
@@ -139,9 +138,9 @@ public class TestStoredLoginSource extends BaseServerTest {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
-		JsonNode node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "john"), paramAsMap("password", "password", "password")));
+		JsonNode node = runRemotely("checkUserLogin", param("login", "login", "john"), param("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
-		node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "john"), paramAsMap("password", "password", "wrong")));
+		node = runRemotely("checkUserLogin", param("login", "login", "john"), param("password", "password", "wrong"));
 		assertFalse(node.get("data").asBoolean());
 	}
 	
@@ -151,11 +150,11 @@ public class TestStoredLoginSource extends BaseServerTest {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
-		JsonNode node = runRemotely("checkHasLogin", Collections.singletonList(paramAsMap("login", "login", "eric")));
+		JsonNode node = runRemotely("checkHasLogin", param("login", "login", "eric"));
 		assertFalse(node.get("data").asBoolean());
-		node = runRemotely("createUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password")));
+		node = runRemotely("createUserLogin", param("login", "login", "eric"), param("password", "password", "password"));
 		assertTrue(node.get("error").isNull());
-		node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password")));
+		node = runRemotely("checkUserLogin", param("login", "login", "eric"), param("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
 	}
 
@@ -164,15 +163,15 @@ public class TestStoredLoginSource extends BaseServerTest {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
-		JsonNode node = runRemotely("createUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password")));
+		JsonNode node = runRemotely("createUserLogin", param("login", "login", "eric"), param("password", "password", "password"));
 		assertTrue(node.get("error").isNull());
-		node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password")));
+		node = runRemotely("checkUserLogin", param("login", "login", "eric"), param("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
-		node = runRemotely("updateUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password2")));
+		node = runRemotely("updateUserLogin", param("login", "login", "eric"), param("password", "password", "password2"));
 		assertTrue(node.get("error").isNull());
-		node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password")));
+		node = runRemotely("checkUserLogin", param("login", "login", "eric"), param("password", "password", "password"));
 		assertFalse(node.get("data").asBoolean());
-		node = runRemotely("checkUserLogin", Arrays.asList(paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password2")));
+		node = runRemotely("checkUserLogin", param("login", "login", "eric"), param("password", "password", "password2"));
 		assertTrue(node.get("data").asBoolean());
 	}
 	
@@ -182,10 +181,15 @@ public class TestStoredLoginSource extends BaseServerTest {
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
 		String config = ResourceUtils.getResourceAsString("auth-config.yml");
-		JsonNode node = runRemotely("checkHasLogin", Arrays.asList(paramAsMap("config", "Text", config), paramAsMap("login", "login", "john")));
+		JsonNode node = runRemotely("checkHasLogin", param("config", "Text", config), param("login", "login", "john"));
 		assertFalse(node.get("data").asBoolean());
-		node = runRemotely("createAndCheckUserLogin", Arrays.asList(paramAsMap("config", "Text", config), paramAsMap("login", "login", "john"), paramAsMap("password", "password", "password")));
+		node = runRemotely("createAndCheckUserLogin", param("config", "Text", config), param("login", "login", "john"), param("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
+	}
+
+	@SafeVarargs
+	private final JsonNode runRemotely(String method, Map<String, Object> ... params) throws Exception {
+		return runRemotely(method, Arrays.asList(params));
 	}
 
 	private final JsonNode runRemotely(String method, List<Map<String, Object>> params) throws Exception {
@@ -199,7 +203,7 @@ public class TestStoredLoginSource extends BaseServerTest {
 		}
 	}
 
-	private Map<String, Object> paramAsMap(String name, String type, Object value) {
+	private Map<String, Object> param(String name, String type, Object value) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("name", name);
 		map.put("type", type);
