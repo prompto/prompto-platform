@@ -38,6 +38,7 @@ import prompto.store.memory.MemStore;
 import prompto.utils.JsonUtils;
 import prompto.utils.ResourceUtils;
 
+@SuppressWarnings("unchecked") // SafeVarargs fails on Travis
 public class TestStoredLoginSource extends BaseServerTest {
 
 	static IStore store = new MemStore(); // need a static to share MemStore across classes
@@ -186,7 +187,6 @@ public class TestStoredLoginSource extends BaseServerTest {
 		assertTrue(node.get("data").asBoolean());
 	}
 
-	@SafeVarargs
 	private final JsonNode runRemotely(String method, Map<String, Object> ... params) throws Exception {
 		String paramsString = JsonUtils.objectToJson(Arrays.asList(params));
 		URL url = new URL("http://localhost:" + port + "/ws/run/" + method + "?params=" + URLEncoder.encode(paramsString, "UTF-8"));
