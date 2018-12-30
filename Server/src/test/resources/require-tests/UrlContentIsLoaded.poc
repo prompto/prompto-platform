@@ -1,0 +1,17 @@
+widget UrlContentIsLoadedPage extends ReactWidget {
+
+	method getInitialState() {
+		return { value: "" };
+	}
+	
+    method componentWillMount() {
+    	value = read all from Url(path = "/require-tests/ok.txt", encoding = "utf-8");
+        setState({ value: value });
+    }
+    
+	Html method render () {
+		state = getState();
+		return <div id="value">{state.value}</div>;
+	}
+	
+}
