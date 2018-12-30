@@ -1,0 +1,15 @@
+method checkHasLogin(login) {
+	factory = getLoginFactory();
+	return factory.hasLogin(login);
+}
+
+method checkUserLogin(login, password) {
+	factory = getLoginFactory();
+	return factory.checkLogin(login, password);
+}
+
+method createUserLogin(login, password) {
+	factory = getLoginFactory();
+	factory.createLogin(login, password);
+}
+

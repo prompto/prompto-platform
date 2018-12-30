@@ -121,16 +121,39 @@ public class TestStoredLoginSource extends BaseServerTest {
 	}
 	
 	@Test
-	public void hasLoginReturnsResult() throws Exception {
-		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/has-login.poc");
+	public void hasLoginReturnsTrueOrFalse() throws Exception {
+		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
 		JsonNode node = runRemotely("checkHasLogin", paramAsMap("login", "login", "john"));
-		assertNotNull(node);
 		assertTrue(node.get("data").asBoolean());
 		node = runRemotely("checkHasLogin", paramAsMap("login", "login", "Eric"));
-		assertNotNull(node);
 		assertFalse(node.get("data").asBoolean());
+	}
+	
+	@Test
+	public void checkLoginReturnsTrueOrFalse() throws Exception {
+		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
+		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
+		tail.setNext(codeResource);	
+		JsonNode node = runRemotely("checkUserLogin", paramAsMap("login", "login", "john"), paramAsMap("password", "password", "password"));
+		assertTrue(node.get("data").asBoolean());
+		node = runRemotely("checkUserLogin", paramAsMap("login", "login", "john"), paramAsMap("password", "password", "wrong"));
+		assertFalse(node.get("data").asBoolean());
+	}
+	
+
+	@Test
+	public void createsLogin() throws Exception {
+		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
+		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
+		tail.setNext(codeResource);	
+		JsonNode node = runRemotely("checkHasLogin", paramAsMap("login", "login", "eric"));
+		assertFalse(node.get("data").asBoolean());
+		node = runRemotely("createUserLogin", paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password"));
+		assertTrue(node.get("error").isNull());
+		node = runRemotely("checkUserLogin", paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password"));
+		assertTrue(node.get("data").asBoolean());
 	}
 
 	@SafeVarargs
