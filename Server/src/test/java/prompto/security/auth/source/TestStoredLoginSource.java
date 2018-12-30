@@ -36,6 +36,7 @@ import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.memory.MemStore;
 import prompto.utils.JsonUtils;
+import prompto.utils.ResourceUtils;
 
 public class TestStoredLoginSource extends BaseServerTest {
 
@@ -170,6 +171,18 @@ public class TestStoredLoginSource extends BaseServerTest {
 		node = runRemotely("checkUserLogin", paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password"));
 		assertFalse(node.get("data").asBoolean());
 		node = runRemotely("checkUserLogin", paramAsMap("login", "login", "eric"), paramAsMap("password", "password", "password2"));
+		assertTrue(node.get("data").asBoolean());
+	}
+	
+	@Test
+	public void loadsAuthenticationSourceFromConfig() throws Exception {
+		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/config-login-factory.poc");
+		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
+		tail.setNext(codeResource);	
+		String config = ResourceUtils.getResourceAsString("auth-config.yml");
+		JsonNode node = runRemotely("checkHasLogin", paramAsMap("config", "Text", config), paramAsMap("login", "login", "john"));
+		assertFalse(node.get("data").asBoolean());
+		node = runRemotely("createAndCheckUserLogin", paramAsMap("config", "Text", config), paramAsMap("login", "login", "john"), paramAsMap("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
 	}
 

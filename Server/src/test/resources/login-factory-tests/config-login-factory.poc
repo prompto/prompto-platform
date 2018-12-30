@@ -1,0 +1,26 @@
+method checkHasLogin(Text config, login) {
+	factory = getLoginFactory(config);
+	return factory.hasLogin(login);
+}
+
+method checkUserLogin(Text config, login, password) {
+	factory = getLoginFactory(config);
+	return factory.checkLogin(login, password);
+}
+
+method createUserLogin(Text config, login, password) {
+	factory = getLoginFactory(config);
+	factory.createLogin(login, password);
+}
+
+method updateUserLogin(Text config, login, password) {
+	factory = getLoginFactory(config);
+	factory.updateLogin(login, password);
+}
+
+method createAndCheckUserLogin(Text config, login, password) {
+	factory = getLoginFactory(config);
+	factory.createLogin(login, password);
+	return factory.checkLogin(login, password);
+}
+

@@ -30,6 +30,11 @@ public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthent
 	}
 	
 	@Override
+	public IAuthenticationSource newAuthenticationSource() {
+		return new StoredPasswordDigestAuthenticationSource(config);
+	}
+	
+	@Override
 	public YamlMapping toYaml() throws Throwable {
 		YamlMapping yaml = IAuthenticationSourceFactory.super.toYaml();
 		config.toYaml(yaml);

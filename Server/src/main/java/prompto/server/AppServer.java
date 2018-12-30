@@ -1,10 +1,14 @@
 package prompto.server;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +26,9 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
+import prompto.config.YamlConfigurationReader;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
 import prompto.grammar.Identifier;
@@ -187,11 +194,17 @@ public class AppServer {
 	}
 
 	/* used by Server.pec */
-	public static IAuthenticationSource getLoginFactory(String config) {
+	public static IAuthenticationSource getLoginFactory(String config) throws IOException {
 		if(config==null)
 			return IAuthenticationSource.instance.get();
-		else
-			throw new UnsupportedOperationException("getLoginFactory with config");
+		else try(InputStream input = new ByteArrayInputStream(config.getBytes())) {
+			return new ServerConfiguration(new YamlConfigurationReader(input), Collections.emptyMap())
+						.getHttpConfiguration()
+						.getAuthenticationConfiguration()
+						.getAuthenticationSourceConfiguration()
+						.getAuthenticationSourceFactory()
+						.newAuthenticationSource();
+		} 
 	}
 	
 	static ThreadLocal<String> httpUser = new ThreadLocal<>();

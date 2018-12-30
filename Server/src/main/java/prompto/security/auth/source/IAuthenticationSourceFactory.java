@@ -23,5 +23,7 @@ public interface IAuthenticationSourceFactory {
 		return yaml;		
 	}
 
+	IAuthenticationSource newAuthenticationSource();
+
 
 }

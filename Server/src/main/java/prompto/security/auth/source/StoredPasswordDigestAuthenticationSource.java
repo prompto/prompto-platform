@@ -15,10 +15,19 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 
 	StoredUserInfoCache cache;
 	
+	public StoredPasswordDigestAuthenticationSource() {
+		// default constructor called by Jetty, followed by a call to initialize
+	}
+	
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
 		super.initialize(subject, callbackHandler, sharedState, options);
 		cache = StoredUserInfoCache.initialize((IStoredAuthenticationSourceConfiguration) options.get("config"));
+	}
+
+	// handy constructor for offline operations, not using shared cache
+	public StoredPasswordDigestAuthenticationSource(IStoredAuthenticationSourceConfiguration config) {
+		cache = new StoredUserInfoCache(config);
 	}
 
 	@Override

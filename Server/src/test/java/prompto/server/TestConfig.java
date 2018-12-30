@@ -17,8 +17,12 @@ import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.TempDirectories;
 import prompto.config.YamlConfigurationReader;
+import prompto.config.auth.IAuthenticationConfiguration;
+import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
+import prompto.security.auth.source.IAuthenticationSource;
+import prompto.security.auth.source.IAuthenticationSourceFactory;
 
 public class TestConfig {
 	
@@ -30,19 +34,25 @@ public class TestConfig {
 
 	@Test
 	public void testFullYamlConfig() throws IOException {
-		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.yml")) {
+		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("test-config.yml")) {
 			assertNotNull(input);
 			IConfigurationReader reader = new YamlConfigurationReader(input);
-			IHttpConfiguration config = new HttpConfiguration(reader.getObject("http"));
-			assertEquals("https", config.getProtocol());
-			assertEquals(443, config.getPort());
-			assertEquals("somewhere", config.getAllowedOrigins());
+			IHttpConfiguration httpConfig = new HttpConfiguration(reader.getObject("http"));
+			assertEquals("https", httpConfig.getProtocol());
+			assertEquals(443, httpConfig.getPort());
+			assertEquals("somewhere", httpConfig.getAllowedOrigins());
 			// keystore
-			IKeyStoreConfiguration ksc = config.getKeyStoreConfiguration();
-			checkKeyStoreConfiguration(ksc);
+			IKeyStoreConfiguration keyStoreConfig = httpConfig.getKeyStoreConfiguration();
+			checkKeyStoreConfiguration(keyStoreConfig);
 			// truststore
-			ksc = config.getTrustStoreConfiguration();
-			checkKeyStoreConfiguration(ksc);
+			keyStoreConfig = httpConfig.getTrustStoreConfiguration();
+			checkKeyStoreConfiguration(keyStoreConfig);
+			// authentication
+			IAuthenticationConfiguration authConfig = httpConfig.getAuthenticationConfiguration();
+			IAuthenticationSourceConfiguration sourceConfig = authConfig.getAuthenticationSourceConfiguration();
+			IAuthenticationSourceFactory factory = sourceConfig.getAuthenticationSourceFactory();
+			IAuthenticationSource source = factory.newAuthenticationSource();
+			assertNotNull(source);
 		}
 		
 	}

@@ -26,5 +26,10 @@ public class PasswordIsUserNameAuthenticationSourceFactory implements IAuthentic
 		return moduleName;
 	}
 	
+	@Override
+	public IAuthenticationSource newAuthenticationSource() {
+		return new PasswordIsUserNameAuthenticationSource();
+	}
+	
 
 }

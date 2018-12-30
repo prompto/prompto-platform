@@ -16,3 +16,9 @@ http:
     secretKey:
       factory: prompto.security.EnvironmentVariableSecretKeyFactory
       secret: not-a-secret
+  authentication:
+    source:
+      factory: prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory
+      store:
+        factory: prompto.store.memory.MemStoreFactory
+  
