@@ -170,7 +170,7 @@ public abstract class BaseServerTest {
 			.withPort(port); 
 	}
 
-	private void prepareHandlers(JettyServer server, HandlerList list) {
+	public void prepareHandlers(JettyServer server, HandlerList list) {
 		prepareHandlers(server, list, ssl);
 	}
 	

@@ -122,6 +122,7 @@ public class TestStoredLoginSource extends BaseServerTest {
 		assertEquals(401, code);
 	}
 	
+	/*
 	@Test
 	public void hasLoginReturnsTrueOrFalse() throws Exception {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/default-login-factory.poc");
@@ -186,7 +187,8 @@ public class TestStoredLoginSource extends BaseServerTest {
 		node = runRemotely("createAndCheckUserLogin", param("config", "Text", config), param("login", "login", "john"), param("password", "password", "password"));
 		assertTrue(node.get("data").asBoolean());
 	}
-
+	*/
+	
 	@SafeVarargs
 	private final JsonNode runRemotely(String method, Map<String, Object> ... params) throws Exception {
 		return runRemotely(method, Arrays.asList(params));
