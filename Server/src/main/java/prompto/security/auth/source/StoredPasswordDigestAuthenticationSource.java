@@ -27,6 +27,24 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 	}
 	
 	@Override
+	public boolean hasLogin(String login) {
+		try {
+			return cache.hasLogin(login);
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+	
+	@Override
+	public boolean checkLogin(String login, String password) {
+		try {
+			return cache.checkLogin(login, password);
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+	
+	@Override
 	public void createLogin(String login, String password) {
 		try {
 			cache.createLogin(login, password);

@@ -187,10 +187,11 @@ public class AppServer {
 	}
 
 	/* used by Server.pec */
-	public static void createLogin(String login, String password) {
-		IAuthenticationSource source = IAuthenticationSource.instance.get();
-		if(source!=null)
-			source.createLogin(login, password);
+	public static IAuthenticationSource getLoginFactory(String config) {
+		if(config==null)
+			return IAuthenticationSource.instance.get();
+		else
+			throw new UnsupportedOperationException("getLoginFactory with config");
 	}
 	
 	static ThreadLocal<String> httpUser = new ThreadLocal<>();

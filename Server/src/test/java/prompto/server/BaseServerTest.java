@@ -12,6 +12,8 @@ import org.eclipse.jetty.util.resource.URLResource;
 import org.junit.After;
 import org.junit.Before;
 
+import prompto.code.BaseCodeStore;
+import prompto.code.ICodeStore;
 import prompto.config.IConfigurationReader;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
@@ -30,6 +32,7 @@ import prompto.utils.SocketUtils;
 
 public abstract class BaseServerTest {
 	
+	protected BaseCodeStore tail;
 	protected int port = -1;
 	boolean ssl = false;
 	
@@ -41,8 +44,33 @@ public abstract class BaseServerTest {
 		IServerConfiguration config = getServerConfig();
 		Mode.set(config.getRuntimeMode());
 		bootstrapCodeStore(config);
+		ServerIdentifierProcessor.register();
 		AppServer.startServer(config, this::prepareHandlers, null);
 		assertTrue(AppServer.isStarted());
+		tail = getCodeStoreTail();
+	}
+	
+	@After
+	public void __after__() throws Exception {
+		if(tail!=null)
+			tail.setNext(null);
+		port = -1;
+		if(AppServer.isStarted()) {
+			AppServer.stop();
+			Thread.sleep(100);
+		}
+	}
+
+	private BaseCodeStore getCodeStoreTail() {
+		ICodeStore store = ICodeStore.getInstance();
+		while(store instanceof BaseCodeStore) {
+			ICodeStore next = ((BaseCodeStore)store).getNext();
+			if(next==null)
+				return (BaseCodeStore)store;
+			else
+				store = next;	
+		}
+		return null;
 	}
 	
 	protected IServerConfiguration getServerConfig() {
@@ -159,16 +187,6 @@ public abstract class BaseServerTest {
 
 	public static void bootstrapCodeStore(IServerConfiguration config) throws Exception {
 		Standalone.bootstrapCodeStore(new MemStore(), config);
-	}
-
-	@After
-	public void __after__() throws Exception {
-		port = -1;
-		if(AppServer.isStarted()) {
-			AppServer.stop();
-			Thread.sleep(100);
-		}
-	}
-	
+	}	
 
 }

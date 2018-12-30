@@ -2,9 +2,13 @@ package prompto.server;
 
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
+import prompto.code.BaseCodeStore;
+import prompto.code.ICodeStore;
 import prompto.config.IConfigurationReader;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
@@ -52,6 +56,31 @@ public abstract class BaseUITest extends BaseWebTest {
 			IServerConfiguration config = new ServerConfiguration(reader, argsMap);
 			return config.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
 		}
+	}
+
+	protected BaseCodeStore tail;
+
+	@Before
+	public void __before__() throws Throwable {
+		tail = getCodeStoreTail();
+	}
+	
+	@After
+	public void __after__() throws Exception {
+		if(tail!=null)
+			tail.setNext(null);
+	}
+
+	private BaseCodeStore getCodeStoreTail() {
+		ICodeStore store = ICodeStore.getInstance();
+		while(store instanceof BaseCodeStore) {
+			ICodeStore next = ((BaseCodeStore)store).getNext();
+			if(next==null)
+				return (BaseCodeStore)store;
+			else
+				store = next;	
+		}
+		return null;
 	}
 
 }

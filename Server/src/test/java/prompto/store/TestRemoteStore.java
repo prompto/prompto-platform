@@ -45,7 +45,6 @@ import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
 
-	BaseCodeStore tail;
 	Path tempDir;	
 
 	@Before

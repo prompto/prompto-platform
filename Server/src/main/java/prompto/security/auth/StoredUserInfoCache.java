@@ -146,6 +146,19 @@ public class StoredUserInfoCache {
 		}
 
 	}
+	
+	
+	public boolean hasLogin(String login) {
+		IQueryBuilder query = store.newQueryBuilder();
+		query.verify(LOGIN, MatchOp.EQUALS, login);
+		IStored authRecord = store.fetchOne(query.build());
+		return authRecord != null;
+	}
+
+	public boolean checkLogin(String login, String password) throws NoSuchAlgorithmException {
+		StoredPasswordDigestCredential credential = new StoredPasswordDigestCredential(login);
+		return credential.check(password);
+	}
 
 	public void createLogin(String login, String password) throws NoSuchAlgorithmException {
 		createLogin(store, login, password);

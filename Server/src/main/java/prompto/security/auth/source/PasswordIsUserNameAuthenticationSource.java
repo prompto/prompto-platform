@@ -31,6 +31,16 @@ public class PasswordIsUserNameAuthenticationSource extends JettyLoginModuleBase
 	}
 	
 	@Override
+	public boolean hasLogin(String login) {
+		return true;
+	}
+	
+	@Override
+	public boolean checkLogin(String login, String password) {
+		return true;
+	}
+	
+	@Override
 	public void createLogin(String login, String password) {
 		// nothing to do
 	}

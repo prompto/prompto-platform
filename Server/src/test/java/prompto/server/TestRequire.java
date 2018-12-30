@@ -10,15 +10,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import prompto.code.BaseCodeStore;
-import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
 import prompto.intrinsic.PromptoVersion;
@@ -33,33 +29,8 @@ import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 @Category(HeadlessTests.class)
 public class TestRequire extends BaseUITest {
 
-	BaseCodeStore tail;
 	Path tempDir;
 	
-	@Before
-	public void before() {
-		tail = getCodeStoreTail();
-	}
-	
-	
-	@After
-	public void after() {
-		if(tail!=null)
-			tail.setNext(null);
-	}
-	
-	private BaseCodeStore getCodeStoreTail() {
-		ICodeStore store = ICodeStore.getInstance();
-		while(store instanceof BaseCodeStore) {
-			ICodeStore next = ((BaseCodeStore)store).getNext();
-			if(next==null)
-				return (BaseCodeStore)store;
-			else
-				store = next;	
-		}
-		return null;
-	}
-
 
 	@Test
 	public void urlContentIsLoaded() throws Exception {

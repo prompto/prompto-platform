@@ -63,8 +63,6 @@ public abstract class BaseWebTest {
 		closeWebDriver();
 	}
 	
-	
-	
 	protected void click(WebElement we, int waitMillis) throws InterruptedException {
 		// Actions actions = new Actions(webDriver);
 		// actions.moveToElement(we).perform();
@@ -126,5 +124,6 @@ public abstract class BaseWebTest {
 		return stored!=null ? stored.getDbId().toString() : null;
 	}
 
-	
+
+
 }

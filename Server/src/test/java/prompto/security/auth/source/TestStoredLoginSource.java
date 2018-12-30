@@ -1,23 +1,32 @@
 package prompto.security.auth.source;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import prompto.code.ImmutableCodeStore;
+import prompto.code.ModuleType;
 import prompto.config.IHttpConfiguration;
 import prompto.config.IStoreConfiguration;
 import prompto.config.auth.IAuthenticationConfiguration;
 import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.intrinsic.PromptoVersion;
 import prompto.security.auth.StoredUserInfoCache;
 import prompto.security.auth.method.BasicAuthenticationMethodFactory;
 import prompto.security.auth.source.IAuthenticationSourceFactory;
@@ -26,6 +35,7 @@ import prompto.server.BaseServerTest;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.memory.MemStore;
+import prompto.utils.JsonUtils;
 
 public class TestStoredLoginSource extends BaseServerTest {
 
@@ -83,19 +93,19 @@ public class TestStoredLoginSource extends BaseServerTest {
 	}
 
 	@Test
-	public void testThatUnknownUserIsRejected() throws Exception {
+	public void unknownUserIsRejected() throws Exception {
 		int code = loadResource("eric", "password");
 		assertEquals(401, code);
 	}
 
 	@Test
-	public void testThatKnownUserIsAllowedWhenUsingCorrectPassword() throws Exception {
+	public void knownUserIsAllowedWhenUsingCorrectPassword() throws Exception {
 		int code = loadResource("john", "password");
 		assertEquals(200, code);
 	}
 
 	@Test
-	public void testThatKnownUserIsRejectedAfterDelay() throws Exception {
+	public void knownUserIsRejectedAfterDelay() throws Exception {
 		int code = loadResource("john", "password");
 		assertEquals(200, code);
 		store.deleteAll();
@@ -105,9 +115,42 @@ public class TestStoredLoginSource extends BaseServerTest {
 	}
 
 	@Test
-	public void testThatKnownUserIsRejectedWhenUsingIncorrectPassword() throws Exception {
+	public void knownUserIsRejectedWhenUsingIncorrectPassword() throws Exception {
 		int code = loadResource("john", "wrong");
 		assertEquals(401, code);
+	}
+	
+	@Test
+	public void hasLoginReturnsResult() throws Exception {
+		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/has-login.poc");
+		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
+		tail.setNext(codeResource);	
+		JsonNode node = runRemotely("checkHasLogin", paramAsMap("login", "login", "john"));
+		assertNotNull(node);
+		assertTrue(node.get("data").asBoolean());
+		node = runRemotely("checkHasLogin", paramAsMap("login", "login", "Eric"));
+		assertNotNull(node);
+		assertFalse(node.get("data").asBoolean());
+	}
+
+	@SafeVarargs
+	private final JsonNode runRemotely(String method, Map<String, Object> ... params) throws Exception {
+		String paramsString = JsonUtils.objectToJson(Arrays.asList(params));
+		URL url = new URL("http://localhost:" + port + "/ws/run/" + method + "?params=" + URLEncoder.encode(paramsString, "UTF-8"));
+		URLConnection cnx = url.openConnection();
+		String authorization = Base64.getEncoder().encodeToString("john:password".getBytes());
+		cnx.setRequestProperty("Authorization", "Basic " + authorization);		
+		try (InputStream input = cnx.getInputStream()) {
+			return new ObjectMapper().readTree(input);
+		}
+	}
+
+	private Map<String, Object> paramAsMap(String name, String type, Object value) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("name", name);
+		map.put("type", type);
+		map.put("value", value);
+		return map;
 	}
 
 	static final String HTTP_CODE_PREFIX = "Server returned HTTP response code: ";

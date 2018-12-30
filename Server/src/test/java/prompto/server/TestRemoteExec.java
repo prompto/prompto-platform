@@ -1,6 +1,6 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,14 +10,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
@@ -36,7 +34,6 @@ import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 @Category(HeadlessTests.class)
 public class TestRemoteExec extends BaseUITest {
 
-	BaseCodeStore tail;
 	Path tempDir;	
 
 	@Before
@@ -44,28 +41,9 @@ public class TestRemoteExec extends BaseUITest {
 		Standalone.clearGlobalContext();
 		DataStore.setGlobal(new MemStore());
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
-		tail = getCodeStoreTail();
 	}
 	
 	
-	@After
-	public void after() {
-		if(tail!=null)
-			tail.setNext(null);
-	}
-	
-	private BaseCodeStore getCodeStoreTail() {
-		ICodeStore store = ICodeStore.getInstance();
-		while(store instanceof BaseCodeStore) {
-			ICodeStore next = ((BaseCodeStore)store).getNext();
-			if(next==null)
-				return (BaseCodeStore)store;
-			else
-				store = next;	
-		}
-		return null;
-	}
-
 	private void linkResourcesAndLoadPage(String resourceName, Dialect dialect) throws Exception {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("remote-exec-tests/" + resourceName + ".p" + dialect.name().toLowerCase() + "c");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
