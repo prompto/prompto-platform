@@ -1,0 +1,16 @@
+define LoginFactory as native category with bindings:
+	
+	define category bindings as:
+		Java: prompto.security.auth.source.IAuthenticationSource
+		
+and methods:
+
+	define createLogin as method receiving login and password doing:
+		Java: this.createLogin(login, password);
+
+	define checkLogin as method receiving login and password doing:
+		Java: this.checkLogin(login, password);
+
+	define hasLogin as method receiving login returning Boolean doing:
+		Java: return this.hasLogin(login);
+
