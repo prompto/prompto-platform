@@ -8,4 +8,5 @@ public interface IAuthenticationSource {
 	boolean hasLogin(String login);
 	boolean checkLogin(String login, String password);
 	void createLogin(String login, String password);
+	void updateLogin(String login, String password);
 }

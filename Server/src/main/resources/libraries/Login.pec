@@ -8,6 +8,9 @@ and methods:
 	define createLogin as method receiving login and password doing:
 		Java: this.createLogin(login, password);
 
+	define updateLogin as method receiving login and password doing:
+		Java: this.updateLogin(login, password);
+
 	define checkLogin as method receiving login and password doing:
 		Java: this.checkLogin(login, password);
 

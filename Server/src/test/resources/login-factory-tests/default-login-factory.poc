@@ -13,3 +13,9 @@ method createUserLogin(login, password) {
 	factory.createLogin(login, password);
 }
 
+
+method updateUserLogin(login, password) {
+	factory = getLoginFactory();
+	factory.updateLogin(login, password);
+}
+

@@ -164,6 +164,24 @@ public class StoredUserInfoCache {
 		createLogin(store, login, password);
 	}
 	
+	public void updateLogin(String login, String password) throws NoSuchAlgorithmException {
+		IQueryBuilder query = store.newQueryBuilder();
+		query.verify(LOGIN, MatchOp.EQUALS, login);
+		IStored stored = store.fetchOne(query.build());
+		if(stored==null)
+			return;
+		String salt = DigestMethod.newSalt();
+		IStorable storable = store.newStorable(Arrays.asList("User"), null);
+		storable.setData("login", login);
+		storable.setData("salt", salt);
+		storable.setData("method", "PBKDF2");
+		String digest = DigestMethod.forName("PBKDF2").digest(password, salt);
+		storable.setData("digest", digest);
+		storable.setDbId(stored.getDbId());
+		store.store(storable);
+		cache.remove(login);
+	}
+	
 	public static void createLogin(IStore store, String login, String password) throws NoSuchAlgorithmException {
 		String salt = DigestMethod.newSalt();
 		IStorable storable = store.newStorable(Arrays.asList("User"), null);

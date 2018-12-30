@@ -44,5 +44,10 @@ public class PasswordIsUserNameAuthenticationSource extends JettyLoginModuleBase
 	public void createLogin(String login, String password) {
 		// nothing to do
 	}
+	
+	@Override
+	public void updateLogin(String login, String password) {
+		// nothing to do
+	}
 
 }
