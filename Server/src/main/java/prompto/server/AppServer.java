@@ -27,8 +27,6 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
 import prompto.config.YamlConfigurationReader;
-import prompto.config.auth.IAuthenticationConfiguration;
-import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.debug.DebugRequestServer;
 import prompto.declaration.IMethodDeclaration;
 import prompto.grammar.Identifier;
