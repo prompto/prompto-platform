@@ -1,7 +1,9 @@
 sudo: required
 addons:
   chrome: stable
-language: java
+  apt:
+    packages:
+      - oracle-java8-installerlanguage: java
 jdk:
   - oraclejdk8
 install:
