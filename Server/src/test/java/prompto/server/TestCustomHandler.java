@@ -1,6 +1,6 @@
 package prompto.server;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -132,7 +132,11 @@ public class TestCustomHandler {
 	}
 	
 	void prepareHandlers(JettyServer server, HandlerList list) {
-		BaseServerTest.prepareHandlers(server, list, false);
+		try {
+			list.addHandler(server.newWebAppHandler());
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 }
