@@ -1,6 +1,6 @@
 package prompto.server;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.InputStream;
 import java.net.URL;

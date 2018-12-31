@@ -31,14 +31,14 @@ public class TestDataServlet extends BaseServerTest {
 	}
 	
 	@Test
-	public void testThatFetchAllOnEmptyStoreIsOk() throws Exception {
+	public void canFetchAllOnEmptyStore() throws Exception {
 		JsonNode node = runQuery("fetch all");
 		assertTrue(node.get("error").isNull());
 		assertEquals(0, node.get("data").get("totalCount").asLong());
 	}
 	
 	@Test
-	public void testThatFetchAllWithAnyIsOk() throws Exception {
+	public void canFetchAllWithAny() throws Exception {
 		IStorable doc = store.newStorable(Collections.singletonList("Any"), id->{});
 		doc.setData("name", "John");
 		store.store(doc);
@@ -49,7 +49,7 @@ public class TestDataServlet extends BaseServerTest {
 	}
 	
 	@Test
-	public void testThatFetchAllWithCategoryIsOk() throws Exception {
+	public void canFetchAllWithCategory() throws Exception {
 		IStorable doc = store.newStorable(Collections.singletonList("MyCategory"), id->{});
 		doc.setData("text", "someName");
 		doc.setData("integer", 987654321L);
