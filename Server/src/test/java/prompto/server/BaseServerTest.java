@@ -39,12 +39,9 @@ public abstract class BaseServerTest {
 	@Before
 	public void __before__() throws Throwable {
 		TempDirectories.create();
-		Mode.set(Mode.UNITTEST);
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
 		IServerConfiguration config = getServerConfig();
-		Mode.set(config.getRuntimeMode());
-		bootstrapCodeStore(config);
-		ServerIdentifierProcessor.register();
+		AppServer.initialize(config);
 		AppServer.startServer(config, this::prepareHandlers, null);
 		assertTrue(AppServer.isStarted());
 		tail = getCodeStoreTail();
@@ -171,11 +168,6 @@ public abstract class BaseServerTest {
 	}
 
 	public void prepareHandlers(JettyServer server, HandlerList list) {
-		prepareHandlers(server, list, ssl);
-	}
-	
-	
-	public static void prepareHandlers(JettyServer server, HandlerList list, boolean ssl) {
 		try {
 			if(ssl)
 				list.addHandler(new SecuredRedirectHandler());
@@ -184,7 +176,8 @@ public abstract class BaseServerTest {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
+	
 	public static void bootstrapCodeStore(IServerConfiguration config) throws Exception {
 		Standalone.bootstrapCodeStore(new MemStore(), config);
 	}	

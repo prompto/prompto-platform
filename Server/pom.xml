@@ -49,6 +49,7 @@
 				<version>2.19.1</version>
 				<configuration>
 					<excludedGroups>prompto.utils.ManualTests</excludedGroups>
+					<argLine>-Dsun.reflect.inflationThreshold=2147483647</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
