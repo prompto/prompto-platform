@@ -1,10 +1,16 @@
 releasing requires pgp for code signing. Once and for all, you must:
- - install gpg or gpg2
+ - install gpg or gpg2 using: brew install gnupg gnupg2
  - create a key pair
  - export it to ascii
  - publish it to various servers
  - specify <gpg.executable> in mvn Settings.xml
  - specify <gpg.passphrase> in mvn Settings.xml
+if pgp key expires:
+ - gpg2 --list-keys
+ - gpg2 --edit-key some-key listed above
+ - key 0, expire
+ - key 1, expire
+ - save
 releasing require authenticating to Nexus. Once and for all, you must:
  - specify <username> in <server>in mvn Settings.xml
  - specify <pasword> in <server>in mvn Settings.xml
