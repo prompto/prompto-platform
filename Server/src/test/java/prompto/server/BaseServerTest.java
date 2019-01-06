@@ -44,7 +44,7 @@ public abstract class BaseServerTest {
 		AppServer.initialize(config);
 		AppServer.startServer(config, this::prepareHandlers, null);
 		assertTrue(AppServer.isStarted());
-		tail = getCodeStoreTail();
+		tail = findCodeStoreTail();
 	}
 	
 	@After
@@ -57,8 +57,12 @@ public abstract class BaseServerTest {
 			Thread.sleep(100);
 		}
 	}
+	
+	public BaseCodeStore getTail() {
+		return tail;
+	}
 
-	private BaseCodeStore getCodeStoreTail() {
+	private BaseCodeStore findCodeStoreTail() {
 		ICodeStore store = ICodeStore.getInstance();
 		while(store instanceof BaseCodeStore) {
 			ICodeStore next = ((BaseCodeStore)store).getNext();
