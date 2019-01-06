@@ -38,6 +38,17 @@ public class PromptoServlet extends CleverServlet {
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		HttpUserReader.readAndSet(req);
 		readSession(req);
+		REGISTERED_ORIGIN.set(readRegisterdOrigin(req));
+		if(sendsXAutorization) {
+			logger.debug(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
+			if(req.getHeader("Authorization")!=null)
+				resp.addHeader("X-Authorization", req.getHeader("Authorization"));
+		}
+		super.service(req, resp);
+	}
+
+	
+	private String readRegisterdOrigin(HttpServletRequest req) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(req.getScheme());
 		sb.append("://");
@@ -48,16 +59,9 @@ public class PromptoServlet extends CleverServlet {
 		sb.append(req.getServerName());
 		sb.append(":");
 		sb.append(req.getServerPort());
-		REGISTERED_ORIGIN.set(sb.toString());
-		if(sendsXAutorization) {
-			logger.debug(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
-			if(req.getHeader("Authorization")!=null)
-				resp.addHeader("X-Authorization", req.getHeader("Authorization"));
-		}
-		super.service(req, resp);
+		return sb.toString();
 	}
 
-	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
