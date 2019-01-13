@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget NullIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value=null);
 		store(stuff);
 	}

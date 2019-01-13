@@ -7,7 +7,7 @@ widget VoidIsExecutedPage extends ReactWidget {
 		return { status: "INITIAL" };
 	}
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		voidMethod() then {
 			setState({ status: "EXECUTED" });
 		}

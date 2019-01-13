@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget BooleanIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value=true);
 		store(stuff);
 	}

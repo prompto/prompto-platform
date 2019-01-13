@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget DbIdIsPopulatedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value="John");
 		store(stuff);
 		stuff = fetch one( mutable Stuff ) where ( dbId == stuff.dbId );

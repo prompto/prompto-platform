@@ -5,7 +5,7 @@ storable category Parent(child, value);
 
 widget ChildIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		child = Child(value="John");
 		user = Parent(child=child, value="Gielgud");
 		store(user);

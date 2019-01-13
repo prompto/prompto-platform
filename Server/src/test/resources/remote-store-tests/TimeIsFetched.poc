@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget TimeIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value='18:15:03');
 		store(stuff);
 	}

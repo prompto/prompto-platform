@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget DateIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value='2016-02-25');
 		store(stuff);
 	}

@@ -3,7 +3,7 @@ storable category Stuff(value);
 
 widget IntegerIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value=123);
 		store(stuff);
 	}
