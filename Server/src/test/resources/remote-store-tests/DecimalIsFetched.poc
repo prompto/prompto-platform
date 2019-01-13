@@ -6,10 +6,14 @@ widget DecimalIsFetchedPage extends ReactWidget {
 	method componentDidMount() {
 		stuff = Stuff(value=123.4);
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value == 123.4 );
-		return <div id="root">{stuff.value.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.text}</div>;
 	}
 }

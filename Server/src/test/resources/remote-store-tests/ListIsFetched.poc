@@ -6,10 +6,14 @@ widget ListIsFetchedPage extends ReactWidget {
 	method componentDidMount() {
 		stuff = Stuff(value=["John", "Gielgud"]);
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value contains "John" );
-		return <div id="root">{stuff.value.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.text}</div>;
 	}
 }
