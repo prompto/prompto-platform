@@ -1,46 +1,79 @@
 package prompto.debug;
 
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 @SuppressWarnings("serial")
 public class DebugEventServlet extends WebSocketServlet {
 
-	WebSocketDebugEventAdapter adapter;
+	DebuggerWebSocketCreator creator = new DebuggerWebSocketCreator();
 	
 	public void setAdapter(WebSocketDebugEventAdapter adapter) {
-		this.adapter = adapter;
+		creator.setAdapter(adapter);
 	}
 
 	@Override
 	public void configure(WebSocketServletFactory factory) {
-		factory.register(DebuggerWebSocket.class);
+		factory.setCreator(creator);
+	}
+	
+	static class DebuggerWebSocketCreator implements WebSocketCreator {
+
+		WebSocketDebugEventAdapter adapter;
+		
+		public void setAdapter(WebSocketDebugEventAdapter adapter) {
+			this.adapter = adapter;
+		}
+		
+		@Override
+		public DebuggerWebSocketListener createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+			return new DebuggerWebSocketListener(adapter);
+		}
+		
 	}
 
-	@WebSocket
-	static class DebuggerWebSocket {
+	static class DebuggerWebSocketListener implements WebSocketListener {
 
-		@SuppressWarnings("unused")
-		private Session session;
+		WebSocketDebugEventAdapter adapter;
+		Session session;
+		
+		public DebuggerWebSocketListener(WebSocketDebugEventAdapter adapter) {
+			this.adapter = adapter;
+		}
 
-		@OnWebSocketConnect
-		public void onConnect(Session session) {
+		@Override
+		public void onWebSocketConnect(Session session) {
 			this.session = session;
 		}
 
-		@OnWebSocketMessage
-		public void onMessage(String msg) {
-			System.out.printf("Got msg: %s%n", msg);
+		@Override
+		public void onWebSocketText(String message) {
+			// TODO Auto-generated method stub
+			
 		}
 
-		@OnWebSocketClose
-		public void onClose(int statusCode, String reason) {
-			this.session = null;
+		@Override
+		public void onWebSocketBinary(byte[] payload, int offset, int len) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onWebSocketClose(int statusCode, String reason) {
+			// TODO Auto-generated method stub
+			
+		}
+
+	
+		@Override
+		public void onWebSocketError(Throwable cause) {
+			// TODO Auto-generated method stub
+			
 		}
 
 	}

@@ -61,6 +61,10 @@ public abstract class BaseServerTest {
 	public BaseCodeStore getTail() {
 		return tail;
 	}
+	
+	public int getPort() {
+		return port;
+	}
 
 	private BaseCodeStore findCodeStoreTail() {
 		ICodeStore store = ICodeStore.getInstance();

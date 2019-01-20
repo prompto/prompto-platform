@@ -1,7 +1,11 @@
 package prompto.debug;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,8 +17,11 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.debug.IDebugEvent.Connected;
 import prompto.intrinsic.PromptoVersion;
+import prompto.runtime.Standalone;
 import prompto.server.BaseServerTest;
+import prompto.utils.Instance;
 import prompto.utils.ManualTests;
+import prompto.utils.StringUtils;
 
 
 @Category(ManualTests.class)
@@ -34,15 +41,13 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	DebuggingServer server = new DebuggingServer();
 	WebSocketDebugEventListener eventListener;
-	
+	Instance<String> output = new Instance<>();
 	
 	@Before
 	public void before() throws Throwable {
-		// start listening to debug events
-		this.eventListener = new WebSocketDebugEventListener(this);
-		eventListener.startListening();
-		// with this cinematic, we can't debug the server startup method
+		// note that with this cinematic, we can't debug the server startup method
 		server.__before__(); 
+		Standalone.clearGlobalContext();
 	}
 	
 	
@@ -53,11 +58,11 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 
 	@Override
 	protected String readOut() throws IOException {
-		/*String output = IOUtils.readFileToString(outputFile);
-		String[] lines = output.split("\n");
+		String result = output.get();
+		if(result==null)
+			return "";
+		String[] lines = result.split("\n");
 		return lines.length>0 ? lines[lines.length-1] : "";
-		*/
-		return null;
 	}
 	
 	
@@ -72,8 +77,26 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 
 	@Override
 	protected void start() throws Exception {
-		debugger = new HttpClientDebugger(eventListener);
+		// create request client
+		debugger = new HttpClientDebugger("localhost", server.getPort());
+		// start listening to debug events
+		this.eventListener = new WebSocketDebugEventListener("localhost", server.getPort(), this);
+		eventListener.startListening();
 		waitConnected();
+		// run method
+		callMainMethod();
+	}
+
+
+	private void callMainMethod() throws Exception {
+		URL url = new URL("http://localhost:" + server.getPort() + "/ws/run/main");
+		new Thread(()->{
+			try(InputStream input = url.openStream()) {
+				output.set(StringUtils.stringFromStream(input));
+			} catch(Exception e) {
+				output.set(e.getMessage());
+			}
+		}).start();
 	}
 
 
@@ -88,14 +111,16 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		URL codeResourceURL = getResourceAsURL(resourceName);
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		server.getTail().setNext(codeResource);	
-}
+	}
 	
-	Object lock  = new Object();
+	Object lock = null;
 	
 	private void waitConnected() throws InterruptedException {
+		lock = new Object();
 		synchronized (lock) {
 			lock.wait();
 		}
+		lock = null;
 	}
 
 

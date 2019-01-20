@@ -6,8 +6,12 @@ import prompto.parser.ISection;
 
 public class HttpClientDebugger implements IDebugger {
 
-	public HttpClientDebugger(WebSocketDebugEventListener eventListener) {
-		// TODO Auto-generated constructor stub
+	String host;
+	int port;
+	
+	public HttpClientDebugger(String host, int port) {
+		this.host = host;
+		this.port = port;
 	}
 
 	@Override
@@ -141,5 +145,7 @@ public class HttpClientDebugger implements IDebugger {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	
 
 }
