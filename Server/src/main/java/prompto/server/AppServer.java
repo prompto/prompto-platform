@@ -27,7 +27,7 @@ import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
 import prompto.config.YamlConfigurationReader;
-import prompto.debug.DebugRequestServer;
+import prompto.debug.IDebugRequestListener;
 import prompto.declaration.IMethodDeclaration;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
@@ -121,10 +121,10 @@ public class AppServer {
 	}
 
 	static int debugServer(IDebugConfiguration debug, IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler) throws Throwable {
-		DebugRequestServer server = Standalone.startDebugging(debug.getHost(), debug.getPort());
+		IDebugRequestListener listener = Standalone.startDebugging(debug);
 		return startServer(config, handler, ()->{
 			Standalone.getGlobalContext().notifyTerminated();
-			server.stopListening();
+			listener.stopListening();
 		});
 	}
 	

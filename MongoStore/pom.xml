@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver</artifactId>
-			<version>${mongo-version}</version>
+			<version>${mongo.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

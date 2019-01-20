@@ -12,7 +12,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jackson-version>2.9.5</jackson-version>
+		<jackson.version>2.9.5</jackson.version>
 	</properties>
 
 	<build>
@@ -99,13 +99,13 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
-			<version>${jackson-version}</version>
+			<version>${jackson.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${jackson-version}</version>
+			<version>${jackson.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

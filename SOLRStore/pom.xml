@@ -12,7 +12,7 @@
 	<artifactId>SOLRStore</artifactId>
 
 	<properties>
-		<solr-version>5.4.0</solr-version>
+		<solr.version>5.4.0</solr.version>
 	</properties>
 
 	<build>
@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-solrj</artifactId>
-			<version>${solr-version}</version>
+			<version>${solr.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>jcl-over-slf4j</artifactId>
@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-core</artifactId>
-			<version>${solr-version}</version>
+			<version>${solr.version}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-langid</artifactId>
-			<version>${solr-version}</version>
+			<version>${solr.version}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
