@@ -35,12 +35,17 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
+import prompto.config.IDebugConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.auth.IAuthenticationConfiguration;
 import prompto.config.auth.source.IAuthenticationSourceConfiguration;
+import prompto.debug.DebugEventServlet;
+import prompto.debug.DebugRequestServlet;
+import prompto.debug.HttpServletDebugRequestListenerFactory;
+import prompto.debug.WebSocketDebugEventAdapterFactory;
 import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
@@ -58,6 +63,8 @@ class JettyServer extends Server {
 	ConstraintSecurityHandler securityHandler;
 	HandlerList contentHandler;
 	WebAppContext servicesHandler;
+	DebugRequestServlet debugRequestServlet;
+	DebugEventServlet debugEventServlet;
 	boolean startComplete = false;
 	Thread serverThread = null;
 	Throwable serverThrowable = null;
@@ -325,16 +332,39 @@ class JettyServer extends Server {
 		handler.addServlet(new ControlServlet(), "/ws/control/*");
 		handler.addServlet(new BinaryServlet(), "/ws/bin/*");
 		handler.addServlet(new DataServlet(), "/ws/data/*");   
-		handler.addServlet(new StoreServlet(), "/ws/store/*");   
-        boolean sendsXAutorization = config.getHttpConfiguration().getSendsXAuthorization();
+		handler.addServlet(new StoreServlet(), "/ws/store/*"); 
+		newDebuggerServlets(handler);
+		boolean sendsXAutorization = config.getHttpConfiguration().getSendsXAuthorization();
         handler.addServlet(new PromptoServlet(sendsXAutorization), "/ws/run/*");  
-        FilterHolder holder = newCrossOriginHandler();
-        if(holder!=null)
-        	handler.addFilter(holder, "/*", EnumSet.of(DispatcherType.REQUEST));
+        FilterHolder filterHolder = newCrossOriginHandler();
+        if(filterHolder!=null)
+        	handler.addFilter(filterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.getSessionHandler().getSessionManager().setMaxInactiveInterval(300); // TODO make timeout configurable
 		return handler;
 	}
 	
+   private void newDebuggerServlets(CleverWebAppContext handler) throws Exception {
+		IDebugConfiguration debug = config.getDebugConfiguration();
+		if(debug==null)
+			return;
+		// if there is a config, create the servlets and map them
+		// they will be wired with the actual debug component instances later
+		String factoryName = debug.getRequestListenerFactory();
+		Object factory = Class.forName(factoryName).newInstance();
+		if(factory instanceof HttpServletDebugRequestListenerFactory) {
+			debugRequestServlet = new DebugRequestServlet();
+			handler.addServlet(debugRequestServlet, "/ws/debug-request/*");  
+		}
+		factoryName = debug.getEventAdapterFactory();
+		factory = Class.forName(factoryName).newInstance();
+		if(factory instanceof WebSocketDebugEventAdapterFactory) {
+			debugEventServlet = new DebugEventServlet();
+			ServletHolder servletHolder = new ServletHolder(debugEventServlet);
+			handler.addServlet(servletHolder, "/ws/debug-event/*");  
+		}
+	}
+
+
    private FilterHolder newCrossOriginHandler() {
     	final String allowedOrigins = config.getHttpConfiguration().getAllowedOrigins();
     	if(allowedOrigins==null)

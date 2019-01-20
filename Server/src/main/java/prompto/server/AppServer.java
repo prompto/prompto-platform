@@ -23,11 +23,17 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import prompto.cloud.Cloud;
 import prompto.config.IConfigurationReader;
 import prompto.config.IDebugConfiguration;
-import prompto.config.IHttpConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.config.ServerConfiguration;
 import prompto.config.YamlConfigurationReader;
+import prompto.debug.DebugEventServlet;
+import prompto.debug.DebugRequestServlet;
+import prompto.debug.HttpServletDebugRequestListener;
+import prompto.debug.HttpServletDebugRequestListenerFactory;
+import prompto.debug.IDebugEventListener;
 import prompto.debug.IDebugRequestListener;
+import prompto.debug.LocalDebugger;
+import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
@@ -105,34 +111,42 @@ public class AppServer {
 	}
 
 	private static void run(IServerConfiguration config) throws Throwable {
-		IHttpConfiguration http = config.getHttpConfiguration();
-		if(http==null) {
-			logger.error(()->"Missing http configuration!");
-			throw new RuntimeException();
-		}
-		/*
-		String webSite = config.getWebSiteRoot();
-		*/
-		IDebugConfiguration debug = config.getDebugConfiguration();
-		if(debug!=null)
-			debugServer(debug, config, (jetty, list)->prepareWebHandlers(jetty, list));
-		else
-			startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
+		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
 	}
 
-	static int debugServer(IDebugConfiguration debug, IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler) throws Throwable {
-		IDebugRequestListener listener = Standalone.startDebugging(debug);
-		return startServer(config, handler, ()->{
-			Standalone.getGlobalContext().notifyTerminated();
-			listener.stopListening();
-		});
+	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverStopped) throws Throwable {
+		IDebugConfiguration debug = config.getDebugConfiguration();
+		if(debug==null)
+			return doStartServer(config, handler, null, serverStopped);
+		else {
+			IDebugRequestListener listener = Standalone.startDebugging(debug);
+			return doStartServer(config, handler, ()->serverReady(listener), ()->serverStopped(listener, serverStopped));			
+		}
 	}
 	
+	static void serverReady(IDebugRequestListener listener) {
+		if(listener instanceof HttpServletDebugRequestListener) {
+			((HttpServletDebugRequestListener)listener).wire();
+			LocalDebugger debugger = Standalone.getGlobalContext().getDebugger();
+			IDebugEventListener adapter = debugger.getListener();
+			if(adapter instanceof WebSocketDebugEventAdapter)
+				((WebSocketDebugEventAdapter)adapter).wire();
+		}
+	}
 	
-	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverStopped) throws Throwable {
+	static void serverStopped(IDebugRequestListener listener, Runnable serverStopped) {
+		Standalone.getGlobalContext().notifyTerminated();
+		listener.stopListening();
+		if(serverStopped!=null)
+			serverStopped.run();
+	}
+	
+	static int doStartServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverReady, Runnable serverStopped) throws Throwable {
 		logger.info(()->"Starting web server on port " + config.getHttpConfiguration().getPort() + "...");
 		jettyServer = new JettyServer(config);
 		jettyServer.prepare(handler);
+		if(serverReady!=null)
+			serverReady.run();
 		callServerAboutToStart(config);
 		AppServer.start(serverStopped);
 		final int port = jettyServer.getHttpPort();
@@ -175,6 +189,15 @@ public class AppServer {
 		return jettyServer!=null  && jettyServer.isStarted();
 	}
 	
+	
+	public static DebugRequestServlet getDebugRequestServlet() {
+		return jettyServer==null ? null : jettyServer.debugRequestServlet;
+	}
+
+	public static DebugEventServlet getDebugEventServlet() {
+		return jettyServer==null ? null : jettyServer.debugEventServlet;
+	}
+
 	/* used by Server.pec */
 	public static long getHttpPort() {
 		return jettyServer.getHttpPort();
@@ -226,4 +249,6 @@ public class AppServer {
 	public static void setHttpSession(Document session) {
 		httpSession.set(session);
 	}
+
+
 }
