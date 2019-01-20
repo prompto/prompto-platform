@@ -42,8 +42,10 @@ public class Route53 {
 	}
 	
 	public String createARecord(String domainName, String domainPrefix, String ipAddress, Long ttl) {
-		domainPrefix = domainPrefix.endsWith(".") ? domainPrefix : domainPrefix + ".";
-		domainName = domainName.endsWith(".") ? domainName : domainName + ".";
+		if(!domainName.endsWith("."))
+			return createARecord(domainName + ".", domainPrefix, ipAddress, ttl);
+		if(!domainPrefix.endsWith("."))
+			return createARecord(domainName, domainPrefix + ".", ipAddress, ttl);
 		String zoneId = getZoneId(domainName);
 		ChangeResourceRecordSetsRequest request = new ChangeResourceRecordSetsRequest()
 			.withHostedZoneId(zoneId)
@@ -59,9 +61,11 @@ public class Route53 {
 		return result.getChangeInfo().getStatus();
 	}
 	
-	public PromptoDocument<String, Object> readARecord(String domainName_, String domainPrefix_) {
-		String domainPrefix = domainName_.endsWith(".") ? domainName_ : domainName_ + ".";
-		String domainName = domainName_.endsWith(".") ? domainName_ : domainName_ + ".";
+	public PromptoDocument<String, Object> readARecord(String domainName, String domainPrefix) {
+		if(!domainName.endsWith("."))
+			return readARecord(domainName + ".", domainPrefix);
+		if(!domainPrefix.endsWith("."))
+			return readARecord(domainName, domainPrefix + ".");
 		String zoneId = getZoneId(domainName);
 		ListResourceRecordSetsRequest listRequest = new ListResourceRecordSetsRequest()
 			.withHostedZoneId(zoneId)
@@ -85,8 +89,10 @@ public class Route53 {
 	}
 	
 	public String deleteARecord(String domainName, String domainPrefix) {
-		domainPrefix = domainPrefix.endsWith(".") ? domainPrefix : domainPrefix + ".";
-		domainName = domainName.endsWith(".") ? domainName : domainName + ".";
+		if(!domainName.endsWith("."))
+			return deleteARecord(domainName + ".", domainPrefix);
+		if(!domainPrefix.endsWith("."))
+			return deleteARecord(domainName, domainPrefix + ".");
 		String zoneId = getZoneId(domainName);
 		ChangeResourceRecordSetsRequest request = new ChangeResourceRecordSetsRequest()
 			.withHostedZoneId(zoneId)
@@ -103,10 +109,11 @@ public class Route53 {
 	}
 
 	private String getZoneId(String domainName) {
-		String zoneName = domainName.endsWith(".") ? domainName : domainName + ".";	
+		if(!domainName.endsWith("."))
+			return getZoneId(domainName + ".");
 		ListHostedZonesResult zones = route53.listHostedZones();
 		HostedZone zone = zones.getHostedZones().stream()
-				.filter(z->z.getName().equals(zoneName))
+				.filter(z->z.getName().equals(domainName))
 				.findFirst()
 				.orElse(null);
 		return zone==null ? null : zone.getId();

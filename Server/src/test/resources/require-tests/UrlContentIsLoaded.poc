@@ -4,7 +4,7 @@ widget UrlContentIsLoadedPage extends ReactWidget {
 		return { value: "" };
 	}
 	
-    method componentWillMount() {
+    method componentDidMount() {
     	value = read all from Url(path = "/require-tests/ok.txt", encoding = "utf-8");
         setState({ value: value });
     }

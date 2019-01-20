@@ -5,16 +5,21 @@ storable category Parent(children, value);
 
 widget ChildrenAreFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		john = Child(value="John");
 		jane = Child(value="Jane");
 		user = Parent(children=[john, jane], value="Gielgud");
 		store(user);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Parent ) where ( value == "Gielgud" );
-		values = child.value for each (child in stuff.children);
-		return <div id="root">{values.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else {
+			values = child.value for each (child in stuff.children);
+			return <div id="root">{values.text}</div>;
+		}
 	}
 }

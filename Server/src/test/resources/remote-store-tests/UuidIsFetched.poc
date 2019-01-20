@@ -3,13 +3,17 @@ storable category Stuff(value);
 
 widget UuidIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value='d5622e5d-9232-48de-bb47-77fc41005f5a');
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value == 'd5622e5d-9232-48de-bb47-77fc41005f5a' );
-		return <div id="root">{stuff.value.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.text}</div>;
 	}
 }

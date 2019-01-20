@@ -88,8 +88,22 @@ public class MongoStore implements IStore {
 			connectWithURI(config, password);
 		else
 			connectWithParams(config, password);
+		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		close();
+	}
+	
+	private synchronized void close() {
+		if(client!=null) {
+			client.close();
+			client = null;
+		}
+	}
+
 	private char[] passwordFromConfig(IMongoStoreConfiguration config) throws Exception {
 		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
 		return secret==null ? null : ISecretKeyFactory.plainPasswordFromConfig(secret).toCharArray();

@@ -3,14 +3,19 @@ storable category Stuff(value);
 
 widget NullIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value=null);
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value == null );
-		text = stuff.value is null ? "null" : stuff.value;
-		return <div id="root">{text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			text = stuff.value is null ? "null" : stuff.value;
+			return <div id="root">{text}</div>;
+		}
 	}
 }

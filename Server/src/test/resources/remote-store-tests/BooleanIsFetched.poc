@@ -3,13 +3,17 @@ storable category Stuff(value);
 
 widget BooleanIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value=true);
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value == true );
-		return <div id="root">{stuff.value.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.text}</div>;
 	}
 }

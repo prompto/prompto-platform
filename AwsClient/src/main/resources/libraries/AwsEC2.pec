@@ -143,8 +143,8 @@ define "latest AMI is identified" as test method doing:
 	amis = sorted descending amis with getAMIVersion as key
 	ami = amis[1]
 and verifying:
-	ami["Name"] = "centos-prompto-v0.0.24"
-	ami["imageId"] = "ami-02770ccc3a39f33c1"
+	ami["Name"] = "centos-prompto-v0.0.50"
+	ami["imageId"] = "ami-0f158b1d37ebf5eb4"
 	
 
 define "AMI can be created" as test method doing:

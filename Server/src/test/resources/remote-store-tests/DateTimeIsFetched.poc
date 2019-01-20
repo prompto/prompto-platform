@@ -3,13 +3,17 @@ storable category Stuff(value);
 
 widget DateTimeIsFetchedPage extends ReactWidget {
 	
-	method componentWillMount() {
+	method componentDidMount() {
 		stuff = Stuff(value='2016-02-25T18:15:03');
 		store(stuff);
+		forceRender();
 	}
 	
 	Html method render() {
 		stuff = fetch one( Stuff ) where ( value == '2016-02-25T18:15:03' );
-		return <div id="root">{stuff.value.text}</div>;
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.text}</div>;
 	}
 }

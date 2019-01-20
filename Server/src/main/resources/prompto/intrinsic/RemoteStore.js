@@ -80,13 +80,17 @@ StorableDocument.prototype.updateDbIds = function(dbIds) {
 
 
 function recordToStored(record) {
-	var stored = new StoredDocument([record.type]);
-	Object.getOwnPropertyNames(record.value)
-		.forEach(function(name) {
-			var value = record.value[name];
-			stored[name] = readJSONValue(value);
-		});
-	return stored;
+	if(record==null)
+		return null;
+	else {
+		var stored = new StoredDocument([record.type]);
+		Object.getOwnPropertyNames(record.value)
+			.forEach(function(name) {
+				var value = record.value[name];
+				stored[name] = readJSONValue(value);
+			});
+		return stored;
+	}
 };
 
 function StoredIterable(records) {
