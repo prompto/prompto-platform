@@ -1,11 +1,7 @@
 package prompto.debug;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,10 +13,7 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.debug.IDebugEvent.Connected;
 import prompto.intrinsic.PromptoVersion;
-import prompto.runtime.Standalone;
 import prompto.server.BaseServerTest;
-import prompto.store.NullStoreFactory;
-import prompto.utils.IOUtils;
 import prompto.utils.ManualTests;
 
 

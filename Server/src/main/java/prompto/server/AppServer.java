@@ -29,7 +29,6 @@ import prompto.config.YamlConfigurationReader;
 import prompto.debug.DebugEventServlet;
 import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListener;
-import prompto.debug.HttpServletDebugRequestListenerFactory;
 import prompto.debug.IDebugEventListener;
 import prompto.debug.IDebugRequestListener;
 import prompto.debug.LocalDebugger;
