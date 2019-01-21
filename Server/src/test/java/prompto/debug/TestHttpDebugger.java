@@ -3,9 +3,6 @@ package prompto.debug;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.junit.After;
 import org.junit.Before;

@@ -4,20 +4,23 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketConnectionListener;
-import org.eclipse.jetty.websocket.api.WebSocketPolicy;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.eclipse.jetty.websocket.common.events.JettyListenerEventDriver;
+
+import prompto.utils.Logger;
+
 
 public class WebSocketDebugEventListener {
 
+	static Logger logger = new Logger();
+	
 	String host;
 	int port;
 	UUID uuid;
 	IDebugEventListener eventListener;
 	WebSocketClient client;
 	WebSocket socket;
-	
+
 	public WebSocketDebugEventListener(String host, int port, IDebugEventListener eventListener) {
 		this.host = host;
 		this.port = port;
@@ -28,45 +31,53 @@ public class WebSocketDebugEventListener {
 	}
 
 	public void startListening() throws Exception {
+		logger.debug(()->"Client socket connecting");
 		String uri = "ws://" + host + ":" + port + "/ws/debug-event?uuid=" + uuid.toString();
 		client.start();
 		client.connect(socket, new URI(uri));
 	}
 
 	public void stopListening() throws Exception {
+		logger.debug(()->"Client socket disconnecting");
 		client.stop();
 	}
 
 	public boolean isListening() {
 		return client.isStarted();
 	}
-	
-	class WebSocket extends JettyListenerEventDriver {
 
-		public WebSocket() {
-			super(WebSocketPolicy.newClientPolicy(), new WebSocketListener());
-		}
-		
-		
-	}
-
-	class WebSocketListener implements WebSocketConnectionListener {
-
-		@Override
-		public void onWebSocketClose(int statusCode, String reason) {
-			// TODO Auto-generated method stub
-			
-		}
+	class WebSocket implements WebSocketListener {
 
 		@Override
 		public void onWebSocketConnect(Session session) {
-			// TODO Auto-generated method stub
-			
+			logger.debug(()->"Client socket connected");
+		}
+
+		@Override
+		public void onWebSocketClose(int statusCode, String reason) {
+			logger.debug(()->"Client socket closed: " + reason);
 		}
 
 		@Override
 		public void onWebSocketError(Throwable cause) {
+			logger.error(()->"Client socket error", cause);
+		}
+
+		@Override
+		public void onWebSocketBinary(byte[] payload, int offset, int len) {
 			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onWebSocketText(String message) {
+			logger.debug(()->"Client socket received: " + message);
+			try {
+				IDebugEvent event = Serializer.readDebugEvent(message);
+				event.execute(eventListener);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
 			
 		}
 
