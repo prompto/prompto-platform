@@ -75,7 +75,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	@Override
 	protected void start() throws Exception {
 		// create request client
-		debugger = new HttpClientDebugger("localhost", server.getPort());
+		debugger = new HttpDebugRequestClient("localhost", server.getPort());
 		// start listening to debug events
 		this.eventListener = new WebSocketDebugEventListener("localhost", server.getPort(), this);
 		eventListener.startListening();
