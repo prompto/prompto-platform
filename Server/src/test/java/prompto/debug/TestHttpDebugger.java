@@ -1,7 +1,9 @@
 package prompto.debug;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URL;
 
 import org.junit.After;
@@ -39,6 +41,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	DebuggingServer server = new DebuggingServer();
 	WebSocketDebugEventListener eventListener;
 	Instance<String> output = new Instance<>();
+	Instance<String> response = new Instance<>();
 	
 	@Before
 	public void before() throws Throwable {
@@ -75,7 +78,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	@Override
 	protected void start() throws Exception {
 		// create request client
-		debugger = new HttpDebugRequestClient("localhost", server.getPort());
+		debugger = new HttpDebugRequestClient("localhost", server.getPort(), ()->server.isAlive());
 		// start listening to debug events
 		this.eventListener = new WebSocketDebugEventListener("localhost", server.getPort(), this);
 		eventListener.startListening();
@@ -84,22 +87,34 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		callMainMethod();
 	}
 
-
+	final Object lock = new Object();
+	
 	private void callMainMethod() throws Exception {
-		URL url = new URL("http://localhost:" + server.getPort() + "/ws/run/main");
+		final URL url = new URL("http://localhost:" + server.getPort() + "/ws/run/main");
 		new Thread(()->{
+			PrintStream oldOut = System.out;
+			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+			System.setOut(new PrintStream(bytes));
 			try(InputStream input = url.openStream()) {
-				output.set(StringUtils.stringFromStream(input));
+				response.set(StringUtils.stringFromStream(input));
 			} catch(Exception e) {
-				output.set(e.getMessage());
+				response.set(e.getMessage());
+			} finally {
+				output.set(bytes.toString());
+				System.setOut(oldOut);
 			}
+			synchronized (lock) {
+				lock.notify();
+			}		
 		}).start();
 	}
 
 
 	@Override
 	protected void join() throws Exception {
-		// process.waitFor();
+		synchronized (lock) {
+			lock.wait();
+		}
 	}
 
 	@Override
@@ -110,20 +125,17 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		server.getTail().setNext(codeResource);	
 	}
 	
-	Object lock = null;
-	
 	private void waitConnected() throws InterruptedException {
-		lock = new Object();
 		synchronized (lock) {
 			lock.wait();
 		}
-		lock = null;
 	}
 
 
 	
 	@Override
 	public void handleConnectedEvent(Connected event) {
+		((DebugRequestClient)debugger).setConnected(true);
 		synchronized (lock) {
 			lock.notify();
 		}		
