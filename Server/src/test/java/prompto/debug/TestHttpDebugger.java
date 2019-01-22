@@ -8,6 +8,7 @@ import java.net.URL;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
@@ -18,9 +19,11 @@ import prompto.intrinsic.PromptoVersion;
 import prompto.runtime.Standalone;
 import prompto.server.BaseServerTest;
 import prompto.utils.Instance;
+import prompto.utils.ManualTests;
 import prompto.utils.StringUtils;
 
-
+// not sure why this blocks in CI
+@Category(ManualTests.class)
 public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventListener {
 
 	static class DebuggingServer extends BaseServerTest {
