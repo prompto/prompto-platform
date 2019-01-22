@@ -12,11 +12,11 @@ public class WebSocketDebugEventAdapter implements IDebugEventAdapter {
 	
 	Session session;
 	
-	public Session getSession() {
+	public synchronized Session getSession() {
 		return session;
 	}
 	
-	public void setSession(Session session) {
+	public synchronized void setSession(Session session) {
 		this.session = session;
 	}
 
@@ -43,6 +43,7 @@ public class WebSocketDebugEventAdapter implements IDebugEventAdapter {
 
 	private void send(IDebugEvent event) {
 		logger.debug(()->"Sending " + event.getType().name());
+		Session session = getSession();
 		if(session!=null) try {
 			String message = Serializer.writeDebugEvent(event);
 			session.getRemote().sendString(message);

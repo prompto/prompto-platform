@@ -53,6 +53,8 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	@After
 	public void after() throws Exception {
+		eventListener.stopListening();
+		eventListener = null;
 		server.__after__(); // stop server
 	}
 

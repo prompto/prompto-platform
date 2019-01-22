@@ -91,7 +91,7 @@ public class DebugEventServlet extends WebSocketServlet {
 		@Override
 		public void onWebSocketClose(int statusCode, String reason) {
 			logger.debug(()->"Server socket closing");
-			adapter.setSession(session);
+			adapter.setSession(null);
 			this.session = null;
 		}
 
