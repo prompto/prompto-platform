@@ -14,16 +14,16 @@ public class WebSocketDebugEventListener {
 
 	static Logger logger = new Logger();
 	
-	String host;
-	int port;
+	String remoteHost;
+	int remotePort;
 	UUID uuid;
 	IDebugEventListener eventListener;
 	WebSocketClient client;
 	WebSocket socket;
 
 	public WebSocketDebugEventListener(String host, int port, IDebugEventListener eventListener) {
-		this.host = host;
-		this.port = port;
+		this.remoteHost = host;
+		this.remotePort = port;
 		this.uuid = UUID.randomUUID();
 		this.eventListener = eventListener;
 		this.client = new WebSocketClient();
@@ -32,7 +32,7 @@ public class WebSocketDebugEventListener {
 
 	public void startListening() throws Exception {
 		logger.debug(()->"Client socket connecting");
-		String uri = "ws://" + host + ":" + port + "/ws/debug-event?uuid=" + uuid.toString();
+		String uri = "ws://" + remoteHost + ":" + remotePort + "/ws/debug-event?uuid=" + uuid.toString();
 		client.start();
 		client.connect(socket, new URI(uri));
 	}
@@ -78,7 +78,6 @@ public class WebSocketDebugEventListener {
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}
-			
 		}
 
 	}

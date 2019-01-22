@@ -58,6 +58,10 @@ public abstract class BaseServerTest {
 		}
 	}
 	
+	public boolean isAlive() {
+		return AppServer.isStarted();
+	}
+	
 	public BaseCodeStore getTail() {
 		return tail;
 	}
