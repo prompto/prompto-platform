@@ -141,7 +141,7 @@ public class PromptoServlet extends CleverServlet {
 
 	protected Identifier readMethod(HttpServletRequest req) {
 		String method = req.getPathInfo();
-		logger.info(()-> "Executing Prompto method: " + method);
+		logger.debug(()-> "Executing Prompto method: " + method);
 		return new Identifier(method.substring(1));
 	}
 
