@@ -1,7 +1,10 @@
 package prompto.server;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -107,8 +110,16 @@ public abstract class BaseWebTest {
 		} catch(Throwable t) {
 			String source = webDriver.getPageSource();
 			if(source==null || source.isEmpty())
-				source = "<empty source>";
-			System.out.println(source);
+				System.out.println("<empty source>");
+			else try {
+				Path path = Files.createTempFile(this.getClass().getSimpleName(), "-test.js");
+				try(FileWriter writer = new FileWriter(path.toFile())) {
+					writer.write(source);
+				}
+				System.out.println("Failing source dumped @ " + path.toString());
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			throw t;
 		}
 	}
