@@ -32,7 +32,7 @@ public class WebSocketDebugEventListener {
 
 	public void startListening() throws Exception {
 		logger.debug(()->"Client socket connecting");
-		String uri = "ws://" + remoteHost + ":" + port + "/ws/debug-event?uuid=" + uuid.toString();
+		String uri = "ws://" + remoteHost + ":" + port + "/ws/debug-event?sessionId=" + uuid.toString();
 		client.start();
 		client.connect(socket, new URI(uri));
 	}
