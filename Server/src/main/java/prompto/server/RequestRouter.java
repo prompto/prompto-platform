@@ -8,7 +8,10 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import prompto.compiler.PromptoClassLoader;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import prompto.debug.ProcessDebugger;
 import prompto.error.PromptoError;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
@@ -18,6 +21,7 @@ import prompto.remoting.ParameterList;
 import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
+import prompto.runtime.Standalone;
 import prompto.statement.MethodCall;
 import prompto.store.DataStore;
 import prompto.store.IStore;
@@ -26,18 +30,7 @@ import prompto.value.BinaryValue;
 import prompto.value.IValue;
 import prompto.value.Text;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 public class RequestRouter {
-
-	PromptoClassLoader classLoader;
-	Context context;
-	
-	public RequestRouter(PromptoClassLoader classLoader, Context context) {
-		this.classLoader = classLoader;
-		this.context = context.newLocalContext();
-	}
 
 	public void route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		boolean isTest = methodName.toString().startsWith("\"") && methodName.toString().endsWith("\"");
@@ -59,18 +52,29 @@ public class RequestRouter {
 		}
 	}
 	
+	private Context prepareContext() {
+		Context context = Standalone.getGlobalContext().newLocalContext();
+		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
+		if(processDebugger!=null)
+			Standalone.startThreadDebugger(Thread.currentThread(), context);
+		return context;
+	}
+
+
 	private void executeTest(Identifier testName, HttpServletResponse response) throws Exception {
 		PrintStream oldOut = System.out;
 		IStore oldStore = DataStore.getInstance();
 		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
+		Context context = prepareContext();
 		try {
-			Executor.executeTest(classLoader, testName.toString());
+			Executor.executeTest(Standalone.getClassLoader(), testName.toString());
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
 		} finally {
+			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
@@ -82,36 +86,40 @@ public class RequestRouter {
 		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
+		Context context = prepareContext();
 		try {
 			Interpreter.interpretTest(context, testName, true);
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
 		} finally {
+			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
 		}
 	}
 
 	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
+		Context context = prepareContext();
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
-			Class<?>[] argTypes = params.toJavaTypes(context, classLoader);
+			Class<?>[] argTypes = params.toJavaTypes(context, Standalone.getClassLoader());
 			Object[] args = params.toJavaValues(context);
 			if(params.isEmpty() && main) {
 				argTypes = new Class<?>[] { PromptoDict.class };
 				args = new Object[] { null };
 			}
-			Object result = Executor.executeGlobalMethod(classLoader, methodName, argTypes, args);
+			Object result = Executor.executeGlobalMethod(Standalone.getClassLoader(), methodName, argTypes, args);
 			// TODO JSON output
 			Text text = new Text(result==null ? "success!" : result.toString());
-			writeJsonResponse(text, response);
+			writeJsonResponse(context, text, response);
 		} finally {
-			context.notifyTerminated();
+			context.notifyCompleted();
 		}
 	}
 	
 	public void interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
+		Context context = prepareContext();
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			ArgumentAssignmentList assignments = params.toAssignments(context);
@@ -121,9 +129,9 @@ public class RequestRouter {
 			if(value instanceof BinaryValue)
 				writeBinaryResponse((BinaryValue)value, response);
 			else
-				writeJsonResponse(value, response);
+				writeJsonResponse(context, value, response);
 		} finally {
-			context.notifyTerminated();
+			context.notifyCompleted();
 		}
 	}
 
@@ -143,7 +151,7 @@ public class RequestRouter {
 		response.getOutputStream().write(value.getBytes());
 	}
 
-	private void writeJsonResponse(IValue value, HttpServletResponse response) throws IOException, PromptoError {
+	private void writeJsonResponse(Context context, IValue value, HttpServletResponse response) throws IOException, PromptoError {
 		response.setContentType("text/json");
 		response.setStatus(HttpServletResponse.SC_OK);
 		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());

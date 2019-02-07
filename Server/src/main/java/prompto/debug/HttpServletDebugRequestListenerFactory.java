@@ -6,7 +6,7 @@ import prompto.config.IDebugRequestListenerConfiguration;
 public class HttpServletDebugRequestListenerFactory implements IDebugRequestListenerFactory {
 
 	@Override
-	public IDebugRequestListener newListener(IDebugRequestListenerConfiguration config, LocalDebugger debugger) {
+	public IDebugRequestListener newListener(IDebugRequestListenerConfiguration config, IDebugger debugger) {
 		return new HttpServletDebugRequestListener(debugger);
 	}
 	

@@ -48,6 +48,12 @@ public class HttpDebugRequestClient extends DebugRequestClient {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public Status getProcessStatus() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	protected IDebugResponse sendRequest(IDebugRequest request, Consumer<Exception> errorHandler) {

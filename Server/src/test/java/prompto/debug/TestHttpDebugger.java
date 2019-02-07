@@ -52,6 +52,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	@Before
 	public void before() throws Throwable {
+		ProcessDebugger.reset();
 		// note that with this cinematic, we can't debug the server startup method
 		server.__before__(); 
 		Standalone.clearGlobalContext();
@@ -77,10 +78,10 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	@Override
 	protected void waitSuspendedOrTerminated() throws Exception {
-		Status status = debugger.getStatus(null);
+		Status status = debugger.getThreadStatus(getDebuggedThread());
 		while(status!=Status.SUSPENDED && status!=Status.TERMINATED) {
 			Thread.sleep(100);
-			status = debugger.getStatus(null);
+			status = debugger.getThreadStatus(getDebuggedThread());
 		}
 	}
 
@@ -94,6 +95,11 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		waitConnected();
 		// run method
 		callMainMethod();
+	}
+	
+	@Override
+	protected IThread getDebuggedThread() {
+		return new OnlyRemoteThread();
 	}
 
 	final Object lock = new Object();
@@ -149,13 +155,21 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 			lock.notify();
 		}		
 	}
+	
+	@Override
+	public void handleStartedEvent(IThread thread) {
+	}
 
 	@Override
-	public void handleSuspendedEvent(SuspendReason reason) {
+	public void handleSuspendedEvent(IThread thread, SuspendReason reason) {
 	}
 	
 	@Override
-	public void handleResumedEvent(ResumeReason reason) {
+	public void handleResumedEvent(IThread thread, ResumeReason reason) {
+	}
+	
+	@Override
+	public void handleCompletedEvent(IThread thread) {
 	}
 	
 	@Override

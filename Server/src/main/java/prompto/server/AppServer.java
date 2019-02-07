@@ -29,13 +29,11 @@ import prompto.config.YamlConfigurationReader;
 import prompto.debug.DebugEventServlet;
 import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListener;
-import prompto.debug.IDebugEventListener;
-import prompto.debug.IDebugRequestListener;
-import prompto.debug.LocalDebugger;
 import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
+import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
@@ -110,55 +108,60 @@ public class AppServer {
 	}
 
 	private static void run(IServerConfiguration config) throws Throwable {
-		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ Standalone.getGlobalContext().notifyTerminated(); });
+		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ 
+			Standalone.getGlobalContext().notifyCompleted(); 
+		});
 	}
 
 	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverStopped) throws Throwable {
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug==null)
-			return doStartServer(config, handler, null, serverStopped);
+			return doStartServer(config, handler, Standalone.getGlobalContext(), null, null, serverStopped);
 		else {
-			IDebugRequestListener listener = Standalone.startDebugging(debug);
-			return doStartServer(config, handler, ()->serverReady(listener), ()->serverStopped(listener, serverStopped));			
+			Context context = Standalone.startProcessDebugger(debug);
+			return doStartServer(config, handler, context, AppServer::serverPrepared, ()->serverStarted(context), ()->serverStopped(serverStopped));			
 		}
 	}
 	
-	static void serverReady(IDebugRequestListener listener) {
-		if(listener instanceof HttpServletDebugRequestListener) {
-			((HttpServletDebugRequestListener)listener).wire();
-			LocalDebugger debugger = Standalone.getGlobalContext().getDebugger();
-			IDebugEventListener adapter = debugger.getListener();
-			if(adapter instanceof WebSocketDebugEventAdapter)
-				((WebSocketDebugEventAdapter)adapter).wire();
-		}
+	static void serverPrepared() {
+		if(Standalone.getDebugRequestListener() instanceof HttpServletDebugRequestListener)
+			((HttpServletDebugRequestListener)Standalone.getDebugRequestListener()).wire();
+		if(Standalone.getDebugEventAdapter() instanceof WebSocketDebugEventAdapter)
+			((WebSocketDebugEventAdapter)Standalone.getDebugEventAdapter()).wire();
 	}
 	
-	static void serverStopped(IDebugRequestListener listener, Runnable serverStopped) {
-		Standalone.getGlobalContext().notifyTerminated();
-		listener.stopListening();
-		if(serverStopped!=null)
-			serverStopped.run();
+	static void serverStarted(Context context) {
+		context.notifyCompleted();
 	}
 	
-	static int doStartServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverReady, Runnable serverStopped) throws Throwable {
+	static void serverStopped(Runnable runnable) {
+		Standalone.getGlobalContext().notifyCompleted();
+		Standalone.stopProcessDebugger();
+		if(runnable!=null)
+			runnable.run();
+	}
+	
+	static int doStartServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Context context, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
 		logger.info(()->"Starting web server on port " + config.getHttpConfiguration().getPort() + "...");
 		jettyServer = new JettyServer(config);
 		jettyServer.prepare(handler);
-		if(serverReady!=null)
-			serverReady.run();
+		if(serverPrepared!=null)
+			serverPrepared.run();
 		AppServer.start(serverStopped);
 		final int port = jettyServer.getHttpPort();
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
-		callServerAboutToStart(config);
+		callServerAboutToStart(config, context);
+		if(serverStarted!=null)
+			serverStarted.run();
 		return port;
 	}
 	
 	
-	public static void callServerAboutToStart(IServerConfiguration config) {
+	public static void callServerAboutToStart(IServerConfiguration config, Context context) {
 		final String serverAboutToStartMethod = config.getServerAboutToStartMethod();
 		if(serverAboutToStartMethod!=null) {
 			logger.info(()->"Calling startUp method '" + serverAboutToStartMethod + "'");
-			Interpreter.interpretMethod(Standalone.getGlobalContext(), new Identifier(serverAboutToStartMethod), Standalone.argsToArgValue(config.getArguments()));
+			Interpreter.interpretMethod(context, new Identifier(serverAboutToStartMethod), Standalone.argsToArgValue(config.getArguments()));
 		}
 	}
 

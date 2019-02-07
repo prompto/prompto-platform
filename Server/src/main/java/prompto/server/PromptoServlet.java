@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import prompto.grammar.Identifier;
-import prompto.runtime.Standalone;
 import prompto.utils.Logger;
 import prompto.value.Document;
 
@@ -70,7 +69,7 @@ public class PromptoServlet extends CleverServlet {
 			boolean main = readMain(req);
 			String[] httpParams = req.getParameterMap().get("params");
 			String jsonParams = httpParams==null || httpParams.length==0 ? null : httpParams[0];
-			RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
+			RequestRouter handler = new RequestRouter();
 			handler.route(mode, methodName, jsonParams, null, main, resp);
 			resp.getOutputStream().close();
 			resp.flushBuffer();
@@ -116,7 +115,7 @@ public class PromptoServlet extends CleverServlet {
 		boolean main = readMain(req);
 		Map<String, byte[]> parts = readParts(req);
 		String jsonParams = new String(parts.get("params"));
-		RequestRouter handler = new RequestRouter(Standalone.getClassLoader(), Standalone.getGlobalContext());
+		RequestRouter handler = new RequestRouter();
 		handler.route(mode, methodName, jsonParams, parts, main, resp);
 		resp.flushBuffer();
 		resp.getOutputStream().close();
