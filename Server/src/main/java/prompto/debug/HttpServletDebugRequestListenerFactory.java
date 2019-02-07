@@ -12,7 +12,7 @@ public class HttpServletDebugRequestListenerFactory implements IDebugRequestList
 	
 	@Override
 	public IDebugRequestListenerConfiguration newConfiguration(IConfigurationReader reader) {
-		return new IDebugRequestListenerConfiguration.Inline();
+		return new IDebugRequestListenerConfiguration.Inline().withFactory(this.getClass().getName());
 	}
 
 }

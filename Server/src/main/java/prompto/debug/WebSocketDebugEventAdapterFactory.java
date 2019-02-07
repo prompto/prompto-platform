@@ -12,7 +12,7 @@ public class WebSocketDebugEventAdapterFactory implements IDebugEventAdapterFact
 	
 	@Override
 	public IDebugEventAdapterConfiguration newConfiguration(IConfigurationReader reader) {
-		return new IDebugEventAdapterConfiguration.Inline();
+		return new IDebugEventAdapterConfiguration.Inline().withFactory(this.getClass().getName());
 	}
 
 }
