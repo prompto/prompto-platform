@@ -146,10 +146,10 @@ public class AppServer {
 		jettyServer.prepare(handler);
 		if(serverReady!=null)
 			serverReady.run();
-		callServerAboutToStart(config);
 		AppServer.start(serverStopped);
 		final int port = jettyServer.getHttpPort();
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
+		callServerAboutToStart(config);
 		return port;
 	}
 	
