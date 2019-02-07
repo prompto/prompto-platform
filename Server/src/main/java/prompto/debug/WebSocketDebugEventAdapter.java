@@ -1,5 +1,8 @@
 package prompto.debug;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jetty.websocket.api.Session;
 
 import prompto.debug.IDebugEvent;
@@ -22,8 +25,9 @@ public class WebSocketDebugEventAdapter implements IDebugEventAdapter {
 
 	@Override
 	public void handleConnectedEvent(IDebugEvent.Connected event) {
-		// this event is notified during server boot, before the client at-ctually attempts to connect
+		// this event is notified during server boot, before the client actually attempts to connect
 		// there is no session, and there can't be, so no point polluting the logs with an error
+		logger.debug(()->"Skipping " + event.getType().name());
 	}
 
 	@Override
@@ -46,7 +50,8 @@ public class WebSocketDebugEventAdapter implements IDebugEventAdapter {
 		Session session = getSession();
 		if(session!=null) try {
 			String message = Serializer.writeDebugEvent(event);
-			session.getRemote().sendString(message);
+			Future<Void> action = session.getRemote().sendStringByFuture(message);
+			action.get(5, TimeUnit.SECONDS);
 		} catch(Throwable t) {
 			logger.error(()->"While sending: " + event, t);
 		} else
