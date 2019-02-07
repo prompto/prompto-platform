@@ -13,6 +13,8 @@ import org.junit.experimental.categories.Category;
 import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
 import prompto.config.IDebugConfiguration;
+import prompto.config.IDebugEventAdapterConfiguration;
+import prompto.config.IDebugRequestListenerConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.debug.IDebugEvent.Connected;
 import prompto.intrinsic.PromptoVersion;
@@ -32,8 +34,13 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		protected IServerConfiguration getServerConfig() {
 			return super.getServerConfig().withDebugConfiguration(
 							new IDebugConfiguration.Inline()
-								.withEventAdapterFactory(WebSocketDebugEventAdapterFactory.class.getName())
-								.withRequestListenerFactory(HttpServletDebugRequestListenerFactory.class.getName())
+								.withEventAdapterConfiguration(
+									new IDebugEventAdapterConfiguration.Inline()
+										.withFactory(WebSocketDebugEventAdapterFactory.class.getName())
+								).withRequestListenerConfiguration(
+									new IDebugRequestListenerConfiguration.Inline()
+										.withFactory(HttpServletDebugRequestListenerFactory.class.getName())
+								)
 							);
 		}
 	}

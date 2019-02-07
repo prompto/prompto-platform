@@ -1,12 +1,18 @@
 package prompto.debug;
 
-import prompto.config.IDebugConfiguration;
+import prompto.config.IConfigurationReader;
+import prompto.config.IDebugEventAdapterConfiguration;
 
 public class WebSocketDebugEventAdapterFactory implements IDebugEventAdapterFactory {
 
 	@Override
-	public IDebugEventAdapter newInstance(IDebugConfiguration config) {
+	public IDebugEventAdapter newAdapter(IDebugEventAdapterConfiguration config) {
 		return new WebSocketDebugEventAdapter();
+	}
+	
+	@Override
+	public IDebugEventAdapterConfiguration newConfiguration(IConfigurationReader reader) {
+		return new IDebugEventAdapterConfiguration.Inline();
 	}
 
 }

@@ -36,6 +36,8 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import prompto.config.IDebugConfiguration;
+import prompto.config.IDebugEventAdapterConfiguration;
+import prompto.config.IDebugRequestListenerConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
@@ -349,18 +351,22 @@ class JettyServer extends Server {
 			return;
 		// if there is a config, create the servlets and map them
 		// they will be wired with the actual debug component instances later
-		String factoryName = debug.getRequestListenerFactory();
-		Object factory = Class.forName(factoryName).newInstance();
-		if(factory instanceof HttpServletDebugRequestListenerFactory) {
-			debugRequestServlet = new DebugRequestServlet();
-			handler.addServlet(debugRequestServlet, "/ws/debug-request/*");  
+		IDebugRequestListenerConfiguration listener = debug.getRequestListenerConfiguration();
+		if(listener!=null) {
+			String factoryName = listener.getFactory();
+			if(HttpServletDebugRequestListenerFactory.class.getName().equals(factoryName)) {
+				debugRequestServlet = new DebugRequestServlet();
+				handler.addServlet(debugRequestServlet, "/ws/debug-request/*");  
+			}
 		}
-		factoryName = debug.getEventAdapterFactory();
-		factory = Class.forName(factoryName).newInstance();
-		if(factory instanceof WebSocketDebugEventAdapterFactory) {
-			debugEventServlet = new DebugEventServlet();
-			ServletHolder servletHolder = new ServletHolder(debugEventServlet);
-			handler.addServlet(servletHolder, "/ws/debug-event/*");  
+		IDebugEventAdapterConfiguration adapter = debug.getEventAdapterConfiguration();
+		if(adapter!=null) {
+			String factoryName = adapter.getFactory();
+			if(WebSocketDebugEventAdapterFactory.class.getName().equals(factoryName)) {
+				debugEventServlet = new DebugEventServlet();
+				ServletHolder servletHolder = new ServletHolder(debugEventServlet);
+				handler.addServlet(servletHolder, "/ws/debug-event/*");  
+			}
 		}
 	}
 
