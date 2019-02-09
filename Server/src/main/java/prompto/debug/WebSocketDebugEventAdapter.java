@@ -31,22 +31,22 @@ public class WebSocketDebugEventAdapter implements IDebugEventAdapter {
 	}
 
 	@Override
-	public void handleStartedEvent(IThread thread) {
+	public void handleStartedEvent(IWorker thread) {
 		send(new IDebugEvent.Started(thread));
 	}
 	
 	@Override
-	public void handleResumedEvent(IThread thread, ResumeReason reason) {
+	public void handleResumedEvent(IWorker thread, ResumeReason reason) {
 		send(new IDebugEvent.Resumed(thread, reason));
 	}
 
 	@Override
-	public void handleSuspendedEvent(IThread thread, SuspendReason reason) {
+	public void handleSuspendedEvent(IWorker thread, SuspendReason reason) {
 		send(new IDebugEvent.Suspended(thread, reason));
 	}
 	
 	@Override
-	public void handleCompletedEvent(IThread thread) {
+	public void handleCompletedEvent(IWorker thread) {
 		send(new IDebugEvent.Completed(thread));
 	}
 

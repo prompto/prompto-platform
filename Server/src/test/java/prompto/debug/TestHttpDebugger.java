@@ -78,10 +78,10 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	@Override
 	protected void waitSuspendedOrTerminated() throws Exception {
-		Status status = debugger.getThreadStatus(getDebuggedThread());
+		Status status = debugger.getWorkerStatus(getDebuggedThread());
 		while(status!=Status.SUSPENDED && status!=Status.TERMINATED) {
 			Thread.sleep(100);
-			status = debugger.getThreadStatus(getDebuggedThread());
+			status = debugger.getWorkerStatus(getDebuggedThread());
 		}
 	}
 
@@ -98,7 +98,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	}
 	
 	@Override
-	protected IThread getDebuggedThread() {
+	protected IWorker getDebuggedThread() {
 		return new OnlyRemoteThread();
 	}
 
@@ -157,19 +157,19 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	}
 	
 	@Override
-	public void handleStartedEvent(IThread thread) {
+	public void handleStartedEvent(IWorker thread) {
 	}
 
 	@Override
-	public void handleSuspendedEvent(IThread thread, SuspendReason reason) {
+	public void handleSuspendedEvent(IWorker thread, SuspendReason reason) {
 	}
 	
 	@Override
-	public void handleResumedEvent(IThread thread, ResumeReason reason) {
+	public void handleResumedEvent(IWorker thread, ResumeReason reason) {
 	}
 	
 	@Override
-	public void handleCompletedEvent(IThread thread) {
+	public void handleCompletedEvent(IWorker thread) {
 	}
 	
 	@Override
