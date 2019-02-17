@@ -29,6 +29,7 @@ import prompto.config.YamlConfigurationReader;
 import prompto.debug.DebugEventServlet;
 import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListener;
+import prompto.debug.IDebugEventAdapter;
 import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
 import prompto.error.TerminatedError;
@@ -154,7 +155,9 @@ public class AppServer {
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
 			serverStarted.run();
-		Standalone.getDebugEventAdapter().handleReadyEvent();
+		IDebugEventAdapter adapter = Standalone.getDebugEventAdapter();
+		if(adapter!=null)
+			adapter.handleReadyEvent();
 		return port;
 	}
 	
