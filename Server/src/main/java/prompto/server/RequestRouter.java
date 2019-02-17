@@ -53,7 +53,8 @@ public class RequestRouter {
 		}
 	}
 	
-	private Context prepareContext() {
+	private Context prepareContext(String name) {
+		Thread.currentThread().setName(name);
 		Context context = Standalone.getGlobalContext().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null)
@@ -68,7 +69,7 @@ public class RequestRouter {
 		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
-		Context context = prepareContext();
+		Context context = prepareContext("Test: " + testName);
 		try {
 			Executor.executeTest(Standalone.getClassLoader(), testName.toString());
 			bytes.flush();
@@ -89,7 +90,7 @@ public class RequestRouter {
 		DataStore.setInstance(new MemStore());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
-		Context context = prepareContext();
+		Context context = prepareContext("Test: " + testName);
 		try {
 			Interpreter.interpretTest(context, testName, true);
 			bytes.flush();
@@ -105,7 +106,7 @@ public class RequestRouter {
 	}
 
 	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
-		Context context = prepareContext();
+		Context context = prepareContext("Method: " + methodName);
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			Class<?>[] argTypes = params.toJavaTypes(context, Standalone.getClassLoader());
@@ -126,7 +127,7 @@ public class RequestRouter {
 	}
 	
 	public void interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
-		Context context = prepareContext();
+		Context context = prepareContext("Method: " + methodName);
 		try {
 			ParameterList params = ParameterList.read(context, jsonParams, parts);
 			ArgumentAssignmentList assignments = params.toAssignments(context);
