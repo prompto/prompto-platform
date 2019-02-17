@@ -154,6 +154,7 @@ public class AppServer {
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
 			serverStarted.run();
+		Standalone.getDebugEventAdapter().handleReadyEvent();
 		return port;
 	}
 	

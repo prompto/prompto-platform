@@ -157,6 +157,10 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	}
 	
 	@Override
+	public void handleReadyEvent() {
+	}
+	
+	@Override
 	public void handleStartedEvent(IWorker thread) {
 	}
 
