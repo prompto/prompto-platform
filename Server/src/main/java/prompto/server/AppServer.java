@@ -31,6 +31,7 @@ import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListener;
 import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
+import prompto.error.TerminatedError;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
 import prompto.runtime.Context;
@@ -159,9 +160,13 @@ public class AppServer {
 	
 	public static void callServerAboutToStart(IServerConfiguration config, Context context) {
 		final String serverAboutToStartMethod = config.getServerAboutToStartMethod();
-		if(serverAboutToStartMethod!=null) {
+		if(serverAboutToStartMethod!=null) try {
 			logger.info(()->"Calling startUp method '" + serverAboutToStartMethod + "'");
 			Interpreter.interpretMethod(context, new Identifier(serverAboutToStartMethod), Standalone.argsToArgValue(config.getArguments()));
+		} catch(TerminatedError e) {
+			// not an error
+		} finally {
+			context.notifyCompleted();
 		}
 	}
 

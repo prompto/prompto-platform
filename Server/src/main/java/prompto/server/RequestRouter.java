@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.debug.ProcessDebugger;
 import prompto.error.PromptoError;
+import prompto.error.TerminatedError;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
 import prompto.grammar.Identifier;
@@ -56,7 +57,7 @@ public class RequestRouter {
 		Context context = Standalone.getGlobalContext().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null)
-			Standalone.startThreadDebugger(Thread.currentThread(), context);
+			Standalone.startWorkerDebugger(Thread.currentThread(), context);
 		return context;
 	}
 
@@ -73,6 +74,8 @@ public class RequestRouter {
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
+		} catch(TerminatedError e) {
+			// not an error
 		} finally {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
@@ -92,6 +95,8 @@ public class RequestRouter {
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
+		} catch(TerminatedError e) {
+			// not an error
 		} finally {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
@@ -113,6 +118,8 @@ public class RequestRouter {
 			// TODO JSON output
 			Text text = new Text(result==null ? "success!" : result.toString());
 			writeJsonResponse(context, text, response);
+		} catch(TerminatedError e) {
+			// not an error
 		} finally {
 			context.notifyCompleted();
 		}
@@ -130,6 +137,8 @@ public class RequestRouter {
 				writeBinaryResponse((BinaryValue)value, response);
 			else
 				writeJsonResponse(context, value, response);
+		} catch(TerminatedError e) {
+			// not an error
 		} finally {
 			context.notifyCompleted();
 		}
