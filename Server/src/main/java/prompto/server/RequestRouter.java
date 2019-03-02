@@ -29,7 +29,7 @@ import prompto.store.IStore;
 import prompto.store.memory.MemStore;
 import prompto.value.BinaryValue;
 import prompto.value.IValue;
-import prompto.value.Text;
+import prompto.value.TextValue;
 
 public class RequestRouter {
 
@@ -117,7 +117,7 @@ public class RequestRouter {
 			}
 			Object result = Executor.executeGlobalMethod(Standalone.getClassLoader(), methodName, argTypes, args);
 			// TODO JSON output
-			Text text = new Text(result==null ? "success!" : result.toString());
+			TextValue text = new TextValue(result==null ? "success!" : result.toString());
 			writeJsonResponse(context, text, response);
 		} catch(TerminatedError e) {
 			// not an error
@@ -133,7 +133,7 @@ public class RequestRouter {
 			ArgumentAssignmentList assignments = params.toAssignments(context);
 			IValue value = interpretMethod(context, methodName, assignments, main);
 			if(value==null)
-				value = new Text("Success!");
+				value = new TextValue("Success!");
 			if(value instanceof BinaryValue)
 				writeBinaryResponse((BinaryValue)value, response);
 			else
@@ -171,7 +171,7 @@ public class RequestRouter {
 			generator.writeNullField("data");
 		else {
 			generator.writeFieldName("data");
-			value.toJson(context, generator, null, null, true, null);
+			value.toJsonStream(context, generator, null, null, true, null);
 		}
 		generator.writeEndObject();
 		generator.flush();

@@ -23,11 +23,11 @@ import prompto.statement.MethodCall;
 import prompto.type.DocumentType;
 import prompto.type.TextType;
 import prompto.utils.Logger;
-import prompto.value.Document;
+import prompto.value.DocumentValue;
 import prompto.value.ExpressionValue;
 import prompto.value.IValue;
 import prompto.value.ListValue;
-import prompto.value.Text;
+import prompto.value.TextValue;
 
 
 @SuppressWarnings("serial")
@@ -52,7 +52,7 @@ public class UserServlet extends CleverServlet {
 		try {
 			logger.info(()->"Processing GET " + req.getRequestURI());
 			Context context = Standalone.getGlobalContext();
-			Document document = paramsToDocument(context, req.getParameterMap());
+			DocumentValue document = paramsToDocument(context, req.getParameterMap());
 			IValue value = interpret(context, document);
 			if(value!=null)
 				sendValue(req, resp, value);
@@ -62,23 +62,23 @@ public class UserServlet extends CleverServlet {
 		}
 	}
 	
-	private IValue interpret(Context context, Document document) {
+	private IValue interpret(Context context, DocumentValue document) {
 		IExpression args = new ExpressionValue(DocumentType.instance(), document);
 		ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
 		MethodCall call = new MethodCall(new MethodSelector(method.getId()), assignments);
 		return call.interpret(context);	
 	}
 
-	private Document paramsToDocument(Context context, Map<String, String[]> params) {
-		Document document = new Document();
+	private DocumentValue paramsToDocument(Context context, Map<String, String[]> params) {
+		DocumentValue document = new DocumentValue();
 		params.forEach((n, l)->{
-			Text name = new Text(n);
+			TextValue name = new TextValue(n);
 			if(l.length==1)
-				document.setItem(context, name, new Text(l[0]));
+				document.setItem(context, name, new TextValue(l[0]));
 			else {
 				ListValue list = new ListValue(TextType.instance());
 				for(String value : l)
-					list.addItem(new Text(value));
+					list.addItem(new TextValue(value));
 				document.setItem(context, name, list);
 			}
 		});
@@ -110,8 +110,8 @@ public class UserServlet extends CleverServlet {
 	private void sendValue(HttpServletRequest req, HttpServletResponse resp, IValue value) throws IOException {
 		if(value==null || value==VoidResult.instance())
 			return;
-		if(value instanceof Text)
-			resp.getWriter().write(((Text)value).getStorableData());
+		if(value instanceof TextValue)
+			resp.getWriter().write(((TextValue)value).getStorableData());
 		else
 			resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
 	}
@@ -123,7 +123,7 @@ public class UserServlet extends CleverServlet {
 
 	private IValue doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Context context = Standalone.getGlobalContext();
-		Document document = paramsToDocument(context, req.getParameterMap());
+		DocumentValue document = paramsToDocument(context, req.getParameterMap());
 		return interpret(context, document);
 	}
 
@@ -131,7 +131,7 @@ public class UserServlet extends CleverServlet {
 		Object object = JSONReader.read(req.getInputStream());
 		if(object instanceof PromptoDocument) {
 			Context context = Standalone.getGlobalContext();
-			Document document = new Document(context, (PromptoDocument<?,?>)object);
+			DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object);
 			return interpret(context, document);
 		} else {
 			resp.sendError(415);

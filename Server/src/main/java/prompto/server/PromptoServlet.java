@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import prompto.grammar.Identifier;
 import prompto.utils.Logger;
-import prompto.value.Document;
+import prompto.value.DocumentValue;
 
 @SuppressWarnings("serial")
 public class PromptoServlet extends CleverServlet {
@@ -82,9 +82,9 @@ public class PromptoServlet extends CleverServlet {
 	
 	
 	private void readSession(HttpServletRequest req) {
-		Document doc = (Document)req.getSession(true).getAttribute("__prompto_http_session__");
+		DocumentValue doc = (DocumentValue)req.getSession(true).getAttribute("__prompto_http_session__");
 		if(doc==null) {
-			doc = new Document();
+			doc = new DocumentValue();
 			req.getSession(true).setAttribute("__prompto_http_session__", doc);
 		}
 		AppServer.setHttpSession(doc);

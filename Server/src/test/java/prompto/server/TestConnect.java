@@ -18,7 +18,7 @@ import prompto.runtime.Context;
 import prompto.type.IType;
 import prompto.type.TextType;
 import prompto.value.IValue;
-import prompto.value.Text;
+import prompto.value.TextValue;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -85,7 +85,7 @@ public class TestConnect extends BaseServerTest {
 	@Test
 	public void testService1TextParam() throws Exception {
 		Context context = Context.newGlobalContext();
-		ParameterList params = createParameterList("name", TextType.instance(), new Text("id"));
+		ParameterList params = createParameterList("name", TextType.instance(), new TextValue("id"));
 		URL url = new URL("http://localhost:" + port + "/ws/run/findAttribute?params=" + params.toURLEncodedString(context));
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();

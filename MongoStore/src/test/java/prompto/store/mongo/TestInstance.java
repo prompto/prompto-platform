@@ -48,16 +48,16 @@ import prompto.type.TextType;
 import prompto.type.TimeType;
 import prompto.type.UuidType;
 import prompto.utils.IdentifierList;
-import prompto.value.Boolean;
+import prompto.value.BooleanValue;
 import prompto.value.ConcreteInstance;
-import prompto.value.Date;
-import prompto.value.Decimal;
+import prompto.value.DateValue;
+import prompto.value.DecimalValue;
 import prompto.value.ExpressionValue;
 import prompto.value.IInstance;
 import prompto.value.IValue;
-import prompto.value.Integer;
-import prompto.value.Text;
-import prompto.value.Time;
+import prompto.value.IntegerValue;
+import prompto.value.TextValue;
+import prompto.value.TimeValue;
 
 public class TestInstance extends BaseMongoTest {
 
@@ -79,7 +79,7 @@ public class TestInstance extends BaseMongoTest {
 		String fieldValue = "hello";
 		createField(fieldName, Family.TEXT, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, TextType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new TextValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new TextLiteral(fieldValue));
@@ -93,7 +93,7 @@ public class TestInstance extends BaseMongoTest {
 		String fieldValue = "hello";
 		createField(fieldName, Family.TEXT, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, TextType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new TextValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new TextLiteral(fieldValue));
@@ -101,7 +101,7 @@ public class TestInstance extends BaseMongoTest {
 		type.setMutable(true);
 		instance = type.newInstance(context, stored);
 		fieldValue = "after";
-		instance.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new TextValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		stored = fetchOne(fieldName, new TextLiteral(fieldValue));
@@ -116,7 +116,7 @@ public class TestInstance extends BaseMongoTest {
 		long fieldValue = 123;
 		createField(fieldName, Family.INTEGER, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, IntegerType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Integer(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new IntegerValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new IntegerLiteral(fieldValue));
@@ -130,7 +130,7 @@ public class TestInstance extends BaseMongoTest {
 		double fieldValue = 123.0;
 		createField(fieldName, Family.DECIMAL, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, IntegerType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Decimal(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new DecimalValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new DecimalLiteral(fieldValue));
@@ -144,7 +144,7 @@ public class TestInstance extends BaseMongoTest {
 		boolean fieldValue = true;
 		createField(fieldName, Family.BOOLEAN, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, BooleanType.instance());
-		instance.setMember(context, new Identifier(fieldName), Boolean.valueOf(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), BooleanValue.valueOf(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new BooleanLiteral("true"));
@@ -158,7 +158,7 @@ public class TestInstance extends BaseMongoTest {
 		PromptoDate fieldValue = PromptoDate.parse("2015-03-12");
 		createField(fieldName, Family.DATE, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, DateType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Date(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new DateValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new DateLiteral(fieldValue));
@@ -172,7 +172,7 @@ public class TestInstance extends BaseMongoTest {
 		PromptoTime fieldValue = PromptoTime.parse("13:15:16.012");
 		createField(fieldName, Family.TIME, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, TimeType.instance());
-		instance.setMember(context, new Identifier(fieldName), new Time(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new TimeValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new TimeLiteral(fieldValue));
@@ -186,7 +186,7 @@ public class TestInstance extends BaseMongoTest {
 		PromptoDateTime fieldValue = PromptoDateTime.parse("2015-03-12T13:15:16.012Z");
 		createField(fieldName, Family.DATETIME, false);
 		IInstance instance = createInstanceWith1Attribute(fieldName, DateTimeType.instance());
-		instance.setMember(context, new Identifier(fieldName), new prompto.value.DateTime(fieldValue));
+		instance.setMember(context, new Identifier(fieldName), new prompto.value.DateTimeValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
 		IStored stored = fetchOne(fieldName, new DateTimeLiteral(fieldValue));
@@ -240,9 +240,9 @@ public class TestInstance extends BaseMongoTest {
 		ConcreteInstance child = new ConcreteInstance(context, cd);
 		dumpDbIds("child", child);
 		child.setMutable(true);
-		child.setMember(context, new Identifier(fieldName), new Text(childValue));
+		child.setMember(context, new Identifier(fieldName), new TextValue(childValue));
 		dumpDbIds("child", child);
-		parent.setMember(context, new Identifier(fieldName), new Text(fieldValue));
+		parent.setMember(context, new Identifier(fieldName), new TextValue(fieldValue));
 		dumpDbIds("parent", parent);
 		parent.setMember(context, new Identifier(childName), child);
 		dumpDbIds("parent", parent);
@@ -260,7 +260,7 @@ public class TestInstance extends BaseMongoTest {
 		IValue v = parent.getMember(context, new Identifier(childName), false);
 		assertNotNull(v);
 		assertTrue(v instanceof IInstance);
-		assertEquals(new Text(childValue), v.getMember(context, new Identifier(fieldName), false));
+		assertEquals(new TextValue(childValue), v.getMember(context, new Identifier(fieldName), false));
 	}
 
 	private IStored fetchOne(String field, IExpression value) throws Exception {

@@ -20,8 +20,8 @@ import org.junit.Test;
 
 import prompto.store.IStore;
 import prompto.value.BinaryValue;
-import prompto.value.Blob;
-import prompto.value.Image;
+import prompto.value.BlobValue;
+import prompto.value.ImageValue;
 
 @Ignore
 public class TestServerSchema {
@@ -93,7 +93,7 @@ public class TestServerSchema {
 		store.addField("data", "blob", options);
 		StorableDocument doc = new StorableDocument(null, null);
 		doc.setData(IStore.dbIdName, UUID.randomUUID());
-		Blob blob = new Blob("application/octet-stream","azertyuiop".getBytes());
+		BlobValue blob = new BlobValue("application/octet-stream","azertyuiop".getBytes());
 		doc.setData("data", blob.getData());
 		store.addDocuments(doc.getDocument());
 		store.flush();
@@ -107,8 +107,8 @@ public class TestServerSchema {
 		assertNotNull(result);
 		Object data = result.getFieldValue("data");
 		data = BinaryValue.newInstance(BinaryConverter.toPromptoBinary(data));
-		assertTrue(data instanceof Blob);
-		blob = (Blob)data;
+		assertTrue(data instanceof BlobValue);
+		blob = (BlobValue)data;
 		assertEquals("application/octet-stream", blob.getMimeType());
 		assertEquals("azertyuiop", new String(blob.getBytes()));
 	}
@@ -121,7 +121,7 @@ public class TestServerSchema {
 		store.addField("data", "image", options);
 		StorableDocument doc = new StorableDocument(null, null);
 		doc.setData(IStore.dbIdName, UUID.randomUUID());
-		Image image = new Image("image/jpeg","JFIF".getBytes());
+		ImageValue image = new ImageValue("image/jpeg","JFIF".getBytes());
 		doc.setData("data", image.getData());
 		store.addDocuments(doc.getDocument());
 		store.flush();
@@ -135,8 +135,8 @@ public class TestServerSchema {
 		assertNotNull(result);
 		Object data = result.getFieldValue("data");
 		data = BinaryValue.newInstance(BinaryConverter.toPromptoBinary(data));
-		assertTrue(data instanceof Image);
-		image = (Image)data;
+		assertTrue(data instanceof ImageValue);
+		image = (ImageValue)data;
 		assertEquals("image/jpeg", image.getMimeType());
 		assertEquals("JFIF", new String(image.getBytes()));
 	}

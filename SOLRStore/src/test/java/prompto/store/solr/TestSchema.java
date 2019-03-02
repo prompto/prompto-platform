@@ -18,8 +18,8 @@ import org.junit.Test;
 
 import prompto.store.IStore;
 import prompto.value.BinaryValue;
-import prompto.value.Blob;
-import prompto.value.Image;
+import prompto.value.BlobValue;
+import prompto.value.ImageValue;
 
 public class TestSchema extends BaseSOLRTest {
 
@@ -119,7 +119,7 @@ public class TestSchema extends BaseSOLRTest {
 		store.addField("blob", "blob", options);
 		StorableDocument doc = new StorableDocument(null, null);
 		doc.setData(IStore.dbIdName, UUID.randomUUID());
-		Blob blob = new Blob("application/octet-stream","azertyuiop".getBytes());
+		BlobValue blob = new BlobValue("application/octet-stream","azertyuiop".getBytes());
 		doc.setData("blob", blob.getData());
 		store.addDocuments(doc.getDocument());
 		store.flush();
@@ -133,8 +133,8 @@ public class TestSchema extends BaseSOLRTest {
 		assertNotNull(result);
 		Object data = result.getFieldValue("blob");
 		data = BinaryValue.newInstance(BinaryConverter.toPromptoBinary(data));
-		assertTrue(data instanceof Blob);
-		blob = (Blob)data;
+		assertTrue(data instanceof BlobValue);
+		blob = (BlobValue)data;
 		assertEquals("application/octet-stream", blob.getMimeType());
 		assertEquals("azertyuiop", new String(blob.getBytes()));
 	}
@@ -147,7 +147,7 @@ public class TestSchema extends BaseSOLRTest {
 		store.addField("image", "image", options);
 		StorableDocument doc = new StorableDocument(null, null);
 		doc.setData(IStore.dbIdName, UUID.randomUUID());
-		Image image = new Image("image/jpeg","JFIF".getBytes());
+		ImageValue image = new ImageValue("image/jpeg","JFIF".getBytes());
 		doc.setData("image", image.getData());
 		store.addDocuments(doc.getDocument());
 		store.flush();
@@ -161,8 +161,8 @@ public class TestSchema extends BaseSOLRTest {
 		assertNotNull(result);
 		Object data = result.getFieldValue("image");
 		data = BinaryValue.newInstance(BinaryConverter.toPromptoBinary(data));
-		assertTrue(data instanceof Image);
-		image = (Image)data;
+		assertTrue(data instanceof ImageValue);
+		image = (ImageValue)data;
 		assertEquals("image/jpeg", image.getMimeType());
 		assertEquals("JFIF", new String(image.getBytes()));
 	}

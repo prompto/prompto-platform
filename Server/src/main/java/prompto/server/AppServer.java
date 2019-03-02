@@ -41,7 +41,7 @@ import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
-import prompto.value.Document;
+import prompto.value.DocumentValue;
 
 public class AppServer {
 	
@@ -250,14 +250,14 @@ public class AppServer {
 		httpUser.set(user);
 	}
 	
-	static ThreadLocal<Document> httpSession = new ThreadLocal<>();
+	static ThreadLocal<DocumentValue> httpSession = new ThreadLocal<>();
 
 	/* used by Server.pec */
-	public static Document getHttpSession() {
+	public static DocumentValue getHttpSession() {
 		return httpSession.get();
 	}
 	
-	public static void setHttpSession(Document session) {
+	public static void setHttpSession(DocumentValue session) {
 		httpSession.set(session);
 	}
 
