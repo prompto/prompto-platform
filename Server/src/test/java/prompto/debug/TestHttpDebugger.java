@@ -24,7 +24,7 @@ import prompto.utils.Instance;
 import prompto.utils.ManualTests;
 import prompto.utils.StringUtils;
 
-// not sure why this blocks in CI
+// not sure why this blocks in CI, individual tests are ok
 @Category(ManualTests.class)
 public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventListener {
 
