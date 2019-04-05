@@ -31,6 +31,7 @@ public class HtmlGenerator {
 	
 	String userAgent;
 	Map<String, Object> pageConfig;
+	String htmlEngine = null;
 	
 	public HtmlGenerator(String userAgent, Map<String, Object> pageConfig) {
 		this.userAgent = userAgent;
@@ -76,11 +77,16 @@ public class HtmlGenerator {
 		generateTitle(printer);
 		generateIcon(printer);
 		generatePromptoScripts(printer);
-		generateLibraries(printer);
-		Consumer<PrintWriter> bodyWriter = generateWidgetScript(context, printer);
-		printer.println("</head>");
-		return bodyWriter;
+		try {
+			generateLibraries(printer);
+			Consumer<PrintWriter> bodyWriter = generateWidgetScript(context, printer);
+			printer.println("</head>");
+			return bodyWriter;
+		} catch(Exception e) {
+			return p->generateException(p, e);
+		}
 	}
+	
 	private Consumer<PrintWriter> generateWidgetScript(Context context, PrintWriter printer) {
 		try {
 			String widgetName = getWidgetName();
@@ -168,11 +174,11 @@ public class HtmlGenerator {
 		printer.println("<script src='/js/lib/require.js'></script>");
 	}
 
-	private void generateLibraries(PrintWriter printer) throws IOException {
+	private void generateLibraries(PrintWriter printer) throws Exception {
 		Map<String, Object> header = getHeaderConfig();
 		if(header==null)
 			return;
-		if(!generateWidgetLibrary(printer, header)) {
+		if(!generateWidgetLibraries(printer, header)) {
 			generateHtmlEngine(printer, header);
 			generateUiFramework(printer, header);
 		}
@@ -230,11 +236,15 @@ public class HtmlGenerator {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 	}
 
-	private void generateHtmlEngine(PrintWriter printer, Map<String, Object> config) throws IOException {
+	private void generateHtmlEngine(PrintWriter printer, Map<String, Object> config) throws Exception {
 		Object value = config.get("htmlEngine");
 		if(value==null)
 			return;
 		else if(value instanceof String) {
+			if(htmlEngine==null)
+				htmlEngine = (String)value;
+			else if(!htmlEngine.equals(value))
+				throw new Exception("HTML engine: " + value + " conflicts with: " + htmlEngine);
 			config = YamlUtils.readResource("htmlEngines/" + value + ".yaml");
 			generateStyleSheets(printer, config);
 			generateJavascripts(printer, config);
@@ -242,19 +252,28 @@ public class HtmlGenerator {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 	}
 
-	private boolean generateWidgetLibrary(PrintWriter printer, Map<String, Object> config) throws IOException {
-		Object value = config.get("widgetLibrary");
-		if(value==null)
+	private boolean generateWidgetLibraries(PrintWriter printer, Map<String, Object> config) throws Exception {
+		Object values = config.get("widgetLibraries");
+		if(values==null)
 			return false;
-		else if(value instanceof String) {
+		else if(values instanceof Collection) {
+			for(Object value : (Collection<?>)values)
+				generateWidgetLibrary(value, printer, config);
+		} else
+			logger.warn(()->"Expected a List, got " + values.getClass().getName());
+		return true;
+	}
+
+	private void generateWidgetLibrary(Object value, PrintWriter printer, Map<String, Object> config) throws Exception {
+		if(value instanceof String) {
 			config = YamlUtils.readResource("widgetLibraries/" + value + ".yaml");
 			generateHtmlEngine(printer, config);
 			generateUiFramework(printer, config);
 			generateStyleSheets(printer, config);
 			generateJavascripts(printer, config);
-		} else
+		}
+		else
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
-		return true;
 	}
 
 	private void generateIcon(PrintWriter printer) {
