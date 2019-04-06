@@ -1,5 +1,6 @@
 header:
-  widgetLibrary: react-bootstrap-3
+  widgetLibraries: 
+  - react-bootstrap-3
 
 body:
   widget: HomePageWidget
