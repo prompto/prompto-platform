@@ -21,6 +21,15 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 	
 	public synchronized void setSession(Session session) {
 		this.session = session;
+		notify();
+	}
+
+	public synchronized void waitSession() {
+		while(session==null) try {
+			wait();
+		} catch(InterruptedException e) {
+			// nothing to do
+		}
 	}
 
 	@Override
@@ -29,6 +38,7 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 		// there is no session, and there can't be, so no point polluting the logs with an error
 		logger.debug(()->"Skipping " + event.getType().name());
 	}
+	
 	
 
 	@Override

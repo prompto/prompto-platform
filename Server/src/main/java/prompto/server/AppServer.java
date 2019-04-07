@@ -152,10 +152,12 @@ public class AppServer {
 		AppServer.start(serverStopped);
 		final int port = jettyServer.getHttpPort();
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
+		IDebugEventAdapter adapter = Standalone.getDebugEventAdapter();
+		if(adapter instanceof WebSocketDebugEventAdapter)
+			((WebSocketDebugEventAdapter)adapter).waitSession();
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
 			serverStarted.run();
-		IDebugEventAdapter adapter = Standalone.getDebugEventAdapter();
 		if(adapter!=null)
 			adapter.handleReadyEvent();
 		return port;
