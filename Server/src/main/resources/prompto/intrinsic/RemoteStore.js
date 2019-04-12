@@ -166,7 +166,8 @@ function RemoteStore() {
 		if(toStore)
 			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
 		this.fetchAsync("/ws/store/deleteAndStore", JSON.stringify(data), function(response) {
-			toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+			if(toStore)
+				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 			andThen();
 		});
 	};
