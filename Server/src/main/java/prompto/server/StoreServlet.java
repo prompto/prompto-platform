@@ -2,6 +2,7 @@ package prompto.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -195,12 +196,34 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	private void deleteJson(JsonNode toDelete) {
-		if(toDelete.isNumber())
-			DataStore.getInstance().delete(toDelete.asLong());
-		else if(toDelete.isTextual())
-			DataStore.getInstance().delete(toDelete.asText());
-		else 
+		Object dbIds = toDbIds(toDelete);
+		if(dbIds instanceof Collection)
+			DataStore.getInstance().delete((Collection<?>)dbIds);
+		else if(dbIds!=null)
+			DataStore.getInstance().delete(dbIds);
+	}
+	
+	private Object toDbIds(JsonNode toDelete) {
+		if(toDelete.isNumber()) {
+			Object dbId = toDelete.asLong();
+			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
+				return dbId;
+			else
+				return DataStore.getInstance().convertToDbId(dbId);
+		} else if(toDelete.isTextual()) {
+			Object dbId = toDelete.asText();
+			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
+				return dbId;
+			else
+				return DataStore.getInstance().convertToDbId(dbId);
+		} else if(toDelete.isArray()) {
+			return StreamSupport.stream(toDelete.spliterator(), false)
+					.map(this::toDbIds)
+					.collect(Collectors.toList());
+		} else {
 			logger.error(()->"Could not delete: " + toDelete.toString());
+			return null;
+		}
 		
 	}
 
