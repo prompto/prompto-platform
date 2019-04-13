@@ -332,6 +332,7 @@ public class HtmlGenerator {
 	private void generateBody(PrintWriter printer) {
 		printer.println("<body onLoad='renderBody()'>");
 		printer.println("<div id=\"body\"></div>");
+		printer.println("<div id=\"modal\"></div>");
 		printer.println("</body>");
 	}
 
