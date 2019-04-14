@@ -74,6 +74,7 @@ public class HtmlGenerator {
 
 	private Consumer<PrintWriter> generateHeader(Context context, PrintWriter printer) throws IOException {
 		printer.println("<head>");
+		generateEncoding(printer);
 		generateTitle(printer);
 		generateIcon(printer);
 		generatePromptoScripts(printer);
@@ -87,6 +88,10 @@ public class HtmlGenerator {
 		}
 	}
 	
+	private void generateEncoding(PrintWriter printer) {
+		printer.println("<meta charset=\"utf-8\">");
+	}
+
 	private Consumer<PrintWriter> generateWidgetScript(Context context, PrintWriter printer) {
 		try {
 			String widgetName = getWidgetName();
