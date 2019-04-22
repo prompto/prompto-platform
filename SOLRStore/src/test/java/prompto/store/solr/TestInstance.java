@@ -15,6 +15,7 @@ import org.junit.Test;
 import prompto.declaration.AttributeDeclaration;
 import prompto.declaration.ConcreteCategoryDeclaration;
 import prompto.expression.EqualsExpression;
+import prompto.expression.ValueExpression;
 import prompto.expression.FetchOneExpression;
 import prompto.expression.IExpression;
 import prompto.expression.UnresolvedIdentifier;
@@ -53,7 +54,6 @@ import prompto.value.BooleanValue;
 import prompto.value.ConcreteInstance;
 import prompto.value.DateValue;
 import prompto.value.DecimalValue;
-import prompto.value.ExpressionValue;
 import prompto.value.IInstance;
 import prompto.value.IValue;
 import prompto.value.IntegerValue;
@@ -180,7 +180,7 @@ public class TestInstance extends BaseSOLRTest {
 		instance.setMember(context, new Identifier(fieldName), new prompto.value.UuidValue(fieldValue));
 		store.store(instance.getStorable());
 		store.flush();
-		IStored stored = fetchOne(fieldName, new ExpressionValue(UuidType.instance(), new prompto.value.UuidValue(fieldValue)));
+		IStored stored = fetchOne(fieldName, new ValueExpression(UuidType.instance(), new prompto.value.UuidValue(fieldValue)));
 		assertNotNull(stored);
 		assertEquals(fieldValue, stored.getData(fieldName));
 	}

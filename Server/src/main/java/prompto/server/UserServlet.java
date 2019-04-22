@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import prompto.declaration.IMethodDeclaration;
+import prompto.expression.ValueExpression;
 import prompto.expression.IExpression;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentAssignmentList;
@@ -24,7 +25,6 @@ import prompto.type.DocumentType;
 import prompto.type.TextType;
 import prompto.utils.Logger;
 import prompto.value.DocumentValue;
-import prompto.value.ExpressionValue;
 import prompto.value.IValue;
 import prompto.value.ListValue;
 import prompto.value.TextValue;
@@ -63,7 +63,7 @@ public class UserServlet extends CleverServlet {
 	}
 	
 	private IValue interpret(Context context, DocumentValue document) {
-		IExpression args = new ExpressionValue(DocumentType.instance(), document);
+		IExpression args = new ValueExpression(DocumentType.instance(), document);
 		ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
 		MethodCall call = new MethodCall(new MethodSelector(method.getId()), assignments);
 		return call.interpret(context);	
