@@ -36,7 +36,7 @@ public class StoredDocument extends BaseDocument implements IStored {
 		Object categories = getData("category");
 		if(categories instanceof Collection) {
 			Collection<String> coll = (Collection<String>)categories;
-			return coll.toArray(new String[coll.size()]);
+			return coll.toArray(new String[0]);
 		} else 
 			throw new RuntimeException("Can't read categoies from " + categories.getClass().getName());
 	}
