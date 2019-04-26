@@ -1,8 +1,6 @@
 package prompto.store.mongo;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import org.bson.Document;
@@ -21,20 +19,24 @@ import com.mongodb.client.model.WriteModel;
 public class StorableDocument extends BaseDocument implements IStorable {
 
 	Document document;
-	List<String> categories;
+	String[] categories;
 	IDbIdListener listener;
 	boolean isUpdate; // partial updates require operations instead of values
 	
-	public StorableDocument(List<String> categories, IDbIdListener listener) {
+	public StorableDocument(String[] categories, IDbIdListener listener) {
 		this.categories = categories;
 		this.listener = listener;
 	}
 
 	@Override
 	public void setCategories(String[] categories) throws PromptoError {
-		this.categories = Arrays.asList(categories);
+		this.categories = categories;
 	}
 	
+	@Override
+	public String[] getCategories() {
+		return categories;
+	}
 	
 	@Override
 	public void setDbId(Object dbId) {

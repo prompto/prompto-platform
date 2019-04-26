@@ -1,8 +1,6 @@
 package prompto.store.solr;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,13 +32,12 @@ public class StoredDocument extends BaseDocument implements IStored {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<String> getCategories() {
+	public String[] getCategories() {
 		Object categories = getData("category");
-		if(categories instanceof List)
-			return (List<String>)categories;
-		else if(categories instanceof Collection)
-			return new ArrayList<>((Collection<String>)categories);
-		else 
+		if(categories instanceof Collection) {
+			Collection<String> coll = (Collection<String>)categories;
+			return coll.toArray(new String[coll.size()]);
+		} else 
 			throw new RuntimeException("Can't read categoies from " + categories.getClass().getName());
 	}
 

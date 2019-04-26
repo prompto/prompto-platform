@@ -365,7 +365,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public IStorable newStorable(List<String> categories, IDbIdListener listener) {
+	public IStorable newStorable(String[] categories, IDbIdListener listener) {
 		return new StorableDocument(categories, listener);
 	}
 	
