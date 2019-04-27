@@ -1,7 +1,6 @@
 package prompto.store.datomic;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,16 +24,17 @@ public class StoredDocument implements IStored {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<String> getCategories() {
+	public String[] getCategories() {
 		Object categories = entity.get(":category/ordered");
 		if(categories instanceof Collection)
 			return ((Collection<String>)categories).stream()
 						.map(OrderedCategory::new)
 						.sorted()
 						.map(OrderedCategory::category)
-						.collect(Collectors.toList());
+						.collect(Collectors.toList())
+						.toArray(new String[0]);
 		else 
-			throw new RuntimeException("Can't read categoies from " + categories.getClass().getName());
+			throw new RuntimeException("Can't read categories from " + categories.getClass().getName());
 	}
 
 

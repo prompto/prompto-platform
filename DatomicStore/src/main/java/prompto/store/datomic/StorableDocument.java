@@ -1,6 +1,5 @@
 package prompto.store.datomic;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,17 +19,22 @@ import datomic.Peer;
 public class StorableDocument implements IStorable  {
 
 	DatomicFacts facts = null;
-	List<String> categories;
+	String[] categories;
 	IDbIdListener listener;
 	
-	public StorableDocument(List<String> categories, IDbIdListener listener) {
+	public StorableDocument(String[] categories, IDbIdListener listener) {
 		this.categories = categories;
 		this.listener = listener;
 	}
 
 	@Override
 	public void setCategories(String[] categories) throws PromptoError {
-		this.categories = Arrays.asList(categories);
+		this.categories = categories;
+	}
+	
+	@Override
+	public String[] getCategories() {
+		return categories;
 	}
 	
 	@Override
@@ -104,7 +108,7 @@ public class StorableDocument implements IStorable  {
 			if(categories!=null && !isUpdate) {
 				facts.add("category", categories); 
 				final AtomicInteger counter = new AtomicInteger(0);
-				facts.add("category/ordered", categories.stream().map(c->"" + counter.incrementAndGet() + ":" + c).collect(Collectors.toSet())); 
+				facts.add("category/ordered", Stream.of(categories).map(c->"" + counter.incrementAndGet() + ":" + c).collect(Collectors.toSet())); 
 			}
 		}
 	}

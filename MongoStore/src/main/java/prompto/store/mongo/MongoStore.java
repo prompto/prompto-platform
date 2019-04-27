@@ -65,12 +65,13 @@ public class MongoStore implements IStore {
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 		    CodecRegistries.fromCodecs(
-		    		new PromptoDateCodec(),
-		    		new PromptoTimeCodec(),
-		    		new PromptoDateTimeCodec(),
-		    		new PromptoVersionCodec(),
-		    		new UuidCodec(UuidRepresentation.STANDARD)),
-				    MongoClient.getDefaultCodecRegistry()
+			    		new PromptoDateCodec(),
+			    		new PromptoTimeCodec(),
+			    		new PromptoDateTimeCodec(),
+			    		new PromptoVersionCodec(),
+			    		new UuidCodec(UuidRepresentation.STANDARD),
+			    		new StringArrayCodec()
+		    		), MongoClient.getDefaultCodecRegistry()
 		);
 		 
 	MongoClient client;
