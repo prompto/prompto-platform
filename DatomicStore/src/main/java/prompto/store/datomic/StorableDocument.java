@@ -106,9 +106,10 @@ public class StorableDocument implements IStorable  {
 				dbId = Peer.tempid(DbPart.USER.dbName());
 			facts = new DatomicFacts(dbId);
 			if(categories!=null && !isUpdate) {
-				facts.add("category", categories); 
+				List<String> categoriesList = Stream.of(categories).collect(Collectors.toList());
+				facts.add("category", categoriesList); 
 				final AtomicInteger counter = new AtomicInteger(0);
-				facts.add("category/ordered", Stream.of(categories).map(c->"" + counter.incrementAndGet() + ":" + c).collect(Collectors.toSet())); 
+				facts.add("category/ordered", categoriesList.stream().map(c->"" + counter.incrementAndGet() + ":" + c).collect(Collectors.toSet())); 
 			}
 		}
 	}
