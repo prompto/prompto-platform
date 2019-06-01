@@ -102,6 +102,7 @@ class JettyServer extends Server {
 					if(onServerStopped!=null)
 						onServerStopped.run();
 				} catch(Throwable t) {
+					t.printStackTrace();
 					serverThrowable = t;
 				} finally {
 					serverThread = null;
