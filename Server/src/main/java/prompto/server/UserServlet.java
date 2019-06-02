@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.debug.ProcessDebugger;
 import prompto.declaration.IMethodDeclaration;
 import prompto.expression.ValueExpression;
 import prompto.expression.IExpression;
@@ -51,9 +52,9 @@ public class UserServlet extends CleverServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			logger.info(()->"Processing GET " + req.getRequestURI());
-			Context context = Standalone.getGlobalContext();
-			DocumentValue document = paramsToDocument(context, req.getParameterMap());
-			IValue value = interpret(context, document);
+			Context local = getWorkerContext();
+			DocumentValue document = paramsToDocument(local, req.getParameterMap());
+			IValue value = interpret(local, document);
 			if(value!=null)
 				sendValue(req, resp, value);
 		} catch(Throwable t) {
@@ -62,6 +63,14 @@ public class UserServlet extends CleverServlet {
 		}
 	}
 	
+	private Context getWorkerContext() {
+		Context context = Standalone.getGlobalContext().newLocalContext();
+		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
+		if(processDebugger!=null)
+			Standalone.startWorkerDebugger(Thread.currentThread(), context);
+		return context;
+	}
+
 	private IValue interpret(Context context, DocumentValue document) {
 		IExpression args = new ValueExpression(DocumentType.instance(), document);
 		ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
@@ -122,7 +131,7 @@ public class UserServlet extends CleverServlet {
 	}
 
 	private IValue doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		Context context = Standalone.getGlobalContext();
+		Context context = getWorkerContext();
 		DocumentValue document = paramsToDocument(context, req.getParameterMap());
 		return interpret(context, document);
 	}
@@ -130,7 +139,7 @@ public class UserServlet extends CleverServlet {
 	private IValue doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Object object = JSONReader.read(req.getInputStream());
 		if(object instanceof PromptoDocument) {
-			Context context = Standalone.getGlobalContext();
+			Context context = getWorkerContext();
 			DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object);
 			return interpret(context, document);
 		} else {
