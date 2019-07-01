@@ -32,15 +32,13 @@ public class TranspilerServlet extends CodeStoreServlet {
 		// always rebuild in DEV/TEST mode
 		if(htmlFile.exists() && Mode.get().ordinal()>=Mode.DEVELOPMENT.ordinal()) 
 			htmlFile.delete();
-		if(htmlFile.exists()) 
-			return new PathResource(htmlFile);
-		try {
+		if(!htmlFile.exists())  try {
 			transpile(request, path, htmlFile);
-			return new PathResource(htmlFile);
 		} catch(Throwable t) {
 			logger.error(()->"While transpiling '" + path + "'", t);
 			return null;
 		}
+		return new PathResource(htmlFile);
 	}
 
 	private File getTranspiledHtmlFile(String path) {
@@ -49,7 +47,7 @@ public class TranspilerServlet extends CodeStoreServlet {
 		if(!parent.exists()) {
 			parent.mkdirs();
 			if(!parent.exists())
-				throw new RuntimeException("Could not creat dir at " + parent.getAbsolutePath());
+				throw new RuntimeException("Could not create dir at " + parent.getAbsolutePath());
 		}
 		return file;	
 	}
