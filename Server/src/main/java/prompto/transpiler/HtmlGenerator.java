@@ -77,6 +77,7 @@ public class HtmlGenerator {
 		generateEncoding(printer);
 		generateTitle(printer);
 		generateIcon(printer);
+		generateName(printer);
 		generatePromptoScripts(printer);
 		try {
 			generateLibraries(printer);
@@ -308,6 +309,24 @@ public class HtmlGenerator {
 			printer.print("<title>");
 			printer.print(value);
 			printer.println("</title>");
+		} else {
+			logger.warn(()->"Expected a String, got " + value.getClass().getName());
+		}
+	}
+
+	private void generateName(PrintWriter printer) {
+		Map<String, Object> header = getHeaderConfig();
+		if(header==null)
+			return;
+		Object value = header.get("name");
+		if(value==null)
+			return;
+		else if(value instanceof String) {
+			printer.print("<script>");
+			printer.print("\twindow.name = '");
+			printer.print(value);
+			printer.print("';");
+			printer.println("</script>");
 		} else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 		}
