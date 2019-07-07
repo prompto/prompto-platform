@@ -43,7 +43,7 @@ StorableDocument.prototype.getDbId = function() {
 StorableDocument.prototype.getOrCreateDbId = function() {
 	var dbId = this.getDbId();
 	if(dbId==null) {
-       	dbId = DataStore.instance.nextDbId();
+       	dbId = $DataStore.instance.nextDbId();
         if(this.dbIdListener)
         	this.dbIdListener(dbId);
         this.setData("dbId", dbId, dbId);
@@ -150,12 +150,22 @@ function RemoteStore() {
 		};
 		request.send(body);
 	};
+	this.convertStorables = function(toStore) {
+		return Array.from(toStore).map(this.convertStorable);
+	};
+	this.convertStorable = function(storable) { 
+		var doc = storable.document; 
+	 	if(typeof(doc.dbId) === "object" && !doc.dbId.tempDbId) {
+	 		doc.dbId = doc.dbId.toString();
+	 	}
+	 	return doc;  
+	};
 	this.store = function(toDel, toStore) {
 		var data = {};
 		if(toDel)
 			data.toDelete = toDel;
-		if(toStore)
-			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
+		if(toStore) 
+			data.toStore = this.convertStorables(toStore);
 		var response = this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
 		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
@@ -164,7 +174,7 @@ function RemoteStore() {
 		if(toDel)
 			data.toDelete = toDel;
 		if(toStore)
-			data.toStore = Array.from(toStore).map(function(thing) { return thing.document; });
+			data.toStore = this.convertStorables(toStore);
 		this.fetchAsync("/ws/store/deleteAndStore", JSON.stringify(data), function(response) {
 			if(toStore)
 				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
@@ -283,4 +293,4 @@ function MatchPredicate(info, matchOp, value) {
 
 
 
-DataStore.instance = new RemoteStore();
+$DataStore.instance = new RemoteStore();

@@ -77,6 +77,7 @@ public class HtmlGenerator {
 		generateEncoding(printer);
 		generateTitle(printer);
 		generateIcon(printer);
+		generateName(printer);
 		generatePromptoScripts(printer);
 		try {
 			generateLibraries(printer);
@@ -313,6 +314,24 @@ public class HtmlGenerator {
 		}
 	}
 
+	private void generateName(PrintWriter printer) {
+		Map<String, Object> header = getHeaderConfig();
+		if(header==null)
+			return;
+		Object value = header.get("name");
+		if(value==null)
+			return;
+		else if(value instanceof String) {
+			printer.print("<script>");
+			printer.print("\twindow.name = '");
+			printer.print(value);
+			printer.print("';");
+			printer.println("</script>");
+		} else {
+			logger.warn(()->"Expected a String, got " + value.getClass().getName());
+		}
+	}
+
 	private Map<String, Object> getHeaderConfig() {
 		return getConfig(pageConfig, "header");
 	}
@@ -336,8 +355,9 @@ public class HtmlGenerator {
 
 	private void generateBody(PrintWriter printer) {
 		printer.println("<body onLoad='renderBody()'>");
-		printer.println("<div id=\"body\"></div>");
-		printer.println("<div id=\"modal\"></div>");
+		printer.println("<div id='body'></div>");
+		printer.println("<div id='modal'></div>");
+		printer.println("<div id='context'></div>");
 		printer.println("</body>");
 	}
 
