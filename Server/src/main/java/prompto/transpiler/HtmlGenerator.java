@@ -159,7 +159,7 @@ public class HtmlGenerator {
 
 	private void generateWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
-		Context context = Standalone.getGlobalContext();
+		Context context = Standalone.getGlobalContext().newLocalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
 		declaration.declare(transpiler);
 		if(transpiler.requires("DataStore")) {
