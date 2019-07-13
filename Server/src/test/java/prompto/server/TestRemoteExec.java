@@ -82,14 +82,16 @@ public class TestRemoteExec extends BaseUITest {
 	@Test
 	public void voidIsExecuted() throws Exception {
 		linkResourcesAndLoadPage("VoidIsExecuted", Dialect.O);
-		WebElement root = waitElement(By.id("root"), 3);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
 		assertEquals("EXECUTED", root.getText());
 	}
 	
 	@Test
 	public void textIsReturned() throws Exception {
 		linkResourcesAndLoadPage("TextIsReturned", Dialect.O);
-		WebElement root = waitElement(By.id("root"), 3);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
 		assertEquals("RETURNED", root.getText());
 	}
 
