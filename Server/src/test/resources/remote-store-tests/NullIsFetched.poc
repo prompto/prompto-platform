@@ -13,7 +13,7 @@ widget NullIsFetchedPage extends ReactWidget {
 		stuff = fetch one( Stuff ) where ( value == null );
 		if(stuff is null)
 			return <div>null!</div>;
-		else
+		else {
 			text = stuff.value is null ? "null" : stuff.value;
 			return <div id="root">{text}</div>;
 		}
