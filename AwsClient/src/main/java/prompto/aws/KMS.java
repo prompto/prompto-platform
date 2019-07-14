@@ -9,8 +9,12 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.AliasListEntry;
+import com.amazonaws.services.kms.model.CreateAliasRequest;
+import com.amazonaws.services.kms.model.CreateKeyResult;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
+import com.amazonaws.services.kms.model.DeleteAliasRequest;
+import com.amazonaws.services.kms.model.DisableKeyRequest;
 import com.amazonaws.services.kms.model.EncryptRequest;
 import com.amazonaws.services.kms.model.EncryptResult;
 import com.amazonaws.services.kms.model.ListAliasesResult;
@@ -31,6 +35,33 @@ public class KMS {
 
 	public KMS(AWSKMS kms) {
 		this.kms = kms;
+	}
+	
+	
+	public String newKeyARNWithAlias(String alias) {
+		CreateKeyResult res = kms.createKey();
+		String arn = res.getKeyMetadata().getArn();
+		CreateAliasRequest req = new CreateAliasRequest()
+				.withAliasName("alias/" + alias)
+				.withTargetKeyId(arn);
+		kms.createAlias(req);
+		return arn;
+	}
+	
+	
+	public void deleteKeyARNWithAlias(String alias) {
+		final String fullAlias = "alias/" + alias;
+		ListAliasesResult res = kms.listAliases();
+		AliasListEntry entry = res.getAliases().stream()
+				.filter(a->fullAlias.equals(a.getAliasName()))
+				.findFirst()
+				.orElse(null);
+		DeleteAliasRequest req1 = new DeleteAliasRequest()
+				.withAliasName(entry.getAliasName());
+		kms.deleteAlias(req1);
+		DisableKeyRequest req2 = new DisableKeyRequest()
+				.withKeyId(entry.getTargetKeyId());
+		kms.disableKey(req2);
 	}
 	
 	public String keyARNFromAlias(String alias) {

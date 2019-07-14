@@ -5,6 +5,12 @@ define AwsKMS as native category with bindings:
 	
 and methods:
 	
+	define newKeyARNWithAlias as method receiving Text alias returning Text doing:
+		Java: return this.newKeyARNWithAlias(alias);
+
+	define deleteKeyARNWithAlias as method receiving Text alias doing:
+		Java: this.deleteKeyARNWithAlias(alias);
+
 	define keyARNFromAlias as method receiving Text alias returning Text doing:
 		Java: return this.keyARNFromAlias(alias);
 
@@ -15,7 +21,7 @@ and methods:
 		Java: return this.decrypt(textToDecrypt);
 
 
-define newAwsKMS as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
+define newAwsKMS as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsKMS doing:
 	Java: prompto.aws.KMS.newInstance(awsRegion, login, password);
 
 define newAwsKMSWithLocalCredentials as method receiving Text awsRegion returning AwsKMS doing:
@@ -25,13 +31,23 @@ define newAwsKMSWithLocalCredentials as method receiving Text awsRegion returnin
 	password = keys.secretKey as Text
 	return newAwsKMS with awsRegion as awsRegion, login as login and password as password
 
-define "kms client can be created" as test method doing:
+define "kms client is created" as test method doing:
 	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 and verifying:
 	kms is not Nothing
 
 	
-define "kms can encrypt and decrypt" as test method doing:
+define "kms creates and deletes key" as test method doing:
+	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
+	arn = kms.newKeyARNWithAlias with "some/alias" as alias
+	kms.deleteKeyARNWithAlias with "some/alias" as alias
+	deleted = kms.keyARNFromAlias with "some/alias" as alias
+and verifying:
+	arn is not Nothing
+	deleted is Nothing
+
+
+define "kms encrypts and decrypts" as test method doing:
 	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 	plain = "some secret"
 	encrypted = kms.encrypt with "arn:arn:aws:kms:us-east-1:838901125615:key/fd4e13e3-72c3-41ee-90de-4531f5c4c93a" as keyARN and plain as textToEncrypt
@@ -40,7 +56,7 @@ and verifying:
 	encrypted = plain
 
 
-define "kms can get keyARN from alias" as test method doing:
+define "kms gets keyARN from alias" as test method doing:
 	kms = newAwsKMSWithLocalCredentials with "us-east-1" as awsRegion
 	keyARN = kms.keyARNFromAlias with "prompto/seed" as alias
 and verifying:
