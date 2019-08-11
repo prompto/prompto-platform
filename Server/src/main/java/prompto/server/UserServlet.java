@@ -14,7 +14,7 @@ import prompto.declaration.IMethodDeclaration;
 import prompto.expression.ValueExpression;
 import prompto.expression.IExpression;
 import prompto.expression.MethodSelector;
-import prompto.grammar.ArgumentAssignmentList;
+import prompto.grammar.ArgumentList;
 import prompto.intrinsic.PromptoDocument;
 import prompto.reader.JSONReader;
 import prompto.runtime.Context;
@@ -73,8 +73,8 @@ public class UserServlet extends CleverServlet {
 
 	private IValue interpret(Context context, DocumentValue document) {
 		IExpression args = new ValueExpression(DocumentType.instance(), document);
-		ArgumentAssignmentList assignments = Interpreter.buildAssignments(method, args);
-		MethodCall call = new MethodCall(new MethodSelector(method.getId()), assignments);
+		ArgumentList arguments = Interpreter.buildArguments(method, args);
+		MethodCall call = new MethodCall(new MethodSelector(method.getId()), arguments);
 		return call.interpret(context);	
 	}
 

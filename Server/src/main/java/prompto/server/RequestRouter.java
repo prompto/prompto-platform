@@ -15,10 +15,10 @@ import prompto.debug.ProcessDebugger;
 import prompto.error.PromptoError;
 import prompto.error.TerminatedError;
 import prompto.expression.MethodSelector;
-import prompto.grammar.ArgumentAssignmentList;
+import prompto.grammar.ArgumentList;
 import prompto.grammar.Identifier;
 import prompto.intrinsic.PromptoDict;
-import prompto.remoting.ParameterList;
+import prompto.remoting.RemoteArgumentList;
 import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
@@ -108,7 +108,7 @@ public class RequestRouter {
 	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		Context context = prepareContext("Method: " + methodName);
 		try {
-			ParameterList params = ParameterList.read(context, jsonParams, parts);
+			RemoteArgumentList params = RemoteArgumentList.read(context, jsonParams, parts);
 			Class<?>[] argTypes = params.toJavaTypes(context, Standalone.getClassLoader());
 			Object[] args = params.toJavaValues(context);
 			if(params.isEmpty() && main) {
@@ -129,9 +129,9 @@ public class RequestRouter {
 	public void interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		Context context = prepareContext("Method: " + methodName);
 		try {
-			ParameterList params = ParameterList.read(context, jsonParams, parts);
-			ArgumentAssignmentList assignments = params.toAssignments(context);
-			IValue value = interpretMethod(context, methodName, assignments, main);
+			RemoteArgumentList params = RemoteArgumentList.read(context, jsonParams, parts);
+			ArgumentList arguments = params.toArguments(context);
+			IValue value = interpretMethod(context, methodName, arguments, main);
 			if(value==null)
 				value = new TextValue("Success!");
 			if(value instanceof BinaryValue)
@@ -145,12 +145,12 @@ public class RequestRouter {
 		}
 	}
 
-	private IValue interpretMethod(Context context, Identifier methodName, ArgumentAssignmentList assignments, boolean main) {
-		if(assignments.isEmpty() && main) {
+	private IValue interpretMethod(Context context, Identifier methodName, ArgumentList arguments, boolean main) {
+		if(arguments.isEmpty() && main) {
 			Interpreter.interpretMainNoArgs(context, methodName);
 			return null;
 		} else {
-			MethodCall methodCall = new MethodCall(new MethodSelector(methodName), assignments);
+			MethodCall methodCall = new MethodCall(new MethodSelector(methodName), arguments);
 			return methodCall.interpret(context);
 		}
 	}

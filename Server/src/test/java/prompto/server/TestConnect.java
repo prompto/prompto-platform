@@ -11,8 +11,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import prompto.error.PromptoError;
-import prompto.remoting.Parameter;
-import prompto.remoting.ParameterList;
+import prompto.remoting.RemoteArgument;
+import prompto.remoting.RemoteArgumentList;
 import prompto.runtime.Standalone;
 import prompto.runtime.Context;
 import prompto.type.IType;
@@ -71,7 +71,7 @@ public class TestConnect extends BaseServerTest {
 	@Test
 	public void testServiceNoParam() throws Exception {
 		Context context = Context.newGlobalContext();
-		ParameterList params = createParameterList();
+		RemoteArgumentList params = createParameterList();
 		URL url = new URL("http://localhost:" + port + "/ws/run/getAllAttributes?params=" + params.toURLEncodedString(context));
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
@@ -85,7 +85,7 @@ public class TestConnect extends BaseServerTest {
 	@Test
 	public void testService1TextParam() throws Exception {
 		Context context = Context.newGlobalContext();
-		ParameterList params = createParameterList("name", TextType.instance(), new TextValue("id"));
+		RemoteArgumentList params = createParameterList("name", TextType.instance(), new TextValue("id"));
 		URL url = new URL("http://localhost:" + port + "/ws/run/findAttribute?params=" + params.toURLEncodedString(context));
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
@@ -96,10 +96,10 @@ public class TestConnect extends BaseServerTest {
 		System.out.println(json.toString());
 	}
 	
-	private ParameterList createParameterList(Object ... params) throws IOException, PromptoError {
-		ParameterList list = new ParameterList();
+	private RemoteArgumentList createParameterList(Object ... params) throws IOException, PromptoError {
+		RemoteArgumentList list = new RemoteArgumentList();
 		for(int i=0;i<params.length;i+=3) {
-			Parameter param = new Parameter();
+			RemoteArgument param = new RemoteArgument();
 			param.setName(params[i].toString());
 			param.setType((IType)params[i+1]);
 			param.setValue((IValue)params[i+2]);
