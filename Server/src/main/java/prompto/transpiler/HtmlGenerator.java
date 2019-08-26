@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 
 import prompto.code.ICodeStore;
 import prompto.declaration.CategoryDeclaration;
-import prompto.declaration.WrappingWidgetDeclaration;
 import prompto.declaration.IDeclaration;
 import prompto.declaration.IWidgetDeclaration;
 import prompto.error.SyntaxError;
@@ -151,9 +150,10 @@ public class HtmlGenerator {
 		IDeclaration decl = iter.next();;
 		if(!(decl instanceof CategoryDeclaration))
 			return null;
-		if(!((CategoryDeclaration)decl).isAWidget(context))
+		if(((CategoryDeclaration)decl).isAWidget(context))
+			return ((CategoryDeclaration)decl).asWidget();
+		else
 			return null;
-		return decl instanceof IWidgetDeclaration ? (IWidgetDeclaration)decl : new WrappingWidgetDeclaration((CategoryDeclaration)decl);
 		
 	}
 
