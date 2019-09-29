@@ -30,7 +30,7 @@ define authenticationSettings as storable AuthenticationSettings attribute
 define Dependency as storable category with attributes name and version
 define dependencies as storable Dependency[] attribute
 
-define Module as storable category with attributes name, version, description, image and dependencies
+define Module as storable category with attributes name, version, description, image, dependencies, moduleStatus and parked
 
 define Library as storable Module
 define Thesaurus as storable Library
