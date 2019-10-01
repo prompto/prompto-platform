@@ -37,6 +37,7 @@
 	    <fieldType name="version" class="prompto.store.solr.VersionFieldType"/>
 	    <fieldType name="blob" class="prompto.store.solr.BinaryFieldType"/>
 	    <fieldType name="image" class="prompto.store.solr.BinaryFieldType"/>
+	    <fieldType name="enumerated" class="solr.StrField" indexed="false"/>
 	</types>
 	<fields>
 		<!-- If you remove this field, you must _also_ disable the update log in solrconfig.xml 
