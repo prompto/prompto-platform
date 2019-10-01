@@ -20,6 +20,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;
+import org.bson.types.ObjectId;
 
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.mongo.IMongoReplicaSetConfiguration;
@@ -213,7 +214,14 @@ public class MongoStore implements IStore {
 	
 	@Override
 	public Object convertToDbId(Object dbId) {
-		return UUID.fromString(String.valueOf(dbId));
+		if(dbId instanceof UUID)
+			return dbId;
+		else if(dbId instanceof ObjectId)
+			return ((ObjectId) dbId).toHexString(); // NOT a UUID!
+		else if(dbId instanceof String)
+			return UUID.fromString((String)dbId);
+		else
+			return UUID.fromString(String.valueOf(dbId));
 	}
 
 	@Override

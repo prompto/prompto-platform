@@ -4,13 +4,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.WriteModel;
 
 import prompto.declaration.AttributeDeclaration;
 import prompto.declaration.ConcreteCategoryDeclaration;
@@ -71,6 +78,16 @@ public class TestInstance extends BaseMongoTest {
 		context = Context.newGlobalContext();
 		AttributeDeclaration a = new AttributeDeclaration(new Identifier("dbId"), AnyType.instance());
 		context.registerDeclaration(a);
+	}
+	
+	@Test
+	public void readsNativeObjectId() throws Exception {
+		Document storable = new Document();
+		storable.put("field", "value");
+		MongoCollection<Document> coll = db.getCollection("instances");
+		coll.insertOne(storable);
+		ObjectId dbId = storable.getObjectId("_id");
+		store.convertToDbId(dbId);
 	}
 	
 	@Test

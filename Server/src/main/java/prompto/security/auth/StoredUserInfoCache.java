@@ -190,6 +190,7 @@ public class StoredUserInfoCache {
 		storable.setData("method", "PBKDF2");
 		String digest = DigestMethod.forName("PBKDF2").digest(password, salt);
 		storable.setData("digest", digest);
+		storable.setDbId(store.newDbId());
 		store.store(storable);
 	}
 
