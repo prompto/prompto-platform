@@ -232,15 +232,19 @@ public class AppServer {
 		if(config==null)
 			return IAuthenticationSource.instance.get();
 		else try(InputStream input = new ByteArrayInputStream(config.getBytes())) {
-			return new ServerConfiguration(new YamlConfigurationReader(input), Collections.emptyMap())
-						.getHttpConfiguration()
-						.getAuthenticationConfiguration()
-						.getAuthenticationSourceConfiguration()
-						.getAuthenticationSourceFactory()
-						.newAuthenticationSource();
+			return getLoginFactory(new YamlConfigurationReader(input));
 		} 
 	}
 	
+	public static IAuthenticationSource getLoginFactory(IConfigurationReader reader) {
+		return new ServerConfiguration(reader, Collections.emptyMap())
+				.getHttpConfiguration()
+				.getAuthenticationConfiguration()
+				.getAuthenticationSourceConfiguration()
+				.getAuthenticationSourceFactory()
+				.newAuthenticationSource();
+	}
+
 	static ThreadLocal<String> httpUser = new ThreadLocal<>();
 	
 	/* used by Server.pec */

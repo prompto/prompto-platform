@@ -8,6 +8,7 @@ import prompto.config.auth.method.IAuthenticationMethodConfiguration;
 import prompto.config.auth.source.AuthenticationSourceConfiguration;
 import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.security.auth.method.BasicAuthenticationMethodFactory;
+import prompto.security.auth.source.IAuthenticationSourceFactory;
 
 public class AuthenticationConfiguration extends IAuthenticationConfiguration.Inline {
 
@@ -27,9 +28,20 @@ public class AuthenticationConfiguration extends IAuthenticationConfiguration.In
 
 	private IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration() {
 		IConfigurationReader child = reader.getObject("source");
-		return child==null ? null : new AuthenticationSourceConfiguration(child);
+		return child==null ? null : readAuthenticationSourceConfiguration(child);
 	}
 	
+	private IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration(IConfigurationReader reader) {
+		String className = reader.getString("factory");
+		if(className==null)
+			return new AuthenticationSourceConfiguration(reader);
+		else try {
+			return IAuthenticationSourceFactory.newFactory(className).newConfiguration(reader);
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+
 	private IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {
 		IConfigurationReader child = reader.getObject("method");
 		// default to BASIC authentication method
