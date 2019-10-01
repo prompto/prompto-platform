@@ -3,7 +3,7 @@ var RemoteRunner = {
 	run: function(name, params, andThen, bindTo) {
 		params.forEach(function(param) {
 			var value = writeJSONValue(param.value, false);
-			if(value.type && value.value) {
+			if(value && value.type && value.value) {
 				param.type = value.type;
 				param.value = value.value;
 			} else
