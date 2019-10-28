@@ -155,7 +155,7 @@ function RemoteStore() {
 	};
 	this.convertStorable = function(storable) { 
 		var doc = storable.document; 
-	 	if(typeof(doc.dbId) === "object" && !doc.dbId.tempDbId) {
+	 	if(typeof(doc.dbId) === "object" && !doc.dbId.tempDbId && (!doc.dbId.type || !doc.dbId.value)) {
 	 		doc.dbId = doc.dbId.toString();
 	 	}
 	 	return doc;  
