@@ -245,6 +245,13 @@ public class MongoStore implements IStore {
 		attributes.put(name, new AttributeInfo(name, family, collection, key, value, words));
 	}
 	
+	void loadAttribute(String name) {
+		Document doc = db.getCollection("attributes").find().filter(Filters.eq("name", name)).first();
+		if(doc!=null)
+			loadAttribute(doc);
+	}
+	
+	
 	@Override
 	public void createOrUpdateAttributes(Collection<AttributeInfo> infos) throws PromptoError {
 		// TODO check for discrepancies
@@ -464,6 +471,10 @@ public class MongoStore implements IStore {
 	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = attributes.get(fieldName);
+		if(info==null) {
+			loadAttribute(fieldName);
+			info = attributes.get(fieldName);
+		}
 		if(info==null)
 			throw new RuntimeException("Missing AttributeInfo for " + fieldName);
 		if(info.isCollection() && data instanceof Collection)
