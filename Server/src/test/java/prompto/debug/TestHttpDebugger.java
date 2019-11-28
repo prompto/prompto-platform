@@ -22,7 +22,7 @@ import prompto.runtime.Standalone;
 import prompto.server.BaseServerTest;
 import prompto.utils.Instance;
 import prompto.utils.ManualTests;
-import prompto.utils.StringUtils;
+import prompto.utils.StreamUtils;
 
 // not sure why this blocks in CI, individual tests are ok
 @Category(ManualTests.class)
@@ -111,7 +111,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 			System.setOut(new PrintStream(bytes));
 			try(InputStream input = url.openStream()) {
-				response.set(StringUtils.stringFromStream(input));
+				response.set(StreamUtils.readString(input));
 			} catch(Exception e) {
 				response.set(e.getMessage());
 			} finally {
