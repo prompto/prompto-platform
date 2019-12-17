@@ -40,10 +40,11 @@ public abstract class ResourceServlet extends CleverServlet {
     int minMemoryMappedContentLength = 1024;
     int minAsyncContentLength = 0;
     Resource builtIns;
-    String welcomePage = "/index.html";
+    String welcomePage;
     
-    public ResourceServlet() throws Exception {
+    public ResourceServlet(String welcomePage) {
     	builtIns = getBuiltInsResource();
+    	this.welcomePage = welcomePage!=null ? welcomePage :  "/index.html";
 	}
     
 	protected abstract Resource getResource(HttpServletRequest request, String resourcePath);
@@ -110,8 +111,12 @@ public abstract class ResourceServlet extends CleverServlet {
             pathInfo = request.getPathInfo();
         }
         String pathInContext = URIUtil.addPaths(servletPath, pathInfo);
-        if(pathInContext=="/" && welcomePage!=null)
-        	pathInContext = welcomePage;
+        if(pathInContext=="/" && welcomePage!=null) {
+        	if(welcomePage.endsWith(".page"))
+        		return new TranspilerServlet().getResource(request, welcomePage);
+        	else
+        		pathInContext = welcomePage;
+        }
         Resource resource = null;
         if(tryGzip)
         	resource = getClassPathResource(pathInContext + ".gz");
@@ -289,7 +294,7 @@ public abstract class ResourceServlet extends CleverServlet {
  	}
 
 
-	private Resource getBuiltInsResource() throws Exception {
+	private Resource getBuiltInsResource() {
 		Stream<Class<?>> classes = Stream.concat(ObjectUtils.getClassesInCallStack().stream(), Stream.of(AppServer.class, Libraries.class));
 		Set<Resource> resources = classes
 				.filter(c->c.getName().startsWith("prompto"))

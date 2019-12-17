@@ -15,7 +15,8 @@ public class WebSiteServlet extends ResourceServlet {
 
 	Resource base;
 	
-	public WebSiteServlet(String root) throws Exception {
+	public WebSiteServlet(String root, String welcomePage) throws IOException {
+		super(welcomePage);
 		this.base = getResourceBase(root);
 	}
 

@@ -10,8 +10,8 @@ import prompto.code.ICodeStore;
 @SuppressWarnings("serial")
 public class CodeStoreServlet extends ResourceServlet {
 
-	public CodeStoreServlet() throws Exception {
-		super();
+	public CodeStoreServlet(String welcomePage) {
+		super(welcomePage);
 	}
 
 	@Override
