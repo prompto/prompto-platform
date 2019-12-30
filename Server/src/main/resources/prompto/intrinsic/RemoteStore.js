@@ -1,5 +1,5 @@
 function StoredDocument(categories) {
-	this.$categories = categories;
+	this.category = categories;
     return this;
 }
 
@@ -18,7 +18,7 @@ StoredDocument.prototype.matches = function(predicate) {
 function StorableDocument(categories, dbIdListener) {
     if(!categories)
         throw new Error("!!!");
-    this.$categories = categories;
+    this.category = categories;
     this.dbIdListener = dbIdListener;
     this.document = null;
     return this;
@@ -58,7 +58,7 @@ StorableDocument.prototype.setDbId = function(dbId) {
 
 StorableDocument.prototype.setData = function(name, value, dbId) {
     if(!this.document) {
-        this.document = new StoredDocument(this.$categories);
+        this.document = new StoredDocument(this.category);
         this.document.dbId = dbId? dbId : this.getOrCreateDbId();
     }
     this.document[name] = writeJSONValue(value, true);
