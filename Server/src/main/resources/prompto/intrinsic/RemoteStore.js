@@ -1,6 +1,5 @@
 function StoredDocument(categories) {
-	// use reserved keyword explicitly
-	this.category = categories;
+	this.$categories = categories;
     return this;
 }
 
@@ -19,8 +18,7 @@ StoredDocument.prototype.matches = function(predicate) {
 function StorableDocument(categories, dbIdListener) {
     if(!categories)
         throw new Error("!!!");
-    // use 'category' reserved keyword voluntarily
-    this.category = categories;
+    this.$categories = categories;
     this.dbIdListener = dbIdListener;
     this.document = null;
     return this;
@@ -60,7 +58,7 @@ StorableDocument.prototype.setDbId = function(dbId) {
 
 StorableDocument.prototype.setData = function(name, value, dbId) {
     if(!this.document) {
-        this.document = new StoredDocument(this.category);
+        this.document = new StoredDocument(this.$categories);
         this.document.dbId = dbId? dbId : this.getOrCreateDbId();
     }
     this.document[name] = writeJSONValue(value, true);

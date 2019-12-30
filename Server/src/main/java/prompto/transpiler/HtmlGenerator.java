@@ -18,8 +18,8 @@ import prompto.declaration.CategoryDeclaration;
 import prompto.declaration.IDeclaration;
 import prompto.declaration.IWidgetDeclaration;
 import prompto.error.SyntaxError;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
-import prompto.runtime.Standalone;
 import prompto.store.DataStore;
 import prompto.utils.Logger;
 import prompto.utils.YamlUtils;
@@ -159,7 +159,7 @@ public class HtmlGenerator {
 
 	private void generateWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
-		Context context = Standalone.getGlobalContext().newLocalContext();
+		Context context = ApplicationContext.get().newLocalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
 		declaration.declare(transpiler);
 		if(transpiler.requires("DataStore")) {

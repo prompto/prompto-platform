@@ -1,6 +1,6 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,20 +16,21 @@ import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import prompto.code.ICodeStore;
-import prompto.code.ImmutableCodeStore;
-import prompto.code.ModuleType;
-import prompto.intrinsic.PromptoVersion;
-import prompto.parser.Dialect;
-import prompto.runtime.Standalone;
-import prompto.store.DataStore;
-import prompto.store.memory.MemStore;
-
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
+
+import prompto.code.ICodeStore;
+import prompto.code.ImmutableCodeStore;
+import prompto.code.ModuleType;
+import prompto.intrinsic.PromptoVersion;
+import prompto.parser.Dialect;
+import prompto.runtime.ApplicationContext;
+import prompto.runtime.Standalone;
+import prompto.store.DataStore;
+import prompto.store.memory.MemStore;
 
 @Category(HeadlessTests.class)
 public class TestRemoteExec extends BaseUITest {
@@ -38,7 +39,7 @@ public class TestRemoteExec extends BaseUITest {
 
 	@Before
 	public void before() throws Exception {
-		Standalone.clearGlobalContext();
+		ApplicationContext.reset();
 		DataStore.setGlobal(new MemStore());
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 	}

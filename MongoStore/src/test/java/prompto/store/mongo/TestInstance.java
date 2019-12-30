@@ -71,7 +71,7 @@ public class TestInstance extends BaseMongoTest {
 		createStore("TestInstance");
 		createField("category", Family.TEXT, true);
 		DataStore.setInstance(store);
-		context = Context.newGlobalContext();
+		context = Context.newGlobalsContext();
 		AttributeDeclaration a = new AttributeDeclaration(new Identifier("dbId"), AnyType.instance());
 		context.registerDeclaration(a);
 	}

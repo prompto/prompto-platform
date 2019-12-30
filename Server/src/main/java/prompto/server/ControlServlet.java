@@ -8,7 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import prompto.runtime.Standalone;
+import prompto.runtime.ApplicationContext;
 import prompto.utils.Logger;
 
 @SuppressWarnings("serial")
@@ -54,7 +54,7 @@ public class ControlServlet extends CleverServlet {
 	}
 
 	private void clearContext(PrintWriter writer) {
-		Standalone.clearGlobalContext();
+		ApplicationContext.reset();
 	}
 
 	private void exitServer(PrintWriter writer) {

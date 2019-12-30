@@ -19,6 +19,7 @@ import prompto.grammar.ArgumentList;
 import prompto.grammar.Identifier;
 import prompto.intrinsic.PromptoDict;
 import prompto.remoting.RemoteArgumentList;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
@@ -55,7 +56,7 @@ public class RequestRouter {
 	
 	private Context prepareContext(String name) {
 		Thread.currentThread().setName(name);
-		Context context = Standalone.getGlobalContext().newLocalContext();
+		Context context = ApplicationContext.get().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null)
 			Standalone.startWorkerDebugger(Thread.currentThread(), context);

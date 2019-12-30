@@ -18,7 +18,7 @@ import prompto.config.IDebugRequestListenerConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.debug.IDebugEvent.Connected;
 import prompto.intrinsic.PromptoVersion;
-import prompto.runtime.Standalone;
+import prompto.runtime.ApplicationContext;
 import prompto.server.BaseServerTest;
 import prompto.utils.Instance;
 import prompto.utils.ManualTests;
@@ -55,7 +55,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		ProcessDebugger.reset();
 		// note that with this cinematic, we can't debug the server startup method
 		server.__before__(); 
-		Standalone.clearGlobalContext();
+		ApplicationContext.reset();
 	}
 	
 	

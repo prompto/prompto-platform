@@ -22,9 +22,9 @@ import prompto.declaration.DeclarationList;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.parser.ECleverParser;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.runtime.Mode;
-import prompto.runtime.Standalone;
 import prompto.utils.Instance;
 import prompto.utils.Out;
 import prompto.utils.SocketUtils;
@@ -46,7 +46,7 @@ public class TestCustomHandler {
 				.getResourceAsStream("prompto/customHandler.pec")) {
 			ECleverParser parser = new ECleverParser(input);
 			DeclarationList decls = parser.parse_declaration_list();
-			Context context = Standalone.getGlobalContext();
+			Context context = ApplicationContext.get();
 			decls.register(context);
 			decls.check(context);
 		}
@@ -118,7 +118,7 @@ public class TestCustomHandler {
 					.getResourceAsStream("prompto/customHandler.pec")) {
 				ECleverParser parser = new ECleverParser(input);
 				DeclarationList decls = parser.parse_declaration_list();
-				Context context = Standalone.getGlobalContext();
+				Context context = ApplicationContext.get();
 				decls.register(context);
 			}
 			AppServer.startServer(config, this::prepareHandlers, null);

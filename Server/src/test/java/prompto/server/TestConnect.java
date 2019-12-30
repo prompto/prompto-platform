@@ -13,7 +13,7 @@ import org.junit.Test;
 import prompto.error.PromptoError;
 import prompto.remoting.RemoteArgument;
 import prompto.remoting.RemoteArgumentList;
-import prompto.runtime.Standalone;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.type.IType;
 import prompto.type.TextType;
@@ -50,13 +50,13 @@ public class TestConnect extends BaseServerTest {
 	@Test
 	public void testControlClearContext() throws Throwable {
 		// force contex loading
-		Standalone.getGlobalContext().findAttribute("name");
-		assertFalse(Standalone.getGlobalContext().isEmpty());
+		ApplicationContext.get().findAttribute("name");
+		assertFalse(ApplicationContext.get().isEmpty());
 		URL url = new URL("http://localhost:" + port + "/ws/control/clear-context");
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();
 		input.close();
-		assertTrue(Standalone.getGlobalContext().isEmpty());
+		assertTrue(ApplicationContext.get().isEmpty());
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class TestConnect extends BaseServerTest {
 	
 	@Test
 	public void testServiceNoParam() throws Exception {
-		Context context = Context.newGlobalContext();
+		Context context = Context.newGlobalsContext();
 		RemoteArgumentList params = createParameterList();
 		URL url = new URL("http://localhost:" + port + "/ws/run/getAllAttributes?params=" + params.toURLEncodedString(context));
 		URLConnection cnx = url.openConnection();
@@ -84,7 +84,7 @@ public class TestConnect extends BaseServerTest {
 
 	@Test
 	public void testService1TextParam() throws Exception {
-		Context context = Context.newGlobalContext();
+		Context context = Context.newGlobalsContext();
 		RemoteArgumentList params = createParameterList("name", TextType.instance(), new TextValue("id"));
 		URL url = new URL("http://localhost:" + port + "/ws/run/findAttribute?params=" + params.toURLEncodedString(context));
 		URLConnection cnx = url.openConnection();

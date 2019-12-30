@@ -1,6 +1,7 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import prompto.config.IRuntimeConfiguration;
 import prompto.config.TempDirectories;
 import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.store.Family;
@@ -70,6 +72,6 @@ public class TestSOLRBootstrap {
 		assertEquals(Family.UUID, store.getAttributeInfo(IStore.dbIdName).getFamily());
 		assertEquals(Family.TEXT, store.getAttributeInfo("name").getFamily());
 		assertEquals(Family.TEXT, store.getAttributeInfo("version").getFamily());
-		assertNull(Standalone.getGlobalContext().findAttribute("prototype"));
+		assertNull(ApplicationContext.get().findAttribute("prototype"));
 	}
 }

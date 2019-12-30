@@ -70,7 +70,7 @@ public class TestInstance extends BaseSOLRTest {
 		store.startServerWithEmptyCore();
 		createField("category", Family.TEXT, true);
 		DataStore.setInstance(store);
-		context = Context.newGlobalContext();
+		context = Context.newGlobalsContext();
 	}
 	
 	@Test

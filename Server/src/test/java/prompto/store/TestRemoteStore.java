@@ -22,6 +22,12 @@ import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import com.esotericsoftware.yamlbeans.YamlConfig;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.document.YamlDocument;
+import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
+
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.code.ImmutableCodeStore;
@@ -31,16 +37,11 @@ import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Standalone;
 import prompto.server.BaseUITest;
 import prompto.server.HeadlessTests;
 import prompto.store.memory.MemStore;
-
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
-import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.esotericsoftware.yamlbeans.document.YamlDocument;
-import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 
 @Category(HeadlessTests.class)
 public class TestRemoteStore extends BaseUITest {
@@ -49,7 +50,7 @@ public class TestRemoteStore extends BaseUITest {
 
 	@Before
 	public void before() throws Exception {
-		Standalone.clearGlobalContext();
+		ApplicationContext.reset();
 		DataStore.setGlobal(new MemStore());
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 		tail = getCodeStoreTail();

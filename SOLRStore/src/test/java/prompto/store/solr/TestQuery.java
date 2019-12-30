@@ -38,7 +38,7 @@ public class TestQuery extends BaseSOLRTest {
 	public void before() throws Exception {
 		createStore("TestQuery");
 		store.startServerWithEmptyCore();
-		context = Context.newGlobalContext();
+		context = Context.newGlobalsContext();
 		registerDbIdAttribute();
 		registerNameAttribute();
 		registerAliasesAttribute();

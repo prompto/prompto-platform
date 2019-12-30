@@ -17,6 +17,7 @@ import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentList;
 import prompto.intrinsic.PromptoDocument;
 import prompto.reader.JSONReader;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
@@ -64,7 +65,7 @@ public class UserServlet extends CleverServlet {
 	}
 	
 	private Context getWorkerContext() {
-		Context context = Standalone.getGlobalContext().newLocalContext();
+		Context context = ApplicationContext.get().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null)
 			Standalone.startWorkerDebugger(Thread.currentThread(), context);

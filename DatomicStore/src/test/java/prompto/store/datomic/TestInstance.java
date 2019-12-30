@@ -67,7 +67,7 @@ public class TestInstance extends BaseDatomicTest {
 	@Before
 	public void before() throws Exception {
 		DataStore.setInstance(store);
-		context = Context.newGlobalContext();
+		context = Context.newGlobalsContext();
 	}
 	
 	@Test

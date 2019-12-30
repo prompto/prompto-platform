@@ -35,6 +35,7 @@ import prompto.declaration.IMethodDeclaration;
 import prompto.error.TerminatedError;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
+import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
@@ -111,14 +112,14 @@ public class AppServer {
 
 	private static void run(IServerConfiguration config) throws Throwable {
 		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ 
-			Standalone.getGlobalContext().notifyCompleted(); 
+			ApplicationContext.get().notifyCompleted(); 
 		});
 	}
 
 	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverStopped) throws Throwable {
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug==null)
-			return doStartServer(config, handler, Standalone.getGlobalContext(), null, null, serverStopped);
+			return doStartServer(config, handler, ApplicationContext.get(), null, null, serverStopped);
 		else {
 			Context context = Standalone.startProcessDebugger(debug);
 			return doStartServer(config, handler, context, AppServer::serverPrepared, ()->serverStarted(context), ()->serverStopped(serverStopped));			
@@ -137,7 +138,7 @@ public class AppServer {
 	}
 	
 	static void serverStopped(Runnable runnable) {
-		Standalone.getGlobalContext().notifyCompleted();
+		ApplicationContext.get().notifyCompleted();
 		Standalone.stopProcessDebugger();
 		if(runnable!=null)
 			runnable.run();

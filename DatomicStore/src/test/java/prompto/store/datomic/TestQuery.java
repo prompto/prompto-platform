@@ -37,7 +37,7 @@ public class TestQuery extends BaseDatomicTest {
 	@Before
 	public void before() throws Exception {
 		DataStore.setInstance(store);
-		context = Context.newGlobalContext();
+		context = Context.newGlobalsContext();
 		registerDbIdAttribute();
 		registerNameAttribute();
 		registerAliasesAttribute();
