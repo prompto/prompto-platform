@@ -92,14 +92,18 @@ function recordToStored(record) {
 };
 
 function StoredIterable(records) {
-	this.index = 0;
 	this.count = function() { return records.count; };
 	this.totalCount = function() { return records.totalCount; };
-	this.hasNext = function() { return this.index < records.count; };
-	this.next = function() { 
-		var record = records.value[this.index++];
-		return recordToStored(record);
-	};
+	this.iterator = function() {
+		var index = 0;
+		return {
+			hasNext: function() { return index < records.count; },
+			next: function() { 
+				var record = records.value[index++];
+				return recordToStored(record);
+			}
+		};
+	}
 	return this;
 }
 
