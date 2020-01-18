@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
+import prompto.intrinsic.PromptoVersion;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
@@ -180,6 +181,8 @@ public class StoreServlet extends CleverServlet {
 			return PromptoTime.parse(fieldValue.asText());
 		case "DateTime":
 			return PromptoDateTime.parse(fieldValue.asText());
+		case "Version":
+			return PromptoVersion.parse(fieldValue.asText());
 		case "%dbRef%":
 			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, updatedDbIds));
 		default:
