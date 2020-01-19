@@ -354,6 +354,8 @@ public class StoreServlet extends CleverServlet {
 		AttributeInfo info = fetchAttributeInfo(name);
 		MatchOp matchOp = MatchOp.valueOf(jsonNode.get("matchOp").get("name").asText());
 		Object value = readJsonValue(jsonNode.get("value"), new HashMap<>());
+		if(IStore.dbIdName.equals(name) && value!=null)
+			value = DataStore.getInstance().convertToDbId(value);
 		builder.verify(info, matchOp, value);
 	}
 	
