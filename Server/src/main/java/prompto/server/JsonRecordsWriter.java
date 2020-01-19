@@ -140,7 +140,10 @@ public class JsonRecordsWriter {
 		if(writer==null)
 			writer = writerForValue(value);
 		generator.writeFieldName(name);
-		writer.accept(generator, value);
+		if(value==null)
+			generator.writeNull();
+		else
+			writer.accept(generator, value);
 	}
 
 	private JsonWriter writerForName(String name) throws IOException {
