@@ -11,7 +11,7 @@ var RemoteRunner = {
 				param.value = value;
 		});
 		formData.append("params", JSON.stringify(params));
-	     axios.post('/ws/run/' + name, formData).then(function(response) {
+	    axios.post('/ws/run/' + name, formData).then(function(response) {
 	    	 response = response.data
 	    	 if(response.error) 
 	    		 alert(response.error); // TODO throw ?
