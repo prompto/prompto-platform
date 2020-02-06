@@ -122,7 +122,8 @@ function RemoteStore() {
 		var response = null;
 		var request  = new XMLHttpRequest();
 		request.open("POST", url, false); // must be synchronous
-		request.setRequestHeader("Content-type", "application/json; charset=utf-8");
+		if(!(body instanceof FormData))
+			request.setRequestHeader("Content-type", "application/json; charset=utf-8");
 		request.onload = function() { 
 			if (this.status == 200)
 				response = JSON.parse(this.responseText); 
@@ -138,7 +139,8 @@ function RemoteStore() {
 	this.fetchAsync = function(url, body, onLoad) {
 		var request  = new XMLHttpRequest();
 		request.open("POST", url, true);
-		request.setRequestHeader("Content-type", "application/json; charset=utf-8");
+		if(!(body instanceof FormData))
+			request.setRequestHeader("Content-type", "application/json; charset=utf-8");
 		request.onload = function() { 
 			if (this.status == 200) {
 				response = JSON.parse(this.responseText); 
@@ -152,32 +154,48 @@ function RemoteStore() {
 		};
 		request.send(body);
 	};
-	this.convertStorables = function(toStore) {
-		return Array.from(toStore).map(this.convertStorable);
+	this.convertStorables = function(toStore, formData) {
+		return Array.from(toStore).map(function(storable) { return this.convertStorable(storable, formData); }, this);
 	};
-	this.convertStorable = function(storable) { 
+	this.convertStorable = function(storable, formData) {
 		var doc = storable.document; 
 	 	if(typeof(doc.dbId) === "object" && !doc.dbId.tempDbId && (!doc.dbId.type || !doc.dbId.value)) {
 	 		doc.dbId = doc.dbId.toString();
 	 	}
-	 	return doc;  
+		Object.getOwnPropertyNames(doc).map(function(key) {
+			var data = doc[key];
+			if(data.type==="Image" || data.type==="Blob") {
+				value = data.value;
+				if(value) {
+					if (value.binaryFile) {
+						value.partName = '@' + value.binaryFile.name;
+						formData.append(value.partName, value.binaryFile);
+						delete value.binaryFile;
+					} else if (value.url)
+						delete doc[key]; // the binary was not modified
+				}
+			}
+		});
+	 	return doc;
+	};
+	this.prepareStore = function(toDel, toStore) {
+		var formData = new FormData();
+		if(toDel)
+			formData.append("toDelete", JSON.stringify(toDel));
+		if(toStore) {
+			toStore = this.convertStorables(toStore, formData);
+			formData.append("toStore", JSON.stringify(toStore));
+		}
+		return formData;
 	};
 	this.store = function(toDel, toStore) {
-		var data = {};
-		if(toDel)
-			data.toDelete = toDel;
-		if(toStore) 
-			data.toStore = this.convertStorables(toStore);
-		var response = this.fetchSync("/ws/store/deleteAndStore", JSON.stringify(data));
+		var formData = this.prepareStore(toDel, toStore);
+		var response = this.fetchSync("/ws/store/deleteAndStore", formData);
 		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
 	this.storeAsync = function(toDel, toStore, andThen) {
-		var data = {};
-		if(toDel)
-			data.toDelete = toDel;
-		if(toStore)
-			data.toStore = this.convertStorables(toStore);
-		this.fetchAsync("/ws/store/deleteAndStore", JSON.stringify(data), function(response) {
+		var formData = this.prepareStore(toDel, toStore);
+		this.fetchAsync("/ws/store/deleteAndStore", formData, function(response) {
 			if(toStore)
 				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 			andThen();

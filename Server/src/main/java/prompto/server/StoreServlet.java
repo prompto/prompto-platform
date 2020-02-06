@@ -11,9 +11,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
@@ -27,16 +32,20 @@ import prompto.store.IStorable;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
+import prompto.type.BinaryType;
 import prompto.utils.Logger;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SuppressWarnings("serial")
 public class StoreServlet extends CleverServlet {
 
 	static Logger logger = new Logger();
 	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
+		setMultipartConfig(new MultipartConfigElement(System.getProperty("java.io.tmpdir")));
+	}
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		doStuff(req, resp);
@@ -57,21 +66,21 @@ public class StoreServlet extends CleverServlet {
 				fetchMany(req, resp);
 				break;
 			case "/deleteAndStore":
-				store(req, resp);
+				deleteAndStore(req, resp);
 			default:
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
 
-	protected void store(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void deleteAndStore(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
 			String contentType = req.getContentType();
 			if(contentType.startsWith("application/json"))
-				storeJson(req, resp);
+				deleteAndStoreJson(req, resp);
 			else if(contentType.startsWith("application/x-www-form-urlencoded"))
-				storeUrlEncoded(req, resp);
+				deleteAndStoreUrlEncoded(req, resp);
 			else if(contentType.startsWith("multipart/form-data"))
-				storeMultipart(req, resp);
+				deleteAndStoreMultipart(req, resp);
 			else
 				resp.sendError(415);
 		} catch(Throwable t) {
@@ -81,21 +90,21 @@ public class StoreServlet extends CleverServlet {
 		}
 	}
 	
-	private void storeJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void deleteAndStoreJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Map<Long, Object> updatedDbIds = new HashMap<>();
 		JsonNode json = readJsonStream(req);
 		if(json.has("toDelete")) 
 			deleteJson(json.get("toDelete"));
 		if(json.has("toStore")) 
-			updatedDbIds = storeJson(json.get("toStore"));
+			updatedDbIds = storeJson(json.get("toStore"), null);
 		writeJSONResult(updatedDbIds, resp.getOutputStream());
 	}
 
-	private Map<Long, Object> storeJson(JsonNode toStore) {
+	private Map<Long, Object> storeJson(JsonNode toStore, Map<String, byte[]> parts) {
 		Map<Long, Object> updatedDbIds = new HashMap<>();
 		if(toStore.isArray()) {
 			List<IStorable> storables = StreamSupport.stream(toStore.spliterator(), false)
-				.map(node->jsonToStorable(node, updatedDbIds))
+				.map(node->jsonToStorable(node, parts, updatedDbIds))
 				.collect(Collectors.toList());
 			DataStore.getInstance().store(storables);
 		} else
@@ -103,18 +112,18 @@ public class StoreServlet extends CleverServlet {
 		return updatedDbIds;
 	}
 
-	private IStorable jsonToStorable(JsonNode node, Map<Long, Object> updatedDbIds) {
+	private IStorable jsonToStorable(JsonNode node, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		List<String> categories = readJsonCategories(node);
 		IStorable storable = DataStore.getInstance().newStorable(categories, null);
-		populateStorable(node, storable, updatedDbIds);
+		populateStorable(node, storable, parts, updatedDbIds);
 		return storable;
 	}
 	
-	private void populateStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
+	private void populateStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		if(isRecordUpdate(record))
-			populateExistingStorable(record, storable, updatedDbIds);
+			populateExistingStorable(record, storable, parts, updatedDbIds);
 		else
-			populateNewStorable(record, storable, updatedDbIds);
+			populateNewStorable(record, storable, parts, updatedDbIds);
 	}
 	
 	
@@ -123,24 +132,24 @@ public class StoreServlet extends CleverServlet {
 		return dbIdField!=null && !dbIdField.has("tempDbId");
 	}
 
-	private void populateExistingStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
-		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), updatedDbIds);
+	private void populateExistingStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
 		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			if(IStore.dbIdName.equals(fieldName))
 				continue;
-			Object value = readJsonValue(record.get(fieldName), updatedDbIds);
+			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
 			storable.setData(fieldName, value, ()->dbId);
 		}
 	}
 
-	private void populateNewStorable(JsonNode record, IStorable storable, Map<Long, Object> updatedDbIds) {
+	private void populateNewStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
-			Object value = readJsonValue(record.get(fieldName), updatedDbIds);
+			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
 			if(IStore.dbIdName.equals(fieldName))
 				storable.setDbId(DataStore.getInstance().convertToDbId(value));
 			else
@@ -148,7 +157,7 @@ public class StoreServlet extends CleverServlet {
 		}
 	}
 
-	private Object readJsonValue(JsonNode fieldValue, Map<Long, Object> updatedDbIds) {
+	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		if(fieldValue.has("tempDbId"))
 			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->DataStore.getInstance().newDbId());
 		else if(fieldValue.isDouble() || fieldValue.isFloat())
@@ -162,16 +171,16 @@ public class StoreServlet extends CleverServlet {
 		else if(fieldValue.isNull())
 			return null;
 		else if(fieldValue.isObject()) {
-			return readJsonValue(fieldValue.get("type").asText(), fieldValue.get("value"), updatedDbIds);
+			return readJsonValue(fieldValue.get("type").asText(), fieldValue.get("value"), parts, updatedDbIds);
 		} else if(fieldValue.isArray())
 			return StreamSupport.stream(fieldValue.spliterator(), false)
-					.map(node->readJsonValue(node, updatedDbIds))
+					.map(node->readJsonValue(node, parts, updatedDbIds))
 					.collect(Collectors.toList());
 		else
 			throw new UnsupportedOperationException(fieldValue.getNodeType().name());
 	}
 
-	private Object readJsonValue(String type, JsonNode fieldValue, Map<Long, Object> updatedDbIds) {
+	private Object readJsonValue(String type, JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		switch(type) {
 		case "Uuid":
 			return UUID.fromString(fieldValue.asText());
@@ -183,8 +192,11 @@ public class StoreServlet extends CleverServlet {
 			return PromptoDateTime.parse(fieldValue.asText());
 		case "Version":
 			return PromptoVersion.parse(fieldValue.asText());
+		case "Blob":
+		case "Image":
+			return BinaryType.readJSONValue(fieldValue, parts);
 		case "%dbRef%":
-			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, updatedDbIds));
+			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, parts, updatedDbIds));
 		default:
 			throw new UnsupportedOperationException(type);
 			
@@ -230,11 +242,21 @@ public class StoreServlet extends CleverServlet {
 		
 	}
 
-	private void storeMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendError(415);
+	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Map<Long, Object> updatedDbIds = new HashMap<>();
+		Map<String, byte[]> parts = readParts(req);
+		if(parts.containsKey("toDelete")) {
+			JsonNode toDelete = new ObjectMapper().readTree(parts.get("toDelete"));
+			deleteJson(toDelete);
+		}
+		if(parts.containsKey("toStore")) {
+			JsonNode toStore = new ObjectMapper().readTree(parts.get("toStore"));
+			updatedDbIds = storeJson(toStore, parts);
+		}
+		writeJSONResult(updatedDbIds, resp.getOutputStream());
 	}
 	
-	private void storeUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void deleteAndStoreUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.sendError(415);
 	}
 	
@@ -257,7 +279,7 @@ public class StoreServlet extends CleverServlet {
 		}
 	}
 	
-	private void fetchManyMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchManyMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		resp.sendError(415);
 	}
 	
@@ -353,7 +375,7 @@ public class StoreServlet extends CleverServlet {
 		String name = jsonNode.get("info").get("name").asText();
 		AttributeInfo info = fetchAttributeInfo(name);
 		MatchOp matchOp = MatchOp.valueOf(jsonNode.get("matchOp").get("name").asText());
-		Object value = readJsonValue(jsonNode.get("value"), new HashMap<>());
+		Object value = readJsonValue(jsonNode.get("value"), null, new HashMap<>());
 		if(IStore.dbIdName.equals(name) && value!=null)
 			value = DataStore.getInstance().convertToDbId(value);
 		builder.verify(info, matchOp, value);
