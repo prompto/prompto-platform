@@ -164,7 +164,7 @@ function RemoteStore() {
 	 	}
 		Object.getOwnPropertyNames(doc).map(function(key) {
 			var data = doc[key];
-			if(data.type==="Image" || data.type==="Blob") {
+			if(data && (data.type==="Image" || data.type==="Blob")) {
 				value = data.value;
 				if(value) {
 					if (value.binaryFile) {
