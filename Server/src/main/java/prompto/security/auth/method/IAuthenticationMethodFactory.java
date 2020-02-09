@@ -20,8 +20,10 @@ public interface IAuthenticationMethodFactory {
 	IAuthenticationMethodConfiguration newConfiguration(IConfigurationReader reader);
 	void setConfiguration(IAuthenticationMethodConfiguration config);
 	Authenticator newAuthenticator(boolean withXAuthorization);
-	default void toYaml(YamlMapping yaml) throws YamlException {
+	default YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = new YamlMapping();
 		yaml.setEntry("factory", this.getClass().getName());
+		return yaml;
 	}
 
 }

@@ -85,17 +85,19 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 			return null;
 		YamlMapping settings = new YamlMapping();
 		IAuthenticationMethodConfiguration method = readAuthenticationMethodConfiguration(); 
-		YamlMapping yaml = new YamlMapping();
-		method.getAuthenticationMethodFactory().toYaml(yaml);
-		settings.setEntry("method", yaml);
 		IAuthenticationSourceConfiguration source = readAuthenticationSourceConfiguration(mode);
-		yaml = source.getAuthenticationSourceFactory().toYaml();
-		settings.setEntry("source", yaml);
-		YamlSequence list = new YamlSequence();
-		for(String w : fetchWhiteList())
-			list.addElement(w);
-		settings.setEntry("whiteList", list);
-		return settings;
+		if(method!=null && source!=null) {
+			YamlMapping yaml = method.getAuthenticationMethodFactory().toYaml();
+			settings.setEntry("method", yaml);
+			yaml = source.getAuthenticationSourceFactory().toYaml();
+			settings.setEntry("source", yaml);
+			YamlSequence list = new YamlSequence();
+			for(String w : fetchWhiteList())
+				list.addElement(w);
+			settings.setEntry("whiteList", list);
+			return settings;
+		} else
+			return null;
 	}
 
 	public boolean isEnabled(Mode runtimeMode) {
@@ -110,9 +112,11 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	private IAuthenticationMethodConfiguration readAuthenticationMethodConfiguration() {
 		if(storedAuthenticationMethodConfiguration!=null) 
 			return storedAuthenticationMethodConfiguration.get();
-		IAuthenticationMethodConfiguration config = fetchAuthenticationMethodConfiguration();
-		storedAuthenticationMethodConfiguration = ()->config;
-		return config;
+		else {
+			IAuthenticationMethodConfiguration config = fetchAuthenticationMethodConfiguration();
+			storedAuthenticationMethodConfiguration = ()->config;
+			return config;
+		}
 	}
 
 	static enum AuthenticationMethod {

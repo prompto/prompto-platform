@@ -37,10 +37,11 @@ public class FormAuthenticationMethodFactory implements IAuthenticationMethodFac
 	}
 	
 	@Override
-	public void toYaml(YamlMapping yaml) throws YamlException {
-		IAuthenticationMethodFactory.super.toYaml(yaml);
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = IAuthenticationMethodFactory.super.toYaml();
 		yaml.setEntry("loginPage", config.getLoginPage());
 		yaml.setEntry("errorPage", config.getErrorPage());
+		return yaml;
 	}
 
 }
