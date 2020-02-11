@@ -77,7 +77,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 		}
 		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, dbId);
 		reader = app.getObject("authenticationSettings");
-		return true;
+		return reader!=null;
 	}
 	
 	public YamlMapping toYaml(Mode mode) throws Throwable {
@@ -103,7 +103,8 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	public boolean isEnabled(Mode runtimeMode) {
 		if(runtimeMode!=Mode.DEVELOPMENT)
 			return true;
-		loadReader();
+		if(!loadReader())
+			return false;
 		Boolean skipAuthInDev = reader.getBooleanOrDefault("skipAuthInDev", Boolean.FALSE);
 		return !skipAuthInDev;
 	}
