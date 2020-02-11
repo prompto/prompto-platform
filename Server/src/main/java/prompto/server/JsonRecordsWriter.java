@@ -22,6 +22,7 @@ import prompto.store.Family;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
+import prompto.utils.StringUtils;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -113,11 +114,13 @@ public class JsonRecordsWriter {
 		generator.writeFieldName("value");
 		generator.writeStartObject();
 		generator.writeFieldName("dbId");
-		writeJsonRaw( stored.getDbId());
+		Object rawDbId = stored.getDbId();
+		writeJsonRaw(rawDbId);
+		String dbId = rawDbId.toString();
 		for(String name : stored.getNames()) {
 			if("category".equals(name) || "dbId".equals(name))
 				continue;
-			writeJsonField(name, stored.getData(name));
+			writeJsonField(name, stored.getData(name), dbId);
 		}
 		generator.writeEndObject();
 		generator.writeEndObject();
@@ -135,18 +138,19 @@ public class JsonRecordsWriter {
 		}
 	}
 
-	private void writeJsonField(String name, Object value) throws IOException {
-		JsonWriter writer = writerForName(name);
-		if(writer==null)
-			writer = writerForValue(value);
+	private void writeJsonField(String name, Object value, String dbId) throws IOException {
 		generator.writeFieldName(name);
 		if(value==null)
 			generator.writeNull();
-		else
+		else {
+			JsonWriter writer = writerForName(name, dbId);
+			if(writer==null)
+				writer = writerForValue(value);
 			writer.accept(generator, value);
+		}
 	}
 
-	private JsonWriter writerForName(String name) throws IOException {
+	private JsonWriter writerForName(String name, String dbId) throws IOException {
 		JsonWriter writer = writers.get(name);
 		if(writer!=null)
 			return writer;
@@ -154,6 +158,8 @@ public class JsonRecordsWriter {
 		if(info==null)
 			return null;
 		Family family = info.getFamily();
+		if(family==Family.IMAGE || family==Family.BLOB)
+			return (g,o) -> writeBinary(g, o, family, name, dbId); // don't register dbId closure
 		if(loadChildren && (family==Family.CATEGORY || family==Family.RESOURCE))
 			writer = this::writeChild;
 		else
@@ -182,9 +188,7 @@ public class JsonRecordsWriter {
 			newEntry(Family.VERSION, JsonRecordsWriter::writePromptoVersion),
 			newEntry(Family.ENUMERATED, (g,o)->g.writeString((String)o)), 
 			newEntry(Family.CATEGORY, (g,o)->g.writeString("<instance>")), 
-			newEntry(Family.RESOURCE, (g,o)->g.writeString("<instance>")), 
-			newEntry(Family.IMAGE, JsonRecordsWriter::writeImage),
-			newEntry(Family.BLOB, JsonRecordsWriter::writeBlob)
+			newEntry(Family.RESOURCE, (g,o)->g.writeString("<instance>"))
 		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 	
@@ -271,24 +275,6 @@ public class JsonRecordsWriter {
 		generator.writeEndObject();
 	}
 
-	private static void writeImage(JsonGenerator generator, Object value) throws IOException {
-		generator.writeStartObject();
-		generator.writeFieldName("type");
-		generator.writeString("Image");
-		generator.writeFieldName("value");
-		generator.writeString("<image>");
-		generator.writeEndObject();
-	}
-
-	private static void writeBlob(JsonGenerator generator, Object value) throws IOException {
-		generator.writeStartObject();
-		generator.writeFieldName("type");
-		generator.writeString("Bob");
-		generator.writeFieldName("value");
-		generator.writeString("<blob>");
-		generator.writeEndObject();
-	}
-
 	private static void writeBinary(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
@@ -296,6 +282,20 @@ public class JsonRecordsWriter {
 		generator.writeFieldName("value");
 		generator.writeString("<binary>");
 		generator.writeEndObject();
+	}
+
+	private static void writeBinary(JsonGenerator generator, Object value, Family family, String fieldName, String dbId) throws IOException {
+		if(value instanceof PromptoBinary) {
+			generator.writeStartObject();
+			generator.writeStringField("type", StringUtils.capitalizeFirst(family.name()));
+			generator.writeFieldName("value");
+			generator.writeStartObject();
+			generator.writeStringField("mimeType", ((PromptoBinary)value).getMimeType());
+			generator.writeStringField("url", "/ws/bin/data?dbId=" + dbId + "&attribute=" + fieldName);
+			generator.writeEndObject();
+			generator.writeEndObject();
+		} else
+			writeBinary(generator, value);
 	}
 
 	@SuppressWarnings("unchecked")
