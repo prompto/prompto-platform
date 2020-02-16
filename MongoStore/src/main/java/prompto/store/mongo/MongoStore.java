@@ -116,18 +116,18 @@ public class MongoStore implements IStore {
 		StringBuilder sb = new StringBuilder();
 		sb.append("mongodb://");
 		replicaConfig.getNodes().forEach(h->{
-			sb.append(h.getHost());
-			sb.append(':');
-			sb.append(h.getPort());
-			sb.append(',');
+			sb.append(h.getHost())
+				.append(':')
+				.append(h.getPort())
+				.append(',');
 		});
 		sb.setLength(sb.length()-1);
-		sb.append('/');
-		sb.append(config.getDbName());
-		sb.append("?ssl=");
-		sb.append(replicaConfig.isSSL());
-		sb.append("&authSource=admin&replicaSet=");
-		sb.append(replicaConfig.getName());
+		sb.append('/')
+			.append(config.getDbName())
+			.append("?ssl=")
+			.append(replicaConfig.isSSL())
+			.append("&authSource=admin&replicaSet=")
+			.append(replicaConfig.getName());
 		String uri = sb.toString();
 		connectWithURI(config.withReplicaSetURI(uri), password);
 		
@@ -148,6 +148,8 @@ public class MongoStore implements IStore {
 			public MongoClientOptions getOptions() {
 				return MongoClientOptions.builder(super.getOptions())
 		                .codecRegistry(codecRegistry)
+		                .socketTimeout(360000)
+		                .connectTimeout(360000)
 		                .build();
 			}
 		};
@@ -177,6 +179,8 @@ public class MongoStore implements IStore {
 		ServerAddress address = new ServerAddress(host, port);
 		MongoClientOptions options = MongoClientOptions.builder()
 		                .codecRegistry(codecRegistry)
+		                .socketTimeout(360000)
+		                .connectTimeout(360000)
 		                .build();
 		if(user!=null && password!=null) {
 			logger.info(()->"Connecting user '" + user + "' to '" + dbName + "' database");
