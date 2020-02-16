@@ -479,8 +479,10 @@ public class MongoStore implements IStore {
 			loadAttribute(fieldName);
 			info = attributes.get(fieldName);
 		}
-		if(info==null)
-			throw new RuntimeException("Missing AttributeInfo for " + fieldName);
+		if(info==null) {
+			logger.error(()->"Missing AttributeInfo for " + fieldName);
+			return null;
+		}
 		if(info.isCollection() && data instanceof Collection)
 			return readCollectionData(info, (Collection<Object>)data);
 		else
