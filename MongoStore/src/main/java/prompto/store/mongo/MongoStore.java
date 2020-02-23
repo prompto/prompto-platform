@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 import org.bson.UuidRepresentation;
@@ -50,10 +51,15 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Collation;
+import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOneModel;
@@ -261,6 +267,77 @@ public class MongoStore implements IStore {
 		// TODO check for discrepancies
 		storeAttributes(infos);
 		loadAttributes();
+		createIndicesIfRequired();
+	}
+
+	private void createIndicesIfRequired() {
+		attributes.values().stream()
+			.filter(AttributeInfo::isIndexed)
+			.forEach(this::createIndexIfRequired);
+	}
+
+	private void createIndexIfRequired(AttributeInfo info) {
+		if(info.isKey())
+			createKeyIndexIfRequired(info.getName());
+		if(info.isValue())
+			createValueIndexIfRequired(info.getName());
+		 /*
+		TODO Mongo only supports 1 full text index per collection
+		TODO disable this for now as it throws a fatal error on startup
+		TODO potential workaround could be to create a { dbId, fieldName, fullText } collection 
+		if(info.isWords())
+			createWordsIndexIfRequired(info.getName());
+		*/
+	}
+	
+	/*
+	private void createWordsIndexIfRequired(String name) {
+		String indexName = name + "_words";
+		if(!indexExists(indexName)) {
+			IndexOptions options = new IndexOptions()
+					.unique(false)
+					.name(indexName);
+			Bson keys = Indexes.text(name);
+			getInstancesCollection().createIndex(keys, options);
+		}
+	}
+	*/
+	
+	private boolean indexExists(String indexName) {
+		ListIndexesIterable<Document> indices = getInstancesCollection().listIndexes();
+		return StreamSupport.stream(indices.spliterator(), false)
+				.map(doc->doc.get("key"))
+				.map(o->(Document)o)
+				.map(Document::keySet)
+				.anyMatch(s->s.contains(indexName));
+	}
+
+	private void createValueIndexIfRequired(String name) {
+		String indexName = name + "_value";
+		if(!indexExists(indexName)) {
+			Collation collation = Collation.builder()
+					.locale("en")
+					.collationStrength(CollationStrength.PRIMARY)
+					.build();
+			IndexOptions options = new IndexOptions()
+					.unique(false)
+					.collation(collation)
+					.name(indexName);
+			Bson keys = Indexes.ascending(name);
+			getInstancesCollection().createIndex(keys, options);
+		}
+	}
+
+	private void createKeyIndexIfRequired(String name) {
+		String indexName = name + "_key";
+		if(!indexExists(indexName)) {
+			IndexOptions options = new IndexOptions()
+					.unique(false)
+					.name(indexName);
+			Bson keys = Indexes.ascending(name);
+			getInstancesCollection().createIndex(keys, options);
+		}
+		
 	}
 
 	private void storeAttributes(Collection<AttributeInfo> infos) {
@@ -295,10 +372,8 @@ public class MongoStore implements IStore {
 	@Override
 	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
-		if(!operations.isEmpty()) {
-			MongoCollection<Document> coll = db.getCollection("instances");
-			coll.bulkWrite(operations);
-		}
+		if(!operations.isEmpty())
+			getInstancesCollection().bulkWrite(operations);
 	}
 
 	private List<WriteModel<Document>> buildWriteModels(Collection<?> deletables, Collection<IStorable> storables) {
@@ -331,8 +406,7 @@ public class MongoStore implements IStore {
 	@Override
 	public PromptoBinary fetchBinary(Object dbId, String attr) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
-		MongoCollection<Document> coll = db.getCollection("instances");
-		Iterator<Document> found = coll.find(filter)
+		Iterator<Document> found = getInstancesCollection().find(filter)
 			.limit(1)
 			.projection(Projections.include(attr))
 			.iterator();
@@ -365,8 +439,7 @@ public class MongoStore implements IStore {
 	}
 	
 	private IStored fetchOne(Bson filter) throws PromptoError {
-		MongoCollection<Document> coll = db.getCollection("instances");
-		Iterator<Document> found = coll.find(filter)
+		Iterator<Document> found = getInstancesCollection().find(filter)
 			.limit(1)
 			.iterator();
 		if(found.hasNext())
@@ -443,8 +516,12 @@ public class MongoStore implements IStore {
 
 	@Override
 	public IStoredIterable fetchMany(IQuery query) throws PromptoError {
-		MongoCollection<Document> coll = db.getCollection("instances");
+		MongoCollection<Document> coll = getInstancesCollection(); 
 		return new StoredIterable(coll, (MongoQuery)query);
+	}
+
+	private MongoCollection<Document> getInstancesCollection() {
+		return db.getCollection("instances");
 	}
 
 	@Override
@@ -498,7 +575,7 @@ public class MongoStore implements IStore {
 	}
 
 	public void insertDocuments(Document ... docs) {
-		db.getCollection("instances").insertMany(Arrays.asList(docs));
+		getInstancesCollection().insertMany(Arrays.asList(docs));
 	}
 
 
