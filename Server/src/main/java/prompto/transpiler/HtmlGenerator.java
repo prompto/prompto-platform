@@ -161,9 +161,7 @@ public class HtmlGenerator {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
 		Context context = ApplicationContext.get().newLocalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
-		final long before1 = System.currentTimeMillis();
 		declaration.declare(transpiler);
-		logger.info(()->"\nGenerator declare: " + (System.currentTimeMillis() - before1));
 		if(transpiler.requires("DataStore")) {
 			transpiler.require("RemoteStore");
 			if(DataStore.getInstance().getDbIdClass()==UUID.class)
@@ -171,9 +169,7 @@ public class HtmlGenerator {
 		}
 		printer.println("<script id='transpiled'>");
 		try {
-			final long before2 = System.currentTimeMillis();
 			transpiler.print(printer);
-			logger.info(()->"Generator transpile: " + (System.currentTimeMillis() - before2));
 		} finally {
 			printer.println("</script>");
 		}
