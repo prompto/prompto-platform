@@ -67,6 +67,8 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	private boolean loadReader() {
 		if(reader!=null)
 			return true;
+		if(source==null)
+			return false;
 		IStore store = locateStore();
 		if(store==null)
 			return false;
