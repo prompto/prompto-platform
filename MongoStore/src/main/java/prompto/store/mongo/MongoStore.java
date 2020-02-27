@@ -532,9 +532,9 @@ public class MongoStore implements IStore {
 	static final Map<Family, Function<Object, Object>> readers = new HashMap<>();
 	
 	static {
-		readers.put(Family.DATE, (o)->PromptoDate.fromJavaTime((Long)o));
-		readers.put(Family.TIME, (o)->PromptoTime.fromMillisOfDay((Long)o));
-		readers.put(Family.DATETIME, (o)->PromptoDateTime.parse(((Document)o).getString("text")));
+		readers.put(Family.DATE, (o)->o instanceof Long ? PromptoDate.fromJavaTime((Long)o) : null);
+		readers.put(Family.TIME, (o)->o instanceof Long ? PromptoTime.fromMillisOfDay((Long)o) : null);
+		readers.put(Family.DATETIME, (o)->o instanceof Document ? PromptoDateTime.parse(((Document)o).getString("text")) : null);
 		readers.put(Family.BLOB, MongoStore::binaryToPromptoBinary);
 		readers.put(Family.IMAGE, MongoStore::binaryToPromptoBinary);
 		readers.put(Family.VERSION, (o)->PromptoVersion.parse((int)o));
