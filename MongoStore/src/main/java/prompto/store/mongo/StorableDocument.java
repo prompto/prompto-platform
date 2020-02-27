@@ -40,9 +40,9 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	
 	@Override
 	public void setDbId(Object dbId) {
-		ensureDocument(null);
-		document.put("_id", dbId);
-		// TODO call listener
+		ensureDocument(()->dbId);
+		if(listener!=null)
+			listener.accept(dbId);
 	}
 	
 	@Override
@@ -76,8 +76,11 @@ public class StorableDocument extends BaseDocument implements IStorable {
 			// in such a case, the scenario is an update scenario
 			if(dbId!=null)
 				this.isUpdate = true;
-			else
+			else {
 				dbId = java.util.UUID.randomUUID();
+				if(listener!=null)
+					listener.accept(dbId);
+			}
 			document = new Document();
 			document.put("_id", dbId);
 			if(categories!=null && !this.isUpdate)
