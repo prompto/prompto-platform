@@ -3,6 +3,9 @@ package prompto.config;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 @SuppressWarnings("unchecked")
 public class ServerConfiguration extends RuntimeConfiguration implements IServerConfiguration {
 
@@ -36,6 +39,21 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 	public <T extends IServerConfiguration> T withHttpConfiguration(IHttpConfiguration config) {
 		this.httpConfiguration = ()->config;
 		return (T)this;
+	}
+	
+	@Override
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = super.toYaml();
+		IHttpConfiguration http = httpConfiguration.get();
+		if(http!=null)
+			yaml.setEntry("http", http.toYaml());
+		String value = serverAboutToStartMethod.get();
+		if(value!=null)
+			yaml.setEntry("serverAboutToStart", value);
+		value = webSiteRoot.get();
+		if(value!=null)
+			yaml.setEntry("webSiteRoot", value);
+		return yaml;
 	}
 
 

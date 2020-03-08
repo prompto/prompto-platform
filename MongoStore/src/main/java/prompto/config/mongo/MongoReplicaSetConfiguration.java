@@ -3,6 +3,10 @@ package prompto.config.mongo;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.esotericsoftware.yamlbeans.document.YamlSequence;
+
 import prompto.config.HostConfiguration;
 import prompto.config.IConfigurationReader;
 import prompto.config.IHostConfiguration;
@@ -42,6 +46,20 @@ public class MongoReplicaSetConfiguration implements IMongoReplicaSetConfigurati
 			}
 			
 		};
+	}
+	
+	@Override
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = new YamlMapping();
+		yaml.setEntry("name", getName());
+		yaml.setEntry("ssl", isSSL());
+		Iterable<IHostConfiguration> nodes = getNodes();
+		YamlSequence sequence = new YamlSequence();
+		for(IHostConfiguration host : nodes) {
+			sequence.addElement(host.toYaml());
+		}
+		yaml.setEntry("nodes", sequence);
+		return yaml;
 	}
 
 }

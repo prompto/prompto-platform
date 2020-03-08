@@ -79,7 +79,7 @@ public class TestStoredLoginSource extends BaseServerTest {
 					}
 					
 					@Override
-					public void toYaml(YamlMapping yaml) {
+					public YamlMapping toYaml() {
 						throw new RuntimeException("Should never get there!");
 					}
 				}));

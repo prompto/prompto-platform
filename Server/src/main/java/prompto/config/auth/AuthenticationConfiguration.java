@@ -2,6 +2,10 @@ package prompto.config.auth;
 
 import java.util.Collection;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+import com.esotericsoftware.yamlbeans.document.YamlSequence;
+
 import prompto.config.IConfigurationReader;
 import prompto.config.auth.method.AuthenticationMethodConfiguration;
 import prompto.config.auth.method.IAuthenticationMethodConfiguration;
@@ -49,6 +53,25 @@ public class AuthenticationConfiguration extends IAuthenticationConfiguration.In
 			return ()->new BasicAuthenticationMethodFactory();
 		else
 			return new AuthenticationMethodConfiguration(child);
+	}
+	
+	@Override
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = new YamlMapping();
+		IAuthenticationSourceConfiguration source = authenticationSourceConfiguration.get();
+		if(source!=null)
+			yaml.setEntry("source", source.getAuthenticationSourceFactory().toYaml());
+		IAuthenticationMethodConfiguration method = authenticationMethodConfiguration.get();
+		if(method!=null)
+			yaml.setEntry("method", method.getAuthenticationMethodFactory().toYaml());
+		Collection<String> whiteList = reader.getArray("whiteList");
+		if(whiteList!=null) {
+			YamlSequence sequence = new YamlSequence();
+			for(String entry : whiteList)
+				sequence.addElement(entry);
+			yaml.setEntry("whiteList", sequence);
+		}
+		return yaml;
 	}
 
 }

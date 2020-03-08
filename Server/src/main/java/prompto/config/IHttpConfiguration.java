@@ -2,6 +2,9 @@ package prompto.config;
 
 import java.util.function.Supplier;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.config.auth.IAuthenticationConfiguration;
 
 public interface IHttpConfiguration {
@@ -25,6 +28,7 @@ public interface IHttpConfiguration {
 	IHttpConfiguration withTrustStoreConfiguration(IKeyStoreConfiguration config);
 	IHttpConfiguration withAuthenticationConfiguration(IAuthenticationConfiguration config);
 	
+	YamlMapping toYaml() throws YamlException;	
 	
 	public static class Inline implements IHttpConfiguration {
 
@@ -91,8 +95,16 @@ public interface IHttpConfiguration {
 			authenticationConfiguration = ()->config;
 			return this;
 		}
+		
+		@Override
+		public YamlMapping toYaml() throws YamlException {
+			return null;
+		}
 	
 	}
+
+
+	
 
 	
 }

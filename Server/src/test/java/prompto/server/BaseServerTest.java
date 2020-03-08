@@ -12,6 +12,9 @@ import org.eclipse.jetty.util.resource.URLResource;
 import org.junit.After;
 import org.junit.Before;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.code.BaseCodeStore;
 import prompto.code.ICodeStore;
 import prompto.config.IConfigurationReader;
@@ -122,6 +125,11 @@ public abstract class BaseServerTest {
 									@Override public IKeyStoreFactoryConfiguration newConfiguration(IConfigurationReader reader) { return null; }
 								};
 							}
+							
+							@Override
+							public YamlMapping toYaml() throws YamlException {
+								return null;
+							}
 						};
 					}
 					
@@ -131,6 +139,11 @@ public abstract class BaseServerTest {
 							@Override public String getFactory() { return PlainSecretKeyFactory.class.getName(); }
 							@Override public char[] getSecret() { return "password".toCharArray(); }
 						};
+					}
+					
+					@Override
+					public YamlMapping toYaml() throws YamlException {
+						return null;
 					}
 					
 				})
@@ -160,6 +173,11 @@ public abstract class BaseServerTest {
 									@Override public IKeyStoreFactoryConfiguration newConfiguration(IConfigurationReader reader) { return null; }
 								};
 							}
+							
+							@Override
+							public YamlMapping toYaml() {
+								return null;
+							}
 						};
 					}
 					
@@ -169,6 +187,11 @@ public abstract class BaseServerTest {
 							@Override public String getFactory() { return PlainSecretKeyFactory.class.getName(); }
 							@Override public char[] getSecret() { return "password".toCharArray(); }
 						};
+					}
+					
+					@Override
+					public YamlMapping toYaml() throws YamlException {
+						return null;
 					}
 				});
 	}

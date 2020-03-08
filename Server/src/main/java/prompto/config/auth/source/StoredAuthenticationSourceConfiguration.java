@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import prompto.config.IConfigurationReader;
 import prompto.config.IStoreConfiguration;
 import prompto.config.YamlConfigurationReader;
+import prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.IQuery;
@@ -12,6 +13,7 @@ import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStore;
 import prompto.store.IStored;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 
@@ -62,8 +64,15 @@ public class StoredAuthenticationSourceConfiguration extends AuthenticationSourc
 	}
 
 	@Override
-	public void toYaml(YamlMapping yaml) throws Throwable {
-		yaml.setEntry("storeName", reader.getString("storeName"));
+	public YamlMapping toYaml() throws YamlException {
+		IStoreConfiguration store = getStoreConfiguration();
+		if(store!=null) {
+			YamlMapping yaml = new YamlMapping();
+			yaml.setEntry("factory", StoredPasswordDigestAuthenticationSourceFactory.class.getName());
+			yaml.setEntry("store", store.toYaml());
+			return yaml;
+		} else
+			return null;
 	}
 
 }

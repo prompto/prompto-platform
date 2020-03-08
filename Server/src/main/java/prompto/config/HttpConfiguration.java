@@ -1,5 +1,8 @@
 package prompto.config;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.config.auth.AuthenticationConfiguration;
 import prompto.config.auth.IAuthenticationConfiguration;
 import prompto.config.auth.IAuthenticationConfigurationFactory;
@@ -24,12 +27,12 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 	
 	private IKeyStoreConfiguration readKeyStoreConfiguration() {
 		IConfigurationReader child = reader.getObject("keyStore");
-		return new KeyStoreConfiguration(child);
+		return child==null ? null : new KeyStoreConfiguration(child);
 	}
 	
 	private IKeyStoreConfiguration readTrustStoreConfiguration() {
 		IConfigurationReader child = reader.getObject("trustStore");
-		return new KeyStoreConfiguration(child);
+		return child==null ? null : new KeyStoreConfiguration(child);
 	}
 	
 	private IAuthenticationConfiguration readAuthenticationConfiguration() {
@@ -46,6 +49,34 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 			throw new RuntimeException(e);
 		}
 			
+	}
+	
+	@Override
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping yaml = new YamlMapping();
+		String value = protocol.get();
+		if(value!=null)
+			yaml.setEntry("protocol", value);
+		if(port.get()!=-1)
+			yaml.setEntry("port", port.get());
+		value = welcomePage.get();
+		if(value!=null)
+			yaml.setEntry("welcomePage", value);
+		if(redirectFrom.get()!=null)
+			yaml.setEntry("redirectFrom", redirectFrom.get());
+		value = allowedOrigins.get();
+		if(value!=null)
+			yaml.setEntry("allowedOrigins", value);
+		IKeyStoreConfiguration config = keyStoreConfiguration.get();
+		if(config!=null)
+			yaml.setEntry("keyStore", config.toYaml());
+		config = trustStoreConfiguration.get();
+		if(config!=null)
+			yaml.setEntry("trustStore", config.toYaml());
+		IAuthenticationConfiguration auth = authenticationConfiguration.get();
+		if(auth!=null)
+			yaml.setEntry("authentication", auth.toYaml());
+		return yaml;
 	}
 
 }

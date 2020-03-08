@@ -1,5 +1,6 @@
 package prompto.security.auth.source;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
 
 import prompto.config.IConfigurationReader;
@@ -35,10 +36,8 @@ public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthent
 	}
 	
 	@Override
-	public YamlMapping toYaml() throws Throwable {
-		YamlMapping yaml = IAuthenticationSourceFactory.super.toYaml();
-		config.toYaml(yaml);
-		return yaml;
+	public YamlMapping toYaml() throws YamlException {
+		return config.toYaml();
 	}
 
 

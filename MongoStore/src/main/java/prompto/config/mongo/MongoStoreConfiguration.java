@@ -2,6 +2,9 @@ package prompto.config.mongo;
 
 import java.util.function.Supplier;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
+
 import prompto.config.IConfigurationReader;
 import prompto.config.StoreConfiguration;
 
@@ -41,6 +44,23 @@ public class MongoStoreConfiguration extends StoreConfiguration implements IMong
 		replicaSetConfig = ()->config;
 		return this;
 	}
+	
+	@Override
+	public YamlMapping toYaml() throws YamlException {
+		YamlMapping mapping = super.toYaml();
+		IMongoReplicaSetConfiguration config = replicaSetConfig.get();
+		if(config!=null) {
+			mapping.deleteEntry("host");
+			mapping.deleteEntry("port");
+			mapping.setEntry("replicaSet", config.toYaml());
+		} else if(replicaSetURI.get()!=null) {
+			mapping.deleteEntry("host");
+			mapping.deleteEntry("port");
+			mapping.setEntry("replicaSetURI", replicaSetURI.get());
+		} 
+		return mapping;
+	}
+
 
 	
 }

@@ -1,0 +1,73 @@
+secretKey: &secretKey
+  factory: prompto.security.AwsKMSSecretKeyFactory
+  alias: prompto/seed
+  awsRegion: us-east-1
+
+secret: &secret some-secret-of-yours
+
+mongoStore: &atlasMongoStore
+  factory: prompto.store.mongo.MongoStoreFactory
+  replicaSet:
+    name: Seed-shard-0
+    nodes:
+      - host: Seed-shard-00-00-cp8j5.mongodb.net
+        port: 27017
+      - host: Seed-shard-00-01-cp8j5.mongodb.net
+        port: 27017
+      - host: Seed-shard-00-02-cp8j5.mongodb.net
+        port: 27017
+  user: admin
+  secretKey:
+    <<: *secretKey
+    secret: *secret
+
+codeStore:
+  <<: *atlasMongoStore
+  dbName: FACTORY
+
+dataStore:
+  <<: *atlasMongoStore
+  dbName: SEED-TOOLS
+
+target:
+  dataStore:
+    <<: *atlasMongoStore
+    dbName: SEED-DATA
+  portRange:
+    minPort: 8080
+    maxPort: 9090
+
+addOnURLs:
+  - file:///AwsClient/AwsClient.jar
+
+http:
+  protocol: https
+  port: 443
+  redirectFrom: 80
+  keyStore:
+    provider:
+      factory: prompto.security.FileKeyStoreFactory
+      file: /keystore.jks
+    secretKey:
+      <<: *secretKey
+      secret: *secret
+  trustStore:
+    provider:
+      factory: prompto.security.FileKeyStoreFactory
+      file: /truststore.jks
+    secretKey:
+      <<: *secretKey
+      secret: *secret
+  authentication:
+    source:
+      factory: prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory
+      store:
+        <<: *atlasMongoStore
+        dbName: SEED-LOGIN
+    method:
+      factory: prompto.security.auth.method.FormAuthenticationMethodFactory
+      loginPage: /auth/loginPage.html
+      errorPage: /auth/errorPage.html
+    whiteList:
+      - /cloud/*
+      - /auth/*

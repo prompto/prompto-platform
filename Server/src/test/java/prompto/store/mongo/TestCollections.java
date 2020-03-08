@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import prompto.code.ICodeStore;
 import prompto.config.IStandaloneConfiguration;
 import prompto.config.TempDirectories;
 import prompto.grammar.Identifier;
@@ -17,17 +18,18 @@ import prompto.runtime.Interpreter;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 import prompto.store.DataStore;
+import prompto.store.IStore;
 public class TestCollections extends BaseMongoTest {
 
 	@Before
 	public void before() throws Throwable {
 		TempDirectories.create();
 		Mode.set(Mode.UNITTEST);
-		MongoStore codeStore = createStore("APPS");
-		Standalone.bootstrapCodeStore(codeStore, newStandaloneConfig());
-		MongoStore dataStore = createStore("DATA");
+		IStore dataStore = createStore("APPS");
+		ICodeStore codeStore = Standalone.bootstrapCodeStore(dataStore, newStandaloneConfig());
+		dataStore = createStore("DATA");
 		DataStore.setInstance(dataStore);
-		Standalone.main(newStandaloneConfig());
+		Standalone.main(newStandaloneConfig(), codeStore, dataStore);
 	}
 	
 	private IStandaloneConfiguration newStandaloneConfig() {

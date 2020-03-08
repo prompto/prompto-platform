@@ -21,6 +21,9 @@ import prompto.config.mongo.IMongoStoreConfiguration;
 import prompto.config.mongo.MongoStoreConfiguration;
 import prompto.utils.ManualTests;
 
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.document.YamlElement;
+import com.esotericsoftware.yamlbeans.document.YamlMapping;
 import com.mongodb.client.MongoIterable;
 
 @Category(ManualTests.class)
@@ -84,18 +87,23 @@ public class TestConfig {
 					return Arrays.asList(new IHostConfiguration() {
 						@Override public String getHost() { return "seed-shard-00-00-cp8j5.mongodb.net"; }
 						@Override public Integer getPort() { return 27017; }
+						@Override public YamlElement toYaml() throws YamlException { return null; }
 					}, new IHostConfiguration() {
 						@Override public String getHost() { return "seed-shard-00-01-cp8j5.mongodb.net"; }
 						@Override public Integer getPort() { return 27017; }
+						@Override public YamlElement toYaml() throws YamlException { return null; }
 					}, new IHostConfiguration() {
 						@Override public String getHost() { return "seed-shard-00-02-cp8j5.mongodb.net"; }
 						@Override public Integer getPort() { return 27017; }
+						@Override public YamlElement toYaml() throws YamlException { return null; }
 					});
 				}
 				@Override
 				public boolean isSSL() { return true; }
 				@Override
 				public String getName() { return "Seed-shard-0"; }
+				@Override
+				public YamlMapping toYaml() throws YamlException { return null; }
 			}; }
 			@Override public IMongoStoreConfiguration withReplicaSetConfiguration(IMongoReplicaSetConfiguration config) { return null; }
 		};
