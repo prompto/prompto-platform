@@ -126,10 +126,12 @@ public class StoreServlet extends CleverServlet {
 
 
 	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
-		List<String> categories = readJsonCategories(record);
-		IStorable storable = DataStore.getInstance().newStorable(categories, null);
+		// use dbId received from client
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
 		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
+		// populate storable
+		List<String> categories = readJsonCategories(record);
+		IStorable storable = DataStore.getInstance().newStorable(categories, null);
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
@@ -142,17 +144,20 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+		// use potentially existing dbId allocated by a dbRef in another storable
 		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
+		Object dbId = updatedDbIds.getOrDefault(tempDbId, null);
 		List<String> categories = readJsonCategories(record);
-		IStorable storable = DataStore.getInstance().newStorable(categories, dbId -> updatedDbIds.put(tempDbId, dbId));
+		IStorable storable = DataStore.getInstance().newStorable(categories, newDbId -> updatedDbIds.put(tempDbId, newDbId));
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
-			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
 			if(IStore.dbIdName.equals(fieldName))
 				continue;
-			else
-				storable.setData(fieldName, value);
+			else {
+				Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
+				storable.setData(fieldName, value, ()->dbId);
+			}
 		}
 		return storable;
 	}
