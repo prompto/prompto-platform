@@ -112,27 +112,22 @@ public class StoreServlet extends CleverServlet {
 		return updatedDbIds;
 	}
 
-	private IStorable jsonToStorable(JsonNode node, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
-		List<String> categories = readJsonCategories(node);
-		IStorable storable = DataStore.getInstance().newStorable(categories, null);
-		populateStorable(node, storable, parts, updatedDbIds);
-		return storable;
-	}
-	
-	private void populateStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private IStorable jsonToStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		if(isRecordUpdate(record))
-			populateExistingStorable(record, storable, parts, updatedDbIds);
+			return populateExistingStorable(record, parts, updatedDbIds);
 		else
-			populateNewStorable(record, storable, parts, updatedDbIds);
+			return populateNewStorable(record, parts, updatedDbIds);
 	}
-	
 	
 	private boolean isRecordUpdate(JsonNode record) {
 		JsonNode dbIdField = record.get(IStore.dbIdName);
 		return dbIdField!=null && !dbIdField.has("tempDbId");
 	}
 
-	private void populateExistingStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+
+	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+		List<String> categories = readJsonCategories(record);
+		IStorable storable = DataStore.getInstance().newStorable(categories, null);
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
 		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
 		Iterator<String> fieldNames = record.fieldNames();
@@ -143,18 +138,23 @@ public class StoreServlet extends CleverServlet {
 			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
 			storable.setData(fieldName, value, ()->dbId);
 		}
+		return storable;
 	}
-
-	private void populateNewStorable(JsonNode record, IStorable storable, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	
+	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
+		List<String> categories = readJsonCategories(record);
+		IStorable storable = DataStore.getInstance().newStorable(categories, dbId -> updatedDbIds.put(tempDbId, dbId));
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
 			if(IStore.dbIdName.equals(fieldName))
-				storable.setDbId(DataStore.getInstance().convertToDbId(value));
+				continue;
 			else
 				storable.setData(fieldName, value);
 		}
+		return storable;
 	}
 
 	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
