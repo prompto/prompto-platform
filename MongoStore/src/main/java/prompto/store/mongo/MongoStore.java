@@ -23,28 +23,6 @@ import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 
-import prompto.config.ISecretKeyConfiguration;
-import prompto.config.mongo.IMongoReplicaSetConfiguration;
-import prompto.config.mongo.IMongoStoreConfiguration;
-import prompto.error.PromptoError;
-import prompto.intrinsic.PromptoBinary;
-import prompto.intrinsic.PromptoDate;
-import prompto.intrinsic.PromptoDateTime;
-import prompto.intrinsic.PromptoList;
-import prompto.intrinsic.PromptoTime;
-import prompto.intrinsic.PromptoVersion;
-import prompto.security.ISecretKeyFactory;
-import prompto.store.AttributeInfo;
-import prompto.store.Family;
-import prompto.store.IQuery;
-import prompto.store.IQueryBuilder;
-import prompto.store.IStorable;
-import prompto.store.IStorable.IDbIdListener;
-import prompto.store.IStore;
-import prompto.store.IStored;
-import prompto.store.IStoredIterable;
-import prompto.utils.Logger;
-
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -64,6 +42,28 @@ import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
+
+import prompto.config.ISecretKeyConfiguration;
+import prompto.config.mongo.IMongoReplicaSetConfiguration;
+import prompto.config.mongo.IMongoStoreConfiguration;
+import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDate;
+import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoList;
+import prompto.intrinsic.PromptoTime;
+import prompto.intrinsic.PromptoVersion;
+import prompto.security.ISecretKeyFactory;
+import prompto.store.AttributeInfo;
+import prompto.store.Family;
+import prompto.store.IQuery;
+import prompto.store.IQueryBuilder;
+import prompto.store.IStorable;
+import prompto.store.IStorable.IDbIdFactory;
+import prompto.store.IStore;
+import prompto.store.IStored;
+import prompto.store.IStoredIterable;
+import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
 	
@@ -365,8 +365,8 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public IStorable newStorable(String[] categories, IDbIdListener listener) {
-		return new StorableDocument(categories, listener);
+	public IStorable newStorable(String[] categories, IDbIdFactory dbIdFactory) {
+		return new StorableDocument(categories, dbIdFactory);
 	}
 
 	@Override

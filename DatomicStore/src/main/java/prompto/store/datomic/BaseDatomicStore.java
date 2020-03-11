@@ -14,19 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import prompto.error.InternalError;
-import prompto.error.PromptoError;
-import prompto.intrinsic.PromptoBinary;
-import prompto.store.AttributeInfo;
-import prompto.store.IQuery;
-import prompto.store.IQueryBuilder;
-import prompto.store.IStorable;
-import prompto.store.IStorable.IDbIdListener;
-import prompto.store.IStore;
-import prompto.store.IStored;
-import prompto.store.IStoredIterable;
-import prompto.store.datomic.Constants.Db;
-import prompto.store.datomic.Constants.DbCardinality;
 import datomic.Connection;
 import datomic.Database;
 import datomic.Datom;
@@ -34,6 +21,19 @@ import datomic.Entity;
 import datomic.Peer;
 import datomic.QueryRequest;
 import datomic.query.EntityMap;
+import prompto.error.InternalError;
+import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoBinary;
+import prompto.store.AttributeInfo;
+import prompto.store.IQuery;
+import prompto.store.IQueryBuilder;
+import prompto.store.IStorable;
+import prompto.store.IStorable.IDbIdFactory;
+import prompto.store.IStore;
+import prompto.store.IStored;
+import prompto.store.IStoredIterable;
+import prompto.store.datomic.Constants.Db;
+import prompto.store.datomic.Constants.DbCardinality;
 
 public abstract class BaseDatomicStore implements IStore {
 
@@ -134,8 +134,8 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public IStorable newStorable(String[] categories, IDbIdListener listener) {
-		return new StorableDocument(categories, listener);
+	public IStorable newStorable(String[] categories, IDbIdFactory factory) {
+		return new StorableDocument(categories, factory);
 	}
 
 	@Override

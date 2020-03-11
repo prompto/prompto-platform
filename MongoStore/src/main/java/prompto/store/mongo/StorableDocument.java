@@ -20,12 +20,12 @@ public class StorableDocument extends BaseDocument implements IStorable {
 
 	Document document;
 	String[] categories;
-	IDbIdListener listener;
+	IDbIdFactory dbIdFactory;
 	boolean isUpdate; // partial updates require operations instead of values
 	
-	public StorableDocument(String[] categories, IDbIdListener listener) {
+	public StorableDocument(String[] categories, IDbIdFactory dbIdFactory) {
 		this.categories = categories;
-		this.listener = listener;
+		this.dbIdFactory = dbIdFactory;
 	}
 
 	@Override
@@ -40,9 +40,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	
 	@Override
 	public void setDbId(Object dbId) {
-		ensureDocument(()->dbId);
-		if(listener!=null)
-			listener.accept(dbId);
+		ensureDocument(dbId);
 	}
 	
 	@Override
@@ -68,33 +66,26 @@ public class StorableDocument extends BaseDocument implements IStorable {
 		return document;
 	}
 	
-	private void ensureDocument(IDbIdProvider provider) {
+	private void ensureDocument(Object dbId) {
 		if(document==null) {
-			UUID dbId = provider==null ? null : (UUID)provider.get();
-			// the scenario where we get an existing dbId is when  
-			// an instance passes a provider when calling setData
-			// in such a case, the scenario is an update scenario
+			if(dbId==null && dbIdFactory!=null)
+				dbId = dbIdFactory.get();
 			if(dbId!=null)
-				this.isUpdate = true;
+				isUpdate = dbIdFactory!=null ? dbIdFactory.isUpdate() : true;
 			else {
 				dbId = java.util.UUID.randomUUID();
-				if(listener!=null)
-					listener.accept(dbId);
+				if(dbIdFactory!=null)
+					dbIdFactory.accept(dbId);
 			}
 			document = new Document();
 			document.put("_id", dbId);
-			if(categories!=null && !this.isUpdate)
+			if(categories!=null && !isUpdate)
 				document.put("category", categories); 
 				
-		}
+		} else if(dbId!=null)
+			document.put("_id", dbId);
 	}
 
-	@Override
-	public void setData(String name, Object value, IDbIdProvider provider) throws PromptoError {
-		ensureDocument(provider);
-		setData(name, value);
-	}
-	
 	@Override
 	public void setData(String name, Object value) throws PromptoError {
 		ensureDocument(null);

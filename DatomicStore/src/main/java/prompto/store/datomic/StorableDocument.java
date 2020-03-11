@@ -60,12 +60,6 @@ public class StorableDocument implements IStorable  {
 	}
 
 	@Override
-	public void setData(String name, Object value, IDbIdProvider provider) throws PromptoError {
-		ensureFacts(provider);
-		setData(name, value);
-	}
-
-	@Override
 	public void setData(String name, Object value) throws PromptoError {
 		ensureFacts(null);
 		if(value instanceof PromptoDate) {

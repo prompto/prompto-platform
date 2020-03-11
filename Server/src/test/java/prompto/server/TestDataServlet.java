@@ -1,6 +1,7 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -17,12 +18,11 @@ import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.store.IStorable;
-import prompto.store.IStore;
 import prompto.store.memory.MemStore;
 
 public class TestDataServlet extends BaseServerTest {
 
-	IStore store;
+	MemStore store;
 	
 	@Before
 	public void before() {

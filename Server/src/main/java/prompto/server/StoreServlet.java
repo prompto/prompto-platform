@@ -29,6 +29,7 @@ import prompto.store.DataStore;
 import prompto.store.IQueryBuilder;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
+import prompto.store.IStorable.IDbIdFactory;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
@@ -129,16 +130,22 @@ public class StoreServlet extends CleverServlet {
 		// use dbId received from client
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
 		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
+		// dbId factory
+		IDbIdFactory dbIdFactory = new IDbIdFactory() {
+			@Override public void accept(Object dbId) { throw new IllegalStateException(); }
+			@Override public Object get() { return dbId; }
+			@Override public boolean isUpdate() { return true; }
+		};
 		// populate storable
 		List<String> categories = readJsonCategories(record);
-		IStorable storable = DataStore.getInstance().newStorable(categories, null);
+		IStorable storable = DataStore.getInstance().newStorable(categories, dbIdFactory);
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			if(IStore.dbIdName.equals(fieldName))
 				continue;
 			Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
-			storable.setData(fieldName, value, ()->dbId);
+			storable.setData(fieldName, value);
 		}
 		return storable;
 	}
@@ -147,8 +154,15 @@ public class StoreServlet extends CleverServlet {
 		// use potentially existing dbId allocated by a dbRef in another storable
 		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
 		Object dbId = updatedDbIds.getOrDefault(tempDbId, null);
+		// dbId factory
+		IDbIdFactory dbIdFactory = new IDbIdFactory() {
+			@Override public void accept(Object newDbId) { updatedDbIds.put(tempDbId, newDbId); }
+			@Override public Object get() { return dbId; }
+			@Override public boolean isUpdate() { return false; }
+		};
+		// populate storable
 		List<String> categories = readJsonCategories(record);
-		IStorable storable = DataStore.getInstance().newStorable(categories, newDbId -> updatedDbIds.put(tempDbId, newDbId));
+		IStorable storable = DataStore.getInstance().newStorable(categories, dbIdFactory );
 		Iterator<String> fieldNames = record.fieldNames();
 		while(fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
@@ -156,7 +170,7 @@ public class StoreServlet extends CleverServlet {
 				continue;
 			else {
 				Object value = readJsonValue(record.get(fieldName), parts, updatedDbIds);
-				storable.setData(fieldName, value, ()->dbId);
+				storable.setData(fieldName, value);
 			}
 		}
 		return storable;

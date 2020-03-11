@@ -18,13 +18,12 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.YamlWriter;
+import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
 import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 
@@ -40,25 +39,23 @@ import prompto.parser.Dialect;
 import prompto.runtime.ApplicationContext;
 import prompto.runtime.Standalone;
 import prompto.server.BaseUITest;
-import prompto.server.HeadlessTests;
-import prompto.store.memory.MemStore;
 
-@Category(HeadlessTests.class)
-public class TestRemoteStore extends BaseUITest {
+public abstract class TestRemoteStoreBase extends BaseUITest {
 
 	Path tempDir;	
 
 	@Before
-	public void before() throws Exception {
+	public void __before__() throws Throwable {
 		ApplicationContext.reset();
-		DataStore.setGlobal(new MemStore());
+		DataStore.setGlobal(getDataStore());
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 		tail = getCodeStoreTail();
 	}
-	
-	
+
+	protected abstract IStore getDataStore();
+
 	@After
-	public void after() {
+	public void __after__() {
 		if(tail!=null)
 			tail.setNext(null);
 	}
@@ -75,7 +72,7 @@ public class TestRemoteStore extends BaseUITest {
 		return null;
 	}
 
-	private void linkResourcesAndLoadPage(String resourceName, Dialect dialect) throws Exception {
+	protected void linkResourcesAndLoadPage(String resourceName, Dialect dialect) throws Exception {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("remote-store-tests/" + resourceName + ".p" + dialect.name().toLowerCase() + "c");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		URL pageResourceURL = Thread.currentThread().getContextClassLoader().getResource("remote-store-tests/" + resourceName + ".page");
@@ -109,7 +106,7 @@ public class TestRemoteStore extends BaseUITest {
 		// done
 		return pageFile.toURI().toURL();
 	}
-
+	
 	@Test
 	public void nullIsStored() throws Exception {
 		linkResourcesAndLoadPage("NullIsStored", Dialect.O);
@@ -381,5 +378,4 @@ public class TestRemoteStore extends BaseUITest {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("Gielgud", elem.getText());
 	}
-
 }

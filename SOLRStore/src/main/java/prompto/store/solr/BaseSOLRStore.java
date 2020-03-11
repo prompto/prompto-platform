@@ -32,7 +32,7 @@ import prompto.store.Family;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
-import prompto.store.IStorable.IDbIdListener;
+import prompto.store.IStorable.IDbIdFactory;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
@@ -365,8 +365,8 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public IStorable newStorable(String[] categories, IDbIdListener listener) {
-		return new StorableDocument(categories, listener);
+	public IStorable newStorable(String[] categories, IDbIdFactory factory) {
+		return new StorableDocument(categories, factory);
 	}
 	
 	public abstract void createCoreIfRequired() throws SolrServerException, IOException;

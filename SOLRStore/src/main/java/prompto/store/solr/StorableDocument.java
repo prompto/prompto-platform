@@ -82,12 +82,6 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	}
 
 	@Override
-	public void setData(String name, Object value, IDbIdProvider provider) throws PromptoError {
-		ensureDocument(provider);
-		setData(name, value);
-	}
-	
-	@Override
 	public void setData(String name, Object value) throws PromptoError {
 		ensureDocument(null);
 		if(value instanceof PromptoBinary)
