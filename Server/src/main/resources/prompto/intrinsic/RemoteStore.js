@@ -59,21 +59,26 @@ StorableDocument.prototype.setDbId = function(dbId) {
 StorableDocument.prototype.setData = function(name, value, dbId) {
     if(!this.document) {
         this.document = new StoredDocument(this.category);
-        this.document.dbId = dbId? dbId : this.getOrCreateDbId();
+        this.document.dbId = dbId || this.getOrCreateDbId();
     }
     this.document[name] = writeJSONValue(value, true);
 };
 
 StorableDocument.prototype.updateDbIds = function(dbIds) {
-	Object.getOwnPropertyNames(this.document).forEach(function(name) {
-		var value = this.document[name];
-		if(value && value.tempDbId && dbIds[value.tempDbId]) {
-			var dbId = dbIds[value.tempDbId];
-			this.document[name] = dbId;
-			if(name==="dbId")
-				this.dbIdListener(dbId);
-		}
-	}, this);
+	Object.getOwnPropertyNames(this.document)
+		.map(function(name) { return this.document[name]; }, this )
+		.filter(function(value) { return value; }, this)
+		.map(function(value) { return Array.isArray(value) ? value : [value]; }, this )
+		.reduce(function(accum, values) { return accum.concat(values)}, [])
+		.filter(function(value) { return value.tempDbId; }, this)
+		.forEach(function(value) { 
+			var dbId = dbIds[val.tempDbId];
+			if(dbId) {
+				this.document[name] = dbId;
+				if(name==="dbId")
+					this.dbIdListener(dbId);
+			} 
+		}, this);
 };
 
 
