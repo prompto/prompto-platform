@@ -110,7 +110,8 @@ function StoredIterable(records) {
 function RemoteStore() {
 	this.lastDbId = 0;
 	this.nextDbId = function() {
-		return { tempDbId: --this.lastDbId };
+		tempDbId = --this.lastDbId;
+		return { tempDbId: tempDbId, getText: function() { return "" + tempDbId; } };
 	};
 	this.newStorableDocument = function(categories, dbIdListener) {
 		return new StorableDocument(categories, dbIdListener);
