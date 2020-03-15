@@ -261,7 +261,7 @@ public class EC2 {
 				.withImageIds(imageId);
 		String state = "pending";
 		long start = System.currentTimeMillis();
-		while(!"available".equals(state) && (System.currentTimeMillis() - start < 3*60*1000)) {
+		while(!"available".equals(state) && (System.currentTimeMillis() - start < 10*60*1000)) {
 			unsafeSleep(1000);
 			DescribeImagesResult describeResult = ec2.describeImages(describeRequest);
 			state = describeResult.getImages().get(0).getState();
