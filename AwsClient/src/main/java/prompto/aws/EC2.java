@@ -235,7 +235,7 @@ public class EC2 {
 		return imageId;
 	}
 	
-	public String copyAMI(String srcImageId, String srcRegion, String name) {
+	public String copyAMI(String srcImageId, String srcRegion, String name, boolean waitForAvailability) {
 		CopyImageRequest request = new CopyImageRequest()
 				.withSourceImageId(srcImageId)
 				.withSourceRegion(srcRegion)
@@ -244,6 +244,8 @@ public class EC2 {
 		CopyImageResult result = ec2.copyImage(request);
 		String dstImageId = result.getImageId();
 		setAMINameTag(dstImageId, name);
+		if(waitForAvailability)
+			waitForAMIAvailability(dstImageId);
 		return dstImageId;
 	}
 

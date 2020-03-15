@@ -50,8 +50,8 @@ and methods:
 	define createAMI as method receiving Text instanceId, Text name and Boolean waitForAvailability returning Text doing:
 		Java: return this.createAMI(instanceId, name, waitForAvailability);
 
-	define copyAMI as method receiving Text imageId, Text awsRegion and Text name returning Text doing:
-		Java: return this.copyAMI(imageId, awsRegion, name);
+	define copyAMI as method receiving Text imageId, Text awsRegion, Text name and Boolean waitForAvailability returning Text doing:
+		Java: return this.copyAMI(imageId, awsRegion, name, waitForAvailability);
 
 	define setAMIPublic as method receiving Text imageId doing:
 		Java: this.setAMIPublic(imageId);
