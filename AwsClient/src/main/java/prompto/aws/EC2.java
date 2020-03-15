@@ -16,6 +16,8 @@ import com.amazonaws.services.ec2.model.AllocateAddressResult;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.AssociateAddressRequest;
 import com.amazonaws.services.ec2.model.AssociateAddressResult;
+import com.amazonaws.services.ec2.model.CopyImageRequest;
+import com.amazonaws.services.ec2.model.CopyImageResult;
 import com.amazonaws.services.ec2.model.CreateImageRequest;
 import com.amazonaws.services.ec2.model.CreateImageResult;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
@@ -53,7 +55,7 @@ public class EC2 {
 	}
 	
 	AmazonEC2 ec2;
-
+	
 	public EC2(AmazonEC2 ec2) {
 		this.ec2 = ec2;
 	}
@@ -233,6 +235,18 @@ public class EC2 {
 		return imageId;
 	}
 	
+	public String copyAMI(String srcImageId, String srcRegion, String name) {
+		CopyImageRequest request = new CopyImageRequest()
+				.withSourceImageId(srcImageId)
+				.withSourceRegion(srcRegion)
+				.withName(name)
+				.withDescription("Copied from " + srcImageId + " in " + srcRegion);
+		CopyImageResult result = ec2.copyImage(request);
+		String dstImageId = result.getImageId();
+		setAMINameTag(dstImageId, name);
+		return dstImageId;
+	}
+
 	public void setAMIPublic(String imageId) {
 		LaunchPermissionModifications permissions = new LaunchPermissionModifications()
 				.withAdd(new LaunchPermission().withGroup(PermissionGroup.All));
@@ -268,6 +282,7 @@ public class EC2 {
 		CreateImageResult result = ec2.createImage(request);
 		return result.getImageId();
 	}
+
 
 	public static void unsafeSleep(long millis) {
 		try {
