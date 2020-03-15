@@ -26,6 +26,10 @@ import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
+import com.amazonaws.services.ec2.model.LaunchPermission;
+import com.amazonaws.services.ec2.model.LaunchPermissionModifications;
+import com.amazonaws.services.ec2.model.ModifyImageAttributeRequest;
+import com.amazonaws.services.ec2.model.PermissionGroup;
 import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -75,7 +79,7 @@ public class EC2 {
 	
 	public void setInstanceName(String instanceId, String name) {
 		// this is typically called immediately after creating an instance
-		// however, the instance may not exist yet, see
+		// however, the instance may not exist yet (can take a few secs)
 		// so try in a loop with a sleep period 
 		for(int i=0;i<10;i++) {
 			try {
@@ -222,29 +226,49 @@ public class EC2 {
 	}
 	
 	public String createAMI(String instanceId, String name, boolean waitForAvailability) {
-		CreateImageRequest request = new CreateImageRequest()
-			.withInstanceId(instanceId)
-			.withName(name);
-		CreateImageResult result = ec2.createImage(request);
-		String imageId = result.getImageId();
-		CreateTagsRequest tagsRequest = new CreateTagsRequest()
-			.withResources(imageId)
-			.withTags(new Tag("Name", name));
-		ec2.createTags(tagsRequest);
-		if(waitForAvailability) {
-			DescribeImagesRequest describeRequest = new DescribeImagesRequest()
-				.withImageIds(imageId);
-			String state = "pending";
-			long start = System.currentTimeMillis();
-			while(!"available".equals(state) && (System.currentTimeMillis() - start < 3*60*1000)) {
-				unsafeSleep(1000);
-				DescribeImagesResult describeResult = ec2.describeImages(describeRequest);
-				state = describeResult.getImages().get(0).getState();
-			}
-		}
+		String imageId = createAMI(instanceId, name);
+		setAMINameTag(imageId, name);
+		if(waitForAvailability)
+			waitForAMIAvailability(imageId);
 		return imageId;
 	}
 	
+	public void setAMIPublic(String imageId) {
+		LaunchPermissionModifications permissions = new LaunchPermissionModifications()
+				.withAdd(new LaunchPermission().withGroup(PermissionGroup.All));
+		ModifyImageAttributeRequest request = new ModifyImageAttributeRequest()
+				.withImageId(imageId)
+				.withLaunchPermission(permissions);
+		ec2.modifyImageAttribute(request);
+	}
+
+	private void waitForAMIAvailability(String imageId) {
+		DescribeImagesRequest describeRequest = new DescribeImagesRequest()
+				.withImageIds(imageId);
+		String state = "pending";
+		long start = System.currentTimeMillis();
+		while(!"available".equals(state) && (System.currentTimeMillis() - start < 3*60*1000)) {
+			unsafeSleep(1000);
+			DescribeImagesResult describeResult = ec2.describeImages(describeRequest);
+			state = describeResult.getImages().get(0).getState();
+		}
+	}
+
+	private void setAMINameTag(String imageId, String name) {
+		CreateTagsRequest request = new CreateTagsRequest()
+				.withResources(imageId)
+				.withTags(new Tag("Name", name));
+		ec2.createTags(request);
+	}
+
+	private String createAMI(String instanceId, String name) {
+		CreateImageRequest request = new CreateImageRequest()
+				.withInstanceId(instanceId)
+				.withName(name);
+		CreateImageResult result = ec2.createImage(request);
+		return result.getImageId();
+	}
+
 	public static void unsafeSleep(long millis) {
 		try {
 			Thread.sleep(1000);

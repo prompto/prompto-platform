@@ -50,6 +50,9 @@ and methods:
 	define createAMI as method receiving Text instanceId, Text name and Boolean waitForAvailability returning Text doing:
 		Java: this.createAMI(instanceId, name, waitForAvailability);
 
+	define setAMIPublic as method receiving Text instanceId doing:
+		Java: this.setAMIPublic(instanceId);
+
 define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
 	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
 
