@@ -66,13 +66,16 @@ StorableDocument.prototype.setData = function(name, value, dbId) {
 
 StorableDocument.prototype.updateDbIds = function(dbIds) {
 	Object.getOwnPropertyNames(this.document)
-		.map(function(name) { return this.document[name]; }, this )
-		.filter(function(value) { return value; }, this)
-		.map(function(value) { return Array.isArray(value) ? value : [value]; }, this )
-		.reduce(function(accum, values) { return accum.concat(values)}, [])
-		.filter(function(value) { return value.tempDbId; }, this)
+		.forEach(function(name) { this.updateDbId(dbIds, name); }, this);
+};
+
+StorableDocument.prototype.updateDbId = function(dbIds, name) {
+	var value = this.document[name]; 
+	if(value) {
+		values = Array.isArray(value) ? value : [value]; };
+		values.filter(function(value) { return value.tempDbId; }, this)
 		.forEach(function(value) { 
-			var dbId = dbIds[val.tempDbId];
+			var dbId = dbIds[value.tempDbId];
 			if(dbId) {
 				this.document[name] = dbId;
 				if(name==="dbId")
