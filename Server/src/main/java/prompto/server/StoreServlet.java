@@ -390,13 +390,20 @@ public class StoreServlet extends CleverServlet {
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void readMatchPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
 		String name = jsonNode.get("info").get("name").asText();
 		AttributeInfo info = fetchAttributeInfo(name);
 		MatchOp matchOp = MatchOp.valueOf(jsonNode.get("matchOp").get("name").asText());
 		Object value = readJsonValue(jsonNode.get("value"), null, new HashMap<>());
-		if(IStore.dbIdName.equals(name) && value!=null)
-			value = DataStore.getInstance().convertToDbId(value);
+		if(IStore.dbIdName.equals(name) && value!=null) {
+			if(value instanceof Collection)
+				value = ((Collection<Object>)value).stream()
+						.map(DataStore.getInstance()::convertToDbId)
+						.collect(Collectors.toList());
+			else
+				value = DataStore.getInstance().convertToDbId(value);
+		}
 		builder.verify(info, matchOp, value);
 	}
 	
