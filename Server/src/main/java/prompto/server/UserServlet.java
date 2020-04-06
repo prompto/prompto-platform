@@ -15,6 +15,7 @@ import prompto.expression.ValueExpression;
 import prompto.expression.IExpression;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentList;
+import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDocument;
 import prompto.reader.JSONReader;
 import prompto.runtime.ApplicationContext;
@@ -26,6 +27,7 @@ import prompto.statement.MethodCall;
 import prompto.type.DocumentType;
 import prompto.type.TextType;
 import prompto.utils.Logger;
+import prompto.value.BinaryValue;
 import prompto.value.DocumentValue;
 import prompto.value.IValue;
 import prompto.value.ListValue;
@@ -122,7 +124,11 @@ public class UserServlet extends CleverServlet {
 			return;
 		if(value instanceof TextValue)
 			resp.getWriter().write(((TextValue)value).getStorableData());
-		else
+		else if(value instanceof BinaryValue) {
+			PromptoBinary binary = ((BinaryValue)value).getData();
+			resp.setContentType(binary.getMimeType());
+			resp.getOutputStream().write(binary.getBytes());
+		} else
 			resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
 	}
 
