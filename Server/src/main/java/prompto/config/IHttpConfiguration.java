@@ -19,6 +19,7 @@ public interface IHttpConfiguration {
 	IAuthenticationConfiguration getAuthenticationConfiguration();
 	boolean getAllowsXAuthorization();
 	boolean getSendsXAuthorization();
+	String getPublicAddress();
 	
 	IHttpConfiguration withProtocol(String protocol);
 	IHttpConfiguration withPort(int port);
@@ -27,6 +28,7 @@ public interface IHttpConfiguration {
 	IHttpConfiguration withKeyStoreConfiguration(IKeyStoreConfiguration config);
 	IHttpConfiguration withTrustStoreConfiguration(IKeyStoreConfiguration config);
 	IHttpConfiguration withAuthenticationConfiguration(IAuthenticationConfiguration config);
+	IHttpConfiguration withPublicAddress(String name);
 	
 	YamlMapping toYaml() throws YamlException;	
 	
@@ -42,7 +44,8 @@ public interface IHttpConfiguration {
 		Supplier<IAuthenticationConfiguration> authenticationConfiguration = ()->null;
 		Supplier<Boolean> allowsXAuthorization = ()->false;
 		Supplier<Boolean> sendsXAuthorization = ()->false;
-		
+		Supplier<String> publicAddress = ()->null;
+			
 		@Override public String getProtocol() { return protocol.get(); }
 		@Override public int getPort() { return port.get(); }
 		@Override public String getWelcomePage() { return welcomePage.get(); }
@@ -53,7 +56,8 @@ public interface IHttpConfiguration {
 		@Override public IAuthenticationConfiguration getAuthenticationConfiguration() { return authenticationConfiguration.get(); }
 		@Override public boolean getAllowsXAuthorization() { return allowsXAuthorization.get(); }
 		@Override public boolean getSendsXAuthorization() { return sendsXAuthorization.get(); }
-		
+		@Override public String getPublicAddress() { return publicAddress.get(); }
+			
 		@Override
 		public IHttpConfiguration withProtocol(String proto) {
 			protocol = ()->proto;
@@ -95,6 +99,14 @@ public interface IHttpConfiguration {
 			authenticationConfiguration = ()->config;
 			return this;
 		}
+		
+		
+		@Override
+		public IHttpConfiguration withPublicAddress(String name) {
+			publicAddress = ()->name;
+			return this;
+		}
+
 		
 		@Override
 		public YamlMapping toYaml() throws YamlException {

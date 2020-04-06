@@ -23,6 +23,7 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 		this.keyStoreConfiguration = ()->readKeyStoreConfiguration();
 		this.trustStoreConfiguration = ()->readTrustStoreConfiguration();
 		this.authenticationConfiguration = ()->readAuthenticationConfiguration();
+		this.publicAddress = ()->reader.getString("publicAddress");
 	}
 	
 	private IKeyStoreConfiguration readKeyStoreConfiguration() {
@@ -76,6 +77,9 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 		IAuthenticationConfiguration auth = authenticationConfiguration.get();
 		if(auth!=null)
 			yaml.setEntry("authentication", auth.toYaml());
+		value = publicAddress.get();
+		if(value!=null)
+			yaml.setEntry("publicAddress", value);
 		return yaml;
 	}
 
