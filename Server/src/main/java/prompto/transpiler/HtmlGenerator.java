@@ -219,7 +219,10 @@ public class HtmlGenerator {
 		else if(value instanceof Collection) {
 			((Collection<String>)value).forEach(item->{
 				if(item instanceof String) {
-					printer.print("<script crossorigin src=\"");
+					printer.print("<script");
+					if(item.startsWith("http"))
+						printer.print(" crossorigin ");
+					printer.print(" src=\"");
 					printer.print(item);
 					printer.println("\"></script>");
 				} else {
