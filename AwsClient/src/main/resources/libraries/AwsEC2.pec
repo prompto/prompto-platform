@@ -47,6 +47,9 @@ and methods:
 	define listOwnedAMIs as method returning Document[] doing:
 		Java: return this.listOwnedAMIs();
 
+	define listAMIsWithOwnerAndName as method receiving Text ownerId and Text name returning Document[] doing:
+		Java: return this.listAMIsWithOwnerAndName(ownerId, name);
+
 	define createAMI as method receiving Text instanceId, Text name and Boolean waitForAvailability returning Text doing:
 		Java: return this.createAMI(instanceId, name, waitForAvailability);
 
@@ -128,6 +131,15 @@ and verifying:
 	amis is not Nothing
 	amis.count > 0
 	(amis[1]["Name"] as Text).startsWith "centos-prompto"
+
+
+define "AMIs with owner and name can be listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	amis = ec2.listAMIsWithOwnerAndName with "838901125615" as ownerId and "centos-prompto-v*" as name
+and verifying:
+	amis is not Nothing
+	amis.count > 0
+	(amis[1]["Name"] as Text).startsWith "centos-prompto-v"
 
 
 define getAMIVersion as method receiving Document value returning Version doing:

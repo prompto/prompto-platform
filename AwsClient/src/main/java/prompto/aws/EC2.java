@@ -27,6 +27,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
+import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.LaunchPermission;
 import com.amazonaws.services.ec2.model.LaunchPermissionModifications;
@@ -226,6 +227,25 @@ public class EC2 {
 		});
 		return list;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public PromptoList<PromptoDocument<String, Object>> listAMIsWithOwnerAndName(String owner, String name) {
+		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
+		DescribeImagesRequest request = new DescribeImagesRequest()
+				.withFilters(new Filter().withName("owner-id").withValues(owner),
+						new Filter().withName("name").withValues(name));
+		DescribeImagesResult result = ec2.describeImages(request);
+		result.getImages().forEach((i)->{
+			JsonNode json = new ObjectMapper().valueToTree(i);
+			Object prompto = PromptoConverter.nodeToPrompto(json);
+			assert (prompto instanceof PromptoDocument);
+			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
+			promoteNameTag(i.getTags(), doc);
+			list.add(doc); 
+		});
+		return list;
+	}
+	
 	
 	public String createAMI(String instanceId, String name, boolean waitForAvailability) {
 		String imageId = createAMI(instanceId, name);

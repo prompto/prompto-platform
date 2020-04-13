@@ -30,6 +30,7 @@ public abstract class AWSTestBase {
 	public static String MASTER_KEY_ARN = "arn:aws:kms:us-east-1:838901125615:key/fd4e13e3-72c3-41ee-90de-4531f5c4c93a";
 	public static String MASTER_KEY_ALIAS = "prompto/seed";
 			
+	AWSCredentials credentials;
 	AmazonEC2 ec2;
 	AmazonRoute53 route53;
 	AWSKMS kms;
@@ -41,7 +42,7 @@ public abstract class AWSTestBase {
 				"/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.properties")) {
 			props.load(input);
 		}
-		AWSCredentials credentials = new BasicAWSCredentials(
+		credentials = new BasicAWSCredentials(
 				props.getProperty("accessKey"), 
 				props.getProperty("secretKey"));
 		ec2 = AmazonEC2ClientBuilder.standard()
