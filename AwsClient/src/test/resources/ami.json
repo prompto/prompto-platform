@@ -1,0 +1,50 @@
+{
+	"kernelId": null,
+	"ramdiskId": null,
+	"virtualizationType": "hvm",
+	"description": null,
+	"enaSupport": null,
+	"ownerId": "838901125615",
+	"stateReason": null,
+	"platform": null,
+	"imageLocation": "838901125615/centos-prompto-v0.0.122",
+	"Name": "centos-prompto-v0.0.122",
+	"public": true,
+	"usageOperation": null,
+	"hypervisor": "xen",
+	"platformDetails": null,
+	"rootDeviceName": "/dev/sda1",
+	"productCodes": [
+	],
+	"state": "available",
+	"imageType": "machine",
+	"architecture": "x86_64",
+	"imageId": "ami-0b03b23e4d7fcaa3f",
+	"blockDeviceMappings": [
+		{
+			"noDevice": null,
+			"virtualName": null,
+			"ebs": {
+				"volumeType": "gp2",
+				"snapshotId": "snap-0f786171904122e61",
+				"encrypted": false,
+				"iops": null,
+				"deleteOnTermination": true,
+				"kmsKeyId": null,
+				"volumeSize": 10
+			},
+			"deviceName": "/dev/sda1"
+		}
+	],
+	"creationDate": "2020-04-12T07:30:50.000Z",
+	"rootDeviceType": "ebs",
+	"tags": [
+		{
+			"value": "centos-prompto-v0.0.122",
+			"key": "Name"
+		}
+	],
+	"sriovNetSupport": null,
+	"name": "centos-prompto-v0.0.122",
+	"imageOwnerAlias": null
+}
