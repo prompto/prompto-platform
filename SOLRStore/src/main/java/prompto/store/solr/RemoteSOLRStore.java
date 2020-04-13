@@ -120,6 +120,12 @@ public class RemoteSOLRStore extends BaseSOLRStore {
 			throw new InternalError(e);
 		}
 	}
+	
+	@Override
+	public void close() throws IOException {
+		client.close();
+		client = null;
+	}
 
 	@Override
 	public boolean hasField(String fieldName) throws SolrServerException, IOException {

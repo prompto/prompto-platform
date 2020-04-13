@@ -167,6 +167,11 @@ public class EmbeddedSOLRStore extends BaseSOLRStore {
 			throw new InternalError(e);
 		}
 	}
+	
+	@Override
+	public void close() throws IOException {
+		// this class is testing only
+	}
 
 	@Override
 	public boolean hasField(String fieldName) {

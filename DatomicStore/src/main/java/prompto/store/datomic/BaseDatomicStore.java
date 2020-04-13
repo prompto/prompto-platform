@@ -1,5 +1,6 @@
 package prompto.store.datomic;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,11 +50,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 	
 	public void connect() {
-		this.cnx = Peer.connect(this.uri);
-	}
-
-	public void disconnect() {
-		this.cnx = null;
+		cnx = Peer.connect(this.uri);
 	}
 
 	@Override
@@ -232,6 +229,31 @@ public abstract class BaseDatomicStore implements IStore {
 		return new StoredIterable((DatomicQuery)query);
 	}
 	
+	private Collection<Collection<Object>> fetch(IQuery query) {
+		if(query==null)
+			return Peer.query("[:find ?e :in $ :where [?e :category _]]", cnx.db());
+		else {
+			DatomicQuery d = (DatomicQuery)query;
+			Object q = d.getQuery();
+			List<Object> inputs = d.getInputs();
+			inputs.set(0, cnx.db());
+			QueryRequest r = QueryRequest.create(q, inputs.toArray());
+			return Peer.query(r);
+		}
+	}
+
+
+	@Override
+	public void flush() throws PromptoError {
+		// no action required
+	}
+	
+	@Override
+	public void close() throws IOException {
+		cnx.release();
+		cnx = null;
+	}
+
 	class StoredIterable implements IStoredIterable {
 
 		DatomicQuery query;
@@ -279,25 +301,6 @@ public abstract class BaseDatomicStore implements IStore {
 			return entities.size();
 		}
 	};
-
-	private Collection<Collection<Object>> fetch(IQuery query) {
-		if(query==null)
-			return Peer.query("[:find ?e :in $ :where [?e :category _]]", cnx.db());
-		else {
-			DatomicQuery d = (DatomicQuery)query;
-			Object q = d.getQuery();
-			List<Object> inputs = d.getInputs();
-			inputs.set(0, cnx.db());
-			QueryRequest r = QueryRequest.create(q, inputs.toArray());
-			return Peer.query(r);
-		}
-	}
-
-
-	@Override
-	public void flush() throws PromptoError {
-		// no action required
-	}
 
 
 }

@@ -32,7 +32,7 @@ public abstract class BaseDatomicTest {
 	
 	@After
 	public final void __after__() throws IOException {
-		store.disconnect();
+		store.close();
 		Peer.deleteDatabase(store.uri);
 	}
 	

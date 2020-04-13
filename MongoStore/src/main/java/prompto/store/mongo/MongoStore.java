@@ -105,7 +105,8 @@ public class MongoStore implements IStore {
 		close();
 	}
 	
-	private synchronized void close() {
+	@Override
+	public synchronized void close() {
 		if(client!=null) {
 			client.close();
 			client = null;
