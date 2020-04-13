@@ -57,6 +57,7 @@ public class TestConfig {
 		
 		MongoStore store = new MongoStore(config);
 		MongoIterable<String> names = store.client.getDatabase("admin").listCollectionNames();
+		store.close();
 		assertNotNull(names);
 	}
 	
@@ -110,6 +111,7 @@ public class TestConfig {
 		
 		MongoStore store = new MongoStore(config);
 		MongoIterable<String> names = store.client.getDatabase("admin").listCollectionNames();
+		store.close();
 		assertNotNull(names);
 	}
 	
