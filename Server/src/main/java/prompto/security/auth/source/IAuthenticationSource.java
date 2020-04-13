@@ -1,8 +1,10 @@
 package prompto.security.auth.source;
 
+import java.io.Closeable;
+
 import prompto.utils.Instance;
 
-public interface IAuthenticationSource {
+public interface IAuthenticationSource extends Closeable {
 	
 	static Instance<IAuthenticationSource> instance = new Instance<>();
 	boolean hasLogin(String login);

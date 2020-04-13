@@ -70,5 +70,14 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 			throw new RuntimeException(t);
 		}
 	}
+	
+	@Override
+	public void close() {
+		try {
+			cache.close();
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
 
 }

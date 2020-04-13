@@ -1,5 +1,6 @@
 package prompto.security.auth;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -180,6 +181,10 @@ public class StoredUserInfoCache {
 		storable.setDbId(stored.getDbId());
 		store.store(storable);
 		cache.remove(login);
+	}
+	
+	public void close() throws IOException {
+		store.close();
 	}
 	
 	public static void createLogin(IStore store, String login, String password) throws NoSuchAlgorithmException {
