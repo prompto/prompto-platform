@@ -18,5 +18,5 @@ and methods:
 		Java: return this.hasLogin(login);
 
 	define close as method doing:
-		Java: return close();
+		Java: this.close();
 
