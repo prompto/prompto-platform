@@ -5,7 +5,7 @@ function StoredDocument(categories) {
 
 
 StoredDocument.prototype.getData = function(name) {
-    return this[name] || null;
+    return this.hasOwnProperty(name) ? this[name] : null;
 };
 
 StoredDocument.prototype.matches = function(predicate) {
