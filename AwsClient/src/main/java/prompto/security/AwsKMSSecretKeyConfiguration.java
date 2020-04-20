@@ -31,6 +31,7 @@ public class AwsKMSSecretKeyConfiguration extends SecretKeyConfiguration impleme
 	public YamlMapping toYaml() throws YamlException {
 		YamlMapping yaml = super.toYaml();
 		yaml.setEntry("awsRegion", reader.getString("awsRegion"));
+		yaml.setEntry("alias", reader.getString("alias"));
 		if(reader.getString("awsAccessKey")!=null && reader.getString("awsSecretKey")!=null) {
 			yaml.setEntry("awsAccessKey", reader.getString("awsAccessKey"));
 			yaml.setEntry("awsSecretKey", reader.getString("awsSecretKey"));
