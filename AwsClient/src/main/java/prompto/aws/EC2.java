@@ -1,5 +1,6 @@
 package prompto.aws;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -231,9 +232,13 @@ public class EC2 {
 	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listAMIsWithOwnerAndName(String owner, String name) {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
+		List<Filter> filters = new ArrayList<>();
+		if(owner!=null)
+			filters.add(new Filter().withName("owner-id").withValues(owner));
+		if(name!=null)
+			filters.add(new Filter().withName("name").withValues(name));
 		DescribeImagesRequest request = new DescribeImagesRequest()
-				.withFilters(new Filter().withName("owner-id").withValues(owner),
-						new Filter().withName("name").withValues(name));
+				.withFilters(filters);
 		DescribeImagesResult result = ec2.describeImages(request);
 		result.getImages().forEach((i)->{
 			JsonNode json = new ObjectMapper().valueToTree(i);

@@ -75,12 +75,21 @@ public class TestAwsEC2 {
 	}
 
 	@Test
-	public void latestAMIIsIdentified() throws Throwable {
+	public void AMIsWithOwnerOnlyCanBeListed() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
-		String[] args = new String[] { "-testMethod", "\"latest AMI is identified\"", "-resourceURLs", url.toString() };
+		String[] args = new String[] { "-testMethod", "\"AMIs with owner only can be listed\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
 
+	
+	@Test
+	public void AMIsWithNameOnlyCanBeListed() throws Throwable {
+		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 
+		String[] args = new String[] { "-testMethod", "\"AMIs with name only can be listed\"", "-resourceURLs", url.toString() };
+		Standalone.main(args);
+	}
+
+	
 	@Test
 	public void AMICanBeCreated() throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsEC2.pec"); 

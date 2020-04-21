@@ -135,35 +135,36 @@ and verifying:
 
 define "AMIs with owner and name can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	amis = ec2.listAMIsWithOwnerAndName with "838901125615" as ownerId and "centos-prompto-v*" as name
+	ownerId = "838901125615"
+	name = "centos-prompto-v*"
+	amis = ec2.listAMIsWithOwnerAndName with ownerId and name
 and verifying:
 	amis is not Nothing
 	amis.count > 0
 	(amis[1]["Name"] as Text).startsWith "centos-prompto-v"
 
 
-define getAMIVersion as method receiving Document value returning Version doing:
-	name = value["Name"] as Text
-	parts = name.split "\\-"
-	return parseVersion parts[3]
-
-
-define "AMI version is extracted" as test method doing:
-	ami = { Name: "centos-prompto-v0.0.22" }
-	version = getAMIVersion with ami as value
-and verifying:
-	version = 'v0.0.22'
-		
-		
-define "latest AMI is identified" as test method doing:
+define "AMIs with owner only can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	amis = ec2.listOwnedAMIs
-	amis = sorted descending amis with getAMIVersion as key
-	ami = amis[1]
+	ownerId = "838901125615"
+	name = Nothing
+	amis = ec2.listAMIsWithOwnerAndName with ownerId and name
 and verifying:
-	ami["Name"] = "centos-prompto-v0.0.50"
-	ami["imageId"] = "ami-0f158b1d37ebf5eb4"
-	
+	amis is not Nothing
+	amis.count > 0
+	(amis[1]["Name"] as Text).startsWith "centos-prompto-v"
+
+
+define "AMIs with name only can be listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	ownerId = Nothing
+	name = "centos-prompto-v*"
+	amis = ec2.listAMIsWithOwnerAndName with ownerId and name
+and verifying:
+	amis is not Nothing
+	amis.count > 0
+	(amis[1]["Name"] as Text).startsWith "centos-prompto-v"
+
 
 define "AMI can be created" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
