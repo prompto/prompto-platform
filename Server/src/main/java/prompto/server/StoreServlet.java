@@ -190,7 +190,10 @@ public class StoreServlet extends CleverServlet {
 		else if(fieldValue.isNull())
 			return null;
 		else if(fieldValue.isObject()) {
-			return readJsonValue(fieldValue.get("type").asText(), fieldValue.get("value"), parts, updatedDbIds);
+			if(fieldValue.has("name"))
+				return fieldValue.get("name").asText();
+			else
+				return readJsonValue(fieldValue.get("type").asText(), fieldValue.get("value"), parts, updatedDbIds);
 		} else if(fieldValue.isArray())
 			return StreamSupport.stream(fieldValue.spliterator(), false)
 					.map(node->readJsonValue(node, parts, updatedDbIds))
