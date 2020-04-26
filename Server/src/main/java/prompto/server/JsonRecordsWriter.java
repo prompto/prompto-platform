@@ -186,7 +186,7 @@ public class JsonRecordsWriter {
 			newEntry(Family.TIME, JsonRecordsWriter::writePromptoTime),
 			newEntry(Family.DATETIME, JsonRecordsWriter::writePromptoDateTime),
 			newEntry(Family.VERSION, JsonRecordsWriter::writePromptoVersion),
-			newEntry(Family.ENUMERATED, (g,o)->g.writeString((String)o)), 
+			newEntry(Family.ENUMERATED, JsonRecordsWriter::writeEnumerated),
 			newEntry(Family.CATEGORY, (g,o)->g.writeString("<instance>")), 
 			newEntry(Family.RESOURCE, (g,o)->g.writeString("<instance>"))
 		 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -239,6 +239,13 @@ public class JsonRecordsWriter {
 		generator.writeEndObject();
 	}
 	
+	private static void writeEnumerated(JsonGenerator generator, Object value) throws IOException {
+		generator.writeStartObject();
+		generator.writeFieldName("name");
+		generator.writeString(value.toString());
+		generator.writeEndObject();
+	}
+
 	private static void writePromptoDate(JsonGenerator generator, Object value) throws IOException {
 		generator.writeStartObject();
 		generator.writeFieldName("type");
