@@ -32,6 +32,7 @@ import prompto.value.DocumentValue;
 import prompto.value.IValue;
 import prompto.value.ListValue;
 import prompto.value.TextValue;
+import prompto.value.TupleValue;
 
 
 @SuppressWarnings("serial")
@@ -122,14 +123,30 @@ public class UserServlet extends CleverServlet {
 	private void sendValue(HttpServletRequest req, HttpServletResponse resp, IValue value) throws IOException {
 		if(value==null || value==VoidResult.instance())
 			return;
-		if(value instanceof TextValue)
+		if(value instanceof TextValue) {
+			resp.setContentType("text/plain");
 			resp.getWriter().write(((TextValue)value).getStorableData());
-		else if(value instanceof BinaryValue) {
+			return;
+		}
+		if(value instanceof BinaryValue) {
 			PromptoBinary binary = ((BinaryValue)value).getData();
 			resp.setContentType(binary.getMimeType());
 			resp.getOutputStream().write(binary.getBytes());
-		} else
-			resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
+			return;
+		} 
+		if(value instanceof TupleValue) {
+			TupleValue tuple = (TupleValue)value;
+			if(tuple.getLength()>=2) {
+				IValue content = tuple.getItem(0);
+				IValue mimeType = tuple.getItem(1);
+				if(content.getType()==TextType.instance() && mimeType.getType()==TextType.instance()) {
+					resp.setContentType(((TextValue)mimeType).getStorableData());
+					resp.getWriter().write(((TextValue)content).getStorableData());
+					return;
+				}
+			}
+		}
+		resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
 	}
 
 	private IValue doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
