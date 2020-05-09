@@ -8,16 +8,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import prompto.code.ICodeStore;
 import prompto.declaration.CategoryDeclaration;
-import prompto.declaration.IDeclaration;
 import prompto.declaration.IWidgetDeclaration;
 import prompto.error.SyntaxError;
+import prompto.grammar.Identifier;
 import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.store.DataStore;
@@ -141,16 +139,8 @@ public class HtmlGenerator {
 	
 
 	private IWidgetDeclaration fetchWidgetDeclaration(Context context, String widgetName) {
-		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchLatestDeclarations(widgetName);
-		if(decls==null)
-			return null;
-		Iterator<IDeclaration> iter = decls.iterator();
-		if(!iter.hasNext())
-			return null;
-		IDeclaration decl = iter.next();;
-		if(!(decl instanceof CategoryDeclaration))
-			return null;
-		if(((CategoryDeclaration)decl).isAWidget(context))
+		CategoryDeclaration decl = context.getRegisteredDeclaration(CategoryDeclaration.class, new Identifier(widgetName));
+		if(decl!=null && decl.isAWidget(context))
 			return ((CategoryDeclaration)decl).asWidget();
 		else
 			return null;
