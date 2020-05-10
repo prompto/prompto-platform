@@ -164,7 +164,7 @@ public class UserServlet extends CleverServlet {
 		Object object = JSONReader.read(req.getInputStream());
 		if(object instanceof PromptoDocument) {
 			Context context = getWorkerContext();
-			DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object);
+			DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object, true);
 			return interpret(context, document);
 		} else {
 			resp.sendError(415);
