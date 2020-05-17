@@ -506,8 +506,8 @@ public class MongoStore implements IStore {
 			if(count==null) {
 				if(query!=null && query.first!=null && query.last!=null) {
 					count = 1 + query.last - query.first;
-					if(count > totalCount())
-						count = totalCount();
+					if(query.first + count - 1 > totalCount())
+						count = totalCount() + 1 - query.first;
 				} else
 					count = totalCount();
 			}
