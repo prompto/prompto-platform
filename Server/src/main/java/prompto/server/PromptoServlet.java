@@ -35,6 +35,7 @@ public class PromptoServlet extends CleverServlet {
 	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(PromptoServlet.class.getSimpleName());
 		HttpUserReader.readAndSet(req);
 		readSession(req);
 		REGISTERED_ORIGIN.set(readRegisterdOrigin(req));

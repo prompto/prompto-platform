@@ -55,7 +55,6 @@ public class RequestRouter {
 	}
 	
 	private Context prepareContext(String name) {
-		Thread.currentThread().setName(name);
 		Context context = ApplicationContext.get().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null)

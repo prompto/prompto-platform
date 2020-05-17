@@ -40,6 +40,7 @@ public class DataServlet extends CleverServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(this.getClass().getSimpleName());
 		String path = req.getPathInfo();
 		if(path!=null) switch(path) {
 		case "/fetch":

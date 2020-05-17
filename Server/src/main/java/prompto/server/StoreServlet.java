@@ -49,11 +49,13 @@ public class StoreServlet extends CleverServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(this.getClass().getSimpleName());
 		doStuff(req, resp);
 	}
 	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(this.getClass().getSimpleName());
 		doStuff(req, resp);
 	}
 	

@@ -21,6 +21,7 @@ public class BinaryServlet extends CleverServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(this.getClass().getSimpleName());
 		try {
 			String dbIdString = req.getParameter(IStore.dbIdName);
 			String attr = req.getParameter("attribute");

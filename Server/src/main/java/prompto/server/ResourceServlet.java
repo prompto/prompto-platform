@@ -59,6 +59,8 @@ public abstract class ResourceServlet extends CleverServlet {
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
+		Thread.currentThread().setName(this.getClass().getSimpleName());
+
 		boolean writeBody = false;
 		
 		switch(request.getMethod().toUpperCase()) {

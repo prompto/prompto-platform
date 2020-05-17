@@ -55,6 +55,7 @@ public class UserServlet extends CleverServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
+			Thread.currentThread().setName(this.getClass().getSimpleName());
 			logger.info(()->"Processing GET " + req.getRequestURI());
 			Context local = getWorkerContext();
 			DocumentValue document = paramsToDocument(local, req.getParameterMap());
