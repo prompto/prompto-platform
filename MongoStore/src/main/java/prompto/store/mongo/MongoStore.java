@@ -36,11 +36,14 @@ import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.WriteModel;
 
 import prompto.config.ISecretKeyConfiguration;
@@ -191,8 +194,8 @@ public class MongoStore implements IStore {
 		                .build();
 		if(user!=null && password!=null) {
 			logger.info(()->"Connecting user '" + user + "' to '" + dbName + "' database");
-			MongoCredential cred = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
-			client = new MongoClient(address, Collections.singletonList(cred), options);
+			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
+			client = new MongoClient(address, credential, options);
 		} else {
 			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
 			client = new MongoClient(address, options);
@@ -494,9 +497,9 @@ public class MongoStore implements IStore {
 		public long totalCount() {
 			if(totalCount==null) {
 				if(query==null || query.predicate==null)
-					totalCount = collection.count();
+					totalCount = collection.estimatedDocumentCount();
 				else
-					totalCount = collection.count(query.predicate);
+					totalCount = collection.countDocuments(query.predicate);
 			}
 			return totalCount;
 		}
@@ -523,6 +526,18 @@ public class MongoStore implements IStore {
 
 	private MongoCollection<Document> getInstancesCollection() {
 		return db.getCollection("instances");
+	}
+	
+	@Override
+	public long nextSequenceValue(String name) {
+		MongoCollection<Document> sequences = db.getCollection("sequences");
+		Bson filter = Filters.eq("_id", name);
+		Bson update = Updates.inc("sequence", 1);
+		FindOneAndUpdateOptions options = new FindOneAndUpdateOptions()
+				.upsert(true)
+				.returnDocument(ReturnDocument.AFTER);
+		Document result = sequences.findOneAndUpdate(filter, update, options);
+		return ((Number)result.get("sequence")).longValue();
 	}
 
 	@Override

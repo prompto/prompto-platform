@@ -394,4 +394,9 @@ abstract class BaseSOLRStore implements IStore {
 	public abstract void dropField(String fieldName) throws SolrServerException, IOException;
 
 	public abstract void setCommitDelay(int commitDelay) throws SolrServerException;
+	
+	@Override
+	public long nextSequenceValue(String prefix) {
+		throw new UnsupportedOperationException("yet!");
+	}
 }
