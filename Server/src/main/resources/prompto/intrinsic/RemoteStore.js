@@ -233,6 +233,23 @@ function RemoteStore() {
 			andThen(cursor);
 		});
 	};
+	this.nextSequenceValue = function(name) {
+		var response = null;
+		var request  = new XMLHttpRequest();
+		request.open("GET", "/ws/store/nextSequenceValue?name=" + name, false); // must be synchronous
+		request.onload = function() { 
+			if (this.status == 200)
+				response = JSON.parse(this.responseText); 
+			else
+				throw new Error(this.statusText);
+		};
+		request.send();
+		if(response)
+			return response;
+		else
+			return -1;
+	
+	};
 	return this; 
 }
 

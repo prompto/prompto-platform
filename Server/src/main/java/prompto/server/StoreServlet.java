@@ -70,9 +70,19 @@ public class StoreServlet extends CleverServlet {
 				break;
 			case "/deleteAndStore":
 				deleteAndStore(req, resp);
+				break;
+			case "/nextSequenceValue":
+				nextSequenceValue(req, resp);
+				break;
 			default:
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 		}
+	}
+
+	private void nextSequenceValue(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		String name = req.getParameter("name");
+		long value = DataStore.getInstance().nextSequenceValue(name);
+		resp.getWriter().print(value);
 	}
 
 	protected void deleteAndStore(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
