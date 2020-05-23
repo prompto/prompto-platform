@@ -352,15 +352,4 @@ public class TestQuery extends BaseMongoTest {
 		assertEquals("John", result.getData("name"));
 	}
 	
-	@Test
-	public void nextSequenceIncrements() {
-		long counter = store.nextSequenceValue("test");
-		assertEquals(1L, counter);
-		counter = store.nextSequenceValue("test");
-		assertEquals(2L, counter);
-		counter = store.nextSequenceValue("test2");
-		assertEquals(1L, counter);
-	}
-	
-	
 }

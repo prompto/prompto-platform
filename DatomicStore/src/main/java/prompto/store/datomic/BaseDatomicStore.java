@@ -290,6 +290,17 @@ public abstract class BaseDatomicStore implements IStore {
 	public long nextSequenceValue(String prefix) {
 		throw new UnsupportedOperationException("yet!");
 	}
+	
+	@Override
+	public Map<String, Object> fetchConfiguration(String name) {
+		throw new UnsupportedOperationException("yet!");
+	}
+	
+	@Override
+	public void storeConfiguration(String name, Map<String, Object> data) {
+		throw new UnsupportedOperationException("yet!");
+	}
+	
 
 
 	@Override

@@ -40,6 +40,7 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOneModel;
@@ -595,5 +596,27 @@ public class MongoStore implements IStore {
 	}
 
 
+	@Override
+	public Map<String, Object> fetchConfiguration(String name) {
+		MongoCollection<Document> configs = db.getCollection("configurations");
+		FindIterable<Document> find = configs.find()
+				.filter(Filters.eq("_id", name))
+				.limit(1);
+		Iterator<Document> iter = find.iterator();
+		if(iter.hasNext())
+			return iter.next();
+		else
+			return null;
+	}
+	
+	@Override
+	public void storeConfiguration(String name, Map<String, Object> data) {
+		Document config = new Document();
+		config.putAll(data);
+		Bson filter = Filters.eq("_id", name);
+		MongoCollection<Document> configs = db.getCollection("configurations");
+		ReplaceOptions options = new ReplaceOptions().upsert(true);
+		configs.replaceOne(filter, config, options);
+	}
 
 }
