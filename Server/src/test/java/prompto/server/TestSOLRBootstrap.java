@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import prompto.config.IRuntimeConfiguration;
@@ -21,6 +22,7 @@ import prompto.store.Family;
 import prompto.store.IStore;
 import prompto.store.solr.EmbeddedSOLRStore;
 
+@Ignore("Until we need it")
 public class TestSOLRBootstrap {
 	
 	EmbeddedSOLRStore store;
