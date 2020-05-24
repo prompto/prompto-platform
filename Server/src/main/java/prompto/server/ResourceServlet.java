@@ -65,6 +65,7 @@ public abstract class ResourceServlet extends CleverServlet {
 		
 		switch(request.getMethod().toUpperCase()) {
 			case "GET":
+			case "POST": // required for auth error page
 				writeBody = true;
 			case "HEAD":
 				break;
