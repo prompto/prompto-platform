@@ -346,8 +346,9 @@ class JettyServer extends Server {
         FilterHolder filterHolder = newCrossOriginHandler();
         if(filterHolder!=null)
         	handler.addFilter(filterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
-        handler.getSessionHandler().getSessionManager().setMaxInactiveInterval(300); // TODO make timeout configurable
-		return handler;
+        SessionManager manager = new SessionManager(config.getHttpConfiguration());
+        handler.getSessionHandler().setSessionManager(manager);
+    	return handler;
 	}
 	
    private void newDebuggerServlets(CleverWebAppContext handler) throws Exception {
