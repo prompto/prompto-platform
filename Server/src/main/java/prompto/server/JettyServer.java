@@ -133,9 +133,10 @@ class JettyServer extends Server {
 		IHttpConfiguration http = config.getHttpConfiguration();
 		IAuthenticationConfiguration auth = http.getAuthenticationConfiguration();
 		String welcomePage = http.getWelcomePage();
-		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol()))
+		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol())) {
+			logger.info(()->"Not possible to force LoginModule initialization");
 			return; // no need or not possible
-		else try {
+		} else try {
 			if(!welcomePage.startsWith("/"))
 				welcomePage = "/" + welcomePage;
 			String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
@@ -146,7 +147,7 @@ class JettyServer extends Server {
 			cnx.getResponseCode();
 			cnx.disconnect();
 		} catch(Throwable t) {
-			logger.debug(()->"During forceLoginModuleInitialization", t);
+			logger.debug(()->"During force LoginModule initialization", t);
 		}
 	}
 
