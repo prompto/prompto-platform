@@ -118,8 +118,10 @@ public class StoredUserInfoCache {
 			IQueryBuilder query = store.newQueryBuilder();
 			query.verify(LOGIN, MatchOp.EQUALS, this.userName);
 			IStored authRecord = store.fetchOne(query.build());
-			if (authRecord == null)
+			if (authRecord == null) {
+				logger.info(()->"Unkown user: " + this.userName);
 				return false; // unregistered user
+			}
 			DigestMethod method = DigestMethod.forName((String)authRecord.getData(METHOD.getName()));
 			if (method == null)
 				return false; // unknown digest method
@@ -131,7 +133,10 @@ public class StoredUserInfoCache {
 				return false; // no digest stored
 			// compute value from credentials
 			String computedDigest = method.apply(credentials.toString(), storedSalt.toString());
-			return Objects.equals(storedDigest, computedDigest);
+			boolean equal = Objects.equals(storedDigest, computedDigest);
+			if(!equal)
+				logger.info(()->"Invalid password for user: " + this.userName);
+			return equal;
 		}
 
 		private boolean wasCheckedRecently(Object credentials) {
