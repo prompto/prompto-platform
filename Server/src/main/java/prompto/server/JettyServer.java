@@ -53,9 +53,9 @@ import prompto.debug.WebSocketDebugEventAdapterFactory;
 import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
-import prompto.security.TrustAllCertificatesManager;
 import prompto.security.auth.method.IAuthenticationMethodFactory;
 import prompto.utils.Logger;
+import prompto.utils.SSLUtils;
 
 class JettyServer extends Server {
 
@@ -136,11 +136,13 @@ class JettyServer extends Server {
 		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol()))
 			return; // no need or not possible
 		else try {
-			String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + "/" + welcomePage;
+			if(!welcomePage.startsWith("/"))
+				welcomePage = "/" + welcomePage;
+			String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
 			logger.info(()->"Locally connecting to " + path + "...");
 			URL url = new URL(path);
 			HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
-			TrustAllCertificatesManager.install(cnx);
+			SSLUtils.trustAllCertificates(cnx);
 			cnx.getResponseCode();
 			cnx.disconnect();
 		} catch(Throwable t) {

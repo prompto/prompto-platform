@@ -15,7 +15,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.junit.Test;
 
-import prompto.security.TrustAllCertificatesManager;
+import prompto.utils.SSLUtils;
 
 public class TestConnectSSL extends BaseServerTest {
 	
@@ -37,7 +37,7 @@ public class TestConnectSSL extends BaseServerTest {
 	public void testResource() throws Exception {
 		URL url = new URL("https://localhost:" + port + "/ws/control/version");
 		HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
-		TrustAllCertificatesManager.install(cnx);
+		SSLUtils.trustAllCertificates(cnx);
 		InputStream input = cnx.getInputStream();
 		try(Reader reader = new InputStreamReader(input)) {
 			try(BufferedReader buffered = new BufferedReader(reader)) {
