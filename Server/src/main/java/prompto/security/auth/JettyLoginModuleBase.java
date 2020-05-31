@@ -14,11 +14,15 @@ import org.eclipse.jetty.jaas.spi.AbstractLoginModule;
 
 import prompto.config.auth.source.IAuthenticationSourceConfiguration;
 import prompto.security.auth.source.IAuthenticationSource;
+import prompto.utils.Logger;
 
 public abstract class JettyLoginModuleBase extends AbstractLoginModule implements IAuthenticationSource {
 
+	static final Logger logger = new Logger();
+
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
+		logger.info(()->"Initializing AuthenticationSource");
 		super.initialize(subject, callbackHandler, sharedState, options);
 		IAuthenticationSource.instance.set(this);
 	}
