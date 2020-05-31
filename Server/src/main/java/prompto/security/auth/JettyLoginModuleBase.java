@@ -19,12 +19,14 @@ import prompto.utils.Logger;
 public abstract class JettyLoginModuleBase extends AbstractLoginModule implements IAuthenticationSource {
 
 	static final Logger logger = new Logger();
-
+	
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
-		logger.info(()->"Initializing AuthenticationSource");
 		super.initialize(subject, callbackHandler, sharedState, options);
-		IAuthenticationSource.instance.set(this);
+		if(IAuthenticationSource.instance.get()!=this) {
+			logger.debug(()->"Initializing AuthenticationSource");
+			IAuthenticationSource.instance.set(this);
+		}
 	}
 	
 	public static void install(final String loginModuleClassName, final IAuthenticationSourceConfiguration config) {
