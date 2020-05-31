@@ -1,8 +1,10 @@
 package prompto.server;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.PasswordAuthentication;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -134,24 +136,28 @@ class JettyServer extends Server {
 	private void forceLoginModuleInitialization() {
 		IHttpConfiguration http = config.getHttpConfiguration();
 		IAuthenticationConfiguration auth = http.getAuthenticationConfiguration();
-		String welcomePage = http.getWelcomePage();
-		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol())) {
-			logger.info(()->"Not possible to force LoginModule initialization");
+		if(auth==null) {
+			logger.info(()->"No auth required, no need to force LoginModule initialization");
 			return; // no need or not possible
 		} else {
 			try {
-				java.net.Authenticator.setDefault(new java.net.Authenticator() {
-					protected java.net.PasswordAuthentication getPasswordAuthentication() {
-						return new PasswordAuthentication("<anonymous>", "<password>".toCharArray());
-					}; 
-				});
-				if(!welcomePage.startsWith("/"))
-					welcomePage = "/" + welcomePage;
-				String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
+				String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + "/j_security_check";
 				logger.info(()->"Locally connecting to " + path + "...");
 				URL url = new URL(path);
-				HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
-				SSLUtils.trustAllCertificates(cnx);
+				HttpURLConnection cnx = (HttpURLConnection)url.openConnection();
+				if(cnx instanceof HttpsURLConnection)
+					SSLUtils.trustAllCertificates((HttpsURLConnection)cnx);
+				byte[] data = "j_username=<anonymous>&j_password=<password>".getBytes( StandardCharsets.UTF_8);
+				cnx.setDoOutput( true );
+				cnx.setInstanceFollowRedirects( false );
+				cnx.setRequestMethod( "POST" );
+				cnx.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded"); 
+				cnx.setRequestProperty( "charset", "utf-8");
+				cnx.setRequestProperty( "Content-Length", Integer.toString(data.length));
+				cnx.setUseCaches( false );
+				try( DataOutputStream wr = new DataOutputStream( cnx.getOutputStream())) {
+				   wr.write(data);
+				}
 				cnx.getResponseCode();
 				cnx.disconnect();
 				if(IAuthenticationSource.instance.get()==null)
@@ -160,9 +166,7 @@ class JettyServer extends Server {
 					logger.info(()->"Authentication source successfully initialized");
 			} catch(Throwable t) {
 				logger.debug(()->"During force LoginModule initialization", t);
-			} finally {
-				java.net.Authenticator.setDefault(null);
-			}
+			} 
 		}
 	}
 
