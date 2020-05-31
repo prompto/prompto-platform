@@ -93,7 +93,7 @@ class JettyServer extends Server {
 				try {
 					try {
 						start();
-						logger.info(()->"Web server started...");
+						logger.info(()->"Web server started.");
 					} finally {
 						logger.info(()->"Signaling start completion...");
 						synchronized (startFlag) {
@@ -120,7 +120,7 @@ class JettyServer extends Server {
 			while(!startComplete)
 				startFlag.wait();
 		}
-		logger.info(()->"Start completion signalled...");
+		logger.info(()->"Start completion signalled.");
 		forceLoginModuleInitialization();
 		if(serverThrowable!=null) {
 			Throwable t = serverThrowable;
@@ -140,15 +140,15 @@ class JettyServer extends Server {
 			return; // no need or not possible
 		} else {
 			try {
-				if(!welcomePage.startsWith("/"))
-					welcomePage = "/" + welcomePage;
-				String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
-				logger.info(()->"Locally connecting to " + path + "...");
 				java.net.Authenticator.setDefault(new java.net.Authenticator() {
 					protected java.net.PasswordAuthentication getPasswordAuthentication() {
 						return new PasswordAuthentication("<anonymous>", "<password>".toCharArray());
 					}; 
 				});
+				if(!welcomePage.startsWith("/"))
+					welcomePage = "/" + welcomePage;
+				String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
+				logger.info(()->"Locally connecting to " + path + "...");
 				URL url = new URL(path);
 				HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
 				SSLUtils.trustAllCertificates(cnx);
@@ -160,6 +160,8 @@ class JettyServer extends Server {
 					logger.info(()->"Authentication source successfully initialized");
 			} catch(Throwable t) {
 				logger.debug(()->"During force LoginModule initialization", t);
+			} finally {
+				java.net.Authenticator.setDefault(null);
 			}
 		}
 	}
