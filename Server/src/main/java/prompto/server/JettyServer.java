@@ -1,6 +1,7 @@
 package prompto.server;
 
 import java.io.IOException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -54,6 +55,7 @@ import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
 import prompto.security.auth.method.IAuthenticationMethodFactory;
+import prompto.security.auth.source.IAuthenticationSource;
 import prompto.utils.Logger;
 import prompto.utils.SSLUtils;
 
@@ -136,18 +138,29 @@ class JettyServer extends Server {
 		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol())) {
 			logger.info(()->"Not possible to force LoginModule initialization");
 			return; // no need or not possible
-		} else try {
-			if(!welcomePage.startsWith("/"))
-				welcomePage = "/" + welcomePage;
-			String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
-			logger.info(()->"Locally connecting to " + path + "...");
-			URL url = new URL(path);
-			HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
-			SSLUtils.trustAllCertificates(cnx);
-			cnx.getResponseCode();
-			cnx.disconnect();
-		} catch(Throwable t) {
-			logger.debug(()->"During force LoginModule initialization", t);
+		} else {
+			try {
+				if(!welcomePage.startsWith("/"))
+					welcomePage = "/" + welcomePage;
+				String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + welcomePage;
+				logger.info(()->"Locally connecting to " + path + "...");
+				java.net.Authenticator.setDefault(new java.net.Authenticator() {
+					protected java.net.PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication("<anonymous>", "<password>".toCharArray());
+					}; 
+				});
+				URL url = new URL(path);
+				HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
+				SSLUtils.trustAllCertificates(cnx);
+				cnx.getResponseCode();
+				cnx.disconnect();
+				if(IAuthenticationSource.instance.get()==null)
+					logger.warn(()->"No authentication source configured!");
+				else
+					logger.info(()->"Authentication source successfully initialized");
+			} catch(Throwable t) {
+				logger.debug(()->"During force LoginModule initialization", t);
+			}
 		}
 	}
 
