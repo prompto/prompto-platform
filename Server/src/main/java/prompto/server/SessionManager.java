@@ -13,46 +13,50 @@ public class SessionManager extends HashSessionManager {
 
 	static final Logger logger = new Logger();
 
-	public SessionManager(IHttpConfiguration httpConfiguration) {
+	public SessionManager(IHttpConfiguration config) {
 		setMaxInactiveInterval(300); // TODO make timeout configurable
+		if(config.getPort()!=443) {
+			_sessionCookie = _sessionCookie + "_" + config.getPort();
+			logger.info(()->"Setting custom session cookie: " + _sessionCookie);
+		}
 	}
 
 	@Override
 	public AbstractSession getSession(String idInCluster) {
 		AbstractSession session = super.getSession(idInCluster);
 		if(session==null)
-			logger.info(()->"No session found for " + idInCluster);
+			logger.debug(()->"No session found for " + idInCluster);
 		return session;
 	}
 	
 	@Override
 	public boolean isValid(HttpSession session) {
 		boolean valid = super.isValid(session);
-		logger.info(()->"Session " + session.getId() + " valid: " + valid);
+		logger.debug(()->"Session " + session.getId() + " valid: " + valid);
 		return valid;
 	}
 	
 	@Override
 	protected void shutdownSessions() throws Exception {
-		logger.info(()->"Shutting down sessions");
+		logger.debug(()->"Shutting down sessions");
 		super.shutdownSessions();
 	}
 	
 	@Override
 	public void renewSessionId(String oldClusterId, String oldNodeId, String newClusterId, String newNodeId) {
-		logger.info(()->"Renewing session " + oldClusterId + " to " + newClusterId);
+		logger.debug(()->"Renewing session " + oldClusterId + " to " + newClusterId);
 		super.renewSessionId(oldClusterId, oldNodeId, newClusterId, newNodeId);
 	}
 	
 	@Override
 	protected AbstractSession newSession(HttpServletRequest request) {
-		logger.info(()->"newSession");
+		logger.debug(()->"newSession");
 		return super.newSession(request);
 	}
 	
 	@Override
 	protected AbstractSession newSession(long created, long accessed, String clusterId) {
-		logger.info(()->"newSession " + clusterId);
+		logger.debug(()->"newSession " + clusterId);
 		return super.newSession(created, accessed, clusterId);
 	}
 }    
