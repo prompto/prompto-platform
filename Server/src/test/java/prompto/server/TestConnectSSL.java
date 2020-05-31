@@ -1,6 +1,9 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -8,24 +11,14 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 
-import org.junit.After;
-import org.junit.Before;
+import javax.net.ssl.HttpsURLConnection;
+
 import org.junit.Test;
 
-import prompto.security.MockTrustManager;
+import prompto.security.TrustAllCertificatesManager;
 
 public class TestConnectSSL extends BaseServerTest {
 	
-	@Before
-	public void before() throws Exception {
-		MockTrustManager.install();
-	}
-
-	@After
-	public void after() {
-		MockTrustManager.restore();
-	}
-
 	public TestConnectSSL() {
 		this.ssl = true;
 	}
@@ -43,16 +36,19 @@ public class TestConnectSSL extends BaseServerTest {
 	@Test
 	public void testResource() throws Exception {
 		URL url = new URL("https://localhost:" + port + "/ws/control/version");
-		try (InputStream input = url.openStream()) {
-			try(Reader reader = new InputStreamReader(input)) {
-				try(BufferedReader buffered = new BufferedReader(reader)) {
-					assertEquals("1.0.0", buffered.readLine());
-				}
+		HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
+		TrustAllCertificatesManager.install(cnx);
+		InputStream input = cnx.getInputStream();
+		try(Reader reader = new InputStreamReader(input)) {
+			try(BufferedReader buffered = new BufferedReader(reader)) {
+				assertEquals("1.0.0", buffered.readLine());
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();
 			fail();
-		} 
+		} finally {
+			cnx.disconnect();
+		}
 	}
 
 }

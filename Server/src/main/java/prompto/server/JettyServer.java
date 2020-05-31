@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
@@ -38,6 +39,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import prompto.config.IDebugConfiguration;
 import prompto.config.IDebugEventAdapterConfiguration;
 import prompto.config.IDebugRequestListenerConfiguration;
+import prompto.config.IHttpConfiguration;
 import prompto.config.IKeyStoreConfiguration;
 import prompto.config.IKeyStoreFactoryConfiguration;
 import prompto.config.ISecretKeyConfiguration;
@@ -51,6 +53,7 @@ import prompto.debug.WebSocketDebugEventAdapterFactory;
 import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
+import prompto.security.TrustAllCertificatesManager;
 import prompto.security.auth.method.IAuthenticationMethodFactory;
 import prompto.utils.Logger;
 
@@ -116,10 +119,32 @@ class JettyServer extends Server {
 				startFlag.wait();
 		}
 		logger.info(()->"Start completion signalled...");
+		forceLoginModuleInitialization();
 		if(serverThrowable!=null) {
 			Throwable t = serverThrowable;
 			serverThrowable = null;
 			throw t;
+		}
+	}
+	
+	
+
+	private void forceLoginModuleInitialization() {
+		IHttpConfiguration http = config.getHttpConfiguration();
+		IAuthenticationConfiguration auth = http.getAuthenticationConfiguration();
+		String welcomePage = http.getWelcomePage();
+		if(auth==null || welcomePage==null || !"https".equals(http.getProtocol()))
+			return; // no need or not possible
+		else try {
+			String path = http.getProtocol() + "://" + http.getPublicAddress() + ":" + http.getPort() + "/" + welcomePage;
+			logger.info(()->"Locally connecting to " + path + "...");
+			URL url = new URL(path);
+			HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
+			TrustAllCertificatesManager.install(cnx);
+			cnx.getResponseCode();
+			cnx.disconnect();
+		} catch(Throwable t) {
+			logger.debug(()->"During forceLoginModuleInitialization", t);
 		}
 	}
 

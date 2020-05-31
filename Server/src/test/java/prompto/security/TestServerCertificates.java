@@ -24,8 +24,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,7 +33,7 @@ import prompto.utils.ManualTests;
 @Category(ManualTests.class)
 public class TestServerCertificates {
 
-	static String CERTS_DIR = "/Users/ericvergnaud/Prompto/certificates/JavaCertificates/";
+	static String CERTS_DIR = "/Users/ericvergnaud/Prompto/certificates/latest/JavaCertificates/";
 	static Instance<String> password = new Instance<>();
 	static Supplier<String> PASSWORD = () -> { 
 		if(password.get()==null) try {
@@ -48,16 +46,6 @@ public class TestServerCertificates {
 		return password.get();
 	};
 	
-	@Before
-	public void before() throws Exception {
-		MockTrustManager.install();
-	}
-
-	@After
-	public void after() {
-		MockTrustManager.restore();
-	}
-
 	@Test
 	public void testLoadCertificate() throws Throwable {
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());

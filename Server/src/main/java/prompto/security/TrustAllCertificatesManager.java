@@ -1,27 +1,20 @@
 package prompto.security;
 
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class MockTrustManager implements X509TrustManager {
+public class TrustAllCertificatesManager implements X509TrustManager {
 	
-	static SSLSocketFactory saved;
-
-	public static void install() throws Exception {
-		saved = HttpsURLConnection.getDefaultSSLSocketFactory();
+	public static void install(HttpsURLConnection cnx) throws GeneralSecurityException {
 		// Install the all-trusting trust manager
 		SSLContext sc = SSLContext.getInstance("SSL");
-		sc.init(null, new TrustManager[] { new MockTrustManager() }, new java.security.SecureRandom());
-		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());	}
-	
-	public static void restore() {
-		if(saved!=null)
-			HttpsURLConnection.setDefaultSSLSocketFactory(saved);
+		sc.init(null, new TrustManager[] { new TrustAllCertificatesManager() }, new java.security.SecureRandom());
+		cnx.setSSLSocketFactory(sc.getSocketFactory());	
 	}
 	
 	@Override
