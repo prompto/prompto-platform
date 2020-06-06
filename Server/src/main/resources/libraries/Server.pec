@@ -16,3 +16,5 @@ define getHttpPort as native method returning Integer doing:
     Java: return $server.getHttpPort();
 	JavaScript: return self.location.port;
 
+define httpRedirect as native method receiving Text path doing:
+    Java: $server.httpRedirect(path);

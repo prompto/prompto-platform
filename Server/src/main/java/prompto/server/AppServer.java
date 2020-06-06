@@ -16,6 +16,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -32,6 +34,7 @@ import prompto.debug.HttpServletDebugRequestListener;
 import prompto.debug.IDebugEventAdapter;
 import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
+import prompto.error.ReadWriteError;
 import prompto.error.TerminatedError;
 import prompto.grammar.Identifier;
 import prompto.libraries.Libraries;
@@ -268,5 +271,12 @@ public class AppServer {
 		httpSession.set(session);
 	}
 
+	/* used by Server.pec */
+	public static void httpRedirect(String path) throws IOException {
+		HttpServletResponse response = CleverServlet.CURRENT_RESPONSE.get();
+		if(response==null)
+			throw new ReadWriteError("Not invoked during server request!");
+		response.sendRedirect(path);
+	}
 
 }
