@@ -67,16 +67,16 @@ public class CleverServlet extends HttpServlet {
 	}
 
 	private String readRegisteredOrigin(HttpServletRequest req) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(req.getScheme());
-		sb.append("://");
-		sb.append(req.getServerName());
-		sb.append(",");
-		sb.append(req.getScheme());
-		sb.append("://");
-		sb.append(req.getServerName());
-		sb.append(":");
-		sb.append(req.getServerPort());
+		StringBuilder sb = new StringBuilder()
+		 .append(req.getScheme())
+		 .append("://")
+		 .append(req.getServerName())
+		 .append(",")
+		 .append(req.getScheme())
+		 .append("://")
+		 .append(req.getServerName())
+		 .append(":")
+		 .append(req.getServerPort());
 		return sb.toString();
 	}
 
