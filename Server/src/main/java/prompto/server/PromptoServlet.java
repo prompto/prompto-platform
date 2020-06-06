@@ -11,14 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import prompto.grammar.Identifier;
 import prompto.utils.Logger;
-import prompto.value.DocumentValue;
 
 @SuppressWarnings("serial")
 public class PromptoServlet extends CleverServlet {
 
 	static final Logger logger = new Logger();
-	
-	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
 	
 	boolean sendsXAutorization;
 	
@@ -35,10 +32,6 @@ public class PromptoServlet extends CleverServlet {
 	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Thread.currentThread().setName(PromptoServlet.class.getSimpleName());
-		HttpUserReader.readAndSet(req);
-		readSession(req);
-		REGISTERED_ORIGIN.set(readRegisterdOrigin(req));
 		if(sendsXAutorization) {
 			logger.debug(()->"PromptoServlet, Authorization: " + req.getHeader("Authorization"));
 			if(req.getHeader("Authorization")!=null)
@@ -48,20 +41,6 @@ public class PromptoServlet extends CleverServlet {
 	}
 
 	
-	private String readRegisterdOrigin(HttpServletRequest req) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(req.getScheme());
-		sb.append("://");
-		sb.append(req.getServerName());
-		sb.append(",");
-		sb.append(req.getScheme());
-		sb.append("://");
-		sb.append(req.getServerName());
-		sb.append(":");
-		sb.append(req.getServerPort());
-		return sb.toString();
-	}
-
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
@@ -82,15 +61,6 @@ public class PromptoServlet extends CleverServlet {
 	}
 	
 	
-	private void readSession(HttpServletRequest req) {
-		DocumentValue doc = (DocumentValue)req.getSession(true).getAttribute("__prompto_http_session__");
-		if(doc==null) {
-			doc = new DocumentValue();
-			req.getSession(true).setAttribute("__prompto_http_session__", doc);
-		}
-		AppServer.setHttpSession(doc);
-	}
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		try {
