@@ -12,11 +12,13 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import prompto.utils.Logger;
+import prompto.value.DocumentValue;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -27,6 +29,10 @@ public class CleverServlet extends HttpServlet {
 
 	static final Logger logger = new Logger();
 
+	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
+	public static ThreadLocal<HttpServletRequest> CURRENT_REQUEST = ThreadLocal.withInitial(()->null);
+	public static ThreadLocal<HttpServletResponse> CURRENT_RESPONSE = ThreadLocal.withInitial(()->null);
+
 	ServletHolder holder;
 	
 	@Override
@@ -34,6 +40,46 @@ public class CleverServlet extends HttpServlet {
 		return this.getClass().getSimpleName();
 	}
 	
+	@Override
+	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Thread.currentThread().setName(this.getClass().getSimpleName());
+		HttpUserReader.readAndSet(req);
+		readSession(req);
+		CURRENT_REQUEST.set(req);
+		CURRENT_RESPONSE.set(resp);
+		REGISTERED_ORIGIN.set(readRegisteredOrigin(req));
+		try {
+			super.service(req, resp);
+		} finally {
+			REGISTERED_ORIGIN.set(null);
+			CURRENT_REQUEST.set(null);
+			CURRENT_RESPONSE.set(null);
+		}
+	}
+	
+	private void readSession(HttpServletRequest req) {
+		DocumentValue doc = (DocumentValue)req.getSession(true).getAttribute("__prompto_http_session__");
+		if(doc==null) {
+			doc = new DocumentValue();
+			req.getSession(true).setAttribute("__prompto_http_session__", doc);
+		}
+		AppServer.setHttpSession(doc);
+	}
+
+	private String readRegisteredOrigin(HttpServletRequest req) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(req.getScheme());
+		sb.append("://");
+		sb.append(req.getServerName());
+		sb.append(",");
+		sb.append(req.getScheme());
+		sb.append("://");
+		sb.append(req.getServerName());
+		sb.append(":");
+		sb.append(req.getServerPort());
+		return sb.toString();
+	}
+
 	public void setHolder(ServletHolder holder) {
 		this.holder = holder;
 	}
