@@ -105,6 +105,8 @@ public class UserServlet extends CleverServlet {
 			logger.info(()->"Processing POST " + req.getRequestURI());
 			IValue value = null;
 			String contentType = req.getContentType();
+			if(contentType==null)
+				contentType = "application/x-www-form-urlencoded";
 			if(contentType.startsWith("application/json"))
 				value = doPostJson(req, resp);
 			else if(contentType.startsWith("application/x-www-form-urlencoded"))
