@@ -1,6 +1,8 @@
 package prompto.config.auth;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.document.YamlMapping;
@@ -27,7 +29,13 @@ public class AuthenticationConfiguration extends IAuthenticationConfiguration.In
 
 	private Collection<String> readWhiteList() {
 		Collection<String> list = reader.getArray("whiteList");
-		return list!=null ? list : DEFAULT_WHITE_LIST;
+		if(list==null)
+			return DEFAULT_WHITE_LIST;
+		boolean useDefaultWhiteList = reader.getBooleanOrDefault("useDefaultWhiteList", true);
+		if(useDefaultWhiteList) 
+			return Stream.concat(list.stream(), DEFAULT_WHITE_LIST.stream()).collect(Collectors.toList());
+		else
+			return list;
 	}
 
 	private IAuthenticationSourceConfiguration readAuthenticationSourceConfiguration() {

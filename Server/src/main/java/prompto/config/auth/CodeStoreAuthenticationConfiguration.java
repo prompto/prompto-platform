@@ -1,6 +1,5 @@
 package prompto.config.auth;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Supplier;
 
@@ -32,7 +31,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	StoredRecordConfigurationReader reader;
 	Supplier<IAuthenticationSourceConfiguration> storedAuthenticationSourceConfiguration;
 	Supplier<IAuthenticationMethodConfiguration> storedAuthenticationMethodConfiguration;
-	Supplier<Collection<String>> storedWhiteList;
+	Supplier<Collection<String>> whiteList;
 	
 	public CodeStoreAuthenticationConfiguration(IConfigurationReader source) {
 		this();
@@ -97,6 +96,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 			for(String w : fetchWhiteList())
 				list.addElement(w);
 			settings.setEntry("whiteList", list);
+			settings.setEntry("useDefaultWhiteList", usesDefaultWhiteList());
 			return settings;
 		} else
 			return null;
@@ -211,27 +211,22 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	}
 
 	public Collection<String> readWhiteList() {
-		if(storedWhiteList!=null)
-			return storedWhiteList.get();
-		Collection<String> whiteList = fetchWhiteList();
-		storedWhiteList = ()->whiteList;
-		return whiteList;
+		if(whiteList!=null)
+			return whiteList.get();
+		Collection<String> fetched = fetchWhiteList();
+		whiteList = ()->fetched;
+		return fetched;
 	}
 	
 	
 	private Collection<String> fetchWhiteList() {
 		if(!loadReader())
 			return null;
-		Collection<String> result = new ArrayList<>();
-		if(alsoUsesDefaultWhiteList())
-			result.addAll(DEFAULT_WHITE_LIST);
-		Collection<String> whiteList = reader.getArray("whiteList");
-		if(whiteList!=null)
-			result.addAll(whiteList);
-		return result;
+		else 
+			return reader.getArray("whiteList");
 	}
 
-	private boolean alsoUsesDefaultWhiteList() {
+	private boolean usesDefaultWhiteList() {
 		return reader.getBooleanOrDefault("useDefaultWhiteList", Boolean.FALSE);
 	}
 
