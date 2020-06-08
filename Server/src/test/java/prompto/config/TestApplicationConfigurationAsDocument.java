@@ -15,7 +15,7 @@ public class TestApplicationConfigurationAsDocument {
 	
 	@Test
 	public void convertsConfigToDocument() throws IOException {
-		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("full-config.yml")) {
+		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("config/full-config.yml")) {
 			IConfigurationReader reader = new YamlConfigurationReader(input);
 			Standalone.configuration = new ServerConfiguration(reader, null);
 			PromptoDocument<String, Object> config = Standalone.getApplicationConfiguration();

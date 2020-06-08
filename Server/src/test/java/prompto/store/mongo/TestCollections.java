@@ -38,7 +38,7 @@ public class TestCollections extends BaseMongoTest {
 			.withRuntimeLibs(()->{
 				List<URL> urls = new ArrayList<>();
 				urls.addAll(Libraries.getPromptoLibraries(Libraries.class));
-				urls.add(Thread.currentThread().getContextClassLoader().getResource("mongoEmbeddedCollection.poc"));
+				urls.add(Thread.currentThread().getContextClassLoader().getResource("prompto/mongoEmbeddedCollection.poc"));
 				return urls;
 			}).withApplicationVersion(PromptoVersion.parse("1.0.0"))
 			.withApplicationName("test")

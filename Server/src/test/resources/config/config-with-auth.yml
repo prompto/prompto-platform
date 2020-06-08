@@ -1,0 +1,26 @@
+applicationVersion: 0.0.6
+addOnURLs: 
+- file:///AwsClient/AwsClient.jar
+serverAboutToStart: start_Baiya
+http: 
+   protocol: http
+   welcomePage: baiya/dashboard.page
+   port: 80
+   publicAddress: uat.baiya.io
+   authentication: 
+      whiteList: 
+      - /baiya/auth/*
+      source: 
+         factory: prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory
+         store: 
+            factory: prompto.store.memory.MemStoreFactory
+      method: 
+         factory: prompto.security.auth.method.FormAuthenticationMethodFactory
+         loginPage: baiya/auth/login.page
+         errorPage: baiya/auth/error.page
+      useDefaultWhiteList: true
+dataStore: 
+   factory: prompto.store.memory.MemStoreFactory
+codeStore: 
+   factory: prompto.store.memory.MemStoreFactory
+applicationName: Baiya
