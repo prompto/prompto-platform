@@ -15,7 +15,7 @@ public class SessionManager extends HashSessionManager {
 
 	public SessionManager(IHttpConfiguration config) {
 		setMaxInactiveInterval(300); // TODO make timeout configurable
-		if(config.getPort()!=443) {
+		if(config.getPort()!=443 && config.getPort()!=80) {
 			_sessionCookie = _sessionCookie + "_" + config.getPort();
 			logger.info(()->"Setting custom session cookie: " + _sessionCookie);
 		}
