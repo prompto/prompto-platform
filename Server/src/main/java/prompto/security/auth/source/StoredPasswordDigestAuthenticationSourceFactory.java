@@ -25,9 +25,14 @@ public class StoredPasswordDigestAuthenticationSourceFactory implements IAuthent
 
 	@Override
 	public String installJettyLoginModule() {
-		String moduleName = StoredPasswordDigestAuthenticationSource.class.getName();
+		String moduleName = getJettyLoginModuleName();
 		JettyLoginModuleBase.install(moduleName, config);
 		return moduleName;
+	}
+	
+	@Override
+	public String getJettyLoginModuleName() {
+		return StoredPasswordDigestAuthenticationSource.class.getName();
 	}
 	
 	@Override

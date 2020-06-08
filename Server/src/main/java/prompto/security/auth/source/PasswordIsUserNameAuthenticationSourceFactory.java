@@ -24,9 +24,14 @@ public class PasswordIsUserNameAuthenticationSourceFactory implements IAuthentic
 
 	@Override
 	public String installJettyLoginModule() {
-		String moduleName = PasswordIsUserNameAuthenticationSource.class.getName();
+		String moduleName = getJettyLoginModuleName();
 		JettyLoginModuleBase.install(moduleName, config);
 		return moduleName;
+	}
+	
+	@Override
+	public String getJettyLoginModuleName() {
+		return PasswordIsUserNameAuthenticationSource.class.getName();
 	}
 	
 	@Override

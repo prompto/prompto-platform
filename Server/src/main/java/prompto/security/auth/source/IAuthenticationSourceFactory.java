@@ -18,6 +18,7 @@ public interface IAuthenticationSourceFactory {
 	IAuthenticationSourceConfiguration newConfiguration(IConfigurationReader reader);
 	void setConfiguration(IAuthenticationSourceConfiguration config);
 	String installJettyLoginModule();
+	String getJettyLoginModuleName();
 	YamlMapping toYaml() throws YamlException;
 
 	IAuthenticationSource newAuthenticationSource();
