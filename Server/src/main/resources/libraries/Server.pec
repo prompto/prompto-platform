@@ -12,10 +12,14 @@ define getHttpUser as native method returning Text doing:
 define getHttpSession as native method returning Document doing:
 	Java: return $server.getHttpSession();
 
+define httpLogout as native method receiving Text path doing:
+    Java: $server.httpLogout(path);
+
 define getHttpPort as native method returning Integer doing:
     Java: return $server.getHttpPort();
 	JavaScript: return self.location.port;
 
 define httpRedirect as native method receiving Text path doing:
     Java: $server.httpRedirect(path);
+	JavaScript: browserGoto(location); from module: prompto/internet/Browser.js
 

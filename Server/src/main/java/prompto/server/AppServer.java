@@ -16,6 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -279,4 +280,11 @@ public class AppServer {
 		response.sendRedirect(path);
 	}
 
+
+	/* used by Server.pec */
+	public static void httpLogout(String path) throws IOException {
+		HttpServletRequest request = CleverServlet.CURRENT_REQUEST.get();
+		request.getSession().invalidate();
+		httpRedirect(path);
+	}
 }
