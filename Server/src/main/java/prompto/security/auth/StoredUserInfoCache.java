@@ -26,6 +26,7 @@ import prompto.store.IStore;
 import prompto.store.IStoreFactory;
 import prompto.store.IStored;
 import prompto.store.IQueryBuilder.MatchOp;
+import prompto.store.IStorable.IDbIdFactory;
 import prompto.utils.Logger;
 
 /* need a shared cache to avoid costly calls to db */
@@ -70,6 +71,11 @@ public class StoredUserInfoCache {
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public StoredUserInfoCache(IStore store) {
+		this.store = store;
+		store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
 	}
 	
 	void evictOldEntriesFromCache() {
@@ -177,13 +183,16 @@ public class StoredUserInfoCache {
 		if(stored==null)
 			return;
 		String salt = DigestMethod.newSalt();
-		IStorable storable = store.newStorable(Arrays.asList("User"), null);
+		IStorable storable = store.newStorable(Arrays.asList("User"), new IDbIdFactory() {
+			@Override public void accept(Object t) { }
+			@Override public Object get() { return stored.getDbId(); }
+			@Override public boolean isUpdate() { return true; }
+		});
 		storable.setData("login", login);
 		storable.setData("salt", salt);
 		storable.setData("method", "PBKDF2");
 		String digest = DigestMethod.forName("PBKDF2").digest(password, salt);
 		storable.setData("digest", digest);
-		storable.setDbId(stored.getDbId());
 		store.store(storable);
 		cache.remove(login);
 	}

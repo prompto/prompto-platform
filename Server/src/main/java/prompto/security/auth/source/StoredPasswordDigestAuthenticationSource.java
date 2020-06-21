@@ -30,6 +30,11 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 		cache = new StoredUserInfoCache(config);
 	}
 
+	// handy constructor for testing, not using shared cache
+	public StoredPasswordDigestAuthenticationSource(StoredUserInfoCache cache) {
+		this.cache = cache;
+	}
+
 	@Override
 	public UserInfo getUserInfo(String username) throws Exception {
 		return cache.getUserInfo(username);
