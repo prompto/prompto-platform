@@ -19,6 +19,10 @@ define getHttpPort as native method returning Integer doing:
     Java: return $server.getHttpPort();
 	JavaScript: return self.location.port;
 
+define getHttpQueryParameter as native method receiving Text name returning Text doing:
+    Java: return $server.getHttpQueryParameter(name);
+	JavaScript: return browserGetQueryParameter(name); from module: prompto/internet/Browser.js
+
 define httpRedirect as native method receiving Text path doing:
     Java: $server.httpRedirect(path);
 	JavaScript: browserGoto(location); from module: prompto/internet/Browser.js

@@ -271,6 +271,15 @@ public class AppServer {
 	public static void setHttpSession(DocumentValue session) {
 		httpSession.set(session);
 	}
+	
+	/* used by Server.pec */
+	public static String getHttpQueryParameter(String name) {
+		HttpServletRequest request = CleverServlet.CURRENT_REQUEST.get();
+		if(request==null)
+			throw new ReadWriteError("Not invoked during server request!");
+		return request.getParameter(name);
+	}
+
 
 	/* used by Server.pec */
 	public static void httpRedirect(String path) throws IOException {
@@ -284,6 +293,8 @@ public class AppServer {
 	/* used by Server.pec */
 	public static void httpLogout(String path) throws IOException {
 		HttpServletRequest request = CleverServlet.CURRENT_REQUEST.get();
+		if(request==null)
+			throw new ReadWriteError("Not invoked during server request!");
 		request.getSession().invalidate();
 		httpRedirect(path);
 	}
