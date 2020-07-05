@@ -17,29 +17,29 @@ import javax.servlet.http.Part;
 
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import prompto.utils.Logger;
-import prompto.value.DocumentValue;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import prompto.utils.Logger;
+import prompto.value.DocumentValue;
 
 @SuppressWarnings("serial")
 public class CleverServlet extends HttpServlet {
 
 	static final Logger logger = new Logger();
 
-	public static ThreadLocal<String> REGISTERED_ORIGIN = ThreadLocal.withInitial(()->null);
-	public static ThreadLocal<HttpServletRequest> CURRENT_REQUEST = ThreadLocal.withInitial(()->null);
-	public static ThreadLocal<HttpServletResponse> CURRENT_RESPONSE = ThreadLocal.withInitial(()->null);
+	public static ThreadLocal<String> REGISTERED_ORIGINS = ThreadLocal.withInitial(() -> null);
+	public static ThreadLocal<HttpServletRequest> CURRENT_REQUEST = ThreadLocal.withInitial(() -> null);
+	public static ThreadLocal<HttpServletResponse> CURRENT_RESPONSE = ThreadLocal.withInitial(() -> null);
 
 	ServletHolder holder;
-	
+
 	@Override
 	public String getServletName() {
 		return this.getClass().getSimpleName();
 	}
-	
+
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Thread.currentThread().setName(this.getClass().getSimpleName());
@@ -47,43 +47,44 @@ public class CleverServlet extends HttpServlet {
 		readSession(req);
 		CURRENT_REQUEST.set(req);
 		CURRENT_RESPONSE.set(resp);
-		REGISTERED_ORIGIN.set(readRegisteredOrigin(req));
+		REGISTERED_ORIGINS.set(readRegisteredOrigins(req));
 		try {
 			super.service(req, resp);
 		} finally {
-			REGISTERED_ORIGIN.set(null);
+			REGISTERED_ORIGINS.set(null);
 			CURRENT_REQUEST.set(null);
 			CURRENT_RESPONSE.set(null);
 		}
 	}
-	
+
 	private void readSession(HttpServletRequest req) {
-		DocumentValue doc = (DocumentValue)req.getSession(true).getAttribute("__prompto_http_session__");
-		if(doc==null) {
+		DocumentValue doc = (DocumentValue) req.getSession(true).getAttribute("__prompto_http_session__");
+		if (doc == null) {
 			doc = new DocumentValue();
 			req.getSession(true).setAttribute("__prompto_http_session__", doc);
 		}
 		AppServer.setHttpSession(doc);
 	}
 
-	private String readRegisteredOrigin(HttpServletRequest req) {
+	private String readRegisteredOrigins(HttpServletRequest req) {
+		return String.join(" ", readRegisteredOrigin(req, false), readRegisteredOrigin(req, true));
+	}
+
+	private String readRegisteredOrigin(HttpServletRequest req, boolean withPort) {
 		StringBuilder sb = new StringBuilder()
-		 .append(req.getScheme())
-		 .append("://")
-		 .append(req.getServerName())
-		 .append(",")
-		 .append(req.getScheme())
-		 .append("://")
-		 .append(req.getServerName())
-		 .append(":")
-		 .append(req.getServerPort());
+				.append(req.getScheme())
+				.append("://")
+				.append(req.getServerName());
+		if (withPort)
+			sb.append(":")
+				.append(req.getServerPort());
 		return sb.toString();
 	}
 
 	public void setHolder(ServletHolder holder) {
 		this.holder = holder;
 	}
-	
+
 	public void setMultipartConfig(MultipartConfigElement config) {
 		holder.getRegistration().setMultipartConfig(config);
 	}
@@ -97,7 +98,7 @@ public class CleverServlet extends HttpServlet {
 		generator.flush();
 		generator.close();
 	}
-	
+
 	protected void writeJSONResult(Object result, ServletOutputStream output) throws IOException {
 		JsonGenerator generator = new JsonFactory().createGenerator(output);
 		generator.setCodec(new ObjectMapper());
@@ -109,24 +110,22 @@ public class CleverServlet extends HttpServlet {
 		generator.close();
 	}
 
-
-
 	protected Map<String, byte[]> readParts(HttpServletRequest req) throws ServletException, IOException {
 		Map<String, byte[]> parts = new HashMap<>();
-		for(Part part : req.getParts())
+		for (Part part : req.getParts())
 			parts.put(part.getName(), readPartData(part));
 		return parts;
 	}
 
 	private byte[] readPartData(Part part) throws IOException {
-		try(InputStream input = part.getInputStream()) {
-			try(ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+		try (InputStream input = part.getInputStream()) {
+			try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
 				byte[] buffer = new byte[4096];
-				while(true) {
+				while (true) {
 					int read = input.read(buffer);
-					if(read<0)
+					if (read < 0)
 						break;
-					if(read>0)
+					if (read > 0)
 						output.write(buffer, 0, read);
 				}
 				output.flush();
@@ -136,7 +135,7 @@ public class CleverServlet extends HttpServlet {
 	}
 
 	protected void writeJsonResponseError(String error, OutputStream output) throws IOException {
-		logger.warn(()->error);
+		logger.warn(() -> error);
 		JsonGenerator generator = new JsonFactory().createGenerator(output);
 		generator.writeStartObject();
 		generator.writeStringField("error", error);
@@ -146,5 +145,4 @@ public class CleverServlet extends HttpServlet {
 		generator.close();
 	}
 
-	
 }
