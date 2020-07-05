@@ -67,7 +67,7 @@ public class CleverServlet extends HttpServlet {
 	}
 
 	private String readRegisteredOrigins(HttpServletRequest req) {
-		return String.join(" ", readRegisteredOrigin(req, false), readRegisteredOrigin(req, true));
+		return String.join(",", readRegisteredOrigin(req, false), readRegisteredOrigin(req, true));
 	}
 
 	private String readRegisteredOrigin(HttpServletRequest req, boolean withPort) {
