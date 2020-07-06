@@ -36,7 +36,7 @@ public class TestAwsKMS extends AWSTestBase {
 
 			@Override public String getFactory() { return AwsKMSSecretKeyFactory.class.getName(); }
 			@Override public char[] getSecret() { return encrypted.toCharArray(); }
-			@Override public String getAwsRegion() { return null; }
+			@Override public String getAwsRegion() { return MASTER_KEY_REGION; }
 			@Override public String getAwsAccesKey() { return props.getProperty("accessKey"); }
 			@Override public String getAwsSecretKey() { return props.getProperty("secretKey"); }
 			
