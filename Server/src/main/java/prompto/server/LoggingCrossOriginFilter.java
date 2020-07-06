@@ -19,7 +19,7 @@ public class LoggingCrossOriginFilter extends CrossOriginFilter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.info(()->"CrossOriginFilter: " + request.toString());
+		logger.debug(()->"CrossOriginFilter: " + request.toString());
 		logRequestHeaders(request, "Origin", "Authorization", "X-Authorization");
 		super.doFilter(request, response, chain);
 		logResponseHeaders(response, CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER);
