@@ -233,7 +233,7 @@ public class TestQuery extends BaseMongoTest {
 		store.insertDocuments(doc);
 		store.flush();
 		// Test the basics
-		String query = "fetch one where \"oh\" in name";
+		String query = "fetch one where name contains \"oh\"";
 		IStored result = fetchOne(query);
 		assertNotNull(result);
 		assertEquals("John", result.getData("name"));
