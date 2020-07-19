@@ -184,8 +184,8 @@ public class AppServer {
 
 	static void prepareWebHandlers(JettyServer jetty, HandlerList list) {
 		try {
-			list.addHandler(jetty.newWebSiteHandler());
 			list.addHandler(jetty.newWebApiHandler());
+			list.addHandler(jetty.newWebSiteHandler());
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
