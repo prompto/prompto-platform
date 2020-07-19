@@ -133,8 +133,9 @@ public class TestCustomHandler {
 	
 	void prepareHandlers(JettyServer server, HandlerList list) {
 		try {
-			list.addHandler(server.newWebAppHandler());
-		} catch(Exception e) {
+			list.addHandler(server.newWebSiteHandler());
+			list.addHandler(server.newWebApiHandler());
+				} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
 	}

@@ -34,7 +34,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.webapp.WebAppContext;
 
 import prompto.config.IDebugConfiguration;
 import prompto.config.IDebugEventAdapterConfiguration;
@@ -50,6 +49,7 @@ import prompto.debug.DebugEventServlet;
 import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListenerFactory;
 import prompto.debug.WebSocketDebugEventAdapterFactory;
+import prompto.graphql.GraphQLServlet;
 import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
@@ -68,7 +68,6 @@ class JettyServer extends Server {
 	ServerConnector redirectConnector;
 	ConstraintSecurityHandler securityHandler;
 	HandlerList contentHandler;
-	WebAppContext servicesHandler;
 	DebugRequestServlet debugRequestServlet;
 	DebugEventServlet debugEventServlet;
 	boolean startComplete = false;
@@ -346,7 +345,7 @@ class JettyServer extends Server {
 		return constraint;
 	}
 
-	static class CleverWebAppContext extends WebAppContext {
+	static abstract class WebAppContextBase extends org.eclipse.jetty.webapp.WebAppContext {
 		
 		public ServletHolder addServlet(CleverServlet servlet, String pathSpec) {
 			ServletHolder holder = new ServletHolder(servlet);
@@ -356,9 +355,27 @@ class JettyServer extends Server {
 		};
 
 	}
+	
+	public static class WebSiteContext extends WebAppContextBase {
+		
+	}
 
-	public WebAppContext newWebAppHandler() throws Exception {
-		CleverWebAppContext handler = new CleverWebAppContext();
+	public static class WebApiContext extends WebAppContextBase {
+		
+	}
+
+	public WebApiContext newWebApiHandler() throws Exception {
+		WebApiContext handler = new WebApiContext();
+		handler.setContextPath("/api");
+		handler.setResourceBase(getResourceBase());
+		// TODO handler.setSecurityHandler(securityHandler);
+		if(GraphQLServlet.isEnabled())
+			handler.addServlet(new GraphQLServlet(), "/graphql/*");
+		return handler;		
+	}
+	
+	public WebSiteContext newWebSiteHandler() throws Exception {
+		WebSiteContext handler = new WebSiteContext();
 		handler.setContextPath("/");
 		handler.setResourceBase(getResourceBase());
 		handler.setSecurityHandler(securityHandler);
@@ -383,7 +400,7 @@ class JettyServer extends Server {
     	return handler;
 	}
 	
-   private void newDebuggerServlets(CleverWebAppContext handler) throws Exception {
+   private void newDebuggerServlets(WebSiteContext handler) throws Exception {
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug==null)
 			return;

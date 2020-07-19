@@ -21,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.webapp.WebAppContext;
 
 import prompto.cloud.Cloud;
 import prompto.config.IConfigurationReader;
@@ -44,6 +43,7 @@ import prompto.runtime.Context;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
+import prompto.server.JettyServer.WebSiteContext;
 import prompto.utils.CmdLineParser;
 import prompto.utils.Logger;
 import prompto.value.DocumentValue;
@@ -184,7 +184,8 @@ public class AppServer {
 
 	static void prepareWebHandlers(JettyServer jetty, HandlerList list) {
 		try {
-			list.addHandler(jetty.newWebAppHandler());
+			list.addHandler(jetty.newWebSiteHandler());
+			list.addHandler(jetty.newWebApiHandler());
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -225,7 +226,8 @@ public class AppServer {
 	public static void installHandler(String path, IMethodDeclaration method) {
 		// TODO check path (must start with '/') and method prototype
 		logger.info(()->"Installing web service '" + method.getName() + "' at path '" + path + "'");
-		WebAppContext handler = jettyServer.getChildHandlerByClass(WebAppContext.class);
+		// TODO move to WebApiContext
+		WebSiteContext handler = jettyServer.getChildHandlerByClass(WebSiteContext.class);
 		UserServlet servlet = new UserServlet(method);
 		ServletHolder holder = new ServletHolder(servlet);
 		servlet.setHolder(holder);

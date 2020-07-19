@@ -202,11 +202,12 @@ public abstract class BaseServerTest {
 			.withPort(port); 
 	}
 
-	public void prepareHandlers(JettyServer server, HandlerList list) {
+	public void prepareHandlers(JettyServer jetty, HandlerList list) {
 		try {
 			if(ssl)
 				list.addHandler(new SecuredRedirectHandler());
-			list.addHandler(server.newWebAppHandler());
+			list.addHandler(jetty.newWebSiteHandler());
+			list.addHandler(jetty.newWebApiHandler());
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
