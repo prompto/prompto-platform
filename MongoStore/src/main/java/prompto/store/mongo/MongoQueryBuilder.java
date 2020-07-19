@@ -25,52 +25,70 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	
 	static {
 		verifiers = new HashMap<>();
-		verifiers.put(MatchOp.EQUALS, MongoQueryBuilder::verifyEQUALS);
-		verifiers.put(MatchOp.ROUGHLY, MongoQueryBuilder::verifyROUGHLY);
-		verifiers.put(MatchOp.CONTAINS, MongoQueryBuilder::verifyCONTAINS);
-		verifiers.put(MatchOp.HAS, MongoQueryBuilder::verifyHAS);
-		verifiers.put(MatchOp.IN, MongoQueryBuilder::verifyIN);
-		verifiers.put(MatchOp.GREATER, MongoQueryBuilder::verifyGREATER);
-		verifiers.put(MatchOp.LESSER, MongoQueryBuilder::verifyLESSER);
+		verifiers.put(MatchOp.EQUALS, MongoQueryBuilder::verify_EQUALS);
+		verifiers.put(MatchOp.ROUGHLY, MongoQueryBuilder::verify_ROUGHLY);
+		verifiers.put(MatchOp.CONTAINS, MongoQueryBuilder::verify_CONTAINS);
+		verifiers.put(MatchOp.HAS, MongoQueryBuilder::verify_HAS);
+		verifiers.put(MatchOp.HAS_ANY, MongoQueryBuilder::verify_HAS_ANY);
+		verifiers.put(MatchOp.HAS_ALL, MongoQueryBuilder::verify_HAS_ALL);
+		verifiers.put(MatchOp.IN, MongoQueryBuilder::verify_IN);
+		verifiers.put(MatchOp.GREATER, MongoQueryBuilder::verify_GREATER);
+		verifiers.put(MatchOp.LESSER, MongoQueryBuilder::verify_LESSER);
 	}
 	
-	static Bson verifyEQUALS(AttributeInfo info, Object value) {
+	static Bson verify_EQUALS(AttributeInfo info, Object value) {
 		return Filters.eq(getAttributeName(info), value);
 	}
 	
-	static Bson verifyROUGHLY(AttributeInfo info, Object value) {
+	static Bson verify_ROUGHLY(AttributeInfo info, Object value) {
 		if(info.getFamily()==Family.TEXT)
 			return Filters.regex(info.getName(), value.toString(), "i");
 		else
 			return Filters.eq(getAttributeName(info), value);
 	}
 
-	static Bson verifyCONTAINS(AttributeInfo info, Object value) {
+	static Bson verify_CONTAINS(AttributeInfo info, Object value) {
 		if(info.getFamily()==Family.TEXT)
 			return Filters.regex(getAttributeName(info), ".*" + value + ".*", "i");
 		else
 			return Filters.eq(getAttributeName(info), value);
 	}
 	
-	static Bson verifyHAS(AttributeInfo info, Object value) {
+	static Bson verify_HAS(AttributeInfo info, Object value) {
 		return Filters.eq(getAttributeName(info), value);
 	}
 
 
 	@SuppressWarnings("unchecked")
-	static Bson verifyIN(AttributeInfo info, Object value) {
+	static Bson verify_HAS_ANY(AttributeInfo info, Object value) {
 		if(value instanceof Collection)
 			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(getAttributeName(info), v)).collect(Collectors.toList()));
 		else
 			return Filters.eq(getAttributeName(info), value);
 	}
 
-	static Bson verifyGREATER(AttributeInfo info, Object value) {
+	@SuppressWarnings("unchecked")
+	static Bson verify_HAS_ALL(AttributeInfo info, Object value) {
+		if(value instanceof Collection)
+			return Filters.and(((Collection<Object>)value).stream().map((v)->Filters.eq(getAttributeName(info), v)).collect(Collectors.toList()));
+		else
+			return Filters.eq(getAttributeName(info), value);
+	}
+
+	@SuppressWarnings("unchecked")
+	static Bson verify_IN(AttributeInfo info, Object value) {
+		if(value instanceof Collection)
+			return Filters.or(((Collection<Object>)value).stream().map((v)->Filters.eq(getAttributeName(info), v)).collect(Collectors.toList()));
+		else
+			return Filters.eq(getAttributeName(info), value);
+	}
+
+	static Bson verify_GREATER(AttributeInfo info, Object value) {
 		return Filters.gt(getAttributeName(info), value);
 	}
 	
 	
-	static Bson verifyLESSER(AttributeInfo info, Object value) {
+	static Bson verify_LESSER(AttributeInfo info, Object value) {
 		return Filters.lt(getAttributeName(info), value);
 	}
 	
