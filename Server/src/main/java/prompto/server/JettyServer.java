@@ -370,7 +370,7 @@ class JettyServer extends Server {
 		handler.setResourceBase(getResourceBase());
 		// TODO handler.setSecurityHandler(securityHandler);
 		if(GraphQLServlet.isEnabled())
-			handler.addServlet(new GraphQLServlet(), "/graphql/*");
+			handler.addServlet(new GraphQLServlet(), "/graphql");
 		return handler;		
 	}
 	
