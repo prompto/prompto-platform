@@ -24,15 +24,24 @@ import graphql.schema.GraphQLSchema;
 import prompto.code.ICodeStore;
 import prompto.declaration.IDeclaration;
 import prompto.server.CleverServlet;
+import prompto.utils.Instance;
 import prompto.utils.JsonUtils;
 import prompto.utils.StreamUtils;
 
 @SuppressWarnings("serial")
 public class GraphQLServlet extends CleverServlet {
 
+	static Instance<GraphQLServlet> instance = new Instance<>();
+	
 	public static boolean isEnabled() {
 		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchDeclarationsWithAnnotations(new HashSet<>(Arrays.asList("@GraphQLQuery", "@GraphQLMutation")));
 		return decls.iterator().hasNext();
+	}
+
+	public static void reset() {
+		if(instance.get()!=null)
+			instance.get().graphQL = null;
+		GraphQLType.TYPE_BY_NAME_MAP.clear();
 	}
 
 	static class GraphQLRequest {
@@ -42,6 +51,10 @@ public class GraphQLServlet extends CleverServlet {
 
 	GraphQL graphQL;
 
+	public GraphQLServlet() {
+		instance.set(this);
+	}
+	
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
@@ -178,5 +191,6 @@ public class GraphQLServlet extends CleverServlet {
 		request.variables = Collections.emptyMap();
 		return request;
 	}
+
 
 }
