@@ -3,17 +3,21 @@ package prompto.graphql;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import prompto.grammar.Identifier;
+import prompto.runtime.ApplicationContext;
+import prompto.value.ConcreteInstance;
 
 public class GraphQLAttributeFetcher implements DataFetcher<Object> {
 
-	public GraphQLAttributeFetcher(Identifier attr) {
-		// TODO Auto-generated constructor stub
+	Identifier attribute;
+	
+	public GraphQLAttributeFetcher(Identifier attribute) {
+		this.attribute = attribute;
 	}
 
 	@Override
 	public Object get(DataFetchingEnvironment environment) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		ConcreteInstance instance = environment.getSource();
+		return instance==null ? null : instance.getMember(ApplicationContext.get(), attribute, false);
 	}
 
 }

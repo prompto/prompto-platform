@@ -3,17 +3,19 @@ package prompto.graphql;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import prompto.declaration.IMethodDeclaration;
+import prompto.runtime.ApplicationContext;
 
 public class GraphQLMethodFetcher implements DataFetcher<Object> {
 
-	public GraphQLMethodFetcher(IMethodDeclaration decl) {
-		// TODO Auto-generated constructor stub
+	IMethodDeclaration method;
+	
+	public GraphQLMethodFetcher(IMethodDeclaration method) {
+		this.method = method;
 	}
 
 	@Override
 	public Object get(DataFetchingEnvironment environment) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return method.interpret(ApplicationContext.get());
 	}
 
 }
