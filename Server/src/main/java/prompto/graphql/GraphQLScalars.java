@@ -21,6 +21,7 @@ import prompto.type.DateTimeType;
 import prompto.type.DateType;
 import prompto.type.DecimalType;
 import prompto.type.IType;
+import prompto.type.ImageType;
 import prompto.type.IntegerType;
 import prompto.type.PeriodType;
 import prompto.type.TextType;
@@ -28,6 +29,7 @@ import prompto.type.TimeType;
 import prompto.type.UuidType;
 import prompto.value.DateTimeValue;
 import prompto.value.DateValue;
+import prompto.value.ImageValue;
 import prompto.value.PeriodValue;
 import prompto.value.TimeValue;
 import prompto.value.UuidValue;
@@ -47,12 +49,12 @@ public abstract class GraphQLScalars {
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(TimeType.instance(), timeScalar()),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(DateTimeType.instance(), dateTimeScalar()),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(PeriodType.instance(), periodScalar()),
-				// new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(ImageType.instance(), imageScalar()),
+				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(ImageType.instance(), imageScalar()),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(UuidType.instance(), uuidScalar()))
 		.stream()
 				.collect(Collectors.toMap(e->e.getKey(), e->e.getValue()));
 	}
-	/*
+	
 	private static GraphQLScalarType imageScalar() {
 		return GraphQLScalarType.newScalar()
 				.name(ImageType.instance().getTypeName())
@@ -60,21 +62,21 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return ((ImageValue)value)..toString();
+						return ((ImageValue)value).getSourceUrl();
 					}
 
 					@Override
-					public UuidValue parseValue(Object input) throws CoercingParseValueException {
-						return new UuidValue(UUID.fromString(String.valueOf(input)));
+					public ImageValue parseValue(Object input) throws CoercingParseValueException {
+						return null; // unsupported
 					}
 
 					@Override
-					public UuidValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new UuidValue(UUID.fromString(String.valueOf(input)));
+					public ImageValue parseLiteral(Object input) throws CoercingParseLiteralException {
+						return null; // unsupported
 					}
 				}).build();
 	}
-	*/
+	
 	
 	private static GraphQLScalarType uuidScalar() {
 		return GraphQLScalarType.newScalar()

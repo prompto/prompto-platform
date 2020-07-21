@@ -171,7 +171,7 @@ public class RequestRouter {
 			generator.writeNullField("data");
 		else {
 			generator.writeFieldName("data");
-			value.toJsonStream(context, generator, null, null, true, null);
+			value.toJsonStream(context, generator, true, null);
 		}
 		generator.writeEndObject();
 		generator.flush();
