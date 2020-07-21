@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import graphql.Scalars;
 import graphql.schema.FieldCoordinates;
 import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLEnumType;
+import graphql.schema.GraphQLEnumValueDefinition;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
@@ -18,11 +20,15 @@ import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import prompto.declaration.AttributeDeclaration;
 import prompto.declaration.CategoryDeclaration;
+import prompto.declaration.IDeclaration;
+import prompto.declaration.IEnumeratedDeclaration;
+import prompto.expression.Symbol;
 import prompto.grammar.Identifier;
 import prompto.runtime.ApplicationContext;
 import prompto.type.CategoryType;
 import prompto.type.CursorType;
 import prompto.type.IType;
+import prompto.type.ListType;
 
 public interface GraphQLType {
 
@@ -93,6 +99,10 @@ public interface GraphQLType {
 					return _buildOutputCursorType((CursorType)type, registry);
 				else if(type instanceof CategoryType)
 					return _buildOutputCategoryType((CategoryType)type, registry);
+				else if(type instanceof ListType) {
+					GraphQLOutputType itemType = buildOutputType(((ListType)type).getItemType(), registry);
+					return GraphQLList.list(itemType);
+				}
 				else
 					throw new UnsupportedOperationException("yet!");
 			}
@@ -110,11 +120,42 @@ public interface GraphQLType {
 			}
 
 			private GraphQLOutputType _buildOutputCategoryType(CategoryType type, GraphQLCodeRegistry.Builder registry) {
-				CategoryDeclaration decl = ApplicationContext.get().getRegisteredDeclaration(CategoryDeclaration.class, type.getTypeNameId());
+				IDeclaration decl = ApplicationContext.get().getRegisteredDeclaration(IDeclaration.class, type.getTypeNameId());
+				if(decl instanceof CategoryDeclaration)
+					return _buildOutputCategoryType((CategoryDeclaration)decl, registry);
+				else if(decl instanceof IEnumeratedDeclaration)
+					return _buildOutputEnumeratedType((IEnumeratedDeclaration<?>)decl, registry);
+				else
+					throw new UnsupportedOperationException("Yet!");
+									
+			}
+
+			private GraphQLOutputType _buildOutputCategoryType(CategoryDeclaration decl, GraphQLCodeRegistry.Builder registry) {
 				return GraphQLObjectType.newObject()
-					.name(type.getTypeName())
-					.fields(_buildOutputFields(decl, registry))
-					.build();
+						.name(type.getTypeName())
+						.fields(_buildOutputFields(decl, registry))
+						.build();
+			}
+
+			private GraphQLOutputType _buildOutputEnumeratedType(IEnumeratedDeclaration<?> decl, GraphQLCodeRegistry.Builder registry) {
+				return GraphQLEnumType.newEnum()
+						.name(type.getTypeName())
+						.values(_buildEnumValues(decl))
+						.build();
+			}
+
+			private List<GraphQLEnumValueDefinition> _buildEnumValues(IEnumeratedDeclaration<?> decl) {
+				return decl.getSymbolsList().stream()
+						.map(this::_buildEnumValue)
+						.collect(Collectors.toList());
+			}
+			
+			private GraphQLEnumValueDefinition _buildEnumValue(Symbol symbol) {
+				return GraphQLEnumValueDefinition.newEnumValueDefinition()
+						.name(symbol.getName())
+						.value(symbol)
+						.build();
+			
 			}
 
 			private List<GraphQLFieldDefinition> _buildOutputFields(CategoryDeclaration decl, GraphQLCodeRegistry.Builder registry) {
@@ -162,5 +203,6 @@ public interface GraphQLType {
 
 		};
 	}
+
 
 }

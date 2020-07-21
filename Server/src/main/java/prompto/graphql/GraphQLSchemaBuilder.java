@@ -16,6 +16,7 @@ import prompto.declaration.IDeclaration;
 import prompto.declaration.IMethodDeclaration;
 import prompto.param.IParameter;
 import prompto.runtime.ApplicationContext;
+import prompto.runtime.Context;
 import prompto.type.IType;
 
 public class GraphQLSchemaBuilder {
@@ -45,10 +46,10 @@ public class GraphQLSchemaBuilder {
 	private GraphQLObjectType buildRootType(GraphQLCodeRegistry.Builder registry, String annotation, String typeName) {
 		Iterable<IDeclaration> queries = ICodeStore.getInstance().fetchDeclarationsWithAnnotations(Collections.singleton(annotation));
 		List<GraphQLFieldDefinition> fields = StreamSupport.stream(queries.spliterator(), false)
-				.filter(d->d instanceof IMethodDeclaration)
-				.map(d->(IMethodDeclaration)d)
-				.filter(d->d.getMemberOf()==null)
-				.map(d->buildRootField(d, typeName, registry))
+				.filter(decl->decl instanceof IMethodDeclaration)
+				.map(method->(IMethodDeclaration)method)
+				.filter(method->method.getMemberOf()==null)
+				.map(method->buildRootField(method, typeName, registry))
 				.collect(Collectors.toList());
 		if(fields.isEmpty())
 			return null;
@@ -60,19 +61,21 @@ public class GraphQLSchemaBuilder {
 		}
 	}
 
-	private GraphQLFieldDefinition buildRootField(IMethodDeclaration decl, String typeName, GraphQLCodeRegistry.Builder registry) {
-		registry.dataFetcher(FieldCoordinates.coordinates(typeName, decl.getName()), new GraphQLMethodFetcher(decl));
-		IType returnType = decl.check(ApplicationContext.get());
+	private GraphQLFieldDefinition buildRootField(IMethodDeclaration method, String typeName, GraphQLCodeRegistry.Builder registry) {
+		registry.dataFetcher(FieldCoordinates.coordinates(typeName, method.getName()), new GraphQLMethodFetcher(method));
+		Context context = ApplicationContext.get().newLocalContext();
+		method.getParameters().register(context);
+		IType returnType = method.check(context);
 		return GraphQLFieldDefinition.newFieldDefinition()
-				.name(decl.getName())
-				.arguments(buildArguments(decl, registry))
+				.name(method.getName())
+				.arguments(buildArguments(method, registry))
 				.type(GraphQLType.buildOutputType(returnType, registry))
 				.build();
 	}
 
 
-	private List<GraphQLArgument> buildArguments(IMethodDeclaration decl, GraphQLCodeRegistry.Builder registry) {
-		return decl.getParameters().stream()
+	private List<GraphQLArgument> buildArguments(IMethodDeclaration method, GraphQLCodeRegistry.Builder registry) {
+		return method.getParameters().stream()
 			.map(param->buildArgument(param, registry))
 			.collect(Collectors.toList());
 	}

@@ -369,8 +369,11 @@ class JettyServer extends Server {
 		handler.setContextPath("/api");
 		handler.setResourceBase(getResourceBase());
 		// TODO handler.setSecurityHandler(securityHandler);
-		if(GraphQLServlet.isEnabled())
+		if(GraphQLServlet.isEnabled()) {
+			logger.info(()->"Starting GraphQL server...");
 			handler.addServlet(new GraphQLServlet(), "/graphql");
+		} else 
+			logger.info(()->"No GraphQL method");
 		return handler;		
 	}
 	
