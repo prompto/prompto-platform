@@ -1,0 +1,10 @@
+@GraphQLQuery
+define someGraphQLQuery as method doing:
+	return "Hello!"
+	
+define someMethod2 as method doing:
+	return "Hello!"
+	
+@GraphQLMutation
+define someGraphQLMutation as method receiving Text name doing:
+	return "Hello " + name + "!"

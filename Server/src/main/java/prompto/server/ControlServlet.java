@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.graphql.GraphQLServlet;
 import prompto.runtime.ApplicationContext;
 import prompto.utils.Logger;
 
@@ -56,6 +57,7 @@ public class ControlServlet extends CleverServlet {
 
 	private void clearContext(PrintWriter writer) {
 		ApplicationContext.reset();
+		GraphQLServlet.reset();
 	}
 
 	private void exitServer(PrintWriter writer) {
