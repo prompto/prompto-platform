@@ -62,7 +62,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return ((ImageValue)value).getSourceUrl();
+						if(value instanceof ImageValue)
+							return ((ImageValue)value).getSourceUrl();
+						else
+							return null;
 					}
 
 					@Override
@@ -85,7 +88,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return value.toString();
+						if(value instanceof UuidValue)
+							return value.toString();
+						else
+							return null;
 					}
 
 					@Override
@@ -107,8 +113,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return value.toString();
-					}
+						if(value instanceof PeriodValue)
+							return value.toString();
+						else
+							return null;	}
 
 					@Override
 					public PeriodValue parseValue(Object input) throws CoercingParseValueException {
@@ -129,8 +137,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return value.toString();
-					}
+						if(value instanceof DateTimeValue)
+							return value.toString();
+						else
+							return null;	}
 
 					@Override
 					public DateTimeValue parseValue(Object input) throws CoercingParseValueException {
@@ -151,8 +161,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return value.toString();
-					}
+						if(value instanceof TimeValue)
+							return value.toString();
+						else
+							return null;		}
 
 					@Override
 					public TimeValue parseValue(Object input) throws CoercingParseValueException {
@@ -173,8 +185,10 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						return value.toString();
-					}
+						if(value instanceof DateValue)
+							return value.toString();
+						else
+							return null;	}
 
 					@Override
 					public DateValue parseValue(Object input) throws CoercingParseValueException {

@@ -16,8 +16,11 @@ public class GraphQLAttributeFetcher implements DataFetcher<Object> {
 
 	@Override
 	public Object get(DataFetchingEnvironment environment) throws Exception {
-		ConcreteInstance instance = environment.getSource();
-		return instance==null ? null : instance.getMember(ApplicationContext.get(), attribute, false);
+		Object instance = environment.getSource();
+		if(instance instanceof ConcreteInstance)
+			return ((ConcreteInstance)instance).getMember(ApplicationContext.get(), attribute, false);
+		else
+			return null;
 	}
 
 }
