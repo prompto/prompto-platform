@@ -22,12 +22,12 @@ then
 		curl --request POST \
 			 --header "Content-Type: application/json" \
 			 --data @release.json \
-			 --user ericvergnaud:$(cat password.txt) \
+			 --header "Authorization: token $(cat token.txt)" \
 			 --url https://api.github.com/repos/prompto/prompto-java/releases
 		curl --request POST \
 			 --header "Content-Type: application/json" \
 			 --data @release.json \
-			 --user ericvergnaud:$(cat password.txt) \
+			 --header "Authorization: token $(cat token.txt)" \
 			 --url https://api.github.com/repos/prompto/prompto-platform/releases
 	else
 		echo $deploy

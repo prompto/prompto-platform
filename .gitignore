@@ -10,3 +10,4 @@ travis.yml
 /.settings/
 /password.txt
 release.json
+/token.txt
