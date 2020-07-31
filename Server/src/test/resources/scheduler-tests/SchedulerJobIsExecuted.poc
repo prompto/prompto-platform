@@ -1,0 +1,21 @@
+widget SchedulerJobIsExecutedPage extends ReactWidget {
+
+	method getInitialState() {
+		return { value: "" };
+	}
+	
+    method componentDidMount() {
+    	executeAt = now() + 'PT0.500S';
+    	scheduleJob(timerTimedOut, executeAt);
+    }
+    
+    method timerTimedOut() {
+    	setState({value: "EXECUTED"});
+    }
+    
+	Html method render () {
+		state = getState();
+		return <div id="value">{state.value}</div>;
+	}
+	
+}

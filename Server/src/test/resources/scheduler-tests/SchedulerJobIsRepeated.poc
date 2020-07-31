@@ -1,0 +1,30 @@
+widget SchedulerJobIsRepeatedPage extends ReactWidget {
+
+	method getInitialState() {
+		return { value: "" };
+	}
+	
+    method componentDidMount() {
+    	executeAt = now() + 'PT0.500S';
+    	jobId = scheduleJob(timerTimedOut, executeAt, repeatEvery = 'PT1S');
+    	setState({jobId: jobId});
+    	executeAt = now() + 'PT3S';
+    	scheduleJob(cancelTheJob, executeAt);
+    }
+    
+    method cancelTheJob() {
+    	jobId = (Integer)state.jobId;
+    	cancelJob(jobId);
+  	}
+  	
+    method timerTimedOut() {
+    	value = (Text)state.value;
+    	setState({value: value + "/ONCE"});
+    }
+    
+	Html method render () {
+		state = getState();
+		return <div id="value">{state.value}</div>;
+	}
+	
+}

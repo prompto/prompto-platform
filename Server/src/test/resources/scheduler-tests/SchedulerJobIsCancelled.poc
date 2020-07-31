@@ -1,0 +1,32 @@
+widget SchedulerJobIsCancelledPage extends ReactWidget {
+
+	method getInitialState() {
+		return { value: "" };
+	}
+	
+    method componentDidMount() {
+    	executeAt = now() + 'PT3S';
+    	jobId = scheduleJob(timerTimedOut, executeAt);
+    	setState({jobId: jobId});
+    	executeAt = now() + 'PT1S';
+    	scheduleJob(cancelTheJob, executeAt);
+    }
+    
+    method cancelTheJob() {
+    	jobId = (Integer)state.jobId;
+    	cancelJob(jobId);
+    	value = (Text)state.value;
+    	setState({value: value + "CANCELLED"});
+  	}
+  	
+    method timerTimedOut() {
+    	value = (Text)state.value;
+    	setState({value: value + "EXECUTED"});
+    }
+    
+	Html method render () {
+		state = getState();
+		return <div id="value">{state.value}</div>;
+	}
+	
+}
