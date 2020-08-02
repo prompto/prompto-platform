@@ -52,6 +52,8 @@ class SOLRFilterBuilder {
 		case LESSER:
 			pushLesser(sb, info, operator, fieldValue);
 			break;
+		default:
+			throw new UnsupportedOperationException(operator.name());
 		}
 		stack.push(sb.toString());
 	}
