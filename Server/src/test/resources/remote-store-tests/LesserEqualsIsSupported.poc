@@ -1,0 +1,18 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget LesserEqualsIsSupportedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		s1 = Stuff(value="John");
+		s2 = Stuff(value="Lucy");
+		store(s1, s2);
+		forceRender();
+	}
+	
+	Html method render() {
+		cursor = fetch all( Stuff ) where ( value <= "Lucy" ) order by ( value desc );
+		values = stuff.value for each(stuff in cursor);
+		return <div id="root">{values}</div>;
+	}
+}

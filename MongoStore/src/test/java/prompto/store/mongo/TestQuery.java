@@ -132,6 +132,20 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
+	public void testFetchTextNotEquals() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name <> \"Johnny\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
+	@Test
 	public void testFetchTextEqualsWithSpace() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
@@ -174,12 +188,33 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
+	public void testFetchTextNotContains() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lucy");
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name not contains \"oh\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("Lucy", result.getData("name"));
+	}
+
+	@Test
 	public void testFetchListHas() throws Exception {
-		Document doc = new Document();
-		doc.put(IStore.dbIdName, UUID.randomUUID());
-		doc.put("name", "John");
-		doc.put("aliases", Arrays.asList("John", "Janet"));
-		store.insertDocuments(doc);
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		doc1.put("aliases", Arrays.asList("John", "Janet"));
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lucy");
+		doc2.put("aliases", Arrays.asList("Sky", "Diamond"));
+		store.insertDocuments(doc1, doc2);
 		store.flush();
 		// Test the basics
 		String query = "fetch one where aliases has \"John\"";
@@ -188,6 +223,25 @@ public class TestQuery extends BaseMongoTest {
 		assertEquals("John", result.getData("name"));
 	}
 
+
+	@Test
+	public void testFetchListNotHas() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		doc1.put("aliases", Arrays.asList("John", "Janet"));
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lucy");
+		doc2.put("aliases", Arrays.asList("Sky", "Diamond"));
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where aliases not has \"John\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("Lucy", result.getData("name"));
+	}
 
 	@Test
 	public void testFetchTextLesser() throws Exception {
@@ -206,7 +260,24 @@ public class TestQuery extends BaseMongoTest {
 		assertEquals("John", result.getData("name"));
 	}
 
-	
+	@Test
+	public void testFetchTextLesserEqual() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lionel");
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name <= \"King\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
+
 	@Test
 	public void testFetchTextGreater() throws Exception {
 		Document doc1 = new Document();
@@ -226,7 +297,24 @@ public class TestQuery extends BaseMongoTest {
 	
 
 	@Test
-	public void testFetchTextInText() throws Exception {
+	public void testFetchTextGreaterEqual() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lionel");
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name >= \"King\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("Lionel", result.getData("name"));
+	}
+
+	@Test
+	public void testFetchContains() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -239,6 +327,20 @@ public class TestQuery extends BaseMongoTest {
 		assertEquals("John", result.getData("name"));
 	}
 	
+	@Test
+	public void testFetchNotContains() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name not contains \"ah\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
 	@Test
 	public void testFetchTextInCollection() throws Exception {
 		Document doc = new Document();
@@ -254,22 +356,21 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchTextInTextCollection() throws Exception {
+	public void testFetchTextNotInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
-		doc.put("aliases", Arrays.asList("Johnny", "Jim"));
 		store.insertDocuments(doc);
 		store.flush();
 		// Test the basics
-		String query = "fetch one where aliases contains \"Jim\"";
+		String query = "fetch one where name not in [\"Lucy\", \"Jim\"]";
 		IStored result = fetchOne(query);
 		assertNotNull(result);
 		assertEquals("John", result.getData("name"));
 	}
 
 	@Test
-	public void testFetchNonTextEquals() throws Exception {
+	public void testFetchIntegerEquals() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -285,7 +386,7 @@ public class TestQuery extends BaseMongoTest {
 
 
 	@Test
-	public void testFetchNonTextLesser() throws Exception {
+	public void testFetchIntegerLesser() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -304,7 +405,26 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchNonTextGreater() throws Exception {
+	public void testFetchIntegerLesserEqual() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		doc1.put("quantity", 3L);
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lionel");
+		doc2.put("quantity", 13L);
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where quantity <= 10";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
+	@Test
+	public void testFetchIntegerGreater() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -323,7 +443,26 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchNonTextInCollection() throws Exception {
+	public void testFetchIntegerGreaterEqual() throws Exception {
+		Document doc1 = new Document();
+		doc1.put(IStore.dbIdName, UUID.randomUUID());
+		doc1.put("name", "John");
+		doc1.put("quantity", 3L);
+		Document doc2 = new Document();
+		doc2.put(IStore.dbIdName, UUID.randomUUID());
+		doc2.put("name", "Lionel");
+		doc2.put("quantity", 13L);
+		store.insertDocuments(doc1, doc2);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where quantity >= 10";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("Lionel", result.getData("name"));
+	}
+
+	@Test
+	public void testFetchIntegerInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -338,7 +477,22 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchNonTextInNonTextCollection() throws Exception {
+	public void testFetchIntegerNotInCollection() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("quantity", 13L);
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where quantity not in [10, 14]";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
+	@Test
+	public void testFetchIntegerListHas() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -346,10 +500,26 @@ public class TestQuery extends BaseMongoTest {
 		store.insertDocuments(doc);
 		store.flush();
 		// Test the basics
-		String query = "fetch one where quantities contains 10";
+		String query = "fetch one where quantities has 10";
 		IStored result = fetchOne(query);
 		assertNotNull(result);
 		assertEquals("John", result.getData("name"));
 	}
+	
+	@Test
+	public void testFetchIntegerListNotHas() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("quantities", Arrays.asList(20L, 13L));
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where quantities not has 10";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John", result.getData("name"));
+	}
+
 	
 }

@@ -378,4 +378,129 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("Gielgud", elem.getText());
 	}
+	
+	@Test
+	public void equalsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("EqualsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+	
+	@Test
+	public void notEqualsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("NotEqualsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+
+	@Test
+	public void greaterIsSupported() throws Exception {
+		linkResourcesAndLoadPage("GreaterIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+
+	
+	@Test
+	public void greaterEqualsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("GreaterEqualsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("JohnLucy", elem.getText());
+	}
+	
+	@Test
+	public void lesserIsSupported() throws Exception {
+		linkResourcesAndLoadPage("LesserIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+
+	@Test
+	public void lesserEqualsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("LesserEqualsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("LucyJohn", elem.getText());
+	}
+	
+
+	@Test
+	public void inIsSupported() throws Exception {
+		linkResourcesAndLoadPage("InIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("BrianJohn", elem.getText());
+	}
+	
+	@Test
+	public void notInIsSupported() throws Exception {
+		linkResourcesAndLoadPage("NotInIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+
+
+	@Test
+	public void isIsSupported() throws Exception {
+		linkResourcesAndLoadPage("IsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+	
+	@Test
+	public void isNotIsSupported() throws Exception {
+		linkResourcesAndLoadPage("IsNotIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+
+	@Test
+	public void hasIsSupported() throws Exception {
+		linkResourcesAndLoadPage("HasIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Gielgud", elem.getText());
+	}
+	
+	@Test
+	public void notHasIsSupported() throws Exception {
+		linkResourcesAndLoadPage("NotHasIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+
+	@Test
+	public void containsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("ContainsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("JohnJohnny", elem.getText());
+	}
+	
+	@Test
+	public void notContainsIsSupported() throws Exception {
+		linkResourcesAndLoadPage("NotContainsIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Lucy", elem.getText());
+	}
+	
+	@Test
+	public void roughlyIsSupported() throws Exception {
+		linkResourcesAndLoadPage("RoughlyIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("John", elem.getText());
+	}
+
+
 }

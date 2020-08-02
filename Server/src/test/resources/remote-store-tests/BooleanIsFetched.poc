@@ -10,7 +10,7 @@ widget BooleanIsFetchedPage extends ReactWidget {
 	}
 	
 	Html method render() {
-		stuff = fetch one( Stuff ) where ( value == true );
+		stuff = fetch one( Stuff ) where ( value is true );
 		if(stuff is null)
 			return <div>null!</div>;
 		else

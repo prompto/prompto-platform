@@ -1,0 +1,19 @@
+storable attribute value: Text;
+storable category Stuff(value);
+
+widget NotInIsSupportedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		s1 = Stuff(value="John");
+		s2 = Stuff(value="Lucy");
+		s3 = Stuff(value="Brian");
+		store(s1, s2, s3);
+		forceRender();
+	}
+	
+	Html method render() {
+		cursor = fetch all ( Stuff ) where ( value not in ["John","Brian"] ) order by (value);
+		values = stuff.value for each(stuff in cursor);
+		return <div id="root">{values}</div>;
+	}
+}

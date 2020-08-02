@@ -1,0 +1,19 @@
+storable attribute value: Text;
+storable attribute archived: Boolean;
+storable category Stuff(value, archived);
+
+widget IsIsSupportedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		s1 = Stuff(value="John", archived=true);
+		s2 = Stuff(value="Lucy", archived=false);
+		store(s1, s2);
+		forceRender();
+	}
+	
+	Html method render() {
+		cursor = fetch all ( Stuff ) where ( archived is true ) order by (value);
+		values = stuff.value for each(stuff in cursor);
+		return <div id="root">{values}</div>;
+	}
+}

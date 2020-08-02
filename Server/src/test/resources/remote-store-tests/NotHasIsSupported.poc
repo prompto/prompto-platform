@@ -1,0 +1,18 @@
+storable attribute values: Text[];
+storable category Stuff(values);
+
+widget NotHasIsSupportedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		s1 = Stuff(values=["John", "Gielgud"]);
+		s2 = Stuff(values=["Lucy"]);
+		store(s1, s2);
+		forceRender();
+	}
+	
+	Html method render() {
+		cursor = fetch all ( Stuff ) where ( values not has "Gielgud" ) order by (values);
+		values = stuff.values[1] for each(stuff in cursor);
+		return <div id="root">{values}</div>;
+	}
+}
