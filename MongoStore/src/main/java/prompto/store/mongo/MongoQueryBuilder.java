@@ -1,5 +1,6 @@
 package prompto.store.mongo;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -132,8 +133,30 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	@Override
 	public MongoQueryBuilder not() {
 		Bson top = predicates.pop();
-		predicates.push(Filters.not(top));
+		if(top.getClass().getSimpleName().endsWith("OrNorFilter"))
+			predicates.push(norify(top));
+		else
+			predicates.push(Filters.not(top));
 		return this;
+	}
+
+	private Bson norify(Bson predicate) {
+		// Mongo does not support $not $or, so convert $or to $nor
+		try {
+			Class<?> klass = predicate.getClass();
+			Field field = klass.getDeclaredField("operator");
+			field.setAccessible(true);
+			Enum<?> value = (Enum<?>)field.get(predicate);
+			Enum<?>[] values = value.getDeclaringClass().getEnumConstants();
+			if(value.ordinal()==0)
+				value = values[1];
+			else
+				value = values[0];
+			field.set(predicate, value);
+			return predicate;
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
 	}
 
 	@Override
