@@ -71,7 +71,7 @@ public class HtmlGenerator {
 
 	private Consumer<PrintWriter> generateHeader(Context context, PrintWriter printer) throws IOException {
 		printer.println("<head>");
-		generateEncoding(printer);
+		generateMetas(printer);
 		generateTitle(printer);
 		generateIcon(printer);
 		generateName(printer);
@@ -86,8 +86,22 @@ public class HtmlGenerator {
 		}
 	}
 	
-	private void generateEncoding(PrintWriter printer) {
+	@SuppressWarnings("unchecked")
+	private void generateMetas(PrintWriter printer) {
 		printer.println("<meta charset=\"utf-8\">");
+		Map<String, Object> config = getHeaderConfig();
+		Object value = config.get("metas");
+		if(value==null)
+			return;
+		else if(value instanceof Collection) {
+			((Collection<String>)value).forEach(item->{
+				if(item instanceof String)
+					printer.println(item);
+				else
+					logger.warn(()->"Expected a String, got " + value.getClass().getName());
+			});
+		} else
+			logger.warn(()->"Expected a Collection, got " + value.getClass().getName());
 	}
 
 	private Consumer<PrintWriter> generateWidgetScript(Context context, PrintWriter printer) {
