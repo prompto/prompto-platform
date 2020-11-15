@@ -2,6 +2,7 @@ package prompto.store.mongo;
 
 import static org.junit.Assert.*;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -29,6 +30,9 @@ import prompto.type.IntegerType;
 import prompto.type.ListType;
 import prompto.type.TextType;
 
+import prompto.intrinsic.PromptoDate;
+import prompto.intrinsic.PromptoDateTime;
+
 public class TestQuery extends BaseMongoTest {
 
 	Context context;
@@ -46,6 +50,8 @@ public class TestQuery extends BaseMongoTest {
 		createField("aliases", Family.TEXT, true);
 		createField("quantity", Family.INTEGER, false);
 		createField("quantities", Family.INTEGER, true);
+		createField("startFrom", Family.DATE, false);
+		createField("timeStamp", Family.DATETIME, false);
 	}
 	
 	private void registerDbIdAttribute() throws SyntaxError {
@@ -521,5 +527,92 @@ public class TestQuery extends BaseMongoTest {
 		assertEquals("John", result.getData("name"));
 	}
 
-	
+	@Test
+	public void filtersDateLesserGreater() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("startFrom", PromptoDate.parse("2020-10-10"));
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where startFrom > '2020-10-09'";
+		IStored result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where startFrom > '2020-10-10'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where startFrom >= '2020-10-10'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where startFrom < '2020-10-10'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where startFrom <= '2020-10-10'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where startFrom < '2020-10-11'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+	}
+
+	@Test
+	public void filtersDateTimeLesserGreater() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("timeStamp", PromptoDateTime.parse("2020-10-10T12:00:00"));
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where timeStamp > '2020-10-09T00:00:00'";
+		IStored result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp > '2020-10-10T12:00:00'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where timeStamp >= '2020-10-10T12:00:00'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp < '2020-10-10T12:00:00'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where timeStamp <= '2020-10-10T12:00:00'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp < '2020-10-11T12:00:00'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+	}
+
+	@Test
+	public void filtersDateTimeLesserGreaterThanDate() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John");
+		doc.put("timeStamp", PromptoDateTime.parse("2020-10-10T00:00:00"));
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where timeStamp > '2020-10-09'";
+		IStored result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp > '2020-10-10'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where timeStamp >= '2020-10-10'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp < '2020-10-10'";
+		result = fetchOne(query);
+		assertNull(result);
+		query = "fetch one where timeStamp <= '2020-10-10'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		query = "fetch one where timeStamp < '2020-10-11'";
+		result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+	}
+
+
 }
