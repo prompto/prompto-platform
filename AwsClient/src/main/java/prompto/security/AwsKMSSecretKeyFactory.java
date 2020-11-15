@@ -3,7 +3,6 @@ package prompto.security;
 import prompto.aws.KMS;
 import prompto.config.IConfigurationReader;
 import prompto.config.ISecretKeyConfiguration;
-import prompto.security.ISecretKeyFactory;
 import prompto.utils.Logger;
 
 public class AwsKMSSecretKeyFactory implements ISecretKeyFactory {

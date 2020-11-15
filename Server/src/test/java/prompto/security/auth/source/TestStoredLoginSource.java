@@ -30,8 +30,6 @@ import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
 import prompto.intrinsic.PromptoVersion;
 import prompto.security.auth.StoredUserInfoCache;
 import prompto.security.auth.method.BasicAuthenticationMethodFactory;
-import prompto.security.auth.source.IAuthenticationSourceFactory;
-import prompto.security.auth.source.StoredPasswordDigestAuthenticationSourceFactory;
 import prompto.server.BaseServerTest;
 import prompto.store.IStore;
 import prompto.store.IStoreFactory;

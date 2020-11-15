@@ -16,7 +16,6 @@ import prompto.intrinsic.PromptoVersion;
 import prompto.libraries.Libraries;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
-import prompto.server.AppServer;
 import prompto.utils.CmdLineParser;
 
 public abstract class BaseUITest extends BaseWebTest {

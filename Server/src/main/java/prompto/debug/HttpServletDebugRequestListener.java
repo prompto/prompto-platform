@@ -1,6 +1,5 @@
 package prompto.debug;
 
-import prompto.debug.IDebugEvent;
 import prompto.server.AppServer;
 
 public class HttpServletDebugRequestListener implements IDebugRequestListener {

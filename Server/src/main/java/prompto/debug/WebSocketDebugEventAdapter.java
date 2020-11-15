@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.websocket.api.Session;
 
-import prompto.debug.IDebugEvent;
 import prompto.server.AppServer;
 import prompto.utils.Logger;
 
