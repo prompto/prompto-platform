@@ -254,10 +254,11 @@ public class MongoStore implements IStore {
 		String name = doc.getString("name");
 		Family family = Family.valueOf(doc.getString("family"));
 		boolean collection = doc.getBoolean("collection", false);
+		boolean general = doc.getBoolean(AttributeInfo.GENERAL, false);
 		boolean key = doc.getBoolean(AttributeInfo.KEY, false);
 		boolean value = doc.getBoolean(AttributeInfo.VALUE, false);
 		boolean words = doc.getBoolean(AttributeInfo.WORDS, false);
-		attributes.put(name, new AttributeInfo(name, family, collection, key, value, words));
+		attributes.put(name, new AttributeInfo(name, family, collection, general, key, value, words));
 	}
 	
 	void loadAttribute(String name) {
@@ -282,6 +283,8 @@ public class MongoStore implements IStore {
 	}
 
 	private void createIndexIfRequired(AttributeInfo info) {
+		if(info.isGeneral())
+			createGeneralIndexIfRequired(info.getName());
 		if(info.isKey())
 			createKeyIndexIfRequired(info.getName());
 		if(info.isValue())
@@ -295,6 +298,10 @@ public class MongoStore implements IStore {
 		*/
 	}
 	
+	private void createGeneralIndexIfRequired(String name) {
+		createKeyIndexIfRequired(name);
+	}
+
 	/*
 	private void createWordsIndexIfRequired(String name) {
 		String indexName = name + "_words";
@@ -341,8 +348,7 @@ public class MongoStore implements IStore {
 					.name(indexName);
 			Bson keys = Indexes.ascending(name);
 			getInstancesCollection().createIndex(keys, options);
-		}
-		
+		}		
 	}
 
 	private void storeAttributes(Collection<AttributeInfo> infos) {
