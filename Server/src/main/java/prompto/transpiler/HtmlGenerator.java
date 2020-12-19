@@ -19,6 +19,7 @@ import prompto.grammar.Identifier;
 import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.store.DataStore;
+import prompto.utils.HtmlUtils;
 import prompto.utils.Logger;
 import prompto.utils.YamlUtils;
 
@@ -125,7 +126,7 @@ public class HtmlGenerator {
 	
 	private void generateSyntaxError(PrintWriter printer, SyntaxError e) {
 		printer.println("<body>");
-		printer.println("Syntax error '" + e.getMessage() + "'");
+		printer.println("Syntax error '" + HtmlUtils.encodeHtmlEntities(e.getMessage()) + "'");
 		printer.println("</body>");
 	}
 
