@@ -218,6 +218,7 @@ public class HtmlGenerator {
 
 	@SuppressWarnings("unchecked")
 	private void generateJavascripts(PrintWriter printer, Map<String, Object> config) {
+		printer.println("<script src=\"/js/lib/mousetrap.js\"></script>");
 		Object value = config.get("javaScripts");
 		if(value==null)
 			return;
