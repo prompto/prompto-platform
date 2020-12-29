@@ -111,7 +111,7 @@ public class HtmlGenerator {
 			generateWidgetScript(context, printer, widgetName);
 			return this::generateBody;
 		} catch(SyntaxError e) {
-			e.printStackTrace(System.err);
+			logger.error(()->"While generating page", e);
 			return p->generateSyntaxError(p, e);
 		} catch(Exception e) {
 			return p->generateException(p, e);
