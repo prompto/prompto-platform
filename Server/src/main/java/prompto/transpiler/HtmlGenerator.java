@@ -89,7 +89,7 @@ public class HtmlGenerator {
 	
 	@SuppressWarnings("unchecked")
 	private void generateMetas(PrintWriter printer) {
-		printer.println("<meta charset=\"utf-8\">");
+		printer.println("<meta charset='utf-8'>");
 		Map<String, Object> config = getHeaderConfig();
 		Object value = config.get("metas");
 		if(value==null)
@@ -111,6 +111,7 @@ public class HtmlGenerator {
 			generateWidgetScript(context, printer, widgetName);
 			return this::generateBody;
 		} catch(SyntaxError e) {
+			e.printStackTrace(System.err);
 			return p->generateSyntaxError(p, e);
 		} catch(Exception e) {
 			return p->generateException(p, e);
@@ -183,6 +184,7 @@ public class HtmlGenerator {
 	private void generatePromptoScripts(PrintWriter printer) {
 		printer.println("<script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js'></script>");
 		printer.println("<script src='/js/lib/require.js'></script>");
+		printer.println("<script src='/js/lib/mousetrap.js'></script>");
 	}
 
 	private void generateLibraries(PrintWriter printer) throws Exception {
@@ -205,9 +207,9 @@ public class HtmlGenerator {
 		else if(value instanceof Collection) {
 			((Collection<String>)value).forEach(item->{
 				if(item instanceof String) {
-					printer.print("<link href=\"");
+					printer.print("<link href='");
 					printer.print(item);
-					printer.println("\" rel=\"stylesheet\"/>");
+					printer.println("' rel='stylesheet'/>");
 				} else {
 					logger.warn(()->"Expected a String, got " + value.getClass().getName());
 				}
@@ -218,7 +220,6 @@ public class HtmlGenerator {
 
 	@SuppressWarnings("unchecked")
 	private void generateJavascripts(PrintWriter printer, Map<String, Object> config) {
-		printer.println("<script src=\"/js/lib/mousetrap.js\"></script>");
 		Object value = config.get("javaScripts");
 		if(value==null)
 			return;
@@ -228,9 +229,9 @@ public class HtmlGenerator {
 					printer.print("<script");
 					if(item.startsWith("http"))
 						printer.print(" crossorigin ");
-					printer.print(" src=\"");
+					printer.print(" src='");
 					printer.print(item);
-					printer.println("\"></script>");
+					printer.println("'></script>");
 				} else {
 					logger.warn(()->"Expected a String, got " + value.getClass().getName());
 				}
@@ -299,9 +300,9 @@ public class HtmlGenerator {
 		if(value==null)
 			return;
 		if(value instanceof String) {
-			printer.print("<link href=\"");
+			printer.print("<link href='");
 			printer.print(value);
-			printer.println("\" rel=\"icon\" type=\"image/ico\"/>");
+			printer.println("' rel='icon' type='image/ico'/>");
 		} else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 		}
