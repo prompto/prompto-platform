@@ -117,9 +117,14 @@ public class PromptoServlet extends CleverServlet {
 
 	protected ExecutionMode readMode(HttpServletRequest req) {
 		String mode = req.getParameter("mode");
-		if(mode!=null)
-			return ExecutionMode.valueOf(mode.toUpperCase());
-		else
+		if(mode!=null) {
+			if(mode.endsWith("I"))
+				return ExecutionMode.INTERPRET;
+			else if(mode.endsWith("E"))
+				return ExecutionMode.EXECUTE;
+			else
+				return ExecutionMode.valueOf(mode.toUpperCase());
+		} else
 			return ExecutionMode.INTERPRET;
 	}
 
