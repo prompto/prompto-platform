@@ -48,6 +48,7 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 	public void __before__() throws Throwable {
 		ApplicationContext.reset();
 		DataStore.setGlobal(getDataStore());
+		DataStore.useGlobal();
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 		tail = getCodeStoreTail();
 	}
