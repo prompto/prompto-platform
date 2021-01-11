@@ -10,8 +10,6 @@ import java.util.Map;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequestEvent;
-import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,7 +21,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import prompto.store.DataStore;
 import prompto.utils.Logger;
 import prompto.value.DocumentValue;
 
@@ -37,27 +34,6 @@ public class CleverServlet extends HttpServlet {
 	public static ThreadLocal<HttpServletResponse> CURRENT_RESPONSE = ThreadLocal.withInitial(() -> null);
 
 	ServletHolder holder;
-
-	public CleverServlet() {
-		installThreadLocalCleaners();
-	}
-	
-	private void installThreadLocalCleaners() {
-		getServletContext().addListener(new ServletRequestListener() {
-
-			@Override
-			public void requestInitialized(ServletRequestEvent sre) {
-				DataStore.useGlobal();
-			}
-
-			@Override
-			public void requestDestroyed(ServletRequestEvent sre) {
-				DataStore.useGlobal();
-			}
-
-			
-		});
-	}
 
 	@Override
 	public String getServletName() {

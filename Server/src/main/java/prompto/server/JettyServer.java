@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 import javax.security.auth.login.LoginContext;
 import javax.servlet.DispatcherType;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 
 import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.Authenticator;
@@ -55,6 +57,7 @@ import prompto.security.IKeyStoreFactory;
 import prompto.security.ISecretKeyFactory;
 import prompto.security.auth.method.IAuthenticationMethodFactory;
 import prompto.security.auth.source.IAuthenticationSource;
+import prompto.store.DataStore;
 import prompto.utils.Logger;
 
 class JettyServer extends Server {
@@ -363,11 +366,27 @@ class JettyServer extends Server {
 	public static class WebApiContext extends WebAppContextBase {
 		
 	}
+	
+	public static class ThreadLocalCleaner implements ServletRequestListener {
+
+		@Override
+		public void requestInitialized(ServletRequestEvent sre) {
+			DataStore.useGlobal();
+		}
+
+		@Override
+		public void requestDestroyed(ServletRequestEvent sre) {
+			DataStore.useGlobal();
+		}
+
+	}
+	
 
 	public WebApiContext newWebApiHandler() throws Exception {
 		WebApiContext handler = new WebApiContext();
 		handler.setContextPath("/api");
 		handler.setResourceBase(getResourceBase());
+		handler.addEventListener(new ThreadLocalCleaner());
 		// TODO handler.setSecurityHandler(securityHandler);
 		if(GraphQLServlet.isEnabled()) {
 			logger.info(()->"Starting GraphQL server...");
@@ -381,6 +400,7 @@ class JettyServer extends Server {
 		WebSiteContext handler = new WebSiteContext();
 		handler.setContextPath("/");
 		handler.setResourceBase(getResourceBase());
+		handler.addEventListener(new ThreadLocalCleaner());
 		handler.setSecurityHandler(securityHandler);
 		String welcomePage = config.getHttpConfiguration().getWelcomePage();
 		if(config.getWebSiteRoot()!=null)
