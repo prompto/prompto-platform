@@ -29,7 +29,7 @@ public class TestResourceStore extends BaseServerTest {
 		ICodeStore store = ICodeStore.getInstance();
 		Resource resource = newResource("stuff.html");
 		store.storeResource(resource, null);
-		assertNotNull(store.fetchSpecificResource(resource.getName(), resource.getVersion()));
+		assertNotNull(store.fetchVersionedResource(resource.getName(), resource.getVersion()));
 		URL url = new URL("http://localhost:" + port + "/stuff.html");
 		URLConnection cnx = url.openConnection();
 		InputStream input = cnx.getInputStream();

@@ -28,11 +28,14 @@ import prompto.statement.MethodCall;
 import prompto.store.DataStore;
 import prompto.store.IStore;
 import prompto.store.memory.MemStore;
+import prompto.utils.Logger;
 import prompto.value.BinaryValue;
 import prompto.value.IValue;
 import prompto.value.TextValue;
 
 public class RequestRouter {
+
+	static final Logger logger = new Logger();
 
 	public void route(ExecutionMode mode, Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		boolean isTest = methodName.toString().startsWith("\"") && methodName.toString().endsWith("\"");
@@ -64,6 +67,7 @@ public class RequestRouter {
 
 
 	private void executeTest(Identifier testName, HttpServletResponse response) throws Exception {
+		logger.debug(()->"Executing test: " + testName.toString());
 		PrintStream oldOut = System.out;
 		IStore oldStore = DataStore.getInstance();
 		DataStore.setInstance(new MemStore());
@@ -81,10 +85,12 @@ public class RequestRouter {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
+			logger.debug(()->"Done executing test: " + testName.toString());
 		}
 	}
 
 	private void interpretTest(Identifier testName, HttpServletResponse response) throws IOException {
+		logger.debug(()->"Interpreting test: " + testName.toString());
 		PrintStream oldOut = System.out;
 		IStore oldStore = DataStore.getInstance();
 		DataStore.setInstance(new MemStore());
@@ -102,10 +108,12 @@ public class RequestRouter {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
 			System.setOut(oldOut);
+			logger.debug(()->"Done interpreting test: " + testName.toString());
 		}
 	}
 
 	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
+		logger.debug(()->"Executing method: " + methodName);
 		Context context = prepareContext("Method: " + methodName);
 		try {
 			RemoteArgumentList params = RemoteArgumentList.read(context, jsonParams, parts);
@@ -123,10 +131,12 @@ public class RequestRouter {
 			// not an error
 		} finally {
 			context.notifyCompleted();
+			logger.debug(()->"Done executing method: " + methodName);
 		}
 	}
 	
 	public void interpretMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
+		logger.debug(()->"Interpreting method: " + methodName);
 		Context context = prepareContext("Method: " + methodName);
 		try {
 			RemoteArgumentList params = RemoteArgumentList.read(context, jsonParams, parts);
@@ -142,13 +152,13 @@ public class RequestRouter {
 			// not an error
 		} finally {
 			context.notifyCompleted();
+			logger.debug(()->"Done interpreting method: " + methodName);
 		}
 	}
 
 	private IValue interpretMethod(Context context, Identifier methodName, ArgumentList arguments, boolean main) {
 		if(arguments.isEmpty() && main) {
-			Interpreter.interpretMainNoArgs(context, methodName);
-			return null;
+			return Interpreter.interpretMainNoArgs(context, methodName);
 		} else {
 			MethodCall methodCall = new MethodCall(new MethodSelector(methodName), arguments);
 			return methodCall.interpret(context);
