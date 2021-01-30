@@ -8,6 +8,9 @@ import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
+import prompto.debug.event.ConnectedDebugEvent;
+import prompto.debug.event.IDebugEvent;
+import prompto.debug.event.TerminatedDebugEvent;
 import prompto.utils.Logger;
 
 @SuppressWarnings("serial")
@@ -51,9 +54,9 @@ public class DebugEventServlet extends WebSocketServlet {
 		}
 
 		private void send(IDebugEvent event) {
-			logger.debug(()->"Server sending " + event.getType().name());
+			logger.debug(()->"Server sending " + event.getClass().getName());
 			try {
-				String message = Serializer.writeDebugEvent(event);
+				String message = Serializer.writeMessage(event);
 				session.getRemote().sendString(message);
 			} catch(Throwable t) {
 				logger.error(()->"While sending: " + event, t);
@@ -67,11 +70,11 @@ public class DebugEventServlet extends WebSocketServlet {
 				return;
 			if(this.session!=null) {
 				adapter.setSession(null);
-				send(new IDebugEvent.Terminated());
+				send(new TerminatedDebugEvent());
 			}
 			this.session = session;
 			adapter.setSession(session);
-			send(new IDebugEvent.Connected());
+			send(new ConnectedDebugEvent());
 		}
 
 

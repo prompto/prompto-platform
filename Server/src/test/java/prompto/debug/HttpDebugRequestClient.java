@@ -10,6 +10,9 @@ import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.debug.request.IDebugRequest;
+import prompto.debug.response.IDebugResponse;
+
 public class HttpDebugRequestClient extends DebugRequestClient {
 
 		Supplier<Boolean> remoteAlive;
@@ -65,7 +68,7 @@ public class HttpDebugRequestClient extends DebugRequestClient {
 			cnx.setRequestProperty("Content-Type", "application/json");
 			cnx.setRequestProperty("charset", "utf-8");
 			try(OutputStream output = cnx.getOutputStream()) {
-				Serializer.writeDebugRequest(output, request);
+				Serializer.writeMessage(output, request);
 				if(cnx.getResponseCode()!=HttpServletResponse.SC_OK)
 					throw new IOException("Http error " + cnx.getResponseCode());
 				try(InputStream input = cnx.getInputStream()) {

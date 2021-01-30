@@ -1,6 +1,8 @@
 package prompto.server;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Enumeration;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -19,21 +21,37 @@ public class LoggingCrossOriginFilter extends CrossOriginFilter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.debug(()->"CrossOriginFilter: " + request.toString());
-		logRequestHeaders(request, "Origin", "Authorization", "X-Authorization");
+		if(logger.isDebugEnabled()) {
+			logger.debug(()->"CrossOriginFilter: " + request.toString());
+			logRequestHeaders((HttpServletRequest)request, "*"); // CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "Origin", "Authorization", "X-Authorization");
+		}
 		super.doFilter(request, response, chain);
-		logResponseHeaders(response, CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER);
+		if(logger.isDebugEnabled())
+			logResponseHeaders((HttpServletResponse)response, CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER);
 	}
 	
-	private void logRequestHeaders(ServletRequest request, String ... headers) {
-		for(String header : headers)
-			logger.debug(()->header + ": " + ((HttpServletRequest)request).getHeader(header));
+	private void logRequestHeaders(HttpServletRequest request, String ... headers) {
+		if(headers.length==1 && headers[0].equals("*")) {
+			Enumeration<String> names = request.getHeaderNames();
+			while(names.hasMoreElements()) {
+				String name = names.nextElement();
+				logger.debug(()->"Request " + name + ": " + request.getHeader(name));
+			}
+		} else {
+			for(String header : headers)
+				logger.debug(()->"Request " + header + ": " + ((HttpServletRequest)request).getHeader(header));
+		}
 		
 	}
 
-	private void logResponseHeaders(ServletResponse response, String ... headers) {
-		for(String header : headers)
-			logger.debug(()->header + ": " + ((HttpServletResponse)response).getHeader(header));
-		
+	private void logResponseHeaders(HttpServletResponse response, String ... headers) {
+		if(headers.length==1 && headers[0].equals("*")) {
+			Collection<String> names = response.getHeaderNames();
+			for(String name : names)
+				logger.debug(()->"Request " + name + ": " + ((HttpServletResponse)response).getHeader(name));
+		} else {
+			for(String header : headers)
+				logger.debug(()->"Response " + header + ": " + ((HttpServletResponse)response).getHeader(header));
+		}
 	}
 }

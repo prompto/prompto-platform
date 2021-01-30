@@ -16,7 +16,7 @@ import prompto.config.IDebugConfiguration;
 import prompto.config.IDebugEventAdapterConfiguration;
 import prompto.config.IDebugRequestListenerConfiguration;
 import prompto.config.IServerConfiguration;
-import prompto.debug.IDebugEvent.Connected;
+import prompto.debug.event.ConnectedDebugEvent;
 import prompto.intrinsic.PromptoVersion;
 import prompto.runtime.ApplicationContext;
 import prompto.server.BaseServerTest;
@@ -24,7 +24,7 @@ import prompto.utils.Instance;
 import prompto.utils.ManualTests;
 import prompto.utils.StreamUtils;
 
-// not sure why this blocks in CI, individual tests are ok
+// not sure why this blocks in CI, manual tests are ok
 @Category(ManualTests.class)
 public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventListener {
 
@@ -149,7 +149,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 
 	
 	@Override
-	public void handleConnectedEvent(Connected event) {
+	public void handleConnectedEvent(ConnectedDebugEvent event) {
 		((DebugRequestClient)debugger).setConnected(true);
 		synchronized (lock) {
 			lock.notify();

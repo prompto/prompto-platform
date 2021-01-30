@@ -1,5 +1,6 @@
 package prompto.debug;
 
+import prompto.debug.event.ConnectedDebugEvent;
 import prompto.server.AppServer;
 
 public class HttpServletDebugRequestListener implements IDebugRequestListener {
@@ -11,8 +12,8 @@ public class HttpServletDebugRequestListener implements IDebugRequestListener {
 	}
 
 	@Override
-	public IDebugEvent.Connected startListening() throws Exception {
-		return new IDebugEvent.Connected(); // always connected
+	public ConnectedDebugEvent startListening() throws Exception {
+		return new ConnectedDebugEvent(); // always connected
 	}
 
 	@Override

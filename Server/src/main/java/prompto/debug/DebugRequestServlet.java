@@ -6,6 +6,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import prompto.debug.request.IDebugRequest;
+import prompto.debug.response.IDebugResponse;
 import prompto.server.CleverServlet;
 
 @SuppressWarnings("serial")
@@ -40,8 +42,8 @@ public class DebugRequestServlet extends CleverServlet {
 	private void doPostJson(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		IDebugRequest request = Serializer.readDebugRequest(req.getInputStream());
 		IDebugResponse response = request.execute(debugger);
-		resp.setContentType("application/json");
-		Serializer.writeDebugResponse(resp.getOutputStream(), response);
+		resp.setContentType("application/json;charset=utf-8");
+		Serializer.writeMessage(resp.getOutputStream(), response);
 	}
 
 

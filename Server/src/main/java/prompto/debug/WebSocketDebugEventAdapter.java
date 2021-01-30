@@ -5,6 +5,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.websocket.api.Session;
 
+import prompto.debug.ack.Acknowledged;
+import prompto.debug.ack.IAcknowledgement;
+import prompto.debug.event.ConnectedDebugEvent;
+import prompto.debug.event.IDebugEvent;
 import prompto.server.AppServer;
 import prompto.utils.Logger;
 
@@ -32,23 +36,23 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 	}
 
 	@Override
-	public void handleConnectedEvent(IDebugEvent.Connected event) {
+	public void handleConnectedEvent(ConnectedDebugEvent event) {
 		// this event is notified during server boot, before the client actually attempts to connect
 		// there is no session, and there can't be, so no point polluting the logs with an error
-		logger.debug(()->"Skipping " + event.getType().name());
+		logger.debug(()->"Skipping " + event.getClass().getName());
 	}
 	
 	
 
 	@Override
 	protected IAcknowledgement send(IDebugEvent event) {
-		logger.debug(()->"Sending " + event.getType().name());
+		logger.debug(()->"Sending " + event.getClass().getName());
 		Session session = getSession();
 		if(session!=null) try {
-			String message = Serializer.writeDebugEvent(event);
+			String message = Serializer.writeMessage(event);
 			Future<Void> action = session.getRemote().sendStringByFuture(message);
 			action.get(5, TimeUnit.SECONDS);
-			return IAcknowledgement.Type.RECEIVED.getKlass().newInstance();
+			return new Acknowledged();
 		} catch(Throwable t) {
 			logger.error(()->"While sending: " + event, t);
 		} else
