@@ -17,6 +17,7 @@ import prompto.config.IDebugEventAdapterConfiguration;
 import prompto.config.IDebugRequestListenerConfiguration;
 import prompto.config.IServerConfiguration;
 import prompto.debug.event.ConnectedDebugEvent;
+import prompto.debug.worker.IWorker;
 import prompto.intrinsic.PromptoVersion;
 import prompto.runtime.ApplicationContext;
 import prompto.server.BaseServerTest;
