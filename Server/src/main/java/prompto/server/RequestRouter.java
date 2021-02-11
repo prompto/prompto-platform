@@ -161,8 +161,8 @@ public class RequestRouter {
 		}
 	}
 
-	private IValue interpretMethod(Context context, Identifier methodName, ArgumentList arguments, boolean main) {
-		if(arguments.isEmpty() && main) {
+	private IValue interpretMethod(Context context, Identifier methodName, ArgumentList arguments, boolean eligibleForMain) {
+		if(arguments.isEmpty() && eligibleForMain) {
 			return Interpreter.interpretMainNoArgs(context, methodName);
 		} else {
 			MethodCall methodCall = new MethodCall(new MethodSelector(methodName), arguments);
