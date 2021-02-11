@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.debug.ProcessDebugger;
+import prompto.debug.WorkerDebugger;
 import prompto.error.PromptoError;
 import prompto.error.TerminatedError;
 import prompto.expression.MethodSelector;
@@ -60,8 +61,12 @@ public class RequestRouter {
 	private Context prepareContext(String name) {
 		Context context = ApplicationContext.get().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
-		if(processDebugger!=null)
-			Standalone.startWorkerDebugger(Thread.currentThread(), context);
+		if(processDebugger!=null) {
+			WorkerDebugger workerDebugger = Standalone.startWorkerDebugger(Thread.currentThread(), context);
+			// step in start method by default
+			// TODO: make this configurable
+			workerDebugger.stepInto();
+		}
 		return context;
 	}
 
