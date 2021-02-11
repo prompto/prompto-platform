@@ -10,7 +10,7 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 import prompto.debug.event.ConnectedDebugEvent;
 import prompto.debug.event.IDebugEvent;
-import prompto.debug.event.TerminatedDebugEvent;
+import prompto.debug.event.ProcessTerminatedDebugEvent;
 import prompto.utils.Logger;
 
 @SuppressWarnings("serial")
@@ -70,7 +70,7 @@ public class DebugEventServlet extends WebSocketServlet {
 				return;
 			if(this.session!=null) {
 				adapter.setSession(null);
-				send(new TerminatedDebugEvent());
+				send(new ProcessTerminatedDebugEvent());
 			}
 			this.session = session;
 			adapter.setSession(session);

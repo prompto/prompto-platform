@@ -164,7 +164,7 @@ public class AppServer {
 		if(serverStarted!=null)
 			serverStarted.run();
 		if(adapter!=null)
-			adapter.handleReadyEvent();
+			adapter.onProcessReadyEvent();
 		return port;
 	}
 	

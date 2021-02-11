@@ -36,7 +36,7 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 	}
 
 	@Override
-	public void handleConnectedEvent(ConnectedDebugEvent event) {
+	public void onConnectedEvent(ConnectedDebugEvent event) {
 		// this event is notified during server boot, before the client actually attempts to connect
 		// there is no session, and there can't be, so no point polluting the logs with an error
 		logger.debug(()->"Skipping " + event.getClass().getName());
