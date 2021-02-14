@@ -45,7 +45,7 @@ public abstract class BaseServerTest {
 		port = SocketUtils.findAvailablePortInRange(8000,  9000);
 		IServerConfiguration config = getServerConfig();
 		AppServer.initialize(config);
-		AppServer.startServer(config, this::prepareHandlers, null);
+		AppServer.startServer(config, this::prepareHandlers, null, null, null);
 		assertTrue(AppServer.isStarted());
 		tail = findCodeStoreTail();
 	}

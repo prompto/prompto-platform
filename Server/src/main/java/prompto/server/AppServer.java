@@ -62,13 +62,13 @@ public class AppServer {
 	
 	public static void main(String[] args, Consumer<IServerConfiguration> afterStart) throws Throwable {
 		IServerConfiguration config = loadConfiguration(args);
-		main(config, afterStart);
+		main(config, null, null, null, afterStart);
 	}
 
-	public static <T extends IServerConfiguration> void main(T config, Consumer<T> afterStart) throws Throwable {
+	public static <T extends IServerConfiguration> void main(T config, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped, Consumer<T> afterStart) throws Throwable {
 		installCloudJARs();
 		initialize(config);
-		run(config);
+		run(config, serverPrepared, serverStarted, serverStopped);
 		if(afterStart!=null)
 			afterStart.accept(config);
 	}
@@ -114,16 +114,19 @@ public class AppServer {
 		return config.withRuntimeLibs(()->Libraries.getPromptoLibraries(Libraries.class, AppServer.class));
 	}
 
-	private static void run(IServerConfiguration config) throws Throwable {
-		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), ()->{ 
+	private static void run(IServerConfiguration config, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
+		Runnable stopped = ()->{ 
+			if(serverStopped != null)
+				serverStopped.run();
 			ApplicationContext.get().notifyCompleted(); 
-		});
+		};
+		startServer(config, (jetty, list)->prepareWebHandlers(jetty, list), serverPrepared, serverStarted, stopped);
 	}
 
-	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverStopped) throws Throwable {
+	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug==null)
-			return doStartServer(config, handler, ApplicationContext.get(), null, null, serverStopped);
+			return doStartServer(config, handler, ApplicationContext.get(), serverPrepared, serverStarted, serverStopped);
 		else {
 			Context context = Standalone.startProcessDebugger(debug);
 			return doStartServer(config, handler, context, AppServer::serverPrepared, ()->serverStarted(context), ()->serverStopped(serverStopped));			

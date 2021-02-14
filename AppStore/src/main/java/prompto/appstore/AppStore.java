@@ -32,7 +32,7 @@ public class AppStore {
 					.withResourceURLs(AppStore.getResourceURLs());
 		if(runtimeMode!=null)
 			config = config.withRuntimeMode(runtimeMode);
-		AppServer.main(config, null); 
+		AppServer.main(config, null, null, null, null); 
 	}
 	
 	public static IServerConfiguration loadConfiguration(String[] args) throws Exception {

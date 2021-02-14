@@ -46,7 +46,7 @@ public abstract class BaseUITest extends BaseWebTest {
 						.withApplicationVersion(PromptoVersion.parse("1.0.0"))
 						// .withResourceURLs(Application.getResourceURLs())
 						.withRuntimeMode(Mode.UNITTEST);
-			AppServer.main(config, null); 
+			AppServer.main(config, null, null, null, null); 
 		}
 		
 		public static IServerConfiguration loadConfiguration(String[] args) throws Exception {

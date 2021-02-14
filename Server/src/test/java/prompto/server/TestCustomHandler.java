@@ -121,7 +121,7 @@ public class TestCustomHandler {
 				Context context = ApplicationContext.get();
 				decls.register(context);
 			}
-			AppServer.startServer(config, this::prepareHandlers, null);
+			AppServer.startServer(config, this::prepareHandlers, null, null, null);
 			consumer.accept(port);
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);
