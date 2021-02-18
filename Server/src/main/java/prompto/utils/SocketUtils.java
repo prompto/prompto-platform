@@ -17,10 +17,10 @@ public abstract class SocketUtils {
 			int port = ThreadLocalRandom.current().nextInt(min, max + 1);
 			if(!alreadyTried.add(port))
 				continue;
-			if(alreadyTried.size() > 1 + max - min)
-				throw new IOException("No available port!");
 			if(isAvailablePort(port))
 				return port;
+			if(alreadyTried.size() >= 1 + max - min)
+				throw new IOException("No available port!");
 		}
 	}
 	
