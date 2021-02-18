@@ -28,11 +28,13 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 	}
 
 	public synchronized void waitSession() {
+		logger.info(()->"Waiting for debugger client to connect...");
 		while(session==null) try {
 			wait();
 		} catch(InterruptedException e) {
 			// nothing to do
 		}
+		logger.info(()->"Debugger client connected.");
 	}
 
 	@Override

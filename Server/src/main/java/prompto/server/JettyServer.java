@@ -246,7 +246,7 @@ class JettyServer extends Server {
 	}
 
 	public int getHttpPort() {
-		return mainConnector.getLocalPort();
+		return mainConnector!=null ? mainConnector.getLocalPort() : -1;
 	}
 
 	private void prepareSecurityHandler() {

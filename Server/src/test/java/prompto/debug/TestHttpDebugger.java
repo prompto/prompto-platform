@@ -1,5 +1,7 @@
 package prompto.debug;
 
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,12 +22,13 @@ import prompto.debug.event.ConnectedDebugEvent;
 import prompto.debug.worker.IWorker;
 import prompto.intrinsic.PromptoVersion;
 import prompto.runtime.ApplicationContext;
+import prompto.server.AppServer;
 import prompto.server.BaseServerTest;
 import prompto.utils.Instance;
 import prompto.utils.ManualTests;
 import prompto.utils.StreamUtils;
 
-// not sure why this blocks in CI, manual tests are ok
+// not sure why this fails in CI, individual manual tests are ok
 @Category(ManualTests.class)
 public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventListener {
 
@@ -55,7 +58,16 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	public void before() throws Throwable {
 		ProcessDebugger.reset();
 		// note that with this cinematic, we can't debug the server startup method
-		server.__before__(); 
+		new Thread(()->{
+			try {
+				server.__before__();
+			} catch(Throwable t) {
+				fail();
+			}
+		}).start(); 
+		do {
+			Thread.sleep(10);
+		} while(AppServer.getHttpPort()<0);
 		ApplicationContext.reset();
 	}
 	
@@ -78,9 +90,9 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	
 	
 	@Override
-	protected void waitSuspendedOrTerminated() throws Exception {
-		Status status = debugger.getWorkerStatus(getDebuggedThread());
-		while(status!=Status.SUSPENDED && status!=Status.TERMINATED) {
+	protected void waitWorkerSuspendedOrTerminated() throws Exception {
+		WorkerStatus status = debugger.getWorkerStatus(getDebuggedThread());
+		while(status!=WorkerStatus.WORKER_SUSPENDED && status!=WorkerStatus.WORKER_TERMINATED) {
 			Thread.sleep(100);
 			status = debugger.getWorkerStatus(getDebuggedThread());
 		}
@@ -147,18 +159,17 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 		}
 	}
 
-
 	
 	@Override
 	public void onConnectedEvent(ConnectedDebugEvent event) {
 		((DebugRequestClient)debugger).setConnected(true);
-		synchronized (lock) {
-			lock.notify();
-		}		
 	}
 	
 	@Override
 	public void onProcessReadyEvent() {
+		synchronized (lock) {
+			lock.notify();
+		}		
 	}
 	
 	@Override

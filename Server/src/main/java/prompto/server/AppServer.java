@@ -32,6 +32,7 @@ import prompto.debug.DebugEventServlet;
 import prompto.debug.DebugRequestServlet;
 import prompto.debug.HttpServletDebugRequestListener;
 import prompto.debug.IDebugEventAdapter;
+import prompto.debug.ProcessDebugger;
 import prompto.debug.WebSocketDebugEventAdapter;
 import prompto.declaration.IMethodDeclaration;
 import prompto.error.ReadWriteError;
@@ -126,10 +127,11 @@ public class AppServer {
 	static int startServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
 		IDebugConfiguration debug = config.getDebugConfiguration();
 		if(debug==null)
-			return doStartServer(config, handler, ApplicationContext.get(), serverPrepared, serverStarted, serverStopped);
+			return doStartServer(config, handler, ApplicationContext.get(), null, serverPrepared, serverStarted, serverStopped);
 		else {
-			Context context = Standalone.startProcessDebugger(debug);
-			return doStartServer(config, handler, context, AppServer::serverPrepared, ()->serverStarted(context), ()->serverStopped(serverStopped));			
+			ProcessDebugger debugger = Standalone.startProcessDebugger(debug);
+			Context context = ApplicationContext.get().newLocalContext();
+			return doStartServer(config, handler, context, debugger, AppServer::serverPrepared, ()->serverStarted(context), ()->serverStopped(serverStopped));			
 		}
 	}
 	
@@ -151,7 +153,7 @@ public class AppServer {
 			runnable.run();
 	}
 	
-	static int doStartServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Context context, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
+	static int doStartServer(IServerConfiguration config, BiConsumer<JettyServer, HandlerList> handler, Context context, ProcessDebugger debugger, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped) throws Throwable {
 		logger.info(()->"Starting web server on port " + config.getHttpConfiguration().getPort() + "...");
 		jettyServer = new JettyServer(config);
 		jettyServer.prepare(handler);
@@ -160,9 +162,7 @@ public class AppServer {
 		AppServer.start(serverStopped);
 		final int port = jettyServer.getHttpPort();
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
-		IDebugEventAdapter adapter = Standalone.getDebugEventAdapter();
-		if(adapter instanceof WebSocketDebugEventAdapter)
-			((WebSocketDebugEventAdapter)adapter).waitSession();
+		IDebugEventAdapter adapter = startDebugSession(debugger, context);
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
 			serverStarted.run();
@@ -172,6 +172,15 @@ public class AppServer {
 	}
 	
 	
+	private static IDebugEventAdapter startDebugSession(ProcessDebugger debugger, Context context) {
+		IDebugEventAdapter adapter = Standalone.getDebugEventAdapter();
+		if(adapter instanceof WebSocketDebugEventAdapter) {
+			((WebSocketDebugEventAdapter)adapter).waitSession();
+			Standalone.wireProcessDebugger(debugger, context);
+		}
+		return adapter;
+	}
+
 	public static void callServerAboutToStart(IServerConfiguration config, Context context) {
 		final String serverAboutToStartMethod = config.getServerAboutToStartMethod();
 		if(serverAboutToStartMethod!=null) try {
@@ -222,7 +231,7 @@ public class AppServer {
 
 	/* used by Server.pec */
 	public static long getHttpPort() {
-		return jettyServer.getHttpPort();
+		return jettyServer!=null ? jettyServer.getHttpPort() : -1;
 	}
 	
 	/* used by Server.pec */

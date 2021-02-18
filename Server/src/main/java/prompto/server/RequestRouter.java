@@ -62,6 +62,7 @@ public class RequestRouter {
 		Context context = ApplicationContext.get().newLocalContext();
 		ProcessDebugger processDebugger = ProcessDebugger.getInstance();
 		if(processDebugger!=null) {
+			logger.info(()->"Wiring debugger for incoming request");
 			WorkerDebugger workerDebugger = Standalone.startWorkerDebugger(Thread.currentThread(), context);
 			// step in start method by default
 			// TODO: make this configurable
