@@ -92,7 +92,7 @@ public class TestHttpDebugger extends TestDebuggerBase implements IDebugEventLis
 	@Override
 	protected void waitWorkerSuspendedOrTerminated() throws Exception {
 		WorkerStatus status = debugger.getWorkerStatus(getDebuggedThread());
-		while(status!=WorkerStatus.WORKER_SUSPENDED && status!=WorkerStatus.WORKER_TERMINATED) {
+		while(status!=WorkerStatus.WORKER_SUSPENDED && status!=WorkerStatus.WORKER_COMPLETED) {
 			Thread.sleep(100);
 			status = debugger.getWorkerStatus(getDebuggedThread());
 		}
