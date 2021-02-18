@@ -53,7 +53,7 @@ public class HttpDebugRequestClient extends DebugRequestClient {
 	}
 	
 	@Override
-	public Status getProcessStatus() {
+	public ProcessStatus getProcessStatus() {
 		// TODO Auto-generated method stub
 		return null;
 	}
