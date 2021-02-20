@@ -13,8 +13,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.debug.ProcessDebugger;
 import prompto.debug.WorkerDebugger;
+import prompto.error.ExecutionError;
 import prompto.error.PromptoError;
 import prompto.error.TerminatedError;
+import prompto.expression.IExpression;
 import prompto.expression.MethodSelector;
 import prompto.grammar.ArgumentList;
 import prompto.grammar.Identifier;
@@ -87,6 +89,8 @@ public class RequestRouter {
 			writeJsonResponse(lines, response);
 		} catch(TerminatedError e) {
 			// not an error
+		} catch(PromptoError e) {
+			writeJsonErrorResponse(context, e, response);
 		} finally {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
@@ -110,6 +114,8 @@ public class RequestRouter {
 			writeJsonResponse(lines, response);
 		} catch(TerminatedError e) {
 			// not an error
+		} catch(PromptoError e) {
+			writeJsonErrorResponse(context, e, response);
 		} finally {
 			context.notifyCompleted();
 			DataStore.setInstance(oldStore);
@@ -135,6 +141,8 @@ public class RequestRouter {
 			writeJsonResponse(context, text, response);
 		} catch(TerminatedError e) {
 			// not an error
+		} catch(PromptoError e) {
+			writeJsonErrorResponse(context, e, response);
 		} finally {
 			context.notifyCompleted();
 			logger.debug(()->"Done executing method: " + methodName);
@@ -156,6 +164,8 @@ public class RequestRouter {
 				writeJsonResponse(context, value, response);
 		} catch(TerminatedError e) {
 			// not an error
+		} catch(PromptoError e) {
+			writeJsonErrorResponse(context, e, response);
 		} finally {
 			context.notifyCompleted();
 			logger.debug(()->"Done interpreting method: " + methodName);
@@ -208,5 +218,33 @@ public class RequestRouter {
 		generator.flush();
 		generator.close();
 	}
+
+	private void writeJsonErrorResponse(Context context, PromptoError error, HttpServletResponse response) throws IOException {
+		response.setContentType("text/json");
+		response.setStatus(HttpServletResponse.SC_OK);
+		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
+		generator.writeStartObject();
+		generator.writeStringField("error",getErrorMessage(context, error));
+		generator.writeNullField("data");
+		generator.writeEndObject();
+		generator.flush();
+		generator.close();
+	}
+
+	private String getErrorMessage(Context context, PromptoError error) {
+		String message = error.getMessage();
+		if(message != null)
+			return message;
+		if(error instanceof ExecutionError) try {
+			IExpression expression = ((ExecutionError)error).getExpression(context);
+			IValue value = expression.interpret(context);
+			if(value!=null)
+				return value.toString();
+		} catch(PromptoError e) {
+			// bail
+		}
+		return "Internal error, please contact Prompto support";
+	}
+
 
 }
