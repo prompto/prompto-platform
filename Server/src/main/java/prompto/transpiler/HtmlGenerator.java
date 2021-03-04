@@ -53,7 +53,7 @@ public class HtmlGenerator {
 		generateEpilog(printer);
 	}
 
-	private void generateRenderScript(PrintWriter printer, String widgetName) {
+	private void generatePageRenderScript(PrintWriter printer, String widgetName) {
 		printer.println("<script>");
 		printer.println("function renderBody() {");
 		// TODO call htmlEngine
@@ -79,7 +79,7 @@ public class HtmlGenerator {
 		generatePromptoScripts(printer);
 		try {
 			generateLibraries(printer);
-			Consumer<PrintWriter> bodyWriter = generateWidgetScript(context, printer);
+			Consumer<PrintWriter> bodyWriter = generatePageWidgetScript(context, printer);
 			printer.println("</head>");
 			return bodyWriter;
 		} catch(Exception e) {
@@ -105,10 +105,10 @@ public class HtmlGenerator {
 			logger.warn(()->"Expected a Collection, got " + value.getClass().getName());
 	}
 
-	private Consumer<PrintWriter> generateWidgetScript(Context context, PrintWriter printer) {
+	private Consumer<PrintWriter> generatePageWidgetScript(Context context, PrintWriter printer) {
 		try {
 			String widgetName = getWidgetName();
-			generateWidgetScript(context, printer, widgetName);
+			generatePageWidgetScript(context, printer, widgetName);
 			return this::generateBody;
 		} catch(SyntaxError e) {
 			logger.error(()->"While generating page", e);
@@ -145,12 +145,12 @@ public class HtmlGenerator {
 			throw new SyntaxError("Expected a String for 'widget', got " + value.getClass().getName());
 	}
 
-	private void generateWidgetScript(Context context, PrintWriter printer, String widgetName) {
+	private void generatePageWidgetScript(Context context, PrintWriter printer, String widgetName) {
 		IWidgetDeclaration widget = fetchWidgetDeclaration(context, widgetName);
 		if(widget==null)
 			throw new SyntaxError("No such widget '" + widgetName + "'");
-		generateWidgetScript(printer, widget);
-		generateRenderScript(printer, widgetName);
+		generatePageWidgetScript(printer, widget);
+		generatePageRenderScript(printer, widgetName);
 	}
 	
 
@@ -163,7 +163,7 @@ public class HtmlGenerator {
 		
 	}
 
-	private void generateWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
+	private void generatePageWidgetScript(PrintWriter printer, IWidgetDeclaration declaration) {
 		IJSEngine engine = IJSEngine.forUserAgent(userAgent);
 		Context context = ApplicationContext.get().newLocalContext();
 		Transpiler transpiler = new Transpiler(engine, context);
@@ -194,6 +194,7 @@ public class HtmlGenerator {
 		if(!generateWidgetLibraries(printer, header)) {
 			generateHtmlEngine(printer, header);
 			generateUiFramework(printer, header);
+			// generateWebLibraries(printer, header);
 		}
 		generateStyleSheets(printer, header);
 		generateJavascripts(printer, header);
