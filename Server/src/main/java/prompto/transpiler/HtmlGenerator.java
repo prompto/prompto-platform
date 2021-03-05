@@ -7,15 +7,23 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.security.InvalidParameterException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import prompto.code.ICodeStore;
+import prompto.code.ModuleType;
+import prompto.code.WebLibrary;
 import prompto.declaration.CategoryDeclaration;
 import prompto.declaration.IWidgetDeclaration;
 import prompto.error.SyntaxError;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoVersion;
 import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.store.DataStore;
@@ -30,6 +38,7 @@ public class HtmlGenerator {
 	String userAgent;
 	Map<String, Object> pageConfig;
 	String htmlEngine = null;
+	Set<String> headerEntries = new HashSet<>();
 	
 	public HtmlGenerator(String userAgent, Map<String, Object> pageConfig) {
 		this.userAgent = userAgent;
@@ -89,7 +98,7 @@ public class HtmlGenerator {
 	
 	@SuppressWarnings("unchecked")
 	private void generateMetas(PrintWriter printer) {
-		printer.println("<meta charset='utf-8'>");
+		writeHeaderEntry(printer, "<meta charset='utf-8'>");
 		Map<String, Object> config = getHeaderConfig();
 		Object value = config.get("metas");
 		if(value==null)
@@ -97,12 +106,19 @@ public class HtmlGenerator {
 		else if(value instanceof Collection) {
 			((Collection<String>)value).forEach(item->{
 				if(item instanceof String)
-					printer.println(item);
+					writeHeaderEntry(printer, item);
 				else
 					logger.warn(()->"Expected a String, got " + value.getClass().getName());
 			});
 		} else
 			logger.warn(()->"Expected a Collection, got " + value.getClass().getName());
+	}
+
+	private void writeHeaderEntry(PrintWriter printer, String entry) {
+		if(headerEntries.add(entry))
+			printer.println(entry);
+		else
+			logger.warn(()->"Duplicate header entry: " + entry);
 	}
 
 	private Consumer<PrintWriter> generatePageWidgetScript(Context context, PrintWriter printer) {
@@ -182,24 +198,69 @@ public class HtmlGenerator {
 	}
 
 	private void generatePromptoScripts(PrintWriter printer) {
-		printer.println("<script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js'></script>");
-		printer.println("<script src='/js/lib/require.js'></script>");
-		printer.println("<script src='/js/lib/mousetrap.js'></script>");
+		writeHeaderEntry(printer, "<script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.js'></script>");
+		writeHeaderEntry(printer, "<script src='/js/lib/require.js'></script>");
+		writeHeaderEntry(printer, "<script src='/js/lib/mousetrap.js'></script>");
 	}
 
 	private void generateLibraries(PrintWriter printer) throws Exception {
-		Map<String, Object> header = getHeaderConfig();
-		if(header==null)
+		Map<String, Object> config = getHeaderConfig();
+		if(config==null)
 			return;
-		if(!generateWidgetLibraries(printer, header)) {
-			generateHtmlEngine(printer, header);
-			generateUiFramework(printer, header);
-			// generateWebLibraries(printer, header);
-		}
-		generateStyleSheets(printer, header);
-		generateJavascripts(printer, header);
+		generateWebLibraries(printer, config);
+		generateWidgetLibraries(printer, config);
+		generateHtmlEngine(printer, config);
+		generateUiFramework(printer, config);
+		generateStyleSheets(printer, config);
+		generateJavaScripts(printer, config);
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void generateWebLibraries(PrintWriter printer, Map<String, Object> config) throws Exception {
+		Object value = config.get("webLibraries");
+		if(value==null)
+			return;
+		else if(value instanceof Collection) {
+			for(Object item : (Collection<Object>)value) {
+				generateWebLibrary(printer, item);
+			}
+		} else
+			logger.warn(()->"Expected a Collection, got " + value.getClass().getName());
+	}
+
+	private void generateWebLibrary(PrintWriter printer, Object entry) throws Exception {
+		if(entry instanceof String)
+			generateWebLibrary(printer, (String)entry, PromptoVersion.LATEST);
+		else if(entry instanceof Map) {
+			Object name = ((Map<?,?>)entry).get("name");
+			if(name instanceof String) {
+				Object value = ((Map<?,?>)entry).get("version");
+				if(value instanceof String) try {
+					PromptoVersion version = PromptoVersion.parse((String)value);
+					generateWebLibrary(printer, (String)name, version);
+				} catch(InvalidParameterException e) {
+					throw new SyntaxError("Invalid 'version' in webLibraries entry: " + entry.toString());
+				} else
+					throw new SyntaxError("Missing 'version' in webLibraries entry: " + entry.toString());
+			} else
+				throw new SyntaxError("Missing 'name' in webLibraries entry: " + entry.toString());
+		} else
+			throw new SyntaxError("Could not understand webLibraries entry: " + entry.toString());
+	}
+
+	private void generateWebLibrary(PrintWriter printer, String name, PromptoVersion version) throws Exception {
+		WebLibrary webLibrary = ICodeStore.getInstance().fetchVersionedModule(ModuleType.WEBLIBRARY, name, version);
+		if(webLibrary == null)
+			throw new SyntaxError("Could not find webLibrary: " + name + ", version: " + version.toString());
+		Map<String, Object> config = new HashMap<>();
+		config.put("htmlEngine", webLibrary.getHtmlEngine());
+		config.put("javaScripts", webLibrary.getJavaScripts());
+		config.put("styleSheets", webLibrary.getStyleSheets());
+		generateHtmlEngine(printer, config);
+		generateStyleSheets(printer, config);
+		generateJavaScripts(printer, config);
+	}
+
 	@SuppressWarnings("unchecked")
 	private void generateStyleSheets(PrintWriter printer, Map<String, Object> config) {
 		Object value = config.get("styleSheets");
@@ -208,9 +269,10 @@ public class HtmlGenerator {
 		else if(value instanceof Collection) {
 			((Collection<String>)value).forEach(item->{
 				if(item instanceof String) {
-					printer.print("<link href='");
-					printer.print(item);
-					printer.println("' rel='stylesheet'/>");
+					if(!(item.startsWith("http")|| item.startsWith("/")))
+						item = "/" + item;
+					String styleSheet = "<link href='" + item + "' rel='stylesheet'/>";
+					writeHeaderEntry(printer, styleSheet);
 				} else {
 					logger.warn(()->"Expected a String, got " + value.getClass().getName());
 				}
@@ -220,19 +282,17 @@ public class HtmlGenerator {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void generateJavascripts(PrintWriter printer, Map<String, Object> config) {
+	private void generateJavaScripts(PrintWriter printer, Map<String, Object> config) {
 		Object value = config.get("javaScripts");
 		if(value==null)
 			return;
 		else if(value instanceof Collection) {
 			((Collection<String>)value).forEach(item->{
 				if(item instanceof String) {
-					printer.print("<script");
-					if(item.startsWith("http"))
-						printer.print(" crossorigin ");
-					printer.print(" src='");
-					printer.print(item);
-					printer.println("'></script>");
+					if(!(item.startsWith("http")|| item.startsWith("/")))
+						item = "/" + item;
+					String javaScript = "<script" + (item.startsWith("http") ? " crossorigin " : "") + " src='" + item + "'></script>";
+					writeHeaderEntry(printer, javaScript);
 				} else {
 					logger.warn(()->"Expected a String, got " + value.getClass().getName());
 				}
@@ -248,7 +308,7 @@ public class HtmlGenerator {
 		else if(value instanceof String) {
 			config = YamlUtils.readResource("uiFrameworks/" + value + ".yaml");
 			generateStyleSheets(printer, config);
-			generateJavascripts(printer, config);
+			generateJavaScripts(printer, config);
 		} else
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 	}
@@ -258,27 +318,29 @@ public class HtmlGenerator {
 		if(value==null)
 			return;
 		else if(value instanceof String) {
-			if(htmlEngine==null)
+			if(value.equals(htmlEngine))
+				return; // already generated
+			else if(htmlEngine!=null)
+				throw new SyntaxError("HTML engine: " + value + " conflicts with: " + htmlEngine);
+			else {
 				htmlEngine = (String)value;
-			else if(!htmlEngine.equals(value))
-				throw new Exception("HTML engine: " + value + " conflicts with: " + htmlEngine);
-			config = YamlUtils.readResource("htmlEngines/" + value + ".yaml");
-			generateStyleSheets(printer, config);
-			generateJavascripts(printer, config);
+				config = YamlUtils.readResource("htmlEngines/" + value + ".yaml");
+				generateStyleSheets(printer, config);
+				generateJavaScripts(printer, config);
+			}
 		} else
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 	}
 
-	private boolean generateWidgetLibraries(PrintWriter printer, Map<String, Object> config) throws Exception {
+	private void generateWidgetLibraries(PrintWriter printer, Map<String, Object> config) throws Exception {
 		Object values = config.get("widgetLibraries");
 		if(values==null)
-			return false;
+			return;
 		else if(values instanceof Collection) {
 			for(Object value : (Collection<?>)values)
 				generateWidgetLibrary(value, printer, config);
 		} else
 			logger.warn(()->"Expected a List, got " + values.getClass().getName());
-		return true;
 	}
 
 	private void generateWidgetLibrary(Object value, PrintWriter printer, Map<String, Object> config) throws Exception {
@@ -287,7 +349,7 @@ public class HtmlGenerator {
 			generateHtmlEngine(printer, config);
 			generateUiFramework(printer, config);
 			generateStyleSheets(printer, config);
-			generateJavascripts(printer, config);
+			generateJavaScripts(printer, config);
 		}
 		else
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
@@ -301,9 +363,8 @@ public class HtmlGenerator {
 		if(value==null)
 			return;
 		if(value instanceof String) {
-			printer.print("<link href='");
-			printer.print(value);
-			printer.println("' rel='icon' type='image/ico'/>");
+			String icon = "<link href='" + value + "' rel='icon' type='image/ico'/>";
+			writeHeaderEntry(printer, icon);
 		} else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 		}
@@ -317,9 +378,8 @@ public class HtmlGenerator {
 		if(value==null)
 			return;
 		else if(value instanceof String) {
-			printer.print("<title>");
-			printer.print(value);
-			printer.println("</title>");
+			String title = "<title>" + value + "</title>";
+			writeHeaderEntry(printer, title);
 		} else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 		}
@@ -333,11 +393,8 @@ public class HtmlGenerator {
 		if(value==null)
 			return;
 		else if(value instanceof String) {
-			printer.print("<script>");
-			printer.print("\twindow.name = '");
-			printer.print(value);
-			printer.print("';");
-			printer.println("</script>");
+			String name = "<script>\twindow.name = '" + value + "';\n</script>";
+			writeHeaderEntry(printer, name);
 		} else {
 			logger.warn(()->"Expected a String, got " + value.getClass().getName());
 		}
