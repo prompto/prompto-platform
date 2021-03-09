@@ -84,7 +84,7 @@ public class PromptoServlet extends CleverServlet {
 		Identifier methodName = readMethod(req);
 		ExecutionMode mode = readMode(req);
 		boolean main = readMain(req);
-		Map<String, byte[]> parts = readParts(req);
+		Map<String, byte[]> parts = readPartsAsBytes(req);
 		String jsonParams = new String(parts.get("params"));
 		RequestRouter handler = new RequestRouter();
 		handler.route(mode, methodName, jsonParams, parts, main, resp);

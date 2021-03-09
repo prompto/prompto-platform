@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import prompto.intrinsic.PromptoBinary;
 import prompto.utils.Logger;
 import prompto.value.DocumentValue;
 
@@ -110,14 +111,31 @@ public class CleverServlet extends HttpServlet {
 		generator.close();
 	}
 
-	protected Map<String, byte[]> readParts(HttpServletRequest req) throws ServletException, IOException {
-		Map<String, byte[]> parts = new HashMap<>();
+	protected Map<String, Object> readPartsAsObjects(HttpServletRequest req) throws ServletException, IOException {
+		Map<String, Object> parts = new HashMap<>();
 		for (Part part : req.getParts())
-			parts.put(part.getName(), readPartData(part));
+			parts.put(part.getName(), readPartAsObject(part));
 		return parts;
 	}
 
-	private byte[] readPartData(Part part) throws IOException {
+	protected Map<String, byte[]> readPartsAsBytes(HttpServletRequest req) throws ServletException, IOException {
+		Map<String, byte[]> parts = new HashMap<>();
+		for (Part part : req.getParts())
+			parts.put(part.getName(), readPartAsBytes(part));
+		return parts;
+	}
+
+	private Object readPartAsObject(Part part) throws IOException {
+		byte[] data = readPartAsBytes(part);
+		if(part.getSubmittedFileName()!=null) {
+			String mimeType = part.getContentType();
+			return new PromptoBinary(mimeType, data);
+			
+		} else
+			return new String(data);
+	}
+	
+	private byte[] readPartAsBytes(Part part) throws IOException {
 		try (InputStream input = part.getInputStream()) {
 			try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
 				byte[] buffer = new byte[4096];

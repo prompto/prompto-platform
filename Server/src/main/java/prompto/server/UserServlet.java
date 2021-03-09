@@ -152,9 +152,12 @@ public class UserServlet extends CleverServlet {
 		resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
 	}
 
-	private IValue doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendError(415);
-		return null;
+	private IValue doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+		Map<String, Object> parts = readPartsAsObjects(req);
+		PromptoDocument<String, Object> document = new PromptoDocument<>(parts);
+		Context context = getWorkerContext();
+		DocumentValue documentValue = new DocumentValue(context, document, true);
+		return interpret(context, documentValue);
 	}
 
 	private IValue doPostUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {

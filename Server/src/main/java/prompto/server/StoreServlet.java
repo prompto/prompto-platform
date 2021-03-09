@@ -278,7 +278,7 @@ public class StoreServlet extends CleverServlet {
 
 	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Map<Long, Object> updatedDbIds = new HashMap<>();
-		Map<String, byte[]> parts = readParts(req);
+		Map<String, byte[]> parts = readPartsAsBytes(req);
 		if(parts.containsKey("toDelete")) {
 			JsonNode toDelete = new ObjectMapper().readTree(parts.get("toDelete"));
 			deleteJson(toDelete);
