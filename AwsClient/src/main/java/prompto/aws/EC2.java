@@ -4,80 +4,84 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import prompto.intrinsic.PromptoConverter;
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
-
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
-import com.amazonaws.services.ec2.model.AllocateAddressResult;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
-import com.amazonaws.services.ec2.model.AssociateAddressRequest;
-import com.amazonaws.services.ec2.model.AssociateAddressResult;
-import com.amazonaws.services.ec2.model.CopyImageRequest;
-import com.amazonaws.services.ec2.model.CopyImageResult;
-import com.amazonaws.services.ec2.model.CreateImageRequest;
-import com.amazonaws.services.ec2.model.CreateImageResult;
-import com.amazonaws.services.ec2.model.CreateTagsRequest;
-import com.amazonaws.services.ec2.model.DescribeAddressesRequest;
-import com.amazonaws.services.ec2.model.DescribeAddressesResult;
-import com.amazonaws.services.ec2.model.DescribeImagesRequest;
-import com.amazonaws.services.ec2.model.DescribeImagesResult;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.DisassociateAddressRequest;
-import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
-import com.amazonaws.services.ec2.model.LaunchPermission;
-import com.amazonaws.services.ec2.model.LaunchPermissionModifications;
-import com.amazonaws.services.ec2.model.ModifyImageAttributeRequest;
-import com.amazonaws.services.ec2.model.PermissionGroup;
-import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
-import com.amazonaws.services.ec2.model.StartInstancesRequest;
-import com.amazonaws.services.ec2.model.StopInstancesRequest;
-import com.amazonaws.services.ec2.model.Tag;
-import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
+import software.amazon.awssdk.services.ec2.model.AllocateAddressResponse;
+import software.amazon.awssdk.services.ec2.model.AssociateAddressRequest;
+import software.amazon.awssdk.services.ec2.model.AssociateAddressResponse;
+import software.amazon.awssdk.services.ec2.model.CopyImageRequest;
+import software.amazon.awssdk.services.ec2.model.CopyImageResponse;
+import software.amazon.awssdk.services.ec2.model.CreateImageRequest;
+import software.amazon.awssdk.services.ec2.model.CreateImageResponse;
+import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeAddressesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeAddressesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.DisassociateAddressRequest;
+import software.amazon.awssdk.services.ec2.model.Ec2Exception;
+import software.amazon.awssdk.services.ec2.model.Filter;
+import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
+import software.amazon.awssdk.services.ec2.model.ImageState;
+import software.amazon.awssdk.services.ec2.model.LaunchPermission;
+import software.amazon.awssdk.services.ec2.model.LaunchPermissionModifications;
+import software.amazon.awssdk.services.ec2.model.ModifyImageAttributeRequest;
+import software.amazon.awssdk.services.ec2.model.PermissionGroup;
+import software.amazon.awssdk.services.ec2.model.ReleaseAddressRequest;
+import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.StartInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.StopInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.Tag;
+import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest; 
 
 public class EC2 {
 	
 	public static EC2 newInstance(String awsRegion, String login, String password) {
-		AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard()
-				.withRegion(awsRegion);
+		Ec2ClientBuilder builder = Ec2Client.builder()
+				.region(Region.of(awsRegion));
 		if(login!=null && password!=null) {
-			AWSCredentials credentials = new BasicAWSCredentials(login, password);
-			builder = builder.withCredentials(new AWSStaticCredentialsProvider(credentials));
+			AwsCredentials credentials = AwsBasicCredentials.create(login, password);
+			builder = builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 		}
 		return new EC2(builder.build());
 	}
 	
-	AmazonEC2 ec2;
+	Ec2Client ec2;
 	
-	public EC2(AmazonEC2 ec2) {
+	public EC2(Ec2Client ec2) {
 		this.ec2 = ec2;
 	}
 	
 	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, PromptoList<String> securityGroups, String userData) {
 		userData = Base64.getEncoder().encodeToString(userData.getBytes());
-		RunInstancesRequest runRequest = new RunInstancesRequest()
-			.withImageId(imageId)
-			.withInstanceType(instanceType)
-			.withUserData(userData)
-			.withMinCount(1)
-            .withMaxCount(1)
-            .withSecurityGroups(securityGroups)
-            .withKeyName(keyName);
-		if(iamRoleName!=null && !iamRoleName.isEmpty()) {
-			IamInstanceProfileSpecification iamProfile = (iamRoleName==null || iamRoleName.isEmpty()) ? null : new IamInstanceProfileSpecification().withName(iamRoleName);
-			runRequest = runRequest.withIamInstanceProfile(iamProfile);
+		try {
+			RunInstancesRequest.Builder runRequestBuilder = RunInstancesRequest.builder()
+				.imageId(imageId)
+				.instanceType(instanceType)
+				.userData(userData)
+				.minCount(1)
+	            .maxCount(1)
+	            .securityGroups(securityGroups)
+	            .keyName(keyName);
+			if(iamRoleName!=null && !iamRoleName.isEmpty()) {
+				IamInstanceProfileSpecification iamProfile = null;
+				if(iamRoleName!=null && !iamRoleName.isEmpty())
+					iamProfile = IamInstanceProfileSpecification.builder().name(iamRoleName).build();
+				runRequestBuilder = runRequestBuilder.iamInstanceProfile(iamProfile);
+			}
+			RunInstancesResponse runResult = ec2.runInstances(runRequestBuilder.build());
+			return runResult.instances().get(0).instanceId();
+		} catch(Ec2Exception e) {
+			throw e;
 		}
-		RunInstancesResult runResult = ec2.runInstances(runRequest);
-		return runResult.getReservation().getInstances().get(0).getInstanceId();
 
 	}
 	
@@ -87,13 +91,13 @@ public class EC2 {
 		// so try in a loop with a sleep period 
 		for(int i=0;i<10;i++) {
 			try {
-				CreateTagsRequest tagsRequest = new CreateTagsRequest()
-				.withResources(instanceId)
-				.withTags(new Tag("Name", name));
-				ec2.createTags(tagsRequest);
+				CreateTagsRequest.Builder tagsRequestBuilder = CreateTagsRequest.builder()
+				.resources(instanceId)
+				.tags(Tag.builder().key("Name").value(name).build());
+				ec2.createTags(tagsRequestBuilder.build());
 				return;
-			} catch(AmazonEC2Exception e) {
-				if("InvalidInstanceID.NotFound".equals(e.getErrorCode()))
+			} catch(Ec2Exception e) {
+				if("InvalidInstanceID.NotFound".equals(e.awsErrorDetails().errorCode()))
 					unsafeSleep(500);
 				else
 					throw e;
@@ -102,37 +106,33 @@ public class EC2 {
 	}
 	
 	public void startInstance(String instanceId) {
-		StartInstancesRequest startRequest = new StartInstancesRequest()
-			.withInstanceIds(instanceId);
+		StartInstancesRequest startRequest = StartInstancesRequest.builder()
+			.instanceIds(instanceId).build();
 		ec2.startInstances(startRequest);
 	}
 	
 	
 	public void stopInstance(String instanceId) {
-		StopInstancesRequest stopRequest = new StopInstancesRequest()
-			.withInstanceIds(instanceId);
+		StopInstancesRequest stopRequest = StopInstancesRequest.builder()
+			.instanceIds(instanceId).build();
 		ec2.stopInstances(stopRequest);
 	}
 
 	
 	public void dropInstance(String instanceId) {
-		TerminateInstancesRequest dropRequest = new TerminateInstancesRequest()
-			.withInstanceIds(instanceId);
+		TerminateInstancesRequest dropRequest = TerminateInstancesRequest.builder()
+			.instanceIds(instanceId).build();
 		ec2.terminateInstances(dropRequest);
 	}
 
 	
-	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listInstances() {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		DescribeInstancesResult result = ec2.describeInstances();
-		result.getReservations().forEach((r)->{
-			r.getInstances().forEach((i)->{
-				JsonNode json = new ObjectMapper().valueToTree(i);
-				Object prompto = PromptoConverter.nodeToPrompto(json);
-				assert (prompto instanceof PromptoDocument);
-				PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
-				promoteNameTag(i.getTags(), doc);
+		DescribeInstancesResponse result = ec2.describeInstances();
+		result.reservations().forEach((r)->{
+			r.instances().forEach((i)->{
+				PromptoDocument<String, Object> doc = Converter.convertPojo(i);
+				promoteNameTag(i.tags(), doc);
 				list.add(doc); 
 			});
 		});
@@ -141,111 +141,112 @@ public class EC2 {
 
 	private void promoteNameTag(List<Tag> tags, PromptoDocument<String, Object> doc) {
 		Tag tag = tags.stream()
-				.filter((t)->"Name".equals(t.getKey()))
+				.filter((t)->"Name".equals(t.key()))
 				.findFirst()
 				.orElse(null);
 		if(tag!=null)
-			doc.put("Name", tag.getValue());
+			doc.put("Name", tag.value());
 		else
 			doc.put("Name", "<anonymous>");
 	}
 
-	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listIpAddresses() {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		DescribeAddressesResult result = ec2.describeAddresses();
-		result.getAddresses().forEach((a)->{
-			JsonNode json = new ObjectMapper().valueToTree(a);
-			Object prompto = PromptoConverter.nodeToPrompto(json);
-			assert (prompto instanceof PromptoDocument);
-			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
-			promoteNameTag(a.getTags(), doc);
+		DescribeAddressesResponse result = ec2.describeAddresses();
+		result.addresses().forEach((a)->{
+			PromptoDocument<String, Object> doc = Converter.convertPojo(a);
+			promoteNameTag(a.tags(), doc);
 			list.add(doc); 
 		});
 		return list;
 	}
 	
 	public String getAddressIdForIpAddress(String ipAddress) {
-		DescribeAddressesRequest req = new DescribeAddressesRequest()
-			.withPublicIps(ipAddress);
-		DescribeAddressesResult res = ec2.describeAddresses(req);
-		if(res.getAddresses().isEmpty())
-			return null;
-		else
-			return res.getAddresses().get(0).getAllocationId();
+		DescribeAddressesRequest req = DescribeAddressesRequest.builder()
+			.publicIps(ipAddress)
+			.build();
+		try {
+			DescribeAddressesResponse res = ec2.describeAddresses(req);
+			if(res.addresses().isEmpty())
+				return null;
+			else
+				return res.addresses().get(0).allocationId();
+		} catch (Ec2Exception e) {
+			if("InvalidAddress.NotFound".equals(e.awsErrorDetails().errorCode()))
+				return null;
+			throw e;
+		}
 	}
 	
 	public PromptoDocument<String, Object> createIpAddress() {
-		AllocateAddressResult newResult = ec2.allocateAddress();
+		AllocateAddressResponse newResult = ec2.allocateAddress();
 		PromptoDocument<String, Object> doc = new PromptoDocument<>();
-		doc.put("allocationId", newResult.getAllocationId());
-		doc.put("publicIp", newResult.getPublicIp());
-		doc.put("domain", newResult.getDomain());
+		doc.put("allocationId", newResult.allocationId());
+		doc.put("publicIp", newResult.publicIp());
+		doc.put("domain", newResult.domain());
 		return doc;
 	}
 	
 	public void setIpAddressName(String addressId, String name) {
-		CreateTagsRequest tagsRequest = new CreateTagsRequest()
-			.withResources(addressId)
-			.withTags(new Tag("Name", name));
+		CreateTagsRequest tagsRequest = CreateTagsRequest.builder()
+			.resources(addressId)
+			.tags(Tag.builder().key("Name").value(name).build())
+			.build();
 		ec2.createTags(tagsRequest);
 	}
 
 	
 	public String associateIPAddress(String instanceId, String addressId) {
-		AssociateAddressRequest assocRequest = new AssociateAddressRequest()
-		.withAllocationId(addressId)
-		.withInstanceId(instanceId);
-		AssociateAddressResult assocResult = ec2.associateAddress(assocRequest);
-		return assocResult.getAssociationId();
+		AssociateAddressRequest assocRequest = AssociateAddressRequest.builder()
+		.allocationId(addressId)
+		.instanceId(instanceId)
+		.build();
+		AssociateAddressResponse assocResult = ec2.associateAddress(assocRequest);
+		return assocResult.associationId();
 	}
 	
 	public void dissociateIPAddress(String associationId) {
-		DisassociateAddressRequest dissocRequest = new DisassociateAddressRequest()
-			.withAssociationId(associationId);
+		DisassociateAddressRequest dissocRequest = DisassociateAddressRequest.builder()
+			.associationId(associationId)
+			.build();
 		ec2.disassociateAddress(dissocRequest);
 	}
 	
 	public void dropIPAddress(String addressId) {
-		ReleaseAddressRequest dropRequest = new ReleaseAddressRequest()
-			.withAllocationId(addressId);
+		ReleaseAddressRequest dropRequest = ReleaseAddressRequest.builder()
+			.allocationId(addressId)
+			.build();
 		ec2.releaseAddress(dropRequest);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listOwnedAMIs() {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		DescribeImagesRequest request = new DescribeImagesRequest()
-		.withOwners("self");
-		DescribeImagesResult result = ec2.describeImages(request);
-		result.getImages().forEach((i)->{
-			JsonNode json = new ObjectMapper().valueToTree(i);
-			Object prompto = PromptoConverter.nodeToPrompto(json);
-			assert (prompto instanceof PromptoDocument);
-			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
-			promoteNameTag(i.getTags(), doc);
+		DescribeImagesRequest request = DescribeImagesRequest.builder()
+		.owners("self")
+		.build();
+		DescribeImagesResponse result = ec2.describeImages(request);
+		result.images().forEach((i)->{
+			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
+			promoteNameTag(i.tags(), doc);
 			list.add(doc); 
 		});
 		return list;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public PromptoList<PromptoDocument<String, Object>> listAMIsWithOwnerAndName(String owner, String name) {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
 		List<Filter> filters = new ArrayList<>();
 		if(owner!=null)
-			filters.add(new Filter().withName("owner-id").withValues(owner));
+			filters.add(Filter.builder().name("owner-id").values(owner).build());
 		if(name!=null)
-			filters.add(new Filter().withName("name").withValues(name));
-		DescribeImagesRequest request = new DescribeImagesRequest()
-				.withFilters(filters);
-		DescribeImagesResult result = ec2.describeImages(request);
-		result.getImages().forEach((i)->{
-			JsonNode json = new ObjectMapper().valueToTree(i);
-			Object prompto = PromptoConverter.nodeToPrompto(json);
-			assert (prompto instanceof PromptoDocument);
-			PromptoDocument<String, Object> doc = (PromptoDocument<String, Object>)prompto;
-			promoteNameTag(i.getTags(), doc);
+			filters.add(Filter.builder().name("name").values(name).build());
+		DescribeImagesRequest request = DescribeImagesRequest.builder()
+				.filters(filters)
+				.build();
+		DescribeImagesResponse result = ec2.describeImages(request);
+		result.images().forEach((i)->{
+			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
+			promoteNameTag(i.tags(), doc);
 			list.add(doc); 
 		});
 		return list;
@@ -261,13 +262,14 @@ public class EC2 {
 	}
 	
 	public String copyAMI(String srcImageId, String srcRegion, String name, boolean waitForAvailability) {
-		CopyImageRequest request = new CopyImageRequest()
-				.withSourceImageId(srcImageId)
-				.withSourceRegion(srcRegion)
-				.withName(name)
-				.withDescription("Copied from " + srcImageId + " in " + srcRegion);
-		CopyImageResult result = ec2.copyImage(request);
-		String dstImageId = result.getImageId();
+		CopyImageRequest request = CopyImageRequest.builder()
+				.sourceImageId(srcImageId)
+				.sourceRegion(srcRegion)
+				.name(name)
+				.description("Copied from " + srcImageId + " in " + srcRegion)
+				.build();
+		CopyImageResponse result = ec2.copyImage(request);
+		String dstImageId = result.imageId();
 		setAMINameTag(dstImageId, name);
 		if(waitForAvailability)
 			waitForAMIAvailability(dstImageId);
@@ -275,39 +277,44 @@ public class EC2 {
 	}
 
 	public void setAMIPublic(String imageId) {
-		LaunchPermissionModifications permissions = new LaunchPermissionModifications()
-				.withAdd(new LaunchPermission().withGroup(PermissionGroup.All));
-		ModifyImageAttributeRequest request = new ModifyImageAttributeRequest()
-				.withImageId(imageId)
-				.withLaunchPermission(permissions);
+		LaunchPermissionModifications permissions = LaunchPermissionModifications.builder()
+				.add(LaunchPermission.builder().group(PermissionGroup.ALL).build())
+				.build();
+		ModifyImageAttributeRequest request = ModifyImageAttributeRequest.builder()
+				.imageId(imageId)
+				.launchPermission(permissions)
+				.build();
 		ec2.modifyImageAttribute(request);
 	}
 
 	private void waitForAMIAvailability(String imageId) {
-		DescribeImagesRequest describeRequest = new DescribeImagesRequest()
-				.withImageIds(imageId);
-		String state = "pending";
+		DescribeImagesRequest describeRequest = DescribeImagesRequest.builder()
+				.imageIds(imageId)
+				.build();
+		ImageState state = ImageState.PENDING;
 		long start = System.currentTimeMillis();
-		while(!"available".equals(state) && (System.currentTimeMillis() - start < 10*60*1000)) {
+		while(state != ImageState.AVAILABLE && (System.currentTimeMillis() - start < 10*60*1000)) {
 			unsafeSleep(1000);
-			DescribeImagesResult describeResult = ec2.describeImages(describeRequest);
-			state = describeResult.getImages().get(0).getState();
+			DescribeImagesResponse describeResult = ec2.describeImages(describeRequest);
+			state = describeResult.images().get(0).state();
 		}
 	}
 
 	private void setAMINameTag(String imageId, String name) {
-		CreateTagsRequest request = new CreateTagsRequest()
-				.withResources(imageId)
-				.withTags(new Tag("Name", name));
+		CreateTagsRequest request = CreateTagsRequest.builder()
+				.resources(imageId)
+				.tags(Tag.builder().key("Name").value(name).build())
+				.build();
 		ec2.createTags(request);
 	}
 
 	private String createAMI(String instanceId, String name) {
-		CreateImageRequest request = new CreateImageRequest()
-				.withInstanceId(instanceId)
-				.withName(name);
-		CreateImageResult result = ec2.createImage(request);
-		return result.getImageId();
+		CreateImageRequest request = CreateImageRequest.builder()
+				.instanceId(instanceId)
+				.name(name)
+				.build();
+		CreateImageResponse result = ec2.createImage(request);
+		return result.imageId();
 	}
 
 

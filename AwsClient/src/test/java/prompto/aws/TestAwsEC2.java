@@ -104,5 +104,7 @@ public class TestAwsEC2 {
 		String[] args = new String[] { "-testMethod", "\"AMI version is extracted\"", "-resourceURLs", url.toString() };
 		Standalone.main(args);
 	}
+	
+	
 
 }

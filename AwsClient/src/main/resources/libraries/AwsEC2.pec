@@ -63,7 +63,7 @@ define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and 
 	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
 
 define newAwsEC2WithLocalCredentials as method receiving Text awsRegion returning AwsEC2 doing:
-	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+	text = read all from Url with "file:/Users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.json" as path
 	keys = (readJson with text as text) as Document
 	login = keys.accessKey as Text
 	password = keys.secretKey as Text
@@ -79,19 +79,19 @@ define "ec2 instances can be listed" as test method doing:
 	docs = ec2.listInstances
 	names = doc["Name"] as Text for each doc in docs
 and verifying:
-	"prompto-deploy-021" in names
+	"prompto-deploy-045" in names
 
 define "ec2 instances can be filtered" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	docs = ec2.listInstances filtered with doc where "prompto-deploy-" in doc.Name as Text
 	names = doc["Name"] as Text for each doc in docs
 and verifying:
-	"prompto-deploy-021" in names
+	"prompto-deploy-045" in names
 
 
 define "ec2 instance can be created, named and dropped" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	nodeId = ec2.runInstance with "ami-d2c924b2" as imageId, "t2.micro" as instanceType,
+	nodeId = ec2.runInstance with "ami-08a28a73" as imageId, "t2.micro" as instanceType,
 		"prompto-admin" as keyName, "deployer" as roleName, ["default"] as securityGroupNames and "some data" as userData
 	ec2.setInstanceName with nodeId as instanceId and "TEST-INSTANCE" as name
 	ec2.dropInstance nodeId
@@ -101,23 +101,23 @@ and verifying:
 define "ec2 addresses can be listed" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	docs = ec2.listIpAddresses
-	print docs
+	printLine docs
 	ips = doc["publicIp"] as Text for each doc in docs
 and verifying:
 	"34.234.147.231" in ips
 
 define "ec2 address can be found by ip" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	name = ec2.getAddressIdForIpAddress "35.166.112.187"
+	name = ec2.getAddressIdForIpAddress "34.234.147.231"
 and verifying:
-	"eipalloc-dc98c1bb" = name
+	"eipalloc-d08cfee2" = name
 
 define "ec2 address can be created, named, associated, dissociated and dropped" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
 	doc = ec2.createIpAddress
 	addressId = doc.allocationId as Text
 	ec2.setIpAddressName with addressId as addressId and "TEST-ADDRESS" as name
-	assocId = ec2.associateIPAddress with "i-0dbd77527d5da6b49" as instanceId and addressId as addressId
+	assocId = ec2.associateIPAddress with "i-0c1c55554c02c4e84" as instanceId and addressId as addressId
 	ec2.dissociateIPAddress assocId
 	ec2.dropIPAddress addressId
 and verifying:
@@ -168,7 +168,7 @@ and verifying:
 
 define "AMI can be created" as test method doing:
 	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
-	amiId = ec2.createAMI with "i-0295d2ed128657bff" as instanceId, "test-ami" as name and true as waitForAvailability
+	amiId = ec2.createAMI with "i-0f97960da0e736ceb" as instanceId, "test-ami" as name and true as waitForAvailability
 and verifying:
 	amiId is not Nothing
 	

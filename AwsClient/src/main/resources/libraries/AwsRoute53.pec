@@ -15,30 +15,30 @@ and methods:
 		Java: return this.deleteARecord(domainName, domainPrefix);
 
 
-define newAwsRoute53 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsRoute53 doing:
-	Java: prompto.aws.Route53.newInstance(awsRegion, login, password);
+define newAwsRoute53 as native method receiving login = Nothing and password = Nothing returning AwsRoute53 doing:
+	Java: prompto.aws.Route53.newInstance(login, password);
 
-define newAwsRoute53WithLocalCredentials as method receiving Text awsRegion returning AwsRoute53 doing:
-	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+define newAwsRoute53WithLocalCredentials as method returning AwsRoute53 doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.json" as path
 	keys = (readJson with text as text) as Document
 	login = keys.accessKey as Text
 	password = keys.secretKey as Text
-	return newAwsRoute53 with awsRegion as awsRegion, login as login and password as password
+	return newAwsRoute53 with login as login and password as password
 
 define "route53 client can be created" as test method doing:
-	route53 = newAwsRoute53WithLocalCredentials with "us-east-1" as awsRegion
+	route53 = newAwsRoute53WithLocalCredentials
 and verifying:
 	route53 is not Nothing
 
 define "route53 A record can be read" as test method doing:
-	route53 = newAwsRoute53WithLocalCredentials with "us-east-1" as awsRegion
-	doc = route53.readARecord with "prompto.org" as domainName and "test-user" as domainPrefix
+	route53 = newAwsRoute53WithLocalCredentials
+	doc = route53.readARecord with "prompto.org" as domainName and "www" as domainPrefix
 and verifying:
 	doc is not Nothing
 
 
 define "route53 A record can be created and dropped" as test method doing:
-	route53 = newAwsRoute53WithLocalCredentials with "us-east-1" as awsRegion
+	route53 = newAwsRoute53WithLocalCredentials
 	createStatus = route53.createARecord with "prompto.org" as domainName, "test-user" as domainPrefix, "222.222.222.222" as ipAddress and 600 as ttl
 	deleteStatus = route53.deleteARecord with "prompto.org" as domainName and "test-user" as domainPrefix
 and verifying:

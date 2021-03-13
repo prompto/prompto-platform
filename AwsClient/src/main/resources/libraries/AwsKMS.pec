@@ -25,7 +25,7 @@ define newAwsKMS as native method receiving Text awsRegion, login = Nothing and 
 	Java: prompto.aws.KMS.newInstance(awsRegion, login, password);
 
 define newAwsKMSWithLocalCredentials as method receiving Text awsRegion returning AwsKMS doing:
-	text = read all from Url with "file:/Users/ericvergnaud/Development/prompto/prompto-keys/aws/keys.json" as path
+	text = read all from Url with "file:/Users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.json" as path
 	keys = (readJson with text as text) as Document
 	login = keys.accessKey as Text
 	password = keys.secretKey as Text
