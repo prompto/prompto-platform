@@ -8,10 +8,10 @@ import org.junit.experimental.categories.Category;
 import software.amazon.awssdk.services.ec2.model.*;
 
 @Category(AwsTest.class)
-public class TestRunInstance extends AWSTestBase {
+public class TestEC2 extends AWSTestBase {
 
 	@Test
-	public void canRunInstance() throws Exception {
+	public void runsInstance() throws Exception {
 		String userData = Base64.getEncoder().encodeToString("{\"prompto-role\":\"prompto-web-site\"}".getBytes());
 		RunInstancesRequest runRequest = RunInstancesRequest.builder()
 			.imageId("ami-08a28a73")
@@ -58,7 +58,7 @@ public class TestRunInstance extends AWSTestBase {
 	}
 
 	@Test
-	public void canListVolumesWithTag() throws Exception {
+	public void listsEBSVolumesWithTag() throws Exception {
 		DescribeVolumesRequest request = DescribeVolumesRequest.builder()
 				.filters(Filter.builder()
 					.name("tag:Name")
@@ -73,7 +73,7 @@ public class TestRunInstance extends AWSTestBase {
 	}
 	
 	@Test
-	public void canCreateVolumeWithTag() throws Exception {
+	public void createsEBSVolumeWithTag() throws Exception {
 		CreateVolumeRequest request = CreateVolumeRequest.builder()
 				.availabilityZone("us-east-1a")
 				.volumeType(VolumeType.GP3)

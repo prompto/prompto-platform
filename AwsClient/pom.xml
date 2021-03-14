@@ -85,6 +85,11 @@
 			<version>${aws.java.sdk.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>efs</artifactId>
+			<version>${aws.java.sdk.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.13.1</version>

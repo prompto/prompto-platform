@@ -2,8 +2,6 @@ package prompto.aws;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.Base64;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -11,16 +9,10 @@ import org.junit.Before;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.efs.EfsClient;
 import software.amazon.awssdk.services.kms.KmsClient;
-import software.amazon.awssdk.services.kms.model.AliasListEntry;
-import software.amazon.awssdk.services.kms.model.DecryptRequest;
-import software.amazon.awssdk.services.kms.model.DecryptResponse;
-import software.amazon.awssdk.services.kms.model.EncryptRequest;
-import software.amazon.awssdk.services.kms.model.EncryptResponse;
-import software.amazon.awssdk.services.kms.model.ListAliasesResponse;
 import software.amazon.awssdk.services.route53.Route53Client;
 
 public abstract class AWSTestBase {
@@ -31,8 +23,9 @@ public abstract class AWSTestBase {
 			
 	AwsCredentials credentials;
 	Ec2Client ec2;
-	Route53Client route53;
 	KmsClient kms;
+	EfsClient efs;
+	Route53Client route53;
 	Properties props = new Properties();
 	
 	@Before
@@ -51,6 +44,10 @@ public abstract class AWSTestBase {
 				.region(Region.US_EAST_1)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
+		efs = EfsClient.builder()
+				.region(Region.US_EAST_1)
+				.credentialsProvider(StaticCredentialsProvider.create(credentials))
+				.build();
 		route53 = Route53Client.builder()
 				.region(Region.AWS_GLOBAL)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
@@ -58,32 +55,5 @@ public abstract class AWSTestBase {
 				
 	}
 	
-	protected String arnFromAlias(String alias) {
-		final String fullAlias = "alias/" + alias;
-		ListAliasesResponse res = kms.listAliases();
-		AliasListEntry entry = res.aliases().stream()
-				.filter(a->fullAlias.equals(a.aliasName()))
-				.findFirst()
-				.orElse(null);
-		if(entry==null)
-			return null;
-		String prefix = entry.aliasArn();
-		prefix = prefix.substring(0, prefix.indexOf(":" + fullAlias));
-		return prefix + ":key/" + entry.targetKeyId(); 
-	}
-	
-	protected String encrypt(String plainKey) {
-		ByteBuffer keyBytes = ByteBuffer.wrap(plainKey.getBytes());
-		EncryptRequest req = EncryptRequest.builder().keyId(MASTER_KEY_ARN).plaintext(SdkBytes.fromByteBuffer(keyBytes)).build();
-		EncryptResponse res = kms.encrypt(req);
-		return Base64.getEncoder().encodeToString(res.ciphertextBlob().asByteArray());
-	}
-	
-	protected String decrypt(String encryptedKey) {
-		ByteBuffer encryptedBytes = ByteBuffer.wrap(Base64.getDecoder().decode(encryptedKey));
-		DecryptRequest req2 = DecryptRequest.builder().ciphertextBlob(SdkBytes.fromByteBuffer(encryptedBytes)).build();
-		DecryptResponse res2 = kms.decrypt(req2);
-		return new String(res2.plaintext().asByteArray());
-	}
 
 }

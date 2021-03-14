@@ -8,7 +8,7 @@ import org.junit.experimental.categories.Category;
 import prompto.runtime.Standalone;
 
 @Category(AwsTest.class)
-public class TestAwsRoute53 {
+public class TesAwsRoute53Library {
 
 	@Test
 	public void testRoute53ClientCanBeCreated() throws Throwable {

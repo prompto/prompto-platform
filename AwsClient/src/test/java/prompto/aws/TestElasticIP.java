@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.ec2.model.ReleaseAddressRequest;
 import software.amazon.awssdk.services.ec2.model.ReleaseAddressResponse;
 
 @Category(AwsTest.class)
-public class TestElasticAddress extends AWSTestBase {
+public class TestElasticIP extends AWSTestBase {
 
 	@Test
 	public void describeAddressesReturnsData() throws Exception {

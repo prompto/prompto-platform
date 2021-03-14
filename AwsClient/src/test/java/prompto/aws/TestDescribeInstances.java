@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.ec2.model.Tag;
 public class TestDescribeInstances extends AWSTestBase {
 
 	@Test
-	public void describeInstancesReturnsData() throws Exception {
+	public void describesInstances() throws Exception {
 		DescribeInstancesResponse result = ec2.describeInstances();
 		System.out.println(result.toString());
 	}

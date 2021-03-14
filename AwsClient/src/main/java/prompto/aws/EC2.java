@@ -235,15 +235,16 @@ public class EC2 {
 	
 	public PromptoList<PromptoDocument<String, Object>> listAMIsWithOwnerAndName(String owner, String name) {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		List<Filter> filters = new ArrayList<>();
-		if(owner!=null)
-			filters.add(Filter.builder().name("owner-id").values(owner).build());
-		if(name!=null)
-			filters.add(Filter.builder().name("name").values(name).build());
-		DescribeImagesRequest request = DescribeImagesRequest.builder()
-				.filters(filters)
-				.build();
-		DescribeImagesResponse result = ec2.describeImages(request);
+		DescribeImagesRequest.Builder builder = DescribeImagesRequest.builder();
+		if(owner!=null || name!=null) {
+			List<Filter> filters = new ArrayList<>();
+			if(owner!=null)
+				filters.add(Filter.builder().name("owner-id").values(owner).build());
+			if(name!=null)
+				filters.add(Filter.builder().name("name").values(name).build());
+			builder = builder.filters(filters);
+		}
+		DescribeImagesResponse result = ec2.describeImages(builder.build());
 		result.images().forEach((i)->{
 			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
 			promoteNameTag(i.tags(), doc);

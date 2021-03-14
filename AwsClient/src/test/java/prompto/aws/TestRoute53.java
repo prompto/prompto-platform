@@ -26,13 +26,13 @@ import software.amazon.awssdk.services.route53.model.ResourceRecordSet;
 public class TestRoute53 extends AWSTestBase {
 
 	@Test
-	public void canListHostedZones() {
+	public void listsHostedZones() {
 		ListHostedZonesResponse zones = route53.listHostedZones();
 		assertEquals(2, zones.hostedZones().size());
 	}
 	
 	@Test
-	public void canReadHostedZoneId() {
+	public void readsHostedZoneId() {
 		String zoneId = getZoneId("prompto.org.");
 		assertEquals("Z2NKEUI11Q0ZVF", zoneId);
 		ListHostedZonesResponse zones = route53.listHostedZones();
@@ -49,7 +49,7 @@ public class TestRoute53 extends AWSTestBase {
 	}
 
 	@Test
-	public void canCreateReadAndDropARecord() {
+	public void createsReadsAndDropsARecord() {
 		String zoneId = getZoneId("prompto.org.");
 		ChangeResourceRecordSetsRequest request = ChangeResourceRecordSetsRequest.builder()
 		.hostedZoneId(zoneId)

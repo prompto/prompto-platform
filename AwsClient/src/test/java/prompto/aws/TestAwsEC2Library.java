@@ -8,7 +8,7 @@ import org.junit.experimental.categories.Category;
 import prompto.runtime.Standalone;
 
 @Category(AwsTest.class)
-public class TestAwsEC2 {
+public class TestAwsEC2Library {
 
 	@Test
 	public void EC2ClientCanBeCreated() throws Throwable {

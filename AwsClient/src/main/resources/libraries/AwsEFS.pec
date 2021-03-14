@@ -1,0 +1,34 @@
+define AwsEFS as native category with bindings:
+	
+	define category bindings as:
+		Java: prompto.aws.EFS
+	
+and methods:
+	
+	define listFileSystems as method returning Document[] doing:
+		Java: return this.listFileSystems();
+		
+	define createFileSystem as method receiving Text name, Text zoneName = Nothing and Boolean backup = nothing returning Text doing:
+		Java: return this.createFileSystem(name, zoneName, backup);
+		
+	define destroyFileSystem as method receiving Text fileSystemId and name doing:
+		Java: this.destroyFileSystem(fileSystemId);
+
+
+define newAwsEFS as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
+	Java: prompto.aws.EFS.newInstance(awsRegion, login, password);
+
+define newAwsEFSWithLocalCredentials as method receiving Text awsRegion returning AwsEC2 doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.json" as path
+	keys = (readJson with text as text) as Document
+	login = keys.accessKey as Text
+	password = keys.secretKey as Text
+	return newAwsEFS with awsRegion as awsRegion, login as login and password as password
+
+define "efs client can be created" as test method doing:
+	efs = newAwsEFSWithLocalCredentials with "us-east-1" as awsRegion
+and verifying:
+	efs is not Nothing
+
+
+	
