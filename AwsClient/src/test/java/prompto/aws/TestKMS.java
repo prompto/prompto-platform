@@ -13,6 +13,7 @@ import prompto.security.AwsKMSSecretKeyFactory;
 import prompto.security.IAwsKMSSecretKeyConfiguration;
 import prompto.security.ISecretKeyFactory;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kms.model.AliasListEntry;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import software.amazon.awssdk.services.kms.model.DecryptResponse;
@@ -23,6 +24,11 @@ import software.amazon.awssdk.services.kms.model.ListAliasesResponse;
 @Category(AwsTest.class)
 public class TestKMS extends AWSTestBase {
 		
+	public static String MASTER_KEY_ARN = "arn:aws:kms:us-east-1:838901125615:key/fd4e13e3-72c3-41ee-90de-4531f5c4c93a";
+	public static String MASTER_KEY_ALIAS = "prompto/seed";
+	public static Region MASTER_KEY_REGION = Region.US_EAST_1;
+			
+
 	@Test
 	public void roundtrip() {
 		String plainKey = "password";

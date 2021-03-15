@@ -56,7 +56,27 @@ public class TestEC2 extends AWSTestBase {
 		TerminateInstancesResponse delResult = ec2.terminateInstances(delRequest);
 		System.out.println(delResult.toString());
 	}
+	
+	@Test
+	public void listsAvailabilityZones() {
+		DescribeAvailabilityZonesResponse response = ec2.describeAvailabilityZones();
+		response.availabilityZones().forEach(zone -> {
+			System.out.println("zone: " + zone.zoneName());
+			System.out.println("region: " + zone.regionName());
+		});
+	}
 
+	
+	@Test
+	public void listsSubnets() {
+		DescribeSubnetsResponse response = ec2.describeSubnets();
+		response.subnets().forEach(subnet -> {
+			System.out.println("zone: " + subnet.availabilityZoneId());
+			System.out.println("id: " + subnet.subnetId());
+		});
+	}
+
+	
 	@Test
 	public void listsEBSVolumesWithTag() throws Exception {
 		DescribeVolumesRequest request = DescribeVolumesRequest.builder()

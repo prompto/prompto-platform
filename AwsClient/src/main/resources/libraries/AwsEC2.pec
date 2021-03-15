@@ -58,6 +58,13 @@ and methods:
 
 	define setAMIPublic as method receiving Text imageId doing:
 		Java: this.setAMIPublic(imageId);
+		
+	define listAvailabilityZones as method returning Document[] doing:
+		Java: return this.listSubnets(); 	
+
+	define listSubnets as method returning Document[] doing:
+		Java: return this.listSubnets(); 	
+
 
 define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:
 	Java: prompto.aws.EC2.newInstance(awsRegion, login, password);
@@ -173,4 +180,17 @@ and verifying:
 	amiId is not Nothing
 	
 	
+define "Availability zones are listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	zones = ec2.listAvailabilityZones
+and verifying:
+	zones.count >= 6
+
+
+define "Subnets are listed" as test method doing:
+	ec2 = newAwsEC2WithLocalCredentials with "us-east-1" as awsRegion
+	zones = ec2.listSubnets
+and verifying:
+	zones.count >= 6
+
 	

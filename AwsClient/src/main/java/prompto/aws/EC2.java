@@ -3,6 +3,7 @@ package prompto.aws;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
@@ -22,9 +23,11 @@ import software.amazon.awssdk.services.ec2.model.CreateImageResponse;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeAddressesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeAddressesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeAvailabilityZonesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeSubnetsResponse;
 import software.amazon.awssdk.services.ec2.model.DisassociateAddressRequest;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 import software.amazon.awssdk.services.ec2.model.Filter;
@@ -98,7 +101,7 @@ public class EC2 {
 				return;
 			} catch(Ec2Exception e) {
 				if("InvalidInstanceID.NotFound".equals(e.awsErrorDetails().errorCode()))
-					unsafeSleep(500);
+					Utils.unsafeSleep(500);
 				else
 					throw e;
 			}
@@ -258,7 +261,7 @@ public class EC2 {
 		String imageId = createAMI(instanceId, name);
 		setAMINameTag(imageId, name);
 		if(waitForAvailability)
-			waitForAMIAvailability(imageId);
+			waitForAMIState(imageId, ImageState.AVAILABLE);
 		return imageId;
 	}
 	
@@ -273,7 +276,7 @@ public class EC2 {
 		String dstImageId = result.imageId();
 		setAMINameTag(dstImageId, name);
 		if(waitForAvailability)
-			waitForAMIAvailability(dstImageId);
+			waitForAMIState(dstImageId, ImageState.AVAILABLE);
 		return dstImageId;
 	}
 
@@ -287,18 +290,35 @@ public class EC2 {
 				.build();
 		ec2.modifyImageAttribute(request);
 	}
+	
+	
+	public List<PromptoDocument<String,Object>> listAvailabilityZones() {
+		DescribeAvailabilityZonesResponse response = ec2.describeAvailabilityZones();
+		return response.availabilityZones().stream()
+				.map(Converter::convertPojo)
+				.collect(Collectors.toList());
+	}
 
-	private void waitForAMIAvailability(String imageId) {
+
+	public List<PromptoDocument<String,Object>> listSubnets() {
+		DescribeSubnetsResponse response = ec2.describeSubnets();
+		return response.subnets().stream()
+				.map(Converter::convertPojo)
+				.collect(Collectors.toList());
+	}
+
+	private void waitForAMIState(String imageId, ImageState state) {
 		DescribeImagesRequest describeRequest = DescribeImagesRequest.builder()
 				.imageIds(imageId)
 				.build();
-		ImageState state = ImageState.PENDING;
+		ImageState read = null;
 		long start = System.currentTimeMillis();
-		while(state != ImageState.AVAILABLE && (System.currentTimeMillis() - start < 10*60*1000)) {
-			unsafeSleep(1000);
+		do {
 			DescribeImagesResponse describeResult = ec2.describeImages(describeRequest);
-			state = describeResult.images().get(0).state();
-		}
+			read = describeResult.images().get(0).state();
+			if(read != state)
+				Utils.unsafeSleep(1000);
+		} while(read != state && (System.currentTimeMillis() - start < 10*60*1000));
 	}
 
 	private void setAMINameTag(String imageId, String name) {
@@ -316,15 +336,6 @@ public class EC2 {
 				.build();
 		CreateImageResponse result = ec2.createImage(request);
 		return result.imageId();
-	}
-
-
-	public static void unsafeSleep(long millis) {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 }
