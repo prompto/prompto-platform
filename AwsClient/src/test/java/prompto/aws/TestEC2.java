@@ -1,82 +1,50 @@
 package prompto.aws;
 
-import java.util.Base64;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import software.amazon.awssdk.services.ec2.model.*;
+import prompto.intrinsic.PromptoDocument;
 
 @Category(AwsTest.class)
 public class TestEC2 extends AWSTestBase {
 
 	@Test
 	public void runsInstance() throws Exception {
-		String userData = Base64.getEncoder().encodeToString("{\"prompto-role\":\"prompto-web-site\"}".getBytes());
-		RunInstancesRequest runRequest = RunInstancesRequest.builder()
-			.imageId("ami-08a28a73")
-			.instanceType("t2.micro")
-			.minCount(1)
-            .maxCount(1)
-            .keyName("prompto-admin")
-            .securityGroups("default")
-            .userData(userData)
-            .build();
-		RunInstancesResponse runResult = ec2.runInstances(runRequest);
-		System.out.println(runResult.toString());
-		String instanceId = runResult.instances().get(0).instanceId();
-		CreateTagsRequest tagsRequest = CreateTagsRequest.builder()
-			.resources(instanceId)
-			.tags(Tag.builder().key("Name").value("prompto-web-server-003").build())
-			.build();
-		CreateTagsResponse tagsResult = ec2.createTags(tagsRequest);
-		System.out.println(tagsResult.toString());
-		boolean running = false;
-		do {
-			Thread.sleep(1000);
-			DescribeInstanceStatusRequest statusRequest = DescribeInstanceStatusRequest.builder()
-				.instanceIds(instanceId)
-				.includeAllInstances(true)
-				.build();
-			DescribeInstanceStatusResponse statusResult = ec2.describeInstanceStatus(statusRequest);
-			System.out.println(statusResult.toString());
-			running = statusResult.instanceStatuses()
-					.get(0)
-					.instanceState()
-					.code()==16;
-		} while(!running);
-		StopInstancesRequest stopRequest = StopInstancesRequest.builder()
-				.instanceIds(instanceId)
-				.build();
-		StopInstancesResponse stopResult = ec2.stopInstances(stopRequest);
-		System.out.println(stopResult.toString());
-		TerminateInstancesRequest delRequest = TerminateInstancesRequest.builder()
-			.instanceIds(instanceId)
-			.build();
-		TerminateInstancesResponse delResult = ec2.terminateInstances(delRequest);
-		System.out.println(delResult.toString());
+		EC2 awsEc2 = new EC2(ec2);
+		String instanceId = awsEc2.runInstance("ami-08a28a73", "t2.micro", "prompto-admin", null, Collections.singletonList("default"), "{\"prompto-role\":\"prompto-web-site\"}");
+		awsEc2.waitForInstanceState(instanceId, "pending", 10);
+		awsEc2.setInstanceName(instanceId, "test-instance-tags");
+		awsEc2.waitForInstanceState(instanceId, "running", 180);
+		awsEc2.stopInstance(instanceId);
+		awsEc2.dropInstance(instanceId);
 	}
 	
 	@Test
 	public void listsAvailabilityZones() {
-		DescribeAvailabilityZonesResponse response = ec2.describeAvailabilityZones();
-		response.availabilityZones().forEach(zone -> {
-			System.out.println("zone: " + zone.zoneName());
-			System.out.println("region: " + zone.regionName());
-		});
+		EC2 awsEc2 = new EC2(ec2);
+		List<PromptoDocument<String, Object>> docs = awsEc2.listAvailabilityZones();
+		assertTrue(docs.size()>=6);
+		assertNotNull(docs.get(0).get("zoneName"));
+		assertNotNull(docs.get(0).get("regionName"));
 	}
 
 	
 	@Test
 	public void listsSubnets() {
-		DescribeSubnetsResponse response = ec2.describeSubnets();
-		response.subnets().forEach(subnet -> {
-			System.out.println("zone: " + subnet.availabilityZoneId());
-			System.out.println("id: " + subnet.subnetId());
-		});
+		EC2 awsEc2 = new EC2(ec2);
+		List<PromptoDocument<String, Object>> docs = awsEc2.listSubnets();
+		assertTrue(docs.size()>=6);
+		assertNotNull(docs.get(0).get("availabilityZoneId"));
+		assertNotNull(docs.get(0).get("subnetId"));
 	}
 
-	
+	/*
 	@Test
 	public void listsEBSVolumesWithTag() throws Exception {
 		DescribeVolumesRequest request = DescribeVolumesRequest.builder()
@@ -123,4 +91,5 @@ public class TestEC2 extends AWSTestBase {
 			System.out.println("Tags: " + volume.tags());
 		});
 	}
+	*/
 }

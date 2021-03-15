@@ -11,8 +11,8 @@ and methods:
 	define createFileSystem as method receiving Text name, Text zoneName = Nothing, Boolean backup = nothing and Boolean waitForAvailability = true returning Text doing:
 		Java: return this.createFileSystem(name, zoneName, backup, waitForAvailability);
 		
-	define destroyFileSystem as method receiving Text fileSystemId and Boolean waitForDestruction = true doing:
-		Java: this.destroyFileSystem(fileSystemId, waitForDestruction);
+	define dropFileSystem as method receiving Text fileSystemId and Boolean waitForDestruction = true doing:
+		Java: this.dropFileSystem(fileSystemId, waitForDestruction);
 
 	define listMountTargets as method receiving Text fileSystemId returning Document[] doing:
 		Java: return this.listMountTargets(fileSystemId);
@@ -20,8 +20,8 @@ and methods:
 	define createMountTarget as method receiving Text fileSystemId, Text subnetId, Text[] securityGroups = nothing and Boolean waitForAvailability = true returning Text doing:
 		Java: return this.createMountTarget(fileSystemId, subnetId, securityGroups, waitForAvailability);
 
-	define destroyMountTarget as method receiving Text mountTargetId and Boolean waitForDestruction = true doing:
-		Java: return this.destroyMountTarget(mountTargetId, waitForDestruction);
+	define dropMountTarget as method receiving Text mountTargetId and Boolean waitForDestruction = true doing:
+		Java: return this.dropMountTarget(mountTargetId, waitForDestruction);
 		
 
 
@@ -50,24 +50,24 @@ and verifying:
 	fs.count >= 0
 	
 
-define "File system is created and destroyed" as test method doing:
+define "File system is created and dropped" as test method doing:
 	efs = newAwsEFSWithLocalCredentials with "us-east-1" as awsRegion
 	before = efs.listFileSystems
 	fsid = efs.createFileSystem "test-efs"
 	after = efs.listFileSystems
-	efs.destroyFileSystem fsid
+	efs.dropFileSystem fsid
 	after2 = efs.listFileSystems
 and verifying:
 	after.count = before.count + 1
 	after2.count = before.count
 	
 
-define "Mount target is created and destroyed" as test method doing:
+define "Mount target is created and dropped" as test method doing:
 	efs = newAwsEFSWithLocalCredentials with "us-east-1" as awsRegion
 	fsid = efs.createFileSystem "test-efs"
 	mtid = efs.createMountTarget with fsid as fileSystemId and "subnet-f9e252c5" as subnetId
-	efs.destroyMountTarget with mtid as mountTargetId
-	efs.destroyFileSystem with fsid as fileSystemId
+	efs.dropMountTarget with mtid as mountTargetId
+	efs.dropFileSystem with fsid as fileSystemId
 and verifying:
 	mtid is not nothing
  	

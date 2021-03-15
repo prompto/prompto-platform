@@ -70,7 +70,7 @@ public class EFS {
 	}
 	
 	
-	public void destroyFileSystem(String fileSystemId, Boolean waitForDestruction) {
+	public void dropFileSystem(String fileSystemId, Boolean waitForDestruction) {
 		DeleteFileSystemRequest deleteRequest = DeleteFileSystemRequest.builder()
 				.fileSystemId(fileSystemId)
 				.build();
@@ -112,7 +112,7 @@ public class EFS {
 	}
 	
 	
-	public void destroyMountTarget(String mountTargetId, Boolean waitForDestruction) {
+	public void dropMountTarget(String mountTargetId, Boolean waitForDestruction) {
 		DeleteMountTargetRequest deleteMTRequest = DeleteMountTargetRequest.builder()
 				.mountTargetId(mountTargetId)
 				.build();

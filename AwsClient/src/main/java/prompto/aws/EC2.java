@@ -26,6 +26,8 @@ import software.amazon.awssdk.services.ec2.model.DescribeAddressesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeAvailabilityZonesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeSubnetsResponse;
 import software.amazon.awssdk.services.ec2.model.DisassociateAddressRequest;
@@ -33,6 +35,7 @@ import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 import software.amazon.awssdk.services.ec2.model.Filter;
 import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import software.amazon.awssdk.services.ec2.model.ImageState;
+import software.amazon.awssdk.services.ec2.model.InstanceState;
 import software.amazon.awssdk.services.ec2.model.LaunchPermission;
 import software.amazon.awssdk.services.ec2.model.LaunchPermissionModifications;
 import software.amazon.awssdk.services.ec2.model.ModifyImageAttributeRequest;
@@ -63,24 +66,25 @@ public class EC2 {
 		this.ec2 = ec2;
 	}
 	
-	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, PromptoList<String> securityGroups, String userData) {
-		userData = Base64.getEncoder().encodeToString(userData.getBytes());
+	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, List<String> securityGroups, String userData) {
 		try {
-			RunInstancesRequest.Builder runRequestBuilder = RunInstancesRequest.builder()
+			RunInstancesRequest.Builder builder = RunInstancesRequest.builder()
 				.imageId(imageId)
 				.instanceType(instanceType)
-				.userData(userData)
 				.minCount(1)
 	            .maxCount(1)
-	            .securityGroups(securityGroups)
 	            .keyName(keyName);
-			if(iamRoleName!=null && !iamRoleName.isEmpty()) {
+			if(userData!=null)
+				builder = builder.userData(Base64.getEncoder().encodeToString(userData.getBytes()));
+			if(securityGroups!=null && !securityGroups.isEmpty())	
+				builder = builder.securityGroups(securityGroups);
+	        if(iamRoleName!=null && !iamRoleName.isEmpty()) {
 				IamInstanceProfileSpecification iamProfile = null;
 				if(iamRoleName!=null && !iamRoleName.isEmpty())
 					iamProfile = IamInstanceProfileSpecification.builder().name(iamRoleName).build();
-				runRequestBuilder = runRequestBuilder.iamInstanceProfile(iamProfile);
+				builder = builder.iamInstanceProfile(iamProfile);
 			}
-			RunInstancesResponse runResult = ec2.runInstances(runRequestBuilder.build());
+			RunInstancesResponse runResult = ec2.runInstances(builder.build());
 			return runResult.instances().get(0).instanceId();
 		} catch(Ec2Exception e) {
 			throw e;
@@ -88,24 +92,38 @@ public class EC2 {
 
 	}
 	
-	public void setInstanceName(String instanceId, String name) {
-		// this is typically called immediately after creating an instance
-		// however, the instance may not exist yet (can take a few secs)
-		// so try in a loop with a sleep period 
-		for(int i=0;i<10;i++) {
+	
+	public void waitForInstanceState(String instanceId, String stateName, int timeOutInSecs) {
+		DescribeInstanceStatusRequest statusRequest = DescribeInstanceStatusRequest.builder()
+				.instanceIds(instanceId)
+				.includeAllInstances(true)
+				.build();
+		InstanceState state = InstanceState.builder().name(stateName).build();
+		InstanceState read = null;
+		long start = System.currentTimeMillis();
+		do {
 			try {
-				CreateTagsRequest.Builder tagsRequestBuilder = CreateTagsRequest.builder()
-				.resources(instanceId)
-				.tags(Tag.builder().key("Name").value(name).build());
-				ec2.createTags(tagsRequestBuilder.build());
-				return;
+				DescribeInstanceStatusResponse describeResult = ec2.describeInstanceStatus(statusRequest);
+				read = describeResult.instanceStatuses().get(0).instanceState();
+				if(read != state)
+					Utils.unsafeSleep(1000);
 			} catch(Ec2Exception e) {
 				if("InvalidInstanceID.NotFound".equals(e.awsErrorDetails().errorCode()))
-					Utils.unsafeSleep(500);
+					read = InstanceState.builder().name("terminated").build();
 				else
 					throw e;
 			}
-		}
+		} while(read != state && (System.currentTimeMillis() - start < timeOutInSecs*1000)); 
+	}
+	
+	public void setInstanceName(String instanceId, String name) {
+		// this is typically called immediately after creating an instance
+		// however, the instance may not exist yet (can take a few secs)
+		waitForInstanceState(instanceId, "pending", 10);
+		CreateTagsRequest.Builder tagsRequestBuilder = CreateTagsRequest.builder()
+			.resources(instanceId)
+			.tags(Tag.builder().key("Name").value(name).build());
+		ec2.createTags(tagsRequestBuilder.build());
 	}
 	
 	public void startInstance(String instanceId) {

@@ -1,10 +1,11 @@
-package prompto.aws;
+package prompto.libraries;
 
 import java.net.URL;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import prompto.aws.AwsTest;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 
@@ -22,13 +23,13 @@ public class TestAwsEFSLibrary {
 	}
 
 	@Test
-	public void fileSystemIsCreatedAndDestroyed() throws Throwable {
-		runTest("File system is created and destroyed");
+	public void fileSystemIsCreatedAndDropped() throws Throwable {
+		runTest("File system is created and dropped");
 	}
 
 	@Test
-	public void mountTargetIsCreatedAndDestroyed() throws Throwable {
-		runTest("Mount target is created and destroyed");
+	public void mountTargetIsCreatedAndDropped() throws Throwable {
+		runTest("Mount target is created and dropped");
 	}
 
 	private void runTest(String testName) throws Throwable {

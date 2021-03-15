@@ -2,6 +2,7 @@ package prompto.aws;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoDocument;
 
@@ -40,6 +41,11 @@ public class Route53 {
 
 	public Route53(Route53Client route53) {
 		this.route53 = route53;
+	}
+	
+	public List<PromptoDocument<String, Object>> listHostedZones() {
+		ListHostedZonesResponse zones = route53.listHostedZones();
+		return zones.hostedZones().stream().map(Converter::convertPojo).collect(Collectors.toList());
 	}
 	
 	public String createARecord(String domainName, String domainPrefix, String ipAddress, Long ttl) {

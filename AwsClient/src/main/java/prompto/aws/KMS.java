@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.kms.model.DisableKeyRequest;
 import software.amazon.awssdk.services.kms.model.EncryptRequest;
 import software.amazon.awssdk.services.kms.model.EncryptResponse;
 import software.amazon.awssdk.services.kms.model.ListAliasesResponse;
+import software.amazon.awssdk.services.kms.model.ScheduleKeyDeletionRequest;
 
 public class KMS {
 	
@@ -79,19 +80,25 @@ public class KMS {
 	
 	public void deleteKeyARNWithAlias(String alias) {
 		final String fullAlias = "alias/" + alias;
-		ListAliasesResponse res = kms.listAliases();
-		AliasListEntry entry = res.aliases().stream()
+		ListAliasesResponse listResponses = kms.listAliases();
+		AliasListEntry entry = listResponses.aliases().stream()
 				.filter(a->fullAlias.equals(a.aliasName()))
 				.findFirst()
 				.orElse(null);
-		DeleteAliasRequest req1 = DeleteAliasRequest.builder()
+		String keyId = entry.targetKeyId();
+		DeleteAliasRequest deleteAliasRequest = DeleteAliasRequest.builder()
 				.aliasName(entry.aliasName())
 				.build();
-		kms.deleteAlias(req1);
-		DisableKeyRequest req2 = DisableKeyRequest.builder()
-				.keyId(entry.targetKeyId())
+		kms.deleteAlias(deleteAliasRequest);
+		DisableKeyRequest disableRequest = DisableKeyRequest.builder()
+				.keyId(keyId)
 				.build();
-		kms.disableKey(req2);
+		kms.disableKey(disableRequest);
+		ScheduleKeyDeletionRequest deletionRequest = ScheduleKeyDeletionRequest.builder()
+				.keyId(keyId)
+				.pendingWindowInDays(7)
+				.build();
+		kms.scheduleKeyDeletion(deletionRequest);
 	}
 	
 	public String keyARNFromAlias(String alias) {

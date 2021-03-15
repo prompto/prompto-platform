@@ -1,10 +1,11 @@
-package prompto.aws;
+package prompto.libraries;
 
 import java.net.URL;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import prompto.aws.AwsTest;
 import prompto.runtime.Mode;
 import prompto.runtime.Standalone;
 
