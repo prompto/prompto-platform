@@ -142,17 +142,6 @@ public class EC2 {
 		return list;
 	}
 
-	private void promoteNameTag(List<Tag> tags, PromptoDocument<String, Object> doc) {
-		Tag tag = tags.stream()
-				.filter((t)->"Name".equals(t.key()))
-				.findFirst()
-				.orElse(null);
-		if(tag!=null)
-			doc.put("Name", tag.value());
-		else
-			doc.put("Name", "<anonymous>");
-	}
-
 	public PromptoList<PromptoDocument<String, Object>> listIpAddresses() {
 		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
 		DescribeAddressesResponse result = ec2.describeAddresses();
@@ -228,7 +217,7 @@ public class EC2 {
 		.owners("self")
 		.build();
 		DescribeImagesResponse result = ec2.describeImages(request);
-		result.images().forEach((i)->{
+		result.images().forEach(i->{
 			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
 			promoteNameTag(i.tags(), doc);
 			list.add(doc); 
@@ -338,4 +327,15 @@ public class EC2 {
 		return result.imageId();
 	}
 	
+	public static void promoteNameTag(List<Tag> tags, PromptoDocument<String, Object> doc) {
+		Tag tag = tags.stream()
+				.filter((t)->"Name".equals(t.key()))
+				.findFirst()
+				.orElse(null);
+		if(tag!=null)
+			doc.put("Name", tag.value());
+		else
+			doc.put("Name", "<anonymous>");
+	}
+
 }

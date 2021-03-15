@@ -46,7 +46,11 @@ public class EFS {
 	public List<PromptoDocument<String, Object>> listFileSystems() {
 		DescribeFileSystemsResponse result = efs.describeFileSystems();
 		return result.fileSystems().stream()
-				.map(Converter::convertPojo)
+				.map(fs -> {
+					PromptoDocument<String, Object> doc = Converter.convertPojo(fs);
+					promoteNameTag(fs.tags(), doc);
+					return doc;
+				})
 				.collect(Collectors.toList());
 	}
 	
@@ -136,4 +140,14 @@ public class EFS {
 		} while (read != state  && read != LifeCycleState.DELETED && (System.currentTimeMillis() - start < 10*60*1000));
 	}
 
+	public static void promoteNameTag(List<Tag> tags, PromptoDocument<String, Object> doc) {
+		Tag tag = tags.stream()
+				.filter((t)->"Name".equals(t.key()))
+				.findFirst()
+				.orElse(null);
+		if(tag!=null)
+			doc.put("Name", tag.value());
+		else
+			doc.put("Name", "<anonymous>");
+	}
 }
