@@ -1,9 +1,11 @@
 package prompto.aws;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -15,6 +17,17 @@ import prompto.intrinsic.PromptoDocument;
 @Category(AwsTest.class)
 public class TestEFS extends AWSTestBase {
 
+	@Test
+	public void propertiesAreLowerCased() {
+		EFS awsEfs = new EFS(efs);
+		List<PromptoDocument<String, Object>> fileSystems = awsEfs.listFileSystems();
+		if(fileSystems.size() > 0) {
+			PromptoDocument<String, Object> doc = fileSystems.get(0);
+			Set<String> keys = doc.keySet();
+			boolean allLowerCase = keys.stream().filter(s -> !"Name".equals(s)).allMatch(s -> Character.isLowerCase(s.charAt(0)));
+			assertTrue(allLowerCase);
+		}
+	}
 
 	@Test
 	public void listsFileSystems() {
