@@ -98,6 +98,16 @@ public class EFS {
 	}
 	
 	
+	public List<PromptoDocument<String, Object>> listMountTargets(String fileSystemId) {
+		DescribeMountTargetsRequest request = DescribeMountTargetsRequest.builder()
+				.fileSystemId(fileSystemId)
+				.build();
+		DescribeMountTargetsResponse response = efs.describeMountTargets(request);
+		return response.mountTargets().stream()
+				.map(Converter::convertPojo)
+				.collect(Collectors.toList());
+	}
+
 	public String createMountTarget(String fileSystemId, String subnetId, List<String> securityGroups, Boolean waitForAvailability) {
 		CreateMountTargetRequest.Builder createRequest = CreateMountTargetRequest.builder()
 				.fileSystemId(fileSystemId)
@@ -150,4 +160,5 @@ public class EFS {
 		else
 			doc.put("Name", "<anonymous>");
 	}
+
 }

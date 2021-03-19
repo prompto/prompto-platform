@@ -2,6 +2,7 @@ package prompto.aws;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,14 +49,17 @@ public class TestEFS extends AWSTestBase {
 	}
 	
 	@Test
-	public void createsAndDeletesMountTarget() throws InterruptedException {
+	public void createsListsAndDeletesMountTarget() throws InterruptedException {
 		EFS awsEfs = new EFS(efs);
 		String fileSystemId = null;
 		String mountTargetId = null;
+		List<PromptoDocument<String, Object>> mountTargets = Collections.emptyList();
 		try {
 			fileSystemId = awsEfs.createFileSystem("test-fs", null, false, true);
 			String subnetId = fetchASubnetId();
 			mountTargetId = awsEfs.createMountTarget(fileSystemId, subnetId, null, true);
+			mountTargets = awsEfs.listMountTargets(fileSystemId);
+			assertEquals(1, mountTargets.size());
 		} finally {
 			if(mountTargetId != null)
 				awsEfs.dropMountTarget(mountTargetId, true);
