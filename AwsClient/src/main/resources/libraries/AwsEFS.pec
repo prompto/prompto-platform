@@ -8,7 +8,7 @@ and methods:
 	define listFileSystems as method returning Document[] doing:
 		Java: return this.listFileSystems();
 		
-	define createFileSystem as method receiving Text name, Text zoneName = Nothing, Boolean backup = nothing and Boolean waitForAvailability = true returning Text doing:
+	define createFileSystem as method receiving Text name, Text zoneName = Nothing, Boolean backup = true and Boolean waitForAvailability = true returning Text doing:
 		Java: return this.createFileSystem(name, zoneName, backup, waitForAvailability);
 		
 	define dropFileSystem as method receiving Text fileSystemId and Boolean waitForDestruction = true doing:
@@ -17,8 +17,8 @@ and methods:
 	define listMountTargets as method receiving Text fileSystemId returning Document[] doing:
 		Java: return this.listMountTargets(fileSystemId);
 		
-	define createMountTarget as method receiving Text fileSystemId, Text subnetId, Text[] securityGroups = nothing and Boolean waitForAvailability = true returning Text doing:
-		Java: return this.createMountTarget(fileSystemId, subnetId, securityGroups, waitForAvailability);
+	define createMountTarget as method receiving Text fileSystemId, Text subnetId, Text[] securityGroupNames = nothing and Boolean waitForAvailability = true returning Text doing:
+		Java: return this.createMountTarget(fileSystemId, subnetId, securityGroupNames, waitForAvailability);
 
 	define dropMountTarget as method receiving Text mountTargetId and Boolean waitForDestruction = true doing:
 		Java: return this.dropMountTarget(mountTargetId, waitForDestruction);
