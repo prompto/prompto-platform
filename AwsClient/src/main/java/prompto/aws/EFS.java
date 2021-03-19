@@ -57,7 +57,7 @@ public class EFS {
 	
 	public String createFileSystem(String name, String availabilityZone, Boolean backup, Boolean waitForAvailability) {
 		CreateFileSystemRequest.Builder createRequest = CreateFileSystemRequest.builder()
-				.tags(Tag.builder().key("Name").value("test-fs").build());
+				.tags(Tag.builder().key("Name").value(name).build());
 		if(availabilityZone != null)
 			createRequest = createRequest.availabilityZoneName(availabilityZone);
 		if(backup != null)
