@@ -29,7 +29,10 @@ public abstract class Converter {
 		PromptoDocument<String, Object> doc = new PromptoDocument<>();
 		pojo.sdkFields().forEach(field -> {
 			Object value = convertSdkField(pojo, field);
-			doc.put(field.unmarshallLocationName(), value);
+			String fieldName = field.unmarshallLocationName();
+			if(Character.isUpperCase(fieldName.charAt(0)))
+				fieldName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
+			doc.put(fieldName, value);
 		});
 		return doc;
 	}
