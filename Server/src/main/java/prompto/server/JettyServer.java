@@ -1,10 +1,13 @@
 package prompto.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -22,14 +25,17 @@ import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.SecuredRedirectHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -168,7 +174,7 @@ class JettyServer extends Server {
 		prepareHandlers(handler);
 	}
 	
-	private void prepareHandlers(BiConsumer<JettyServer, HandlerList> handler) {
+	private void prepareHandlers(BiConsumer<JettyServer, HandlerList> handler) throws IOException {
 		prepareSecurityHandler();
 		prepareContentHandler(handler);
 		setHandler(contentHandler);
@@ -279,14 +285,35 @@ class JettyServer extends Server {
 		}
 	}
 	
-	private void prepareContentHandler(BiConsumer<JettyServer, HandlerList> handler) {
+	private void prepareContentHandler(BiConsumer<JettyServer, HandlerList> handler) throws IOException {
 		logger.info(()->"Preparing web handlers...");
 		HandlerList list = new HandlerList();
+		list.addHandler(prepareHttpRequestLogger());
 		if(config.getHttpConfiguration().getRedirectFrom()!=null)
 			list.addHandler(new SecuredRedirectHandler());
 		handler.accept(this, list);
 		contentHandler = list;
 		logger.info(()->"Web handlers successfully prepared.");
+	}
+
+	private Handler prepareHttpRequestLogger() throws IOException {
+		File dir = new File("/logs");
+		if(!dir.exists())
+			dir = Files.createTempDirectory("prompto_jetty_").toFile();
+		File file = new File(dir, "jetty-http-yyyy_mm_dd.log");
+		String path = file.getAbsolutePath();
+		logger.info(()->"Logging http requests to " + path + ".");
+		NCSARequestLog logger = new NCSARequestLog(path);
+		logger.setRetainDays(365);
+		logger.setAppend(true);
+		logger.setExtended(false);
+		logger.setLogTimeZone("GMT");
+		logger.setLogLatency(true);
+		logger.setLogLocale(Locale.ENGLISH);
+		// logger.setLogDateFormat("yyyy-MM-ddTHH:mm:ss"); // ISO-8601
+		RequestLogHandler handler = new RequestLogHandler();
+		handler.setRequestLog(logger);
+		return handler;
 	}
 
 	private Authenticator prepareAuthenticator() {
