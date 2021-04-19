@@ -85,6 +85,80 @@ public class MongoStore implements IStore {
 		    		), MongoClient.getDefaultCodecRegistry()
 		);
 		 
+
+	public static String uriFromConfig(IMongoStoreConfiguration config) {
+		try {
+			char[] password = passwordFromConfig(config);
+			String replicaUri = config.getReplicaSetURI();
+			IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
+			if(replicaUri!=null) 
+				return uriFromURIConfig(config, password);
+			else if(replicaConfig!=null)
+				return uriFromReplicaSetConfig(config, password);
+			else
+				return uriFromParams(config, password);
+		} catch(Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+
+	private static String uriFromParams(IMongoStoreConfiguration config, char[] password) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("mongodb://");
+		if(password!=null) {
+			sb.append(config.getUser())
+				.append(":")
+				.append(password)
+				.append("@");
+		}
+		sb.append(config.getHost())
+			.append(":")
+			.append(config.getPort())
+			.append("/")
+			.append(config.getDbName());
+		return sb.toString();
+	}
+
+	private static String uriFromReplicaSetConfig(IMongoStoreConfiguration config, char[] password) {
+		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
+		StringBuilder sb = new StringBuilder();
+		sb.append("mongodb://");
+		if(password!=null) {
+			sb.append(config.getUser())
+				.append(":")
+				.append(password)
+				.append("@");
+		}
+		replicaConfig.getNodes().forEach(h->{
+			sb.append(h.getHost())
+				.append(':')
+				.append(h.getPort())
+				.append(',');
+		});
+		sb.setLength(sb.length()-1);
+		sb.append('/')
+			.append(config.getDbName())
+			.append("?ssl=")
+			.append(replicaConfig.isSSL())
+			.append("&replicaSet=")
+			.append(replicaConfig.getName())
+			.append("&authSource=admin");
+		return sb.toString();
+	}
+
+	private static String uriFromURIConfig(IMongoStoreConfiguration config, char[] password) {
+		String uri = config.getReplicaSetURI(); 
+		if(password!=null)
+			uri = uri.replace("mongodb://", "mongodb://" + config.getUser() + ":" + new String(password) + "@");
+		return uri;
+	}
+
+	private static char[] passwordFromConfig(IMongoStoreConfiguration config) throws Exception {
+		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
+		return secret==null ? null : ISecretKeyFactory.plainPasswordFromConfig(secret).toCharArray();
+	}
+
+
 	MongoClient client;
 	MongoDatabase db;
 	Map<String, AttributeInfo> attributes = new HashMap<>();
@@ -92,13 +166,13 @@ public class MongoStore implements IStore {
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
-		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
 		String replicaUri = config.getReplicaSetURI();
-		if(replicaConfig!=null)
-			connectWithReplicaSetConfig(config, password);
-		else if(replicaUri!=null) 
+		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
+		if(replicaUri!=null) 
 			connectWithURI(config, password);
-		else
+		else if(replicaConfig!=null)
+			connectWithReplicaSetConfig(config, password);
+		else 
 			connectWithParams(config, password);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
@@ -117,29 +191,8 @@ public class MongoStore implements IStore {
 		}
 	}
 
-	private char[] passwordFromConfig(IMongoStoreConfiguration config) throws Exception {
-		ISecretKeyConfiguration secret = config.getSecretKeyConfiguration();
-		return secret==null ? null : ISecretKeyFactory.plainPasswordFromConfig(secret).toCharArray();
-	}
-
 	private void connectWithReplicaSetConfig(IMongoStoreConfiguration config, char[] password) {
-		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
-		StringBuilder sb = new StringBuilder();
-		sb.append("mongodb://");
-		replicaConfig.getNodes().forEach(h->{
-			sb.append(h.getHost())
-				.append(':')
-				.append(h.getPort())
-				.append(',');
-		});
-		sb.setLength(sb.length()-1);
-		sb.append('/')
-			.append(config.getDbName())
-			.append("?ssl=")
-			.append(replicaConfig.isSSL())
-			.append("&authSource=admin&replicaSet=")
-			.append(replicaConfig.getName());
-		String uri = sb.toString();
+		String uri = uriFromReplicaSetConfig(config, null);
 		connectWithURI(config.withReplicaSetURI(uri), password);
 		
 	}
@@ -171,7 +224,7 @@ public class MongoStore implements IStore {
 			loadAttributes();
 		logger.info(()->"Connected to database @" + mcu.getOptions().getRequiredReplicaSetName());
 	}
-	
+		
 	public MongoStore(String host, int port, String database) {
 		connectWithParams(host, port, database, null, null);
 	}
@@ -624,5 +677,7 @@ public class MongoStore implements IStore {
 		ReplaceOptions options = new ReplaceOptions().upsert(true);
 		configs.replaceOne(filter, config, options);
 	}
+
+
 
 }
