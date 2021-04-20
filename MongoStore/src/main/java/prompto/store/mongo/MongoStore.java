@@ -116,6 +116,8 @@ public class MongoStore implements IStore {
 			.append(config.getPort())
 			.append("/")
 			.append(config.getDbName());
+		if(password!=null)
+			sb.append("?authSource=admin");
 		return sb.toString();
 	}
 
