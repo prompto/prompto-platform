@@ -78,6 +78,10 @@ public class AppServer {
 		Cloud cloud = Cloud.current();
 		if(cloud==null)
 			return;
+		installCloudJARs(cloud);
+	}
+	
+	public static void installCloudJARs(Cloud cloud) throws Exception {
 		Collection<URL> jars = cloud.getJarURsL();
 		if(jars==null)
 			return;
