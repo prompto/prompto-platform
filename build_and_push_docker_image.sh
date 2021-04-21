@@ -1,6 +1,6 @@
 #!/bin/bash
 pushd ../prompto-docker
-	docker build -t prompto/platform:$1 -f platform.dockerfile .
+	docker build --no-cache -t prompto/platform:$1 -f platform.dockerfile .
 	build=$?
 popd
 if [ $build -eq 0 ] 
