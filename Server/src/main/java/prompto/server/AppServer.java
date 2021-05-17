@@ -82,7 +82,7 @@ public class AppServer {
 	}
 	
 	public static void installCloudJARs(Cloud cloud) throws Exception {
-		Collection<URL> jars = cloud.getJarURsL();
+		Collection<URL> jars = cloud.getJarURLs();
 		if(jars==null)
 			return;
 		jars = filterOutAlreadyLoadedJars(jars);
