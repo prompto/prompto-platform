@@ -53,7 +53,7 @@
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jackson.version>2.10.0</jackson.version>
-		<jetty.version>9.3.3.v20150827</jetty.version>
+		<jetty.version>9.4.41.v20210516</jetty.version>
 		<solr.version>5.4.0</solr.version>
 		<mongo.version>3.12.6</mongo.version>
   	</properties>
