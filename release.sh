@@ -6,7 +6,7 @@ mvn versions:set -DnewVersion=$version -DgenerateBackupPoms=false
 mvn clean deploy -P deploy -DskipTests=true
 deploy=$?
 mvn versions:set -DnewVersion=0.0.1-SNAPSHOT -DgenerateBackupPoms=false
-popd ..
+popd
 if [ $deploy -eq 0 ] 
 then
 	mvn versions:set -DnewVersion=$version -DgenerateBackupPoms=false
