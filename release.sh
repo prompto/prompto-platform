@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Is the docker daemon running?"
 read -p "version to publish: " version
 read -p "release name: " name
 pushd prompto-java

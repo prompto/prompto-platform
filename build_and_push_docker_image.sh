@@ -12,4 +12,4 @@ then
 else
 	echo docker build failed: $build
 fi
-	 
+exit $build	 
