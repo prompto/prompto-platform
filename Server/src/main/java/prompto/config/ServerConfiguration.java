@@ -12,12 +12,14 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 	Supplier<IHttpConfiguration> httpConfiguration;
 	Supplier<String> serverAboutToStartMethod;
 	Supplier<String> webSiteRoot;
+	Supplier<Boolean> useConsole;
 
 	public ServerConfiguration(IConfigurationReader reader, Map<String, String> arguments) {
 		super(reader, arguments);
 		this.httpConfiguration = ()->readHttpConfiguration();
 		this.serverAboutToStartMethod = ()->reader.getString("serverAboutToStart");
 		this.webSiteRoot = ()->reader.getString("webSiteRoot");
+		this.useConsole = ()->reader.getBoolean("useConsole");
 	}
 
 	private IHttpConfiguration readHttpConfiguration() {
@@ -28,6 +30,7 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 	@Override public IHttpConfiguration getHttpConfiguration() { return httpConfiguration.get(); }
 	@Override public String getServerAboutToStartMethod() { return serverAboutToStartMethod.get(); }
 	@Override public String getWebSiteRoot() { return webSiteRoot.get(); }
+	@Override public boolean useConsole() { return useConsole.get(); }
 	
 	@Override
 	public <T extends IServerConfiguration> T withServerAboutToStartMethod(String method) {
@@ -42,6 +45,12 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 	}
 	
 	@Override
+	public <T extends IServerConfiguration> T withUseConsole(boolean set) {
+		this.useConsole = ()->set;
+		return (T)this;
+	}
+
+	@Override
 	public YamlMapping toYaml() throws YamlException {
 		YamlMapping yaml = super.toYaml();
 		IHttpConfiguration http = httpConfiguration.get();
@@ -53,6 +62,9 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 		value = webSiteRoot.get();
 		if(value!=null)
 			yaml.setEntry("webSiteRoot", value);
+		boolean flag = useConsole.get();
+		if(flag)
+			yaml.setEntry("useConsole", flag);
 		return yaml;
 	}
 

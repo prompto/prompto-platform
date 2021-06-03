@@ -112,7 +112,8 @@ public class TestCustomHandler {
 		try {
 			int port = SocketUtils.findAvailablePortInRange(8000, 9000);
 			IServerConfiguration config = newServerConfiguration(port)
-					.withServerAboutToStartMethod("serverAboutToStart");
+					.withServerAboutToStartMethod("serverAboutToStart")
+					.withUseConsole(true);
 			AppServer.initialize(config);
 			try(InputStream input = Thread.currentThread().getContextClassLoader()
 					.getResourceAsStream("prompto/customHandler.pec")) {

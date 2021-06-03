@@ -169,8 +169,10 @@ public class AppServer {
 		final int port = jettyServer.getHttpPort();
 		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + port); // CodeFactory launcher listens to System.out 
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
-		OutLogger.install();
-		ErrorLogger.install();
+		if(!config.useConsole()) {
+			OutLogger.install();
+			ErrorLogger.install();
+		}
 		IDebugEventAdapter adapter = startDebugSession(debugger, context);
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
