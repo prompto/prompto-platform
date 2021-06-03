@@ -46,7 +46,9 @@ import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
 import prompto.server.JettyServer.WebSiteContext;
 import prompto.utils.CmdLineParser;
+import prompto.utils.ErrorLogger;
 import prompto.utils.Logger;
+import prompto.utils.OutLogger;
 import prompto.value.DocumentValue;
 
 public class AppServer {
@@ -167,6 +169,8 @@ public class AppServer {
 		final int port = jettyServer.getHttpPort();
 		System.out.println(WEB_SERVER_SUCCESSFULLY_STARTED + port); // CodeFactory launcher listens to System.out 
 		logger.info(()->WEB_SERVER_SUCCESSFULLY_STARTED + port);
+		OutLogger.install();
+		ErrorLogger.install();
 		IDebugEventAdapter adapter = startDebugSession(debugger, context);
 		callServerAboutToStart(config, context);
 		if(serverStarted!=null)
