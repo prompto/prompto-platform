@@ -19,7 +19,7 @@ public class ServerConfiguration extends RuntimeConfiguration implements IServer
 		this.httpConfiguration = ()->readHttpConfiguration();
 		this.serverAboutToStartMethod = ()->reader.getString("serverAboutToStart");
 		this.webSiteRoot = ()->reader.getString("webSiteRoot");
-		this.useConsole = ()->reader.getBoolean("useConsole");
+		this.useConsole = ()->reader.getBooleanOrDefault("useConsole", false);
 	}
 
 	private IHttpConfiguration readHttpConfiguration() {
