@@ -12,6 +12,7 @@ public interface IHttpConfiguration {
 	String getProtocol();
 	int getPort();
 	String getWelcomePage();
+	String getSiteMap();
 	Integer getRedirectFrom();
 	String getAllowedOrigins();
 	IKeyStoreConfiguration getKeyStoreConfiguration();
@@ -24,6 +25,7 @@ public interface IHttpConfiguration {
 	IHttpConfiguration withProtocol(String protocol);
 	IHttpConfiguration withPort(int port);
 	IHttpConfiguration withWelcomePage(String welcomePage);
+	IHttpConfiguration withSiteMap(String siteMap);
 	IHttpConfiguration withSendsXAuthorization(boolean set);
 	IHttpConfiguration withKeyStoreConfiguration(IKeyStoreConfiguration config);
 	IHttpConfiguration withTrustStoreConfiguration(IKeyStoreConfiguration config);
@@ -37,6 +39,7 @@ public interface IHttpConfiguration {
 		Supplier<String> protocol = ()->null;
 		Supplier<Integer> port = ()->0;
 		Supplier<String> welcomePage = ()->null;
+		Supplier<String> siteMap = ()->null;
 		Supplier<Integer> redirectFrom = ()->null;
 		Supplier<String> allowedOrigins = ()->null;
 		Supplier<IKeyStoreConfiguration> keyStoreConfiguration = ()->null;
@@ -49,6 +52,7 @@ public interface IHttpConfiguration {
 		@Override public String getProtocol() { return protocol.get(); }
 		@Override public int getPort() { return port.get(); }
 		@Override public String getWelcomePage() { return welcomePage.get(); }
+		@Override public String getSiteMap() { return siteMap.get(); }
 		@Override public Integer getRedirectFrom() { return redirectFrom.get(); }
 		@Override public String getAllowedOrigins() { return allowedOrigins.get(); }
 		@Override public IKeyStoreConfiguration getKeyStoreConfiguration() { return keyStoreConfiguration.get(); }
@@ -73,6 +77,12 @@ public interface IHttpConfiguration {
 		@Override
 		public IHttpConfiguration withWelcomePage(String welcomePage) {
 			this.welcomePage = ()->welcomePage;
+			return this;
+		}
+		
+		@Override
+		public IHttpConfiguration withSiteMap(String siteMap) {
+			this.siteMap = ()->siteMap;
 			return this;
 		}
 		

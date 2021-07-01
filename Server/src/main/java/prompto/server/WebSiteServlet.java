@@ -16,7 +16,7 @@ public class WebSiteServlet extends ResourceServlet {
 	Resource base;
 	
 	public WebSiteServlet(String root, String welcomePage) throws IOException {
-		super(welcomePage);
+		super(welcomePage, "sitemap.xml");
 		this.base = getResourceBase(root);
 	}
 

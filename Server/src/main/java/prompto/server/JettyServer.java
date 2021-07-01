@@ -430,10 +430,11 @@ class JettyServer extends Server {
 		handler.addEventListener(new ThreadLocalCleaner());
 		handler.setSecurityHandler(securityHandler);
 		String welcomePage = config.getHttpConfiguration().getWelcomePage();
+		String siteMap = config.getHttpConfiguration().getSiteMap();
 		if(config.getWebSiteRoot()!=null)
 			handler.addServlet(new WebSiteServlet(config.getWebSiteRoot(), welcomePage), "/");
 		else
-			handler.addServlet(new CodeStoreServlet(welcomePage), "/");
+			handler.addServlet(new CodeStoreServlet(welcomePage, siteMap), "/");
 		handler.addServlet(new TranspilerServlet(), "*.page");   
 		handler.addServlet(new ControlServlet(), "/ws/control/*");
 		handler.addServlet(new BinaryServlet(), "/ws/bin/*");

@@ -16,6 +16,7 @@ public class HttpConfiguration extends IHttpConfiguration.Inline {
 		this.protocol = ()->reader.getStringOrDefault("protocol", "http");
 		this.port = ()->reader.getIntegerOrDefault("port", -1);
 		this.welcomePage = ()->reader.getString("welcomePage");
+		this.siteMap = ()->reader.getStringOrDefault("siteMap", "GENERATED");
 		this.redirectFrom = ()->reader.getInteger("redirectFrom");
 		this.allowedOrigins = ()->reader.getString("allowedOrigins");
 		this.allowsXAuthorization = ()->reader.getBooleanOrDefault("allowsXAuthorization", false);

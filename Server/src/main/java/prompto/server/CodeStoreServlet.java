@@ -18,18 +18,28 @@ import prompto.store.IStored;
 @SuppressWarnings("serial")
 public class CodeStoreServlet extends ResourceServlet {
 
-	public CodeStoreServlet(String welcomePage) {
-		super(welcomePage);
+	public CodeStoreServlet(String welcomePage, String siteMap) {
+		super(welcomePage, siteMap);
 	}
 
 	@Override
 	protected Resource getResource(HttpServletRequest request, String path) {
 		if(path.equals("/stub"))
 			return getStubResource(request, path);
+		else if(path.equalsIgnoreCase("/sitemap.xml"))
+			return getSiteMapResource(request);
 		else
 			return getCodeResource(request, path);
 	}
 	
+	private Resource getSiteMapResource(HttpServletRequest request) {
+		if("GENERATED".equals(siteMap)) {
+			String urlPrefix = request.getRequestURL().toString();
+			return SiteMapResource.fromWebSitePages(urlPrefix.substring(0, 1 + urlPrefix.indexOf("/sitemap.xml")));
+		} else
+			return getCodeResource(request, siteMap);
+	}
+
 	protected Resource getStubResource(HttpServletRequest request, String path) {
 		try {
 			String moduleId = request.getParameter("moduleId");

@@ -23,7 +23,7 @@ public class TranspilerServlet extends CodeStoreServlet {
 	static final Logger logger = new Logger();
 
 	public TranspilerServlet() {
-		super(null);
+		super(null, null);
 	}
 	
 	@Override

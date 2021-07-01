@@ -41,10 +41,12 @@ public abstract class ResourceServlet extends CleverServlet {
     int minAsyncContentLength = 0;
     Resource builtIns;
     String welcomePage;
+    String siteMap;
     
-    public ResourceServlet(String welcomePage) {
+    public ResourceServlet(String welcomePage, String siteMap) {
     	builtIns = getBuiltInsResource();
     	this.welcomePage = welcomePage!=null ? welcomePage :  "/index.html";
+    	this.siteMap = siteMap!=null ? siteMap :  "GENERATED";
 	}
     
 	protected abstract Resource getResource(HttpServletRequest request, String resourcePath);
