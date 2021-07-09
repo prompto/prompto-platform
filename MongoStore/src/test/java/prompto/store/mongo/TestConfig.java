@@ -33,7 +33,7 @@ public class TestConfig {
 	public void connectsUsingReplicaSetURI() throws Exception {
 		IMongoStoreConfiguration config = configWithReplicaSetURI();
 		MongoStore store = new MongoStore(config);
-		MongoIterable<String> names = store.client.getDatabase("admin").listCollectionNames();
+		MongoIterable<String> names = store.client.getDatabase("PING").listCollectionNames();
 		store.close();
 		assertNotNull(names);
 	}
@@ -45,7 +45,7 @@ public class TestConfig {
 		String expected = "mongodb://ping:ping@seed-shard-00-00-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-01-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-02-cp8j5.mongodb.net:27017/"
-				+ "admin?ssl=true&replicaSet=Seed-shard-0&authSource=admin";
+				+ "PING?ssl=true&replicaSet=Seed-shard-0&authSource=admin";
 		assertEquals(expected, uri);
 	}
 
@@ -56,7 +56,7 @@ public class TestConfig {
 			@Override public String getFactory() { return null; }
 			@Override public String getHost() { return null; }
 			@Override public Integer getPort() { return null; }
-			@Override public String getDbName() { return "admin"; }
+			@Override public String getDbName() { return "PING"; }
 			@Override public String getUser() { return "ping"; }
 			@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 			@Override public ISecretKeyConfiguration getSecretKeyConfiguration() {
@@ -68,7 +68,7 @@ public class TestConfig {
 			@Override public String getReplicaSetURI() { return "mongodb://seed-shard-00-00-cp8j5.mongodb.net:27017,"
 					+ "seed-shard-00-01-cp8j5.mongodb.net:27017,"
 					+ "seed-shard-00-02-cp8j5.mongodb.net:27017/"
-					+ "admin?ssl=true&replicaSet=Seed-shard-0&authSource=admin"; }
+					+ "PING?ssl=true&replicaSet=Seed-shard-0&authSource=admin"; }
 			@Override public IMongoStoreConfiguration withReplicaSetURI(String uri) { return null; }
 			@Override public IMongoReplicaSetConfiguration getReplicaSetConfiguration() { return null; }
 			@Override public IMongoStoreConfiguration withReplicaSetConfiguration(IMongoReplicaSetConfiguration config) { return null; }
@@ -78,9 +78,8 @@ public class TestConfig {
 	@Test
 	public void connectsUsingReplicaSetConfig() throws Exception {
 		IMongoStoreConfiguration config = configWithReplicaSetConfig();
-	
 		MongoStore store = new MongoStore(config);
-		MongoIterable<String> names = store.client.getDatabase("admin").listCollectionNames();
+		MongoIterable<String> names = store.client.getDatabase("PING").listCollectionNames();
 		store.close();
 		assertNotNull(names);
 	}
@@ -92,7 +91,7 @@ public class TestConfig {
 		String expected = "mongodb://ping:ping@seed-shard-00-00-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-01-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-02-cp8j5.mongodb.net:27017/"
-				+ "admin?ssl=true&replicaSet=Seed-shard-0&authSource=admin";
+				+ "PING?ssl=true&replicaSet=Seed-shard-0&authSource=admin";
 		assertEquals(expected, uri);
 	}
 
@@ -105,7 +104,7 @@ public class TestConfig {
 			@Override public String getFactory() { return null; }
 			@Override public String getHost() { return null; }
 			@Override public Integer getPort() { return null; }
-			@Override public String getDbName() { return "admin"; }
+			@Override public String getDbName() { return "PING"; }
 			@Override public String getUser() { return "ping"; }
 			@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 			@Override public ISecretKeyConfiguration getSecretKeyConfiguration() {

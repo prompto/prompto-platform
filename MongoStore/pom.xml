@@ -60,7 +60,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver</artifactId>
+			<artifactId>mongodb-driver-sync</artifactId>
 			<version>${mongo.version}</version>
 		</dependency>
 		<dependency>

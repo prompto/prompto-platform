@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,11 +24,13 @@ import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
@@ -71,6 +74,8 @@ import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
 	
+	static final boolean ENABLE_AUDIT = false;
+	
 	static final Logger logger = new Logger();
 	static final String AUTH_DB_NAME = "admin";
 	
@@ -82,7 +87,7 @@ public class MongoStore implements IStore {
 			    		new PromptoVersionCodec(),
 			    		new UuidCodec(UuidRepresentation.STANDARD),
 			    		new StringArrayCodec()
-		    		), MongoClient.getDefaultCodecRegistry()
+		    		), MongoClientSettings.getDefaultCodecRegistry()
 		);
 		 
 
@@ -164,7 +169,7 @@ public class MongoStore implements IStore {
 	MongoClient client;
 	MongoDatabase db;
 	Map<String, AttributeInfo> attributes = new HashMap<>();
-	
+	ChangeStreamIterable<Document> auditor = null;
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
@@ -176,6 +181,16 @@ public class MongoStore implements IStore {
 			connectWithReplicaSetConfig(config, password);
 		else 
 			connectWithParams(config, password);
+		startAuditor();
+		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
+	}
+	
+	public MongoStore(String host, int port, String database) {
+		this(host, port, database, null, null);
+	}
+	
+	public MongoStore(String host, int port, String database, String user, char[] password) {
+		connectWithParams(host, port, database, user, password);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
@@ -187,6 +202,7 @@ public class MongoStore implements IStore {
 	
 	@Override
 	public synchronized void close() {
+		stopAuditor();
 		if(client!=null) {
 			client.close();
 			client = null;
@@ -200,62 +216,49 @@ public class MongoStore implements IStore {
 	}
 
 	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
-		// we use 'admin' for default connection
-		final String dbName = config.getDbName()==null ? "admin" : config.getDbName();
-		MongoClientURI mcu = new MongoClientURI(config.getReplicaSetURI()) {
-			@Override
-			public MongoCredential getCredentials() {
-				if(password==null)
-					return null;
-				else
-					return MongoCredential.createCredential(config.getUser(), AUTH_DB_NAME, password);
-			};
-			@Override
-			public MongoClientOptions getOptions() {
-				return MongoClientOptions.builder(super.getOptions())
-		                .codecRegistry(codecRegistry)
-		                .socketTimeout(360000)
-		                .connectTimeout(360000)
-		                .build();
-			}
-		};
-		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + mcu.getOptions().getRequiredReplicaSetName());
-		client = new MongoClient(mcu);
+		ConnectionString conn = new ConnectionString(config.getReplicaSetURI());
+		MongoClientSettings.Builder builder = MongoClientSettings.builder()
+				.applyConnectionString(conn)
+                .codecRegistry(codecRegistry)
+                .applyToSocketSettings(socketBuilder -> socketBuilder
+                		.readTimeout(6, TimeUnit.MINUTES)
+                		.connectTimeout(6, TimeUnit.MINUTES));
+ 		if(password != null) {
+ 			MongoCredential credential = MongoCredential.createCredential(config.getUser(), AUTH_DB_NAME, password);
+ 			builder = builder.credential(credential);
+		}
+ 		MongoClientSettings settings = builder.build();
+		// we use 'admin' for default connection when no dbname is specified
+		final String dbName = config.getDbName()!=null ? config.getDbName() : conn.getDatabase()!=null ? conn.getDatabase() : "admin";
+ 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		client = MongoClients.create(settings);
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
-		logger.info(()->"Connected to database @" + mcu.getOptions().getRequiredReplicaSetName());
+		logger.info(()->"Connected to database @" + settings.getClusterSettings().getRequiredReplicaSetName());
 	}
 		
-	public MongoStore(String host, int port, String database) {
-		connectWithParams(host, port, database, null, null);
-	}
-	
-	public MongoStore(String host, int port, String database, String user, char[] password) {
-		connectWithParams(host, port, database, user, password);
-	}
-	
 	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
 		connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
 	}
-
+	
 	private void connectWithParams(String host, int port, String database, String user, char[] password) {
 		// we use 'admin' for default connection
 		final String dbName = database==null ? "admin" : database;
-		ServerAddress address = new ServerAddress(host, port);
-		MongoClientOptions options = MongoClientOptions.builder()
+		MongoClientSettings.Builder builder = MongoClientSettings.builder()
 		                .codecRegistry(codecRegistry)
-		                .socketTimeout(360000)
-		                .connectTimeout(360000)
-		                .build();
+		                .applyToClusterSettings(clusterBuilder -> clusterBuilder
+		                		.hosts(Collections.singletonList(new ServerAddress(host, port))))
+		                .applyToSocketSettings(socketBuilder -> socketBuilder
+		                		.readTimeout(6, TimeUnit.MINUTES)
+		                		.connectTimeout(6, TimeUnit.MINUTES));
 		if(user!=null && password!=null) {
 			logger.info(()->"Connecting user '" + user + "' to '" + dbName + "' database");
 			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
-			client = new MongoClient(address, credential, options);
-		} else {
+			builder = builder.credential(credential);
+		} else 
 			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
-			client = new MongoClient(address, options);
-		}
+		client = MongoClients.create(builder.build());
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
@@ -429,7 +432,26 @@ public class MongoStore implements IStore {
 		model.getOptions().upsert(true);
 		return model;
 	}
+	
+	@SuppressWarnings("unused")
+	private void startAuditor() {
+		if(ENABLE_AUDIT && client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName()!=null) {
+			new Thread(() -> {
+				auditor = getInstancesCollection().watch();
+				try {
+					auditor.forEach(doc -> System.out.println(doc));
+				} catch(IllegalStateException e) {
+					
+				}
+			},"Mongo auditor").start();
+		}
+	}
 
+
+	private void stopAuditor() {
+		// TODO
+	}
+	
 	@Override
 	public IStorable newStorable(String[] categories, IDbIdFactory dbIdFactory) {
 		return new StorableDocument(categories, dbIdFactory);

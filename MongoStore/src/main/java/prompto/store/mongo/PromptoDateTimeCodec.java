@@ -11,11 +11,11 @@ import org.bson.codecs.EncoderContext;
 
 import prompto.intrinsic.PromptoDateTime;
 
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 
 public class PromptoDateTimeCodec implements CollectibleCodec<PromptoDateTime> {
 
-	static Codec<Document> documentCodec = MongoClient.getDefaultCodecRegistry().get(Document.class);
+	static Codec<Document> documentCodec = MongoClientSettings.getDefaultCodecRegistry().get(Document.class);
 	
 	@Override
 	public void encode(BsonWriter writer, PromptoDateTime value, EncoderContext encoderContext) {
