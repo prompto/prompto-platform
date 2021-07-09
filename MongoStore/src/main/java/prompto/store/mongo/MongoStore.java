@@ -24,17 +24,22 @@ import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.client.ChangeStreamIterable;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.TransactionBody;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.DeleteOneModel;
@@ -74,7 +79,7 @@ import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
 	
-	static final boolean ENABLE_AUDIT = false;
+	static final boolean ENABLE_AUDIT = true;
 	
 	static final Logger logger = new Logger();
 	static final String AUTH_DB_NAME = "admin";
@@ -167,9 +172,10 @@ public class MongoStore implements IStore {
 
 
 	MongoClient client;
+	ClientSession session;
 	MongoDatabase db;
 	Map<String, AttributeInfo> attributes = new HashMap<>();
-	ChangeStreamIterable<Document> auditor = null;
+	MongoAuditor auditor = null;
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
@@ -191,6 +197,13 @@ public class MongoStore implements IStore {
 	
 	public MongoStore(String host, int port, String database, String user, char[] password) {
 		connectWithParams(host, port, database, user, password);
+		startAuditor();
+		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
+	}
+	
+	public MongoStore(String uri, String user, char[] password) {
+		connectWithURI(uri, user, password);
+		startAuditor();
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
@@ -203,6 +216,10 @@ public class MongoStore implements IStore {
 	@Override
 	public synchronized void close() {
 		stopAuditor();
+		if(session!=null) {
+			session.close();
+			session = null;
+		}
 		if(client!=null) {
 			client.close();
 			client = null;
@@ -229,14 +246,44 @@ public class MongoStore implements IStore {
  			builder = builder.credential(credential);
 		}
  		MongoClientSettings settings = builder.build();
+ 		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
 		// we use 'admin' for default connection when no dbname is specified
 		final String dbName = config.getDbName()!=null ? config.getDbName() : conn.getDatabase()!=null ? conn.getDatabase() : "admin";
- 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously" : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + replicaSet);
  		client = MongoClients.create(settings);
+		if(replicaSet != null)
+			session = client.startSession();
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
-		logger.info(()->"Connected to database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+		logger.info(()->"Connected to database @" + replicaSet);
+	}
+	
+	private void connectWithURI(String uri, String user, char[] password) {
+		ConnectionString conn = new ConnectionString(uri);
+		MongoClientSettings.Builder builder = MongoClientSettings.builder()
+				.applyConnectionString(conn)
+                .codecRegistry(codecRegistry)
+                .uuidRepresentation(UuidRepresentation.STANDARD)
+                .applyToSocketSettings(socketBuilder -> socketBuilder
+                		.readTimeout(6, TimeUnit.MINUTES)
+                		.connectTimeout(6, TimeUnit.MINUTES));
+ 		if(user != null && password != null) {
+ 			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
+ 			builder = builder.credential(credential);
+		}
+ 		MongoClientSettings settings = builder.build();
+ 		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
+		// we use 'admin' for default connection when no dbname is specified
+		final String dbName = conn.getDatabase()!=null ? conn.getDatabase() : "admin";
+ 		logger.info(()->"Connecting " + (user==null ? "anonymously " : "user '" + user + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		client = MongoClients.create(settings);
+		if(replicaSet != null)
+			session = client.startSession();
+		db = client.getDatabase(dbName);
+		if(!"admin".equals(dbName))
+			loadAttributes();
+		logger.info(()->"Connected to database @" + replicaSet);
 	}
 		
 	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
@@ -260,7 +307,9 @@ public class MongoStore implements IStore {
 			builder = builder.credential(credential);
 		} else 
 			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
-		client = MongoClients.create(builder.build());
+		MongoClientSettings settings = builder.build();
+		client = MongoClients.create(settings);
+		session = null; // unnecessary but explicit, transactions require a replicaSet
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
@@ -435,23 +484,28 @@ public class MongoStore implements IStore {
 		return model;
 	}
 	
-	@SuppressWarnings("unused")
 	private void startAuditor() {
-		if(ENABLE_AUDIT && client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName()!=null) {
-			new Thread(() -> {
-				auditor = getInstancesCollection().watch();
-				try {
-					auditor.forEach(doc -> System.out.println(doc));
-				} catch(IllegalStateException e) {
-					
-				}
-			},"Mongo auditor").start();
+		startAuditorIfEnabled(ENABLE_AUDIT);
+	}
+	
+	
+	private void startAuditorIfEnabled(boolean enabled) {
+		if(enabled) {
+			// Mongo watch only works with replicaSets
+			String rsName = client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName();
+			if(rsName!=null) {
+				auditor = new MongoAuditor(this);
+				auditor.start();
+			}
 		}
 	}
 
 
 	private void stopAuditor() {
-		// TODO
+		if(auditor!=null) {
+			auditor.stop();
+			auditor = null;
+		}
 	}
 	
 	@Override
@@ -463,7 +517,34 @@ public class MongoStore implements IStore {
 	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
 		if(!operations.isEmpty())
-			getInstancesCollection().bulkWrite(operations);
+			writeOperations(operations);
+	}
+
+	private void writeOperations(List<WriteModel<Document>> operations) {
+		if(session!=null)
+			writeTransaction(operations);
+		else
+			writeBulk(operations);
+	}
+
+	private void writeTransaction(List<WriteModel<Document>> operations) {
+		TransactionOptions txnOptions = TransactionOptions.builder()
+		        .readPreference(ReadPreference.primary())
+		        .readConcern(ReadConcern.LOCAL)
+		        .writeConcern(WriteConcern.MAJORITY)
+		        .build();
+		TransactionBody<String> txnBody = new TransactionBody<String>() {
+		    public String execute() {
+		    	getInstancesCollection().bulkWrite(session, operations);
+		        return "Transaction written";
+		    }
+		};
+		session.withTransaction(txnBody, txnOptions);
+		session.commitTransaction();
+	}
+
+	private void writeBulk(List<WriteModel<Document>> operations) {
+		getInstancesCollection().bulkWrite(operations);
 	}
 
 	private List<WriteModel<Document>> buildWriteModels(Collection<?> deletables, Collection<IStorable> storables) {
@@ -610,7 +691,7 @@ public class MongoStore implements IStore {
 		return new StoredIterable(coll, (MongoQuery)query);
 	}
 
-	private MongoCollection<Document> getInstancesCollection() {
+	MongoCollection<Document> getInstancesCollection() {
 		return db.getCollection("instances");
 	}
 	
