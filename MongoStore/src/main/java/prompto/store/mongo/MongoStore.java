@@ -220,6 +220,7 @@ public class MongoStore implements IStore {
 		MongoClientSettings.Builder builder = MongoClientSettings.builder()
 				.applyConnectionString(conn)
                 .codecRegistry(codecRegistry)
+                .uuidRepresentation(UuidRepresentation.STANDARD)
                 .applyToSocketSettings(socketBuilder -> socketBuilder
                 		.readTimeout(6, TimeUnit.MINUTES)
                 		.connectTimeout(6, TimeUnit.MINUTES));
@@ -247,6 +248,7 @@ public class MongoStore implements IStore {
 		final String dbName = database==null ? "admin" : database;
 		MongoClientSettings.Builder builder = MongoClientSettings.builder()
 		                .codecRegistry(codecRegistry)
+		                .uuidRepresentation(UuidRepresentation.STANDARD)
 		                .applyToClusterSettings(clusterBuilder -> clusterBuilder
 		                		.hosts(Collections.singletonList(new ServerAddress(host, port))))
 		                .applyToSocketSettings(socketBuilder -> socketBuilder
@@ -663,7 +665,7 @@ public class MongoStore implements IStore {
 		if(info.isCollection() && data instanceof Collection)
 			return readCollectionData(info, (Collection<Object>)data);
 		else
-			return readers.getOrDefault(info.getFamily(), (o)->o).apply(data);
+			return readers.getOrDefault(info.getFamily(), o->o).apply(data);
 	}
 	
 	private Object readCollectionData(AttributeInfo info, Collection<Object> data) {
