@@ -29,6 +29,7 @@ import prompto.intrinsic.PromptoPeriod;
 import prompto.intrinsic.PromptoTime;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
+import prompto.store.IAuditMetadata;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
@@ -232,7 +233,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
+	public void store(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		List<String> dbIdsToDrop = null;
 		if(deletables!=null && deletables.size()>0) {
 			dbIdsToDrop = new ArrayList<>();
@@ -409,4 +410,10 @@ abstract class BaseSOLRStore implements IStore {
 	public void storeConfiguration(String name, Map<String, Object> data) {
 		throw new UnsupportedOperationException("yet!");
 	}
+	
+	@Override 
+	public boolean supportsAudit() {
+		return true;
+	}
+
 }

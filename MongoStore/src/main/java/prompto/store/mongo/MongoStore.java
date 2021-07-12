@@ -68,6 +68,7 @@ import prompto.intrinsic.PromptoVersion;
 import prompto.security.ISecretKeyFactory;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
+import prompto.store.IAuditMetadata;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder;
 import prompto.store.IStorable;
@@ -514,7 +515,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
+	public void store(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
 		if(!operations.isEmpty())
 			writeOperations(operations);
@@ -785,6 +786,10 @@ public class MongoStore implements IStore {
 		configs.replaceOne(filter, config, options);
 	}
 
+	@Override 
+	public boolean supportsAudit() {
+		return true;
+	}
 
 
 }

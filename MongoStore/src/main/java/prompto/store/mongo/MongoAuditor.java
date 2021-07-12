@@ -114,8 +114,8 @@ public class MongoAuditor {
 		insert.put("instanceId", change.getDocumentKey());
 		insert.put("operation", change.getOperationType().name());
 		insert.put("instance", change.getFullDocument());
-		insert.put("removed", change.getUpdateDescription().getRemovedFields());
-		insert.put("updated", change.getUpdateDescription().getUpdatedFields());
+		insert.put("removedFields", change.getUpdateDescription().getRemovedFields());
+		insert.put("updatedFields", change.getUpdateDescription().getUpdatedFields());
 		store.db.getCollection("audits").insertOne(insert);
 	}
 
