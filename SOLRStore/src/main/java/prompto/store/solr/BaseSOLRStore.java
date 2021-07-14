@@ -233,7 +233,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
+	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		List<String> dbIdsToDrop = null;
 		if(deletables!=null && deletables.size()>0) {
 			dbIdsToDrop = new ArrayList<>();

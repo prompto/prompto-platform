@@ -39,7 +39,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.TransactionBody;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationStrength;
 import com.mongodb.client.model.DeleteOneModel;
@@ -76,6 +75,8 @@ import prompto.store.IStorable.IDbIdFactory;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
+import prompto.store.mongo.MongoAuditor.AuditMetadata;
+import prompto.store.mongo.MongoAuditor.AuditRecord;
 import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
@@ -491,13 +492,9 @@ public class MongoStore implements IStore {
 	
 	
 	private void startAuditorIfEnabled(boolean enabled) {
-		if(enabled) {
-			// Mongo watch only works with replicaSets
-			String rsName = client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName();
-			if(rsName!=null) {
-				auditor = new MongoAuditor(this);
-				auditor.start();
-			}
+		if(enabled && supportsAudit()) {
+			auditor = new MongoAuditor(this);
+			auditor.start();
 		}
 	}
 
@@ -515,33 +512,35 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
+	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata auditMetadata) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
-		if(!operations.isEmpty())
-			writeOperations(operations);
+		if(!operations.isEmpty()) {
+			writeOperations((AuditMetadata)auditMetadata, operations);
+		}
 	}
 
-	private void writeOperations(List<WriteModel<Document>> operations) {
+	private void writeOperations(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
 		if(session!=null)
-			writeTransaction(operations);
+			writeTransaction(auditMetadata, operations);
 		else
 			writeBulk(operations);
 	}
 
-	private void writeTransaction(List<WriteModel<Document>> operations) {
+	private void writeTransaction(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
 		TransactionOptions txnOptions = TransactionOptions.builder()
 		        .readPreference(ReadPreference.primary())
 		        .readConcern(ReadConcern.LOCAL)
 		        .writeConcern(WriteConcern.MAJORITY)
 		        .build();
-		TransactionBody<String> txnBody = new TransactionBody<String>() {
-		    public String execute() {
-		    	getInstancesCollection().bulkWrite(session, operations);
-		        return "Transaction written";
-		    }
-		};
-		session.withTransaction(txnBody, txnOptions);
-		session.commitTransaction();
+		session.startTransaction(txnOptions);
+		try {
+			auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
+			db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+			getInstancesCollection().bulkWrite(session, operations);
+			session.commitTransaction();
+		} catch (Throwable t) {
+			session.abortTransaction();
+		}
 	}
 
 	private void writeBulk(List<WriteModel<Document>> operations) {
@@ -559,7 +558,7 @@ public class MongoStore implements IStore {
 				.map((s)->((StorableDocument)s).toWriteModel());
 		if(deletes==null && upserts==null)
 			return Collections.emptyList();
-		Stream<WriteModel<Document>> all;
+		Stream<WriteModel<Document>> all = null;
 		if(deletes==null)
 			all = upserts;
 		else if(upserts==null)
@@ -741,7 +740,7 @@ public class MongoStore implements IStore {
 			info = attributes.get(fieldName);
 		}
 		if(info==null) {
-			logger.error(()->"Missing AttributeInfo for " + fieldName);
+			logger.error(()->"Missing AttributeInfo for: " + fieldName);
 			return null;
 		}
 		if(info.isCollection() && data instanceof Collection)
@@ -788,8 +787,75 @@ public class MongoStore implements IStore {
 
 	@Override 
 	public boolean supportsAudit() {
-		return true;
+		// Mongo watch only works with replicaSets
+		String rsName = client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName();
+		return rsName!=null;
 	}
 
+	@Override
+	public AuditMetadata newAuditMetadata() {
+		if(auditor!=null)
+			return auditor.newAuditMetadata();
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Object fetchLatestAuditMetadataId(Object dbId) {
+		if(auditor!=null)
+			return auditor.fetchLatestAuditMetadataId(dbId);
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<Object> fetchAllAuditMetadataIds(Object dbId) {
+		if(auditor!=null)
+			return auditor.fetchAllAuditMetadataIds(dbId);
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public IAuditMetadata fetchAuditMetadata(Object metaId) {
+		if(auditor!=null)
+			return auditor.newAuditMetadata();
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
+		if(auditor!=null)
+			return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public AuditRecord fetchLatestAuditRecord(Object dbId) {
+		if(auditor!=null)
+			return auditor.fetchLatestAuditRecord(dbId);
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<AuditRecord> fetchAllAuditRecords(Object dbId) {
+		if(auditor!=null)
+			return auditor.fetchAllAuditRecords(dbId);
+		else
+			throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
+		if(auditor!=null)
+			return auditor.fetchAuditRecordsMatching(auditPredicates, instancePredicates);
+		else
+			throw new UnsupportedOperationException();
+	}
+	
+	
 
 }

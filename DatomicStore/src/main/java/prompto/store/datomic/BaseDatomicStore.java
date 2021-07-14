@@ -180,7 +180,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
+	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		Stream<Object> retractions = null;
 		Stream<Object> additions = null;
 		if(deletables!=null)

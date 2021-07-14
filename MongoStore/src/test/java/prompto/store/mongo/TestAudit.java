@@ -2,7 +2,9 @@ package prompto.store.mongo;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -23,8 +25,12 @@ import prompto.runtime.Context;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
 import prompto.store.Family;
+import prompto.store.IAuditMetadata;
+import prompto.store.IAuditRecord;
+import prompto.store.IAuditRecord.Operation;
 import prompto.store.IStorable;
 import prompto.store.IStored;
+import prompto.store.mongo.MongoAuditor.AuditRecord;
 import prompto.type.AnyType;
 import prompto.type.IType;
 import prompto.type.TextType;
@@ -58,10 +64,11 @@ public class TestAudit {
 	public void before() {
 		store = new MongoStore(DOCKER_MONGO_RS_URI, null, null);
 		createField("category", Family.TEXT, true);
+		createField("name", Family.TEXT, false);
 		DataStore.setInstance(store);
 		store.db.getCollection("instances").drop();
-		store.db.getCollection("transactions").drop();
-		store.db.getCollection("audits").drop();
+		store.db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).drop();
+		store.db.getCollection(MongoAuditor.AUDIT_RECORDS_COLLECTION).drop();
 		context = Context.newGlobalsContext();
 		AttributeDeclaration a = new AttributeDeclaration(new Identifier("dbId"), AnyType.instance());
 		context.registerDeclaration(a);
@@ -86,10 +93,17 @@ public class TestAudit {
 				.collect(Collectors.toList());
 		store.store(instances);
 		Thread.sleep(3000L);
-		MongoCollection<Document> coll = store.db.getCollection("transactions");
+		MongoCollection<Document> coll = store.db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION);
 		assertEquals(1L, coll.estimatedDocumentCount());
-		coll = store.db.getCollection("audits");
+		coll = store.db.getCollection(MongoAuditor.AUDIT_RECORDS_COLLECTION);
 		assertEquals(3L, coll.estimatedDocumentCount());
+		Object metaId = store.fetchLatestAuditMetadataId(instances.get(0).getOrCreateDbId());
+		assertNotNull(metaId);
+		IAuditMetadata meta = store.fetchAuditMetadata(metaId);
+		assertNotNull(meta);
+		IAuditRecord audit = store.fetchLatestAuditRecord(instances.get(0).getOrCreateDbId());
+		assertNotNull(audit);
+		assertEquals("hello 1", audit.getInstance().getData("name"));
 	}
 	
 	@Test
@@ -107,10 +121,20 @@ public class TestAudit {
 		instance.setMember(context, new Identifier("name"), new TextValue("bye"));
 		store.store(instance.getStorable());
 		Thread.sleep(3000L);
-		MongoCollection<Document> coll = store.db.getCollection("transactions");
+		MongoCollection<Document> coll = store.db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION);
 		assertEquals(2L, coll.estimatedDocumentCount());
-		coll = store.db.getCollection("audits");
+		coll = store.db.getCollection(MongoAuditor.AUDIT_RECORDS_COLLECTION);
 		assertEquals(2L, coll.estimatedDocumentCount());
+		Collection<AuditRecord> audits = store.fetchAllAuditRecords(stored.getDbId());
+		assertEquals(2L, audits.size());	
+		Iterator<AuditRecord> iter = audits.iterator();
+		IAuditRecord audit = iter.next();
+		assertEquals("bye", audit.getInstance().getData("name"));
+		audit = iter.next();
+		assertEquals("hello", audit.getInstance().getData("name"));
+		Collection<Object> metaIds = store.fetchAllAuditMetadataIds(stored.getDbId());
+		assertEquals(2L, metaIds.size());
+		metaIds.forEach(metaId -> assertNotNull(store.fetchAuditMetadata(metaId)));
 	}
 
 	@Test
@@ -124,10 +148,25 @@ public class TestAudit {
 		Thread.sleep(3000L);
 		store.delete(instance.getStorable().getOrCreateDbId());
 		Thread.sleep(3000L);
-		MongoCollection<Document> coll = store.db.getCollection("transactions");
+		MongoCollection<Document> coll = store.db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION);
 		assertEquals(2L, coll.estimatedDocumentCount());
-		coll = store.db.getCollection("audits");
+		coll = store.db.getCollection(MongoAuditor.AUDIT_RECORDS_COLLECTION);
 		assertEquals(2L, coll.estimatedDocumentCount());
+		Collection<AuditRecord> audits = store.fetchAllAuditRecords(instance.getStorable().getOrCreateDbId());
+		assertEquals(2L, audits.size());	
+		Iterator<AuditRecord> iter = audits.iterator();
+		IAuditRecord audit = iter.next();
+		assertNull(audit.getInstance());
+		audit = iter.next();
+		assertEquals("hello", audit.getInstance().getData("name"));
+		audits = store.fetchAuditRecordsMatching(null, Collections.singletonMap("name", "hello"));
+		assertEquals(1L, audits.size());
+		audit = audits.iterator().next();
+		assertEquals("hello", audit.getInstance().getData("name"));
+		audits = store.fetchAuditRecordsMatching(Collections.singletonMap("operation", Operation.DELETE), null);
+		assertEquals(1L, audits.size());
+		audit = audits.iterator().next();
+		assertNull(audit.getInstance());
 	}
 
 	private ConcreteCategoryDeclaration createCategory(String name, String ... attrs) {
