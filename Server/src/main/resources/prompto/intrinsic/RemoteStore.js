@@ -187,7 +187,7 @@ function RemoteStore() {
 		});
 	 	return doc;
 	};
-	this.prepareStore = function(toDel, toStore) {
+	this.prepareStore = function(toDel, toStore, withMeta) {
 		var formData = new FormData();
 		if(toDel)
 			formData.append("toDelete", JSON.stringify(toDel));
@@ -195,15 +195,17 @@ function RemoteStore() {
 			toStore = this.convertStorables(toStore, formData);
 			formData.append("toStore", JSON.stringify(toStore));
 		}
+		if(withMeta)
+			writeJSONValue(withMeta, false, formData);
 		return formData;
 	};
-	this.store = function(toDel, toStore) {
-		var formData = this.prepareStore(toDel, toStore);
+	this.deleteAndStore = function(toDel, toStore, withMeta) {
+		var formData = this.prepareStore(toDel, toStore, withMeta);
 		var response = this.fetchSync("/ws/store/deleteAndStore", formData);
 		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
-	this.storeAsync = function(toDel, toStore, andThen) {
-		var formData = this.prepareStore(toDel, toStore);
+	this.deleteAndStoreAsync = function(toDel, toStore, withMeta, andThen) {
+		var formData = this.prepareStore(toDel, toStore, withMeta);
 		this.fetchAsync("/ws/store/deleteAndStore", formData, function(response) {
 			if(toStore)
 				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
