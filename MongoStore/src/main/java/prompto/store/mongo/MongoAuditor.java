@@ -33,6 +33,7 @@ import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
+import prompto.intrinsic.PromptoDocument;
 import prompto.store.IAuditMetadata;
 import prompto.store.IAuditRecord;
 import prompto.store.IAuditRecord.Operation;
@@ -292,8 +293,11 @@ public class MongoAuditor {
 			} 
 			return super.get(fieldName, resultClass);
 		}
-		
-		
+
+		@Override
+		public PromptoDocument<String, Object> toDocument() {
+			return new PromptoDocument<String, Object>(this);
+		}		
 		
 	}
 
