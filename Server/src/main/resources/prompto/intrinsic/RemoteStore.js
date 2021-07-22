@@ -85,8 +85,8 @@ StorableDocument.prototype.updateDbId = function(dbIds, name) {
 			var dbId = dbIds[value.tempDbId];
 			if(dbId) {
 				this.document[name] = dbId;
-				if(name==="dbId")
-					this.dbIdListener(dbId);
+				if(name==="dbId" && this.dbIdFactory)
+					this.dbIdFactory.listener(dbId);
 			} 
 		}, this);
 };
