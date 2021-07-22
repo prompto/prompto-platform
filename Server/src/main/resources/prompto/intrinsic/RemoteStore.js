@@ -15,11 +15,11 @@ StoredDocument.prototype.matches = function(predicate) {
         return predicate.matches(this);
 };
 
-function StorableDocument(categories, dbIdListener) {
+function StorableDocument(categories, dbIdFactory) {
     if(!categories)
         throw new Error("!!!");
     this.category = categories;
-    this.dbIdListener = dbIdListener;
+    this.dbIdFactory = dbIdFactory;
     this.document = null;
     return this;
 }
@@ -41,10 +41,17 @@ StorableDocument.prototype.getDbId = function() {
 StorableDocument.prototype.getOrCreateDbId = function() {
 	var dbId = this.getDbId();
 	if(dbId==null) {
-       	dbId = $DataStore.instance.nextDbId();
-        if(this.dbIdListener)
-        	this.dbIdListener(dbId);
-        this.setData("dbId", dbId, dbId);
+		if(this.dbIdFactory)
+			dbId = this.dbIdFactory.provider();
+       	if(dbId!=null) 
+			this.setDbId(dbId);
+		else {
+			dbId = $DataStore.instance.nextDbId();
+	        if(this.dbIdFactory)
+	        	this.dbIdFactory.listener(dbId);
+			this.setData("dbId", dbId, dbId);
+        }
+		
     }
     return dbId;
 };

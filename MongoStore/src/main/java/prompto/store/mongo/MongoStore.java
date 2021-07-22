@@ -809,7 +809,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Collection<Object> fetchAllAuditMetadataIds(Object dbId) {
+	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
 		if(auditor!=null)
 			return auditor.fetchAllAuditMetadataIds(dbId);
 		else
@@ -825,7 +825,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Collection<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
+	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
 		if(auditor!=null)
 			return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
 		else
@@ -841,7 +841,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Collection<AuditRecord> fetchAllAuditRecords(Object dbId) {
+	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
 		if(auditor!=null)
 			return auditor.fetchAllAuditRecords(dbId);
 		else
@@ -849,7 +849,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Collection<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
+	public PromptoList<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
 		if(auditor!=null)
 			return auditor.fetchAuditRecordsMatching(auditPredicates, instancePredicates);
 		else

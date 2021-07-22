@@ -4,7 +4,6 @@ import java.lang.Thread.State;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +33,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
 import prompto.intrinsic.PromptoDocument;
+import prompto.intrinsic.PromptoList;
 import prompto.store.IAuditMetadata;
 import prompto.store.IAuditRecord;
 import prompto.store.IAuditRecord.Operation;
@@ -326,17 +326,17 @@ public class MongoAuditor {
 		return data==null ? null : data.get("auditMetaDataId");
 	}
 
-	public Collection<Object> fetchAllAuditMetadataIds(Object dbId) {
+	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
 		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
 				.find(Filters.eq("instanceId", dbId))
 				.projection(Projections.include("auditMetaDataId"))
 				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp")))
 				.spliterator(), false)
 				.map(data -> data.get("auditMetaDataId"))
-				.collect(Collectors.toList());
+				.collect(PromptoList.collector());
 	}
 
-	public Collection<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
+	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -350,17 +350,17 @@ public class MongoAuditor {
 		return new AuditRecord(store, data);
 	}
 
-	public Collection<AuditRecord> fetchAllAuditRecords(Object dbId) {
+	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
 		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
 				.find(Filters.eq("instanceId", dbId))
 				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp"))).spliterator(), false)
 				.map(data -> new AuditRecord(store, data))
-				.collect(Collectors.toList());
+				.collect(PromptoList.collector());
 	}
 
-	public Collection<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
+	public PromptoList<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
 		if((auditPredicates==null ? 0 : auditPredicates.size()) + (instancePredicates==null ? 0 : instancePredicates.size())==0)
-			return Collections.emptyList();
+			return new PromptoList<>(false);
 		List<Bson> auditFilters = auditPredicates==null ? Collections.emptyList() : auditPredicates.entrySet().stream()
 				.map(e -> Filters.eq(e.getKey(), convertQueryValue(e.getValue())))
 				.collect(Collectors.toList());
@@ -373,7 +373,7 @@ public class MongoAuditor {
 				.find(filter)
 				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp"))).spliterator(), false)
 				.map(data -> new AuditRecord(store, data))
-				.collect(Collectors.toList());
+				.collect(PromptoList.collector());
 				
 	}
 	
