@@ -1,6 +1,8 @@
 package prompto.store.mongo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +51,7 @@ import prompto.value.TextValue;
 @Category(ManualTests.class)
 public class TestAudit {
 
-	static final String DOCKER_MONGO_RS_URI = "mongodb://localhost:27001,localhost:27002,localhost:27003/TEST?replicaSet=mongo-rs";
+	static final String DOCKER_MONGO_RS_URI = "mongodb://localhost:27001,localhost:27002,localhost:27003/{TEST}?replicaSet=mongo-rs";
 
 	MongoStore store;
 	Context context;
@@ -62,7 +64,8 @@ public class TestAudit {
 	
 	@Before
 	public void before() {
-		store = new MongoStore(DOCKER_MONGO_RS_URI, null, null);
+		String rs_uri = DOCKER_MONGO_RS_URI.replace("{TEST}", "TEST_" + System.currentTimeMillis());
+		store = new MongoStore(rs_uri, null, null);
 		createField("category", Family.TEXT, true);
 		createField("name", Family.TEXT, false);
 		DataStore.setInstance(store);
@@ -189,5 +192,25 @@ public class TestAudit {
 		store.createOrUpdateAttributes(Collections.singletonList(info));
 	}
 
+	@Test
+	public void recoversIfInterrupted() throws Exception {
+		store.stopAuditor();
+		createAttribute("name", TextType.instance());
+		ConcreteCategoryDeclaration cat = createCategory("Test", "name");
+		IInstance instance = new ConcreteInstance(context, cat);
+		instance.setMutable(true);
+		instance.setMember(context, new Identifier("name"), new TextValue("hello"));
+		store.store(instance.getStorable());
+		Thread.sleep(3000L);
+		// need an auditor instance since store doesn't have one when audit is off
+		MongoAuditor auditor = new MongoAuditor(store);
+		Collection<AuditRecord> audits = auditor.fetchAllAuditRecords(instance.getStorable().getOrCreateDbId());
+		assertEquals(0, audits.size());
+		store.startAuditor();
+		Thread.sleep(3000L);
+		audits = store.fetchAllAuditRecords(instance.getStorable().getOrCreateDbId());
+		assertEquals(1L, audits.size());
+
+	}
 
 }

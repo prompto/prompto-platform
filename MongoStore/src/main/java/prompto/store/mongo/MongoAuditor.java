@@ -3,6 +3,7 @@ package prompto.store.mongo;
 import java.lang.Thread.State;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -17,18 +18,21 @@ import java.util.stream.StreamSupport;
 
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
+import org.bson.BsonTimestamp;
 import org.bson.BsonType;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
 import org.bson.internal.UuidHelper;
 
+import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoChangeStreamCursor;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
@@ -45,12 +49,12 @@ public class MongoAuditor {
 	static final Logger logger = new Logger();
 	static final String AUDIT_RECORDS_COLLECTION = "auditRecords";
 	static final String AUDIT_METADATAS_COLLECTION = "auditMetadatas";
+	static final String AUDIT_CONFIGS_COLLECTION = "auditConfigs";
 	
 
 	private final AtomicBoolean isTerminated = new AtomicBoolean(false);
 	final MongoStore store;
 	Thread thread;
-	MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor;
 	AuditMetadata metadata;
 	
 	public MongoAuditor(MongoStore store) {
@@ -77,22 +81,27 @@ public class MongoAuditor {
 	}
 
 	private void watchInstancesChanges() {
-		List<Bson> filter = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "delete"))));
-		cursor = store.getInstancesCollection()
-				.watch(filter)
-				.fullDocument(FullDocument.UPDATE_LOOKUP)
-				.cursor();
-		while(!isTerminated.get()) {
-			consumeChanges();
-			try {
-				TimeUnit.MILLISECONDS.sleep(100);
-			} catch(InterruptedException ignored) {
-				
+		List<Bson> filters = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "delete"))));
+		BsonTimestamp resumeTimestamp = fetchLastAuditTimestamp();
+		if(resumeTimestamp==null) 
+			resumeTimestamp = computeResumeTimestamp();
+		ChangeStreamIterable<Document> stream = store.getInstancesCollection()
+				.watch(filters)
+				.startAtOperationTime(resumeTimestamp)
+				.fullDocument(FullDocument.UPDATE_LOOKUP);
+		try (MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor = stream.cursor()) {
+			while(!isTerminated.get()) {
+				consumeChanges(cursor);
+				try {
+					TimeUnit.MILLISECONDS.sleep(100);
+				} catch(InterruptedException ignored) {
+					
+				}
 			}
 		}
 	}
 	
-	private void consumeChanges() {
+	private void consumeChanges(MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor) {
 		for(;;) {
 			ChangeStreamDocument<Document> change = cursor.tryNext();
 			if(change==null)
@@ -101,79 +110,119 @@ public class MongoAuditor {
 		}
 	}
 
-	private void auditInstanceChange(ChangeStreamDocument<Document> change) {
-		loadMetadataRecordIfRequired(change);
-		createAuditRecord(change);
+	private BsonTimestamp computeResumeTimestamp() {
+		LocalDateTime dt = LocalDateTime.now().minusYears(1);
+		long seconds = dt.toEpochSecond(ZoneOffset.UTC);
+		return new BsonTimestamp((int)seconds, 0);
 	}
 
-	private void createAuditRecord(ChangeStreamDocument<Document> change) {
-		switch(change.getOperationType()) {
-		case INSERT:
-			createInsertRecord(change);
-			break;
-		case UPDATE:
-			createUpdateRecord(change);
-			break;
-		case DELETE:
-			createDeleteRecord(change);
-			break;
-		default:
-			logger.warn(()->"Unsupported operation: " + change.getOperationType().name());
+	private BsonTimestamp fetchLastAuditTimestamp() {
+		Bson filter = Filters.eq("name", "LAST_AUDIT_TIMESTAMP");
+		Document record = store.db.getCollection(AUDIT_CONFIGS_COLLECTION).find(filter).first();
+		if(record!=null)
+			return record.get("timeStamp", BsonTimestamp.class);
+		else 
+			return null;
+	}
+
+	private void storeLastAuditTimestamp(ClientSession session, ChangeStreamDocument<Document> change) {
+		Document record = new Document();
+		record.put("name", "LAST_AUDIT_TIMESTAMP");
+		record.put("timeStamp", change.getClusterTime());
+		Document update = new Document("$set", record);
+		Bson filter = Filters.eq("name", "LAST_AUDIT_TIMESTAMP");
+		store.db.getCollection(AUDIT_CONFIGS_COLLECTION).updateOne(filter, update, new UpdateOptions().upsert(true));
+		
+	}
+
+	private void auditInstanceChange(ChangeStreamDocument<Document> change) {
+		loadMetadataRecordIfRequired(change);
+		storeAuditRecord(change);
+	}
+
+	private void storeAuditRecord(ChangeStreamDocument<Document> change) {
+		try(ClientSession session = store.client.startSession()) {
+			logger.info(()->"Auditing change for record " + change.getDocumentKey().get("_id"));
+			session.startTransaction();
+			switch(change.getOperationType()) {
+			case INSERT:
+				storeInsertRecord(session, change);
+				break;
+			case UPDATE:
+				storeUpdateRecord(session, change);
+				break;
+			case DELETE:
+				storeDeleteRecord(session, change);
+				break;
+			default:
+				logger.warn(()->"Unsupported operation: " + change.getOperationType().name());
+			}
+			storeLastAuditTimestamp(session, change);
+			session.commitTransaction();
 		}
 	}
 
-	private void createInsertRecord(ChangeStreamDocument<Document> change) {
+	private void storeInsertRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord insert = newAuditRecord();
 		insert.setInstanceDbId(change.getDocumentKey().get("_id"));
 		insert.setOperation(Operation.INSERT);
 		insert.setInstance(new StoredDocument(store, change.getFullDocument()));
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(insert);
+		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(session, insert);
 	}
 
-	private void createUpdateRecord(ChangeStreamDocument<Document> change) {
-		AuditRecord insert = newAuditRecord();
-		insert.setInstanceDbId(change.getDocumentKey().get("_id"));
-		insert.setOperation(Operation.UPDATE);
-		insert.setInstance(new StoredDocument(store, change.getFullDocument()));
-		insert.put("removedFields", change.getUpdateDescription().getRemovedFields());
-		insert.put("updatedFields", change.getUpdateDescription().getUpdatedFields());
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(insert);
+	private void storeUpdateRecord(ClientSession session, ChangeStreamDocument<Document> change) {
+		AuditRecord update = newAuditRecord();
+		update.setInstanceDbId(change.getDocumentKey().get("_id"));
+		update.setOperation(Operation.UPDATE);
+		update.setInstance(new StoredDocument(store, change.getFullDocument()));
+		update.put("removedFields", change.getUpdateDescription().getRemovedFields());
+		update.put("updatedFields", change.getUpdateDescription().getUpdatedFields());
+		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(update);
 	}
 
-	private void createDeleteRecord(ChangeStreamDocument<Document> change) {
-		AuditRecord insert = newAuditRecord();
-		insert.setInstanceDbId(change.getDocumentKey().get("_id"));
-		insert.setOperation(Operation.DELETE);
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(insert);
+	private void storeDeleteRecord(ClientSession session, ChangeStreamDocument<Document> change) {
+		AuditRecord delete = newAuditRecord();
+		delete.setInstanceDbId(change.getDocumentKey().get("_id"));
+		delete.setOperation(Operation.DELETE);
+		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(delete);
 	}
 	
 	private AuditRecord newAuditRecord() {
 		AuditRecord audit = new AuditRecord(store);
 		audit.setAuditRecordId(UUID.randomUUID());
-		audit.setAuditMetadataId(metadata.getAuditMetadataId());
-		audit.setUTCTimestamp(metadata.getUTCTimestamp());
+		if(metadata!=null) {
+			audit.setAuditMetadataId(metadata.getAuditMetadataId());
+			audit.setUTCTimestamp(metadata.getUTCTimestamp());
+		} else {
+			audit.setAuditMetadataId(null);
+			audit.setUTCTimestamp(LocalDateTime.now());
+		}	
 		return audit;
 	}
 
-	private boolean loadMetadataRecordIfRequired(ChangeStreamDocument<Document> change) {
-		Object sessionId = null;
+	private void loadMetadataRecordIfRequired(ChangeStreamDocument<Document> change) {
 		BsonDocument lsId = change.getLsid();
-		if(lsId.get("id").getBsonType()==BsonType.BINARY) {
-			BsonBinary binary = lsId.get("id").asBinary();
-			sessionId = UuidHelper.decodeBinaryToUuid(binary.getData(), binary.getType(), UuidRepresentation.STANDARD);
-		} else
-			sessionId = lsId.toString();
-		Object txnNumber = change.getTxnNumber();
-		if(metadata!=null && !(sessionId.equals(metadata.get("mongoSessionId")) && txnNumber.equals(metadata.get("mongoTxnNumber"))))
+		// if document was stored outside a session there is no associated metadata
+		if(lsId==null)
 			metadata = null;
-		if(metadata==null) {
-			Bson predicate = Filters.and(Filters.eq("mongoSessionId", sessionId), Filters.eq("mongoTxnNumber", txnNumber));
-			Document data = store.db.getCollection(AUDIT_METADATAS_COLLECTION).find(predicate).first();
-			if(data!=null)
-				metadata = new AuditMetadata(data);
-				
+		else {
+			Object sessionId = null;
+			if(lsId.get("id").getBsonType()==BsonType.BINARY) {
+				BsonBinary binary = lsId.get("id").asBinary();
+				sessionId = UuidHelper.decodeBinaryToUuid(binary.getData(), binary.getType(), UuidRepresentation.STANDARD);
+			} else
+				sessionId = lsId.toString();
+			Object txnNumber = change.getTxnNumber();
+			if(metadata!=null && !(sessionId.equals(metadata.get("mongoSessionId")) && txnNumber.equals(metadata.get("mongoTxnNumber"))))
+				metadata = null;
+			if(metadata==null) {
+				Bson predicate = Filters.and(Filters.eq("mongoSessionId", sessionId), Filters.eq("mongoTxnNumber", txnNumber));
+				Document data = store.db.getCollection(AUDIT_METADATAS_COLLECTION).find(predicate).first();
+				if(data!=null) {
+					metadata = new AuditMetadata(data);
+				}
+			}
 		}
-		return metadata!=null;
 	}
 
 
@@ -186,7 +235,6 @@ public class MongoAuditor {
 		} catch(InterruptedException ignored) {
 			
 		}
-		cursor.close();
 	}
 	
 	@SuppressWarnings("serial")

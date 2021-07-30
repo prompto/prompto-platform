@@ -486,7 +486,7 @@ public class MongoStore implements IStore {
 		return model;
 	}
 	
-	private void startAuditor() {
+	void startAuditor() {
 		startAuditorIfEnabled(ENABLE_AUDIT);
 	}
 	
@@ -499,7 +499,7 @@ public class MongoStore implements IStore {
 	}
 
 
-	private void stopAuditor() {
+	void stopAuditor() {
 		if(auditor!=null) {
 			auditor.stop();
 			auditor = null;
@@ -514,9 +514,8 @@ public class MongoStore implements IStore {
 	@Override
 	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata auditMetadata) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
-		if(!operations.isEmpty()) {
+		if(!operations.isEmpty())
 			writeOperations((AuditMetadata)auditMetadata, operations);
-		}
 	}
 
 	private void writeOperations(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
@@ -534,12 +533,15 @@ public class MongoStore implements IStore {
 		        .build();
 		session.startTransaction(txnOptions);
 		try {
-			auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
-			db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+			if(auditor!=null) {
+				auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
+				db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+			}
 			getInstancesCollection().bulkWrite(session, operations);
 			session.commitTransaction();
 		} catch (Throwable t) {
 			session.abortTransaction();
+			logger.error(()->"While writing transaction...", t);
 		}
 	}
 
