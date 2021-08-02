@@ -152,10 +152,11 @@ public class MongoStore implements IStore {
 		sb.setLength(sb.length()-1);
 		sb.append('/')
 			.append(config.getDbName())
-			.append("?ssl=")
+			.append("?replicaSet=")
+			.append(replicaConfig.getName());
+		if(password!=null)
+			sb.append("&ssl=")
 			.append(replicaConfig.isSSL())
-			.append("&replicaSet=")
-			.append(replicaConfig.getName())
 			.append("&authSource=admin");
 		return sb.toString();
 	}
