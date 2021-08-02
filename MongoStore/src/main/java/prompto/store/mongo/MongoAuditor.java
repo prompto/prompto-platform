@@ -1,6 +1,7 @@
 package prompto.store.mongo;
 
 import java.lang.Thread.State;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -142,7 +143,7 @@ public class MongoAuditor {
 
 	private void storeAuditRecord(ChangeStreamDocument<Document> change) {
 		try(ClientSession session = store.client.startSession()) {
-			logger.info(()->"Auditing change for record " + change.getDocumentKey().get("_id"));
+			logger.debug(()->"Auditing change for record " + change.getDocumentKey().get("_id"));
 			session.startTransaction();
 			switch(change.getOperationType()) {
 			case INSERT:
@@ -218,11 +219,23 @@ public class MongoAuditor {
 			if(metadata==null) {
 				Bson predicate = Filters.and(Filters.eq("mongoSessionId", sessionId), Filters.eq("mongoTxnNumber", txnNumber));
 				Document data = store.db.getCollection(AUDIT_METADATAS_COLLECTION).find(predicate).first();
-				if(data!=null) {
+				if(data!=null)
 					metadata = new AuditMetadata(data);
-				}
+				else
+					metadata = createMetadata(sessionId, txnNumber, change.getClusterTime());
 			}
 		}
+	}
+
+	private AuditMetadata createMetadata(Object sessionId, Object txnNumber, BsonTimestamp timestamp) {
+		AuditMetadata metadata = newAuditMetadata();
+		metadata.put("description", "<pre-existing-records>");
+		metadata.put("mongoSessionId", sessionId);
+		metadata.put("mongoTxnNumber", txnNumber);
+		Instant instant = Instant.ofEpochSecond(timestamp.getTime());
+		metadata.setUTCTimestamp(instant.atOffset(ZoneOffset.UTC).toLocalDateTime());
+		store.db.getCollection(AUDIT_METADATAS_COLLECTION).insertOne(metadata);
+		return metadata;
 	}
 
 
@@ -263,12 +276,12 @@ public class MongoAuditor {
 
 		@Override
 		public void setAuditMetadataId(Object id) {
-			put("auditMetaDataId", id);
+			put("auditMetadataId", id);
 		}
 
 		@Override
 		public Object getAuditMetadataId() {
-			return get("auditMetaDataId");
+			return get("auditMetadataId");
 		}
 
 		@Override
