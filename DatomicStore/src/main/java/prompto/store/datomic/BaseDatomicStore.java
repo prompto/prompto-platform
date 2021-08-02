@@ -364,7 +364,7 @@ public abstract class BaseDatomicStore implements IStore {
 	};
 
 	@Override 
-	public boolean supportsAudit() {
+	public boolean isAuditEnabled() {
 		return false; // TODO Datomic naturally supports audit, just a matter of wiring and testing it
 	}
 

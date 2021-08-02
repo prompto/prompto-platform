@@ -14,7 +14,6 @@ import java.util.stream.IntStream;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -56,16 +55,10 @@ public class TestAudit {
 	MongoStore store;
 	Context context;
 	
-	@BeforeClass
-	public static void beforeClass() {
-		if(!MongoStore.ENABLE_AUDIT)
-			throw new IllegalStateException("MongoStore.ENABLE_AUDIT is false!");
-	}
-	
 	@Before
 	public void before() {
 		String rs_uri = DOCKER_MONGO_RS_URI.replace("{TEST}", "TEST_" + System.currentTimeMillis());
-		store = new MongoStore(rs_uri, null, null);
+		store = new MongoStore(rs_uri, true, null, null);
 		createField("category", Family.TEXT, true);
 		createField("name", Family.TEXT, false);
 		DataStore.setInstance(store);
@@ -206,7 +199,7 @@ public class TestAudit {
 		MongoAuditor auditor = new MongoAuditor(store);
 		Collection<AuditRecord> audits = auditor.fetchAllAuditRecords(instance.getStorable().getOrCreateDbId());
 		assertEquals(0, audits.size());
-		store.startAuditor();
+		store.startAuditor(()->true);
 		Thread.sleep(3000L);
 		audits = store.fetchAllAuditRecords(instance.getStorable().getOrCreateDbId());
 		assertEquals(1L, audits.size());

@@ -412,8 +412,8 @@ abstract class BaseSOLRStore implements IStore {
 	}
 	
 	@Override 
-	public boolean supportsAudit() {
-		return true;
+	public boolean isAuditEnabled() {
+		return false;
 	}
 
 }

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -57,6 +58,7 @@ import com.mongodb.client.model.WriteModel;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.mongo.IMongoReplicaSetConfiguration;
 import prompto.config.mongo.IMongoStoreConfiguration;
+import prompto.error.AuditDisabledError;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
@@ -80,8 +82,6 @@ import prompto.store.mongo.MongoAuditor.AuditRecord;
 import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
-	
-	static final boolean ENABLE_AUDIT = true;
 	
 	static final Logger logger = new Logger();
 	static final String AUTH_DB_NAME = "admin";
@@ -189,23 +189,23 @@ public class MongoStore implements IStore {
 			connectWithReplicaSetConfig(config, password);
 		else 
 			connectWithParams(config, password);
-		startAuditor();
+		startAuditor(config::getAudit);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
-	public MongoStore(String host, int port, String database) {
-		this(host, port, database, null, null);
+	public MongoStore(String host, int port, String database, boolean audit) {
+		this(host, port, database, audit, null, null);
 	}
 	
-	public MongoStore(String host, int port, String database, String user, char[] password) {
+	public MongoStore(String host, int port, String database, boolean audit, String user, char[] password) {
 		connectWithParams(host, port, database, user, password);
-		startAuditor();
+		startAuditor(()->audit);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
-	public MongoStore(String uri, String user, char[] password) {
+	public MongoStore(String uri, boolean audit, String user, char[] password) {
 		connectWithURI(uri, user, password);
-		startAuditor();
+		startAuditor(()->audit);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
@@ -486,16 +486,22 @@ public class MongoStore implements IStore {
 		return model;
 	}
 	
-	void startAuditor() {
-		startAuditorIfEnabled(ENABLE_AUDIT);
+	void startAuditor(Supplier<Boolean> config) {
+		Boolean enabled = config.get();
+		if(enabled!=null && enabled)
+			startAuditorIfSupported();
+		else
+			logger.info(()->"Not starting Auditor because it is disabled");
 	}
 	
 	
-	private void startAuditorIfEnabled(boolean enabled) {
-		if(enabled && supportsAudit()) {
+	private void startAuditorIfSupported() {
+		if(supportsAudit()) {
 			auditor = new MongoAuditor(this);
 			auditor.start();
-		}
+			logger.info(()->"Starting Auditor");
+		} else
+			logger.info(()->"Not starting Auditor because it is not supported");
 	}
 
 
@@ -788,76 +794,67 @@ public class MongoStore implements IStore {
 	}
 
 	@Override 
-	public boolean supportsAudit() {
+	public boolean isAuditEnabled() {
+		return auditor != null;
+	}
+	
+	boolean supportsAudit() {
 		// Mongo watch only works with replicaSets
 		String rsName = client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName();
 		return rsName!=null;
 	}
 
+	private void checkAuditEnabled() {
+		if(auditor==null)
+			throw new AuditDisabledError();
+	}
+
 	@Override
 	public AuditMetadata newAuditMetadata() {
-		if(auditor!=null)
-			return auditor.newAuditMetadata();
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.newAuditMetadata();
 	}
 
 	@Override
 	public Object fetchLatestAuditMetadataId(Object dbId) {
-		if(auditor!=null)
-			return auditor.fetchLatestAuditMetadataId(dbId);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchLatestAuditMetadataId(dbId);
 	}
 
 	@Override
 	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
-		if(auditor!=null)
-			return auditor.fetchAllAuditMetadataIds(dbId);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchAllAuditMetadataIds(dbId);
 	}
 
 	@Override
 	public IAuditMetadata fetchAuditMetadata(Object metaId) {
-		if(auditor!=null)
-			return auditor.newAuditMetadata();
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.newAuditMetadata();
 	}
 
 	@Override
 	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
-		if(auditor!=null)
-			return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
 	}
 
 	@Override
 	public AuditRecord fetchLatestAuditRecord(Object dbId) {
-		if(auditor!=null)
-			return auditor.fetchLatestAuditRecord(dbId);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchLatestAuditRecord(dbId);
 	}
 
 	@Override
 	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
-		if(auditor!=null)
-			return auditor.fetchAllAuditRecords(dbId);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchAllAuditRecords(dbId);
 	}
 
 	@Override
 	public PromptoList<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
-		if(auditor!=null)
-			return auditor.fetchAuditRecordsMatching(auditPredicates, instancePredicates);
-		else
-			throw new UnsupportedOperationException();
+		checkAuditEnabled();
+		return auditor.fetchAuditRecordsMatching(auditPredicates, instancePredicates);
 	}
 	
-	
-
 }

@@ -67,7 +67,7 @@ public abstract class BaseMongoTest {
 	}
 
 	protected MongoStore createStore(String name) {
-		store = new MongoStore("localhost", mongoPort, name);
+		store = new MongoStore("localhost", mongoPort, name, false);
 		db = store.db;
 		return store;
 	}
