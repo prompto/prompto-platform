@@ -128,8 +128,8 @@ function RemoteStore() {
 		tempDbId = --this.lastDbId;
 		return { tempDbId: tempDbId, getText: function() { return "" + tempDbId; } };
 	};
-	this.newStorableDocument = function(categories, dbIdListener) {
-		return new StorableDocument(categories, dbIdListener);
+	this.newStorableDocument = function(categories, dbIdFactory) {
+		return new StorableDocument(categories, dbIdFactory);
 	};
 	this.newQueryBuilder = function() {
 		return new RemoteQueryBuilder();
