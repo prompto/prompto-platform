@@ -18,6 +18,7 @@ import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoTime;
 import prompto.store.IStorable;
+import prompto.store.IStorable.IDbIdFactory;
 import prompto.store.memory.MemStore;
 
 public class TestDataServlet extends BaseServerTest {
@@ -39,7 +40,7 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void canFetchAllWithAny() throws Exception {
-		IStorable doc = store.newStorable(Collections.singletonList("Any"), id->{});
+		IStorable doc = store.newStorable(Collections.singletonList("Any"), IDbIdFactory.of(null, null, null));
 		doc.setData("name", "John");
 		store.store(doc);
 		JsonNode node = runQuery("fetch all");
@@ -50,7 +51,7 @@ public class TestDataServlet extends BaseServerTest {
 	
 	@Test
 	public void canFetchAllWithCategory() throws Exception {
-		IStorable doc = store.newStorable(Collections.singletonList("MyCategory"), id->{});
+		IStorable doc = store.newStorable(Collections.singletonList("MyCategory"), IDbIdFactory.of(null, null, null));
 		doc.setData("text", "someName");
 		doc.setData("integer", 987654321L);
 		doc.setData("decimal", 987654321.654);

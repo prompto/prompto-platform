@@ -26,6 +26,7 @@ import prompto.error.InternalError;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.store.AttributeInfo;
+import prompto.store.IAuditMetadata;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder;
 import prompto.store.IStorable;
@@ -179,7 +180,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
+	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		Stream<Object> retractions = null;
 		Stream<Object> additions = null;
 		if(deletables!=null)
@@ -362,5 +363,9 @@ public abstract class BaseDatomicStore implements IStore {
 		}
 	};
 
+	@Override 
+	public boolean isAuditEnabled() {
+		return false; // TODO Datomic naturally supports audit, just a matter of wiring and testing it
+	}
 
 }

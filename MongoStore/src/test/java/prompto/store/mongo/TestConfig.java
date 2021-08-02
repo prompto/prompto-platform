@@ -57,6 +57,7 @@ public class TestConfig {
 			@Override public String getHost() { return null; }
 			@Override public Integer getPort() { return null; }
 			@Override public String getDbName() { return "PING"; }
+			@Override public Boolean getAudit() { return false; }
 			@Override public String getUser() { return "ping"; }
 			@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 			@Override public ISecretKeyConfiguration getSecretKeyConfiguration() {
@@ -105,6 +106,7 @@ public class TestConfig {
 			@Override public String getHost() { return null; }
 			@Override public Integer getPort() { return null; }
 			@Override public String getDbName() { return "PING"; }
+			@Override public Boolean getAudit() { return false; }
 			@Override public String getUser() { return "ping"; }
 			@Override public IStoreConfiguration withDbName(String dbName) { return null; }
 			@Override public ISecretKeyConfiguration getSecretKeyConfiguration() {

@@ -15,11 +15,11 @@ StoredDocument.prototype.matches = function(predicate) {
         return predicate.matches(this);
 };
 
-function StorableDocument(categories, dbIdListener) {
+function StorableDocument(categories, dbIdFactory) {
     if(!categories)
         throw new Error("!!!");
     this.category = categories;
-    this.dbIdListener = dbIdListener;
+    this.dbIdFactory = dbIdFactory;
     this.document = null;
     return this;
 }
@@ -41,10 +41,17 @@ StorableDocument.prototype.getDbId = function() {
 StorableDocument.prototype.getOrCreateDbId = function() {
 	var dbId = this.getDbId();
 	if(dbId==null) {
-       	dbId = $DataStore.instance.nextDbId();
-        if(this.dbIdListener)
-        	this.dbIdListener(dbId);
-        this.setData("dbId", dbId, dbId);
+		if(this.dbIdFactory)
+			dbId = this.dbIdFactory.provider();
+       	if(dbId!=null) 
+			this.setDbId(dbId);
+		else {
+			dbId = $DataStore.instance.nextDbId();
+	        if(this.dbIdFactory)
+	        	this.dbIdFactory.listener(dbId);
+			this.setData("dbId", dbId, dbId);
+        }
+		
     }
     return dbId;
 };
@@ -78,8 +85,8 @@ StorableDocument.prototype.updateDbId = function(dbIds, name) {
 			var dbId = dbIds[value.tempDbId];
 			if(dbId) {
 				this.document[name] = dbId;
-				if(name==="dbId")
-					this.dbIdListener(dbId);
+				if(name==="dbId" && this.dbIdFactory)
+					this.dbIdFactory.listener(dbId);
 			} 
 		}, this);
 };
@@ -187,7 +194,7 @@ function RemoteStore() {
 		});
 	 	return doc;
 	};
-	this.prepareStore = function(toDel, toStore) {
+	this.prepareStore = function(toDel, toStore, withMeta) {
 		var formData = new FormData();
 		if(toDel)
 			formData.append("toDelete", JSON.stringify(toDel));
@@ -195,15 +202,17 @@ function RemoteStore() {
 			toStore = this.convertStorables(toStore, formData);
 			formData.append("toStore", JSON.stringify(toStore));
 		}
+		if(withMeta)
+			writeJSONValue(withMeta, false, formData);
 		return formData;
 	};
-	this.store = function(toDel, toStore) {
-		var formData = this.prepareStore(toDel, toStore);
+	this.deleteAndStore = function(toDel, toStore, withMeta) {
+		var formData = this.prepareStore(toDel, toStore, withMeta);
 		var response = this.fetchSync("/ws/store/deleteAndStore", formData);
 		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
-	this.storeAsync = function(toDel, toStore, andThen) {
-		var formData = this.prepareStore(toDel, toStore);
+	this.deleteAndStoreAsync = function(toDel, toStore, withMeta, andThen) {
+		var formData = this.prepareStore(toDel, toStore, withMeta);
 		this.fetchAsync("/ws/store/deleteAndStore", formData, function(response) {
 			if(toStore)
 				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });

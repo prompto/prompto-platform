@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -24,15 +25,19 @@ import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.client.ChangeStreamIterable;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Collation;
@@ -53,6 +58,7 @@ import com.mongodb.client.model.WriteModel;
 import prompto.config.ISecretKeyConfiguration;
 import prompto.config.mongo.IMongoReplicaSetConfiguration;
 import prompto.config.mongo.IMongoStoreConfiguration;
+import prompto.error.AuditDisabledError;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
@@ -63,6 +69,7 @@ import prompto.intrinsic.PromptoVersion;
 import prompto.security.ISecretKeyFactory;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
+import prompto.store.IAuditMetadata;
 import prompto.store.IQuery;
 import prompto.store.IQueryBuilder;
 import prompto.store.IStorable;
@@ -70,11 +77,11 @@ import prompto.store.IStorable.IDbIdFactory;
 import prompto.store.IStore;
 import prompto.store.IStored;
 import prompto.store.IStoredIterable;
+import prompto.store.mongo.MongoAuditor.AuditMetadata;
+import prompto.store.mongo.MongoAuditor.AuditRecord;
 import prompto.utils.Logger;
 
 public class MongoStore implements IStore {
-	
-	static final boolean ENABLE_AUDIT = false;
 	
 	static final Logger logger = new Logger();
 	static final String AUTH_DB_NAME = "admin";
@@ -167,9 +174,10 @@ public class MongoStore implements IStore {
 
 
 	MongoClient client;
+	ClientSession session;
 	MongoDatabase db;
 	Map<String, AttributeInfo> attributes = new HashMap<>();
-	ChangeStreamIterable<Document> auditor = null;
+	MongoAuditor auditor = null;
 	
 	public MongoStore(IMongoStoreConfiguration config) throws Exception {
 		char[] password = passwordFromConfig(config);
@@ -181,16 +189,23 @@ public class MongoStore implements IStore {
 			connectWithReplicaSetConfig(config, password);
 		else 
 			connectWithParams(config, password);
-		startAuditor();
+		startAuditor(config::getAudit);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
-	public MongoStore(String host, int port, String database) {
-		this(host, port, database, null, null);
+	public MongoStore(String host, int port, String database, boolean audit) {
+		this(host, port, database, audit, null, null);
 	}
 	
-	public MongoStore(String host, int port, String database, String user, char[] password) {
+	public MongoStore(String host, int port, String database, boolean audit, String user, char[] password) {
 		connectWithParams(host, port, database, user, password);
+		startAuditor(()->audit);
+		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
+	}
+	
+	public MongoStore(String uri, boolean audit, String user, char[] password) {
+		connectWithURI(uri, user, password);
+		startAuditor(()->audit);
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
@@ -203,6 +218,10 @@ public class MongoStore implements IStore {
 	@Override
 	public synchronized void close() {
 		stopAuditor();
+		if(session!=null) {
+			session.close();
+			session = null;
+		}
 		if(client!=null) {
 			client.close();
 			client = null;
@@ -229,14 +248,44 @@ public class MongoStore implements IStore {
  			builder = builder.credential(credential);
 		}
  		MongoClientSettings settings = builder.build();
+ 		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
 		// we use 'admin' for default connection when no dbname is specified
 		final String dbName = config.getDbName()!=null ? config.getDbName() : conn.getDatabase()!=null ? conn.getDatabase() : "admin";
- 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously " : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously" : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + replicaSet);
  		client = MongoClients.create(settings);
+		if(replicaSet != null)
+			session = client.startSession();
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
-		logger.info(()->"Connected to database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+		logger.info(()->"Connected to database @" + replicaSet);
+	}
+	
+	private void connectWithURI(String uri, String user, char[] password) {
+		ConnectionString conn = new ConnectionString(uri);
+		MongoClientSettings.Builder builder = MongoClientSettings.builder()
+				.applyConnectionString(conn)
+                .codecRegistry(codecRegistry)
+                .uuidRepresentation(UuidRepresentation.STANDARD)
+                .applyToSocketSettings(socketBuilder -> socketBuilder
+                		.readTimeout(6, TimeUnit.MINUTES)
+                		.connectTimeout(6, TimeUnit.MINUTES));
+ 		if(user != null && password != null) {
+ 			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
+ 			builder = builder.credential(credential);
+		}
+ 		MongoClientSettings settings = builder.build();
+ 		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
+		// we use 'admin' for default connection when no dbname is specified
+		final String dbName = conn.getDatabase()!=null ? conn.getDatabase() : "admin";
+ 		logger.info(()->"Connecting " + (user==null ? "anonymously " : "user '" + user + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		client = MongoClients.create(settings);
+		if(replicaSet != null)
+			session = client.startSession();
+		db = client.getDatabase(dbName);
+		if(!"admin".equals(dbName))
+			loadAttributes();
+		logger.info(()->"Connected to database @" + replicaSet);
 	}
 		
 	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
@@ -260,7 +309,9 @@ public class MongoStore implements IStore {
 			builder = builder.credential(credential);
 		} else 
 			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
-		client = MongoClients.create(builder.build());
+		MongoClientSettings settings = builder.build();
+		client = MongoClients.create(settings);
+		session = null; // unnecessary but explicit, transactions require a replicaSet
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
@@ -435,23 +486,30 @@ public class MongoStore implements IStore {
 		return model;
 	}
 	
-	@SuppressWarnings("unused")
-	private void startAuditor() {
-		if(ENABLE_AUDIT && client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName()!=null) {
-			new Thread(() -> {
-				auditor = getInstancesCollection().watch();
-				try {
-					auditor.forEach(doc -> System.out.println(doc));
-				} catch(IllegalStateException e) {
-					
-				}
-			},"Mongo auditor").start();
-		}
+	void startAuditor(Supplier<Boolean> config) {
+		Boolean enabled = config.get();
+		if(enabled!=null && enabled)
+			startAuditorIfSupported();
+		else
+			logger.info(()->"Not starting Auditor because it is disabled");
+	}
+	
+	
+	private void startAuditorIfSupported() {
+		if(supportsAudit()) {
+			auditor = new MongoAuditor(this);
+			auditor.start();
+			logger.info(()->"Starting Auditor");
+		} else
+			logger.info(()->"Not starting Auditor because it is not supported");
 	}
 
 
-	private void stopAuditor() {
-		// TODO
+	void stopAuditor() {
+		if(auditor!=null) {
+			auditor.stop();
+			auditor = null;
+		}
 	}
 	
 	@Override
@@ -460,10 +518,41 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public void store(Collection<?> deletables, Collection<IStorable> storables) throws PromptoError {
+	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata auditMetadata) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
 		if(!operations.isEmpty())
-			getInstancesCollection().bulkWrite(operations);
+			writeOperations((AuditMetadata)auditMetadata, operations);
+	}
+
+	private void writeOperations(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
+		if(session!=null)
+			writeTransaction(auditMetadata, operations);
+		else
+			writeBulk(operations);
+	}
+
+	private void writeTransaction(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
+		TransactionOptions txnOptions = TransactionOptions.builder()
+		        .readPreference(ReadPreference.primary())
+		        .readConcern(ReadConcern.LOCAL)
+		        .writeConcern(WriteConcern.MAJORITY)
+		        .build();
+		session.startTransaction(txnOptions);
+		try {
+			if(auditor!=null) {
+				auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
+				db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+			}
+			getInstancesCollection().bulkWrite(session, operations);
+			session.commitTransaction();
+		} catch (Throwable t) {
+			session.abortTransaction();
+			logger.error(()->"While writing transaction...", t);
+		}
+	}
+
+	private void writeBulk(List<WriteModel<Document>> operations) {
+		getInstancesCollection().bulkWrite(operations);
 	}
 
 	private List<WriteModel<Document>> buildWriteModels(Collection<?> deletables, Collection<IStorable> storables) {
@@ -477,7 +566,7 @@ public class MongoStore implements IStore {
 				.map((s)->((StorableDocument)s).toWriteModel());
 		if(deletes==null && upserts==null)
 			return Collections.emptyList();
-		Stream<WriteModel<Document>> all;
+		Stream<WriteModel<Document>> all = null;
 		if(deletes==null)
 			all = upserts;
 		else if(upserts==null)
@@ -610,7 +699,7 @@ public class MongoStore implements IStore {
 		return new StoredIterable(coll, (MongoQuery)query);
 	}
 
-	private MongoCollection<Document> getInstancesCollection() {
+	MongoCollection<Document> getInstancesCollection() {
 		return db.getCollection("instances");
 	}
 	
@@ -659,7 +748,7 @@ public class MongoStore implements IStore {
 			info = attributes.get(fieldName);
 		}
 		if(info==null) {
-			logger.error(()->"Missing AttributeInfo for " + fieldName);
+			logger.error(()->"Missing AttributeInfo for: " + fieldName);
 			return null;
 		}
 		if(info.isCollection() && data instanceof Collection)
@@ -704,6 +793,68 @@ public class MongoStore implements IStore {
 		configs.replaceOne(filter, config, options);
 	}
 
+	@Override 
+	public boolean isAuditEnabled() {
+		return auditor != null;
+	}
+	
+	boolean supportsAudit() {
+		// Mongo watch only works with replicaSets
+		String rsName = client.getClusterDescription().getClusterSettings().getRequiredReplicaSetName();
+		return rsName!=null;
+	}
 
+	private void checkAuditEnabled() {
+		if(auditor==null)
+			throw new AuditDisabledError();
+	}
 
+	@Override
+	public AuditMetadata newAuditMetadata() {
+		checkAuditEnabled();
+		return auditor.newAuditMetadata();
+	}
+
+	@Override
+	public Object fetchLatestAuditMetadataId(Object dbId) {
+		checkAuditEnabled();
+		return auditor.fetchLatestAuditMetadataId(dbId);
+	}
+
+	@Override
+	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
+		checkAuditEnabled();
+		return auditor.fetchAllAuditMetadataIds(dbId);
+	}
+
+	@Override
+	public IAuditMetadata fetchAuditMetadata(Object metaId) {
+		checkAuditEnabled();
+		return auditor.newAuditMetadata();
+	}
+
+	@Override
+	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
+		checkAuditEnabled();
+		return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
+	}
+
+	@Override
+	public AuditRecord fetchLatestAuditRecord(Object dbId) {
+		checkAuditEnabled();
+		return auditor.fetchLatestAuditRecord(dbId);
+	}
+
+	@Override
+	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
+		checkAuditEnabled();
+		return auditor.fetchAllAuditRecords(dbId);
+	}
+
+	@Override
+	public PromptoList<AuditRecord> fetchAuditRecordsMatching(Map<String, Object> auditPredicates, Map<String, Object> instancePredicates) {
+		checkAuditEnabled();
+		return auditor.fetchAuditRecordsMatching(auditPredicates, instancePredicates);
+	}
+	
 }
