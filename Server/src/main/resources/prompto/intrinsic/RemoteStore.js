@@ -202,8 +202,11 @@ function RemoteStore() {
 			toStore = this.convertStorables(toStore, formData);
 			formData.append("toStore", JSON.stringify(toStore));
 		}
-		if(withMeta)
-			writeJSONValue(withMeta, false, formData);
+		if(withMeta) {
+			var json = writeJSONValue(withMeta, false, formData);
+			formData.append("withMeta", JSON.stringify(json));
+		}
+			
 		return formData;
 	};
 	this.deleteAndStore = function(toDel, toStore, withMeta) {

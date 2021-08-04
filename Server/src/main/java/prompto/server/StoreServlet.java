@@ -3,10 +3,12 @@ package prompto.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -26,6 +28,7 @@ import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
+import prompto.store.IAuditMetadata;
 import prompto.store.IQueryBuilder;
 import prompto.store.IQueryBuilder.MatchOp;
 import prompto.store.IStorable;
@@ -106,24 +109,82 @@ public class StoreServlet extends CleverServlet {
 	private void deleteAndStoreJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Map<Long, Object> updatedDbIds = new HashMap<>();
 		JsonNode json = readJsonStream(req);
+		JsonNode toDelete = null;
+		JsonNode toStore = null;
 		if(json.has("toDelete")) 
-			deleteJson(json.get("toDelete"));
+			toDelete = json.get("toDelete");
 		if(json.has("toStore")) 
-			updatedDbIds = storeJson(json.get("toStore"), null);
+			toStore = json.get("toStore");
+		if(toDelete!=null || toStore!=null)
+			updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, json.get("withMeta"));
 		writeJSONResult(updatedDbIds, resp.getOutputStream());
 	}
 
-	private Map<Long, Object> storeJson(JsonNode toStore, Map<String, byte[]> parts) {
+	private Map<Long, Object> deleteAndStoreJson(JsonNode toDelete, JsonNode toStore, Map<String, byte[]> parts, JsonNode withMeta) {
+		Collection<?> deletables = collectDeletables(toDelete);
 		Map<Long, Object> updatedDbIds = new HashMap<>();
-		if(toStore.isArray()) {
-			List<IStorable> storables = StreamSupport.stream(toStore.spliterator(), false)
-				.map(node->jsonToStorable(node, parts, updatedDbIds))
-				.collect(Collectors.toList());
-			DataStore.getInstance().store(storables);
-		} else
-			logger.error(()->"Could not delete: " + toStore.toString());
+		List<IStorable> storables = collectStorables(toStore, parts, updatedDbIds);
+		IAuditMetadata metadata = collectMetadata(withMeta, parts);
+		DataStore.getInstance().deleteAndStore(deletables, storables, metadata);
 		return updatedDbIds;
 	}
+
+	private Collection<?> collectDeletables(JsonNode toDelete) {
+		if(toDelete==null)
+			return null;
+		else
+			return jsonToDbIdsCollection(toDelete);
+	}
+
+	
+	private Collection<?> jsonToDbIdsCollection(JsonNode node) {
+		Object converted = convertJsonToDbIds(node);
+		if(converted==null)
+			return Collections.emptyList();
+		else if(converted instanceof Collection)
+			return (Collection<?>)converted;
+		else
+			return Collections.singletonList(converted);
+	}
+	
+	
+	private Object convertJsonToDbIds(JsonNode node) {
+		if(node.isNumber()) {
+			Object dbId = node.asLong();
+			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
+				return dbId;
+			else
+				return DataStore.getInstance().convertToDbId(dbId);
+		} else if(node.isTextual()) {
+			Object dbId = node.asText();
+			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
+				return dbId;
+			else
+				return DataStore.getInstance().convertToDbId(dbId);
+		} else if(node.isArray()) {
+			return StreamSupport.stream(node.spliterator(), false)
+					.map(this::convertJsonToDbIds)
+					.collect(Collectors.toList());
+		} else {
+			logger.error(()->"Could not convert: " + node.toString());
+			return null;
+		}
+		
+	}
+
+	private List<IStorable> collectStorables(JsonNode toStore, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+		if(toStore==null)
+			return null;
+		else if(toStore.isArray())
+			return StreamSupport.stream(toStore.spliterator(), false)
+				.map(node->jsonToStorable(node, parts, updatedDbIds))
+				.collect(Collectors.toList());
+		else {
+			logger.error(()->"Could not store: " + toStore.toString());
+			return null;
+		}
+	}
+
 
 	private IStorable jsonToStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		if(isRecordUpdate(record))
@@ -233,7 +294,6 @@ public class StoreServlet extends CleverServlet {
 			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, parts, updatedDbIds));
 		default:
 			throw new UnsupportedOperationException(type);
-			
 		}
 	}
 	
@@ -244,48 +304,37 @@ public class StoreServlet extends CleverServlet {
 			.collect(Collectors.toList());
 	}
 
-	private void deleteJson(JsonNode toDelete) {
-		Object dbIds = toDbIds(toDelete);
-		if(dbIds instanceof Collection)
-			DataStore.getInstance().delete((Collection<?>)dbIds);
-		else if(dbIds!=null)
-			DataStore.getInstance().delete(dbIds);
+	private IAuditMetadata collectMetadata(JsonNode withMeta, Map<String, byte[]> parts) {
+		if(withMeta!=null) {
+			if(withMeta.isObject()) {
+				IAuditMetadata metadata = DataStore.getInstance().newAuditMetadata();
+				withMeta.fields().forEachRemaining(e -> collectMetadata(metadata, e, parts));
+				return metadata;
+			} else
+				logger.error(()->"Could not convert: " + withMeta.toString());
+		} 
+		return null;
 	}
-	
-	private Object toDbIds(JsonNode toDelete) {
-		if(toDelete.isNumber()) {
-			Object dbId = toDelete.asLong();
-			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
-				return dbId;
-			else
-				return DataStore.getInstance().convertToDbId(dbId);
-		} else if(toDelete.isTextual()) {
-			Object dbId = toDelete.asText();
-			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
-				return dbId;
-			else
-				return DataStore.getInstance().convertToDbId(dbId);
-		} else if(toDelete.isArray()) {
-			return StreamSupport.stream(toDelete.spliterator(), false)
-					.map(this::toDbIds)
-					.collect(Collectors.toList());
-		} else {
-			logger.error(()->"Could not delete: " + toDelete.toString());
-			return null;
-		}
-		
+
+
+	private void collectMetadata(IAuditMetadata metadata, Entry<String, JsonNode> entry, Map<String, byte[]> parts) {
+		metadata.put(entry.getKey(), readJsonValue(entry.getValue(), parts, Collections.emptyMap()));
 	}
 
 	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Map<Long, Object> updatedDbIds = new HashMap<>();
 		Map<String, byte[]> parts = readPartsAsBytes(req);
-		if(parts.containsKey("toDelete")) {
-			JsonNode toDelete = new ObjectMapper().readTree(parts.get("toDelete"));
-			deleteJson(toDelete);
-		}
-		if(parts.containsKey("toStore")) {
-			JsonNode toStore = new ObjectMapper().readTree(parts.get("toStore"));
-			updatedDbIds = storeJson(toStore, parts);
+		JsonNode toDelete = null;
+		JsonNode toStore = null;
+		JsonNode withMeta = null;
+		if(parts.containsKey("toDelete"))
+			toDelete = new ObjectMapper().readTree(parts.get("toDelete"));
+		if(parts.containsKey("toStore"))
+			toStore = new ObjectMapper().readTree(parts.get("toStore"));
+		if(toDelete!=null || toStore!=null) {
+			if(parts.containsKey("withMeta"))
+				withMeta = new ObjectMapper().readTree(parts.get("withMeta"));
+			updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, withMeta);
 		}
 		writeJSONResult(updatedDbIds, resp.getOutputStream());
 	}
