@@ -1,0 +1,27 @@
+storable attribute value: Text;
+storable category User(value);
+
+widget DeleteIsAuditedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return {user: null};
+	}
+	
+	
+	method componentDidMount() {
+		user = User(value="John");
+		store (user) then {
+			delete (user) with metadata ({message: "Hello"}) then {
+				setState({user: user});
+			}
+		}
+	}
+	
+	Html method render() {
+		user = state.user;
+		if(user is a User)
+			return <div id="root">{user.value}</div>;
+		else
+			return <div>empty</div>;
+	}
+}
