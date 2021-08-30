@@ -13,8 +13,7 @@ public class PromptoVersionCodec implements CollectibleCodec<PromptoVersion> {
 
 	@Override
 	public void encode(BsonWriter writer, PromptoVersion value, EncoderContext encoderContext) {
-		int val = value.asInt();
-		writer.writeInt32(val);
+		writer.writeInt32(value.asInt());
 	}
 
 	@Override
@@ -24,8 +23,7 @@ public class PromptoVersionCodec implements CollectibleCodec<PromptoVersion> {
 
 	@Override
 	public PromptoVersion decode(BsonReader reader, DecoderContext decoderContext) {
-		int val = reader.readInt32();
-		return PromptoVersion.parse(val);
+		return PromptoVersion.parse(reader.readInt32());
 	}
 
 	@Override
