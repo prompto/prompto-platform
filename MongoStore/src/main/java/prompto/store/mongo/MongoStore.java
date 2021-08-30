@@ -729,7 +729,7 @@ public class MongoStore implements IStore {
 		readers.put(Family.DATETIME, (o)->o instanceof Document ? PromptoDateTime.parse(((Document)o).getString("text")) : null);
 		readers.put(Family.BLOB, MongoStore::binaryToPromptoBinary);
 		readers.put(Family.IMAGE, MongoStore::binaryToPromptoBinary);
-		readers.put(Family.VERSION, (o)->PromptoVersion.parse((int)o));
+		readers.put(Family.VERSION, (o)->PromptoVersion.parseInt((int)o));
 	}
 	
 	static Object binaryToPromptoBinary(Object o) {

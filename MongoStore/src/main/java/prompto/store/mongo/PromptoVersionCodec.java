@@ -23,7 +23,7 @@ public class PromptoVersionCodec implements CollectibleCodec<PromptoVersion> {
 
 	@Override
 	public PromptoVersion decode(BsonReader reader, DecoderContext decoderContext) {
-		return PromptoVersion.parse(reader.readInt32());
+		return PromptoVersion.parseInt(reader.readInt32());
 	}
 
 	@Override
