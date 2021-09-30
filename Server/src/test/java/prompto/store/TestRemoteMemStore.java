@@ -35,7 +35,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John", elem.getText());
 		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
-		AttributeInfo info = ICodeStore.getInstance().fetchLatestAttributeInfo(ApplicationContext.get(), "value");
+		AttributeInfo info = ICodeStore.getInstance().fetchAttributeInfo(ApplicationContext.get(), "value");
 		builder.verify(info, MatchOp.EQUALS, "John");
 		IStored stored = DataStore.getInstance().fetchOne(builder.build());
 		assertNotNull(stored);
@@ -55,7 +55,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("John", elem.getText());
 		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
-		AttributeInfo info = ICodeStore.getInstance().fetchLatestAttributeInfo(ApplicationContext.get(), "value");
+		AttributeInfo info = ICodeStore.getInstance().fetchAttributeInfo(ApplicationContext.get(), "value");
 		builder.verify(info, MatchOp.EQUALS, "John");
 		IStored stored = DataStore.getInstance().fetchOne(builder.build());
 		assertNotNull(stored);
