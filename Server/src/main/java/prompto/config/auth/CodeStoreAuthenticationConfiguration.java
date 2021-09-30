@@ -7,7 +7,7 @@ import com.esotericsoftware.yamlbeans.document.YamlMapping;
 import com.esotericsoftware.yamlbeans.document.YamlSequence;
 
 import prompto.code.ICodeStore;
-import prompto.code.QueryableCodeStore;
+import prompto.code.MutableCodeStore;
 import prompto.config.IConfigurationReader;
 import prompto.config.StoredRecordConfigurationReader;
 import prompto.config.auth.method.IAuthenticationMethodConfiguration;
@@ -51,11 +51,11 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 	
 	private IStore locateStore() {
 		ICodeStore codeStore = ICodeStore.instance.get();
-		if(!(codeStore instanceof QueryableCodeStore)) {
+		if(!(codeStore instanceof MutableCodeStore)) {
 			logger.error(()->"No code store to fetch config!");
 			return null;
 		}
-		IStore store = ((QueryableCodeStore)codeStore).getStore();
+		IStore store = ((MutableCodeStore)codeStore).getStore();
 		if(store==null){
 			logger.error(()->"No underlying store to fetch config!");
 			return null;
