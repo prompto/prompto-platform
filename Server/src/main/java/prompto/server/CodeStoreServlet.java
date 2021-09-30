@@ -63,7 +63,7 @@ public class CodeStoreServlet extends ResourceServlet {
 			if(path.startsWith("/"))
 				path = path.substring(1);
 			ICodeStore store = ICodeStore.getInstance();
-			prompto.code.Resource res = store.fetchLatestResource(path);
+			prompto.code.Resource res = store.fetchResource(path);
 			return res==null ? null : new CodeStoreResource(res);
 		} catch(Throwable t) {
 			t.printStackTrace();

@@ -59,9 +59,7 @@ public class TestCodeStore extends BaseMongoTest {
 		Mode.set(Mode.UNITTEST);
 		ICodeStore codeStore = Standalone.bootstrapCodeStore(new MemStore(), newRuntimeConfig(null));
 		DeclarationList read = parseEResource("prompto/graphQLMethods.pec");
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(1), null);
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(2), null);
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(1), "Other");
+		codeStore.storeDeclarations(read, Dialect.E, "ModuleId");
 		Context context = Context.newGlobalsContext();
 		Iterable<IDeclaration> decls = context.getRegisteredDeclarationsWithAnnotations("@GraphQLQuery", "@GraphQLMutation");
 		Set<String> names = StreamSupport.stream(decls.spliterator(), false).map(IDeclaration::getName).collect(Collectors.toSet());
@@ -75,9 +73,7 @@ public class TestCodeStore extends BaseMongoTest {
 		Mode.set(Mode.UNITTEST);
 		ICodeStore codeStore = Standalone.bootstrapCodeStore(store, newRuntimeConfig(null));
 		DeclarationList read = parseEResource("prompto/graphQLMethods.pec");
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(1), null);
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(2), null);
-		codeStore.storeDeclarations(read, Dialect.E, PromptoVersion.parseInt(1), "Other");
+		codeStore.storeDeclarations(read, Dialect.E, "ModuleId");
 		Context context = Context.newGlobalsContext();
 		Iterable<IDeclaration> decls = context.getRegisteredDeclarationsWithAnnotations("@GraphQLQuery", "@GraphQLMutation");
 		Set<String> names = StreamSupport.stream(decls.spliterator(), false).map(IDeclaration::getName).collect(Collectors.toSet());

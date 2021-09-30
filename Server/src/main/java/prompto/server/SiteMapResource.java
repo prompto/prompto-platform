@@ -25,7 +25,7 @@ import prompto.code.ICodeStore;
 public class SiteMapResource extends Resource {
 
 	public static SiteMapResource fromWebSitePages(String urlPrefix) {
-		Iterable<prompto.code.Resource> pages = ICodeStore.getInstance().fetchLatestResourcesWithMimeTypes("text/html", "text/page");
+		Iterable<prompto.code.Resource> pages = ICodeStore.getInstance().fetchResourcesWithMimeTypes("text/html", "text/page");
 		return fromWebSitePages(urlPrefix, pages);
 	}
 
