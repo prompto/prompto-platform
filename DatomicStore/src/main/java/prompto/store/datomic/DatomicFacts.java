@@ -29,7 +29,7 @@ public class DatomicFacts {
 		toAdd.put(":" + name, value);
 	}
 
-	public Stream<List<Object>> getAddedFacts() {
+	public Stream<List<Object>> getFacts() {
 		Stream<List<Object>> singles = getSingleValueFacts();
 		Stream<List<Object>> multiples = getMultiValueFacts();
 		return Stream.concat(singles, multiples);
@@ -53,6 +53,7 @@ public class DatomicFacts {
 			.filter(e->!(e.getValue() instanceof Collection))
 			.map(e->Arrays.asList(":db/add", dbId, e.getKey(), e.getValue()));
 	}
+
 	
 	
 }

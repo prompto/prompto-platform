@@ -1,6 +1,7 @@
 package prompto.store.mongo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -87,7 +88,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testStoreTextField() throws Exception {
+	public void storesTextField() throws Exception {
 		String fieldName = "msg";
 		String fieldValue = "hello";
 		createField(fieldName, Family.TEXT, false);
@@ -101,7 +102,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testUpdateTextField() throws Exception {
+	public void updatesTextField() throws Exception {
 		String fieldName = "msg";
 		String fieldValue = "hello";
 		createField(fieldName, Family.TEXT, false);
@@ -124,7 +125,7 @@ public class TestInstance extends BaseMongoTest {
 
 
 	@Test
-	public void testStoreIntegerField() throws Exception {
+	public void storseIntegerField() throws Exception {
 		String fieldName = "int";
 		long fieldValue = 123;
 		createField(fieldName, Family.INTEGER, false);
@@ -138,7 +139,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreDecimalField() throws Exception {
+	public void storesDecimalField() throws Exception {
 		String fieldName = "decimal";
 		double fieldValue = 123.0;
 		createField(fieldName, Family.DECIMAL, false);
@@ -152,7 +153,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreBooleanField() throws Exception {
+	public void storesBooleanField() throws Exception {
 		String fieldName = "bool";
 		boolean fieldValue = true;
 		createField(fieldName, Family.BOOLEAN, false);
@@ -166,7 +167,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreDateField() throws Exception {
+	public void storesDateField() throws Exception {
 		String fieldName = "date";
 		PromptoDate fieldValue = PromptoDate.parse("2015-03-12");
 		createField(fieldName, Family.DATE, false);
@@ -180,7 +181,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreTimeField() throws Exception {
+	public void storesTimeField() throws Exception {
 		String fieldName = "time";
 		PromptoTime fieldValue = PromptoTime.parse("13:15:16.012");
 		createField(fieldName, Family.TIME, false);
@@ -194,7 +195,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreDateTimeField() throws Exception {
+	public void storesDateTimeField() throws Exception {
 		String fieldName = "datetime";
 		PromptoDateTime fieldValue = PromptoDateTime.parse("2015-03-12T13:15:16.012Z");
 		createField(fieldName, Family.DATETIME, false);
@@ -208,7 +209,7 @@ public class TestInstance extends BaseMongoTest {
 	}
 
 	@Test
-	public void testStoreUUIDField() throws Exception {
+	public void storesUUIDField() throws Exception {
 		String fieldName = "uuid";
 		UUID fieldValue = UUID.randomUUID();
 		createField(fieldName, Family.UUID, false);
@@ -221,24 +222,8 @@ public class TestInstance extends BaseMongoTest {
 		assertEquals(fieldValue, stored.getData(fieldName));
 	}
 
-	private static boolean isDump() {
-		return false;
-	}
-	
-	private static void dumpDbIds(String which, IInstance instance) {
-		if(isDump()) {
-			IValue value = instance.getMember(null, new Identifier("dbId"), false);
-			Object dbId = value==null ? null : value.getStorableData();
-			System.err.print(which + ": ivalue: " + String.valueOf(dbId));
-			IStorable storable = instance.getStorable();
-			Document document = storable==null ? null : ((StorableDocument)storable).getDocument();
-			dbId = document == null ? null : document.get("dbId");
-			System.err.println(", dbvalue: " + String.valueOf(dbId));
-		}
-	}
-	
 	@Test
-	public void testStoreChildField() throws Exception {
+	public void storesChildField() throws Exception {
 		CategoryType type = new CategoryType(new Identifier("Test"));
 		String fieldName = "textField";
 		String fieldValue = "textValue";
@@ -275,6 +260,40 @@ public class TestInstance extends BaseMongoTest {
 		assertTrue(v instanceof IInstance);
 		assertEquals(new TextValue(childValue), v.getMember(context, new Identifier(fieldName), false));
 	}
+	
+	@Test
+	public void deletesField() throws Exception {
+		String fieldName = "msg";
+		String fieldValue = "hello";
+		createField(fieldName, Family.TEXT, false);
+		IInstance instance = createInstanceWith1Attribute(fieldName, TextType.instance());
+		instance.setMember(context, new Identifier(fieldName), new prompto.value.TextValue(fieldValue));
+		store.store(instance.getStorable());
+		IStored stored = store.fetchUnique(instance.getStorable().getOrCreateDbId());
+		instance = instance.toMutable();
+		instance.getStorable().removeData(fieldName);
+		store.store(instance.getStorable());
+		stored = store.fetchUnique(instance.getStorable().getOrCreateDbId());
+		assertFalse(stored.hasData(fieldName));
+			
+	}
+
+	private static boolean isDump() {
+		return false;
+	}
+	
+	private static void dumpDbIds(String which, IInstance instance) {
+		if(isDump()) {
+			IValue value = instance.getMember(null, new Identifier("dbId"), false);
+			Object dbId = value==null ? null : value.getStorableData();
+			System.err.print(which + ": ivalue: " + String.valueOf(dbId));
+			IStorable storable = instance.getStorable();
+			Document document = storable==null ? null : ((StorableDocument)storable).getDocument();
+			dbId = document == null ? null : document.get("dbId");
+			System.err.println(", dbvalue: " + String.valueOf(dbId));
+		}
+	}
+	
 
 	private IStored fetchOne(String field, IExpression value) throws Exception {
 		FetchOneExpression expression = new FetchOneExpression(

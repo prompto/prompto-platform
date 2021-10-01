@@ -87,7 +87,11 @@ public class StorableDocument implements IStorable  {
 		} else
 			facts.add(name, value);
 	}
-
+	
+	@Override
+	public void removeData(String name) throws PromptoError {
+		setData(name, null);
+	}
 	
 	private void ensureFacts(IDbIdProvider provider) {
 		if(facts==null) {
@@ -109,7 +113,7 @@ public class StorableDocument implements IStorable  {
 	}
 	
 	public Stream<List<Object>> getAddedFacts() {
-		return facts.getAddedFacts();
+		return facts.getFacts();
 	}
 
 	

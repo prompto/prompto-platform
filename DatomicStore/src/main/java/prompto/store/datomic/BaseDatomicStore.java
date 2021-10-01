@@ -217,7 +217,7 @@ public abstract class BaseDatomicStore implements IStore {
 	
 	public void storeFacts(DatomicFacts ... storables) throws PromptoError {
 		List<Object> list = Stream.of(storables)
-				.map(DatomicFacts::getAddedFacts)
+				.map(DatomicFacts::getFacts)
 				.flatMap(Function.identity())
 				.collect(Collectors.toList());
 		try {

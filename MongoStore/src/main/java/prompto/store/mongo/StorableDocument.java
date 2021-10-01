@@ -6,22 +6,25 @@ import java.util.UUID;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import prompto.error.PromptoError;
-import prompto.error.ReadWriteError;
-import prompto.intrinsic.PromptoBinary;
-import prompto.store.IStorable;
-
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 
+import prompto.error.PromptoError;
+import prompto.error.ReadWriteError;
+import prompto.intrinsic.PromptoBinary;
+import prompto.store.IStorable;
+
 public class StorableDocument extends BaseDocument implements IStorable {
 
+	static final String REMOVED_VALUE = "";
+	
 	Document document;
 	String[] categories;
 	IDbIdFactory dbIdFactory;
 	boolean isUpdate; // partial updates require operations instead of values
+	boolean hasRemovedValue;
 	
 	public StorableDocument(String[] categories, IDbIdFactory dbIdFactory) {
 		this.categories = categories;
@@ -93,6 +96,19 @@ public class StorableDocument extends BaseDocument implements IStorable {
 			value = toBytes((PromptoBinary)value);
 		document.put(name, value);
 	}
+	
+	@Override
+	public void removeData(String name) throws PromptoError {
+		ensureDocument(null);
+		if(this.isUpdate) {
+			setData(name, REMOVED_VALUE);
+			hasRemovedValue = true;
+		} else {
+			ensureDocument(null);
+			document.remove(name);
+		}
+	}
+
 
 	private byte[] toBytes(PromptoBinary binary) throws PromptoError {
 		try {
@@ -105,7 +121,15 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	public WriteModel<Document> toWriteModel() {
 		if(this.isUpdate) {
 			Bson filter = Filters.eq("_id", document.get("_id"));
-			return new UpdateOneModel<>(filter, new Document("$set", document));
+			if(hasRemovedValue) {
+				Document set = document.entrySet().stream().filter(e -> e.getValue()!=REMOVED_VALUE).collect(MongoUtils.toDocument());
+				Document unset = document.entrySet().stream().filter(e -> e.getValue()==REMOVED_VALUE).collect(MongoUtils.toDocument());
+				Document updates = new Document();
+				updates.put("$set", set);
+				updates.put("$unset", unset);
+				return new UpdateOneModel<>(filter, updates);
+			} else
+				return new UpdateOneModel<>(filter, new Document("$set", document));
 		} else
 			return new InsertOneModel<Document>(document);
 	}

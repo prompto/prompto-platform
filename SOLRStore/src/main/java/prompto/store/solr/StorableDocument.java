@@ -91,6 +91,13 @@ public class StorableDocument extends BaseDocument implements IStorable {
 		else
 			document.setField(name, value);
 	}
+	
+	@Override
+	public void removeData(String name) throws PromptoError {
+		ensureDocument(null);
+		document.remove(name);
+	}
+
 
 	private byte[] toBytes(PromptoBinary binary) throws PromptoError {
 		try {
