@@ -331,7 +331,12 @@ public class MongoAuditor {
 			Object instance = get("instance");
 			return instance instanceof Document ? new StoredDocument(store, (Document)instance) : null;
 		}
-		
+
+		@Override
+		public PromptoDocument<String, Object> toDocument() {
+			return new PromptoDocument<>(this);
+		}
+
 	}
 
 	@SuppressWarnings("serial")
