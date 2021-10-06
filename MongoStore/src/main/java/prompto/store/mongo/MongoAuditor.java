@@ -37,6 +37,7 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
 import prompto.store.IAuditMetadata;
@@ -51,6 +52,9 @@ public class MongoAuditor {
 	static final String AUDIT_RECORDS_COLLECTION = "auditRecords";
 	static final String AUDIT_METADATAS_COLLECTION = "auditMetadatas";
 	static final String AUDIT_CONFIGS_COLLECTION = "auditConfigs";
+	static final String METADATA_DBID_FIELD_NAME = "metadataDbId";
+	static final String INSTANCE_DBID_FIELD_NAME = "instanceDbId";
+	static final String UTC_TIMESTAMP_FIELD_NAME = "utcTimestamp";
 	
 
 	private final AtomicBoolean isTerminated = new AtomicBoolean(false);
@@ -165,7 +169,7 @@ public class MongoAuditor {
 
 	private void storeInsertRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord insert = newAuditRecord();
-		insert.setInstanceDbId(change.getDocumentKey().get("_id"));
+		insert.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
 		insert.setOperation(Operation.INSERT);
 		insert.setInstance(new StoredDocument(store, change.getFullDocument()));
 		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(session, insert);
@@ -173,7 +177,7 @@ public class MongoAuditor {
 
 	private void storeUpdateRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord update = newAuditRecord();
-		update.setInstanceDbId(change.getDocumentKey().get("_id"));
+		update.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
 		update.setOperation(Operation.UPDATE);
 		update.setInstance(new StoredDocument(store, change.getFullDocument()));
 		update.put("removedFields", change.getUpdateDescription().getRemovedFields());
@@ -183,19 +187,19 @@ public class MongoAuditor {
 
 	private void storeDeleteRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord delete = newAuditRecord();
-		delete.setInstanceDbId(change.getDocumentKey().get("_id"));
+		delete.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
 		delete.setOperation(Operation.DELETE);
 		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(delete);
 	}
 	
 	private AuditRecord newAuditRecord() {
 		AuditRecord audit = new AuditRecord(store);
-		audit.setAuditRecordId(UUID.randomUUID());
+		audit.setDbId(PromptoDbId.of(UUID.randomUUID()));
 		if(metadata!=null) {
-			audit.setAuditMetadataId(metadata.getAuditMetadataId());
+			audit.setMetadataDbId(metadata.getAuditMetadataId());
 			audit.setUTCTimestamp(metadata.getUTCTimestamp());
 		} else {
-			audit.setAuditMetadataId(null);
+			audit.setMetadataDbId(null);
 			audit.setUTCTimestamp(LocalDateTime.now());
 		}	
 		return audit;
@@ -265,33 +269,33 @@ public class MongoAuditor {
 		}
 
 		@Override
-		public void setAuditRecordId(Object id) {
+		public void setDbId(PromptoDbId id) {
 			put("_id", id);
 		}
 
 		@Override
-		public Object getAuditRecordId() {
-			return get("_id");
+		public PromptoDbId getDbId() {
+			return PromptoDbId.of(get("_id"));
 		}
 
 		@Override
-		public void setAuditMetadataId(Object id) {
-			put("auditMetadataId", id);
+		public void setMetadataDbId(PromptoDbId id) {
+			put(METADATA_DBID_FIELD_NAME, id);
 		}
 
 		@Override
-		public Object getAuditMetadataId() {
-			return get("auditMetadataId");
+		public PromptoDbId getMetadataDbId() {
+			return PromptoDbId.of(get(METADATA_DBID_FIELD_NAME));
 		}
 
 		@Override
 		public void setUTCTimestamp(LocalDateTime timeStamp) {
-			put("utcTimestamp", timeStamp);
+			put(UTC_TIMESTAMP_FIELD_NAME, timeStamp);
 		}
 
 		@Override
 		public LocalDateTime getUTCTimestamp() {
-			Object timeStamp = get("utcTimestamp");
+			Object timeStamp = get(UTC_TIMESTAMP_FIELD_NAME);
 			return timeStamp==null ? null : convertUTCTimestamp(timeStamp);
 		}
 
@@ -301,13 +305,13 @@ public class MongoAuditor {
 		}
 
 		@Override
-		public void setInstanceDbId(Object dbId) {
-			put("instanceId", dbId);
+		public void setInstanceDbId(PromptoDbId dbId) {
+			put(INSTANCE_DBID_FIELD_NAME, dbId);
 		}
 
 		@Override
-		public Object getInstanceDbId() {
-			return get("instanceId");
+		public PromptoDbId getInstanceDbId() {
+			return PromptoDbId.of(get(INSTANCE_DBID_FIELD_NAME));
 		}
 
 		@Override
@@ -369,7 +373,7 @@ public class MongoAuditor {
 
 	public AuditMetadata newAuditMetadata() {
 		AuditMetadata meta = new AuditMetadata();
-		meta.setAuditMetadataId(UUID.randomUUID());
+		meta.setAuditMetadataId(PromptoDbId.of(UUID.randomUUID()));
 		return meta;
 	}
 
@@ -382,44 +386,51 @@ public class MongoAuditor {
 		return auditMetadata;
 	}
 
-	public Object fetchLatestAuditMetadataId(Object dbId) {
+	public PromptoDbId fetchLatestAuditMetadataId(PromptoDbId dbId) {
 		Document data = store.db.getCollection(AUDIT_RECORDS_COLLECTION)
-				.find(Filters.eq("instanceId", dbId))
-				.projection(Projections.include("auditMetaDataId"))
-				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp")))
+				.find(Filters.eq(INSTANCE_DBID_FIELD_NAME, dbId.getValue()))
+				.projection(Projections.include(METADATA_DBID_FIELD_NAME))
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME)))
 				.limit(1)
 				.first();
-		return data==null ? null : data.get("auditMetaDataId");
+		return data==null ? null : PromptoDbId.of(data.get(METADATA_DBID_FIELD_NAME));
 	}
 
-	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
+	public PromptoList<PromptoDbId> fetchAllAuditMetadataIds(PromptoDbId dbId) {
 		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
-				.find(Filters.eq("instanceId", dbId))
-				.projection(Projections.include("auditMetaDataId"))
-				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp")))
+				.find(Filters.eq(INSTANCE_DBID_FIELD_NAME, dbId.getValue()))
+				.projection(Projections.include(METADATA_DBID_FIELD_NAME))
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME)))
 				.spliterator(), false)
-				.map(data -> data.get("auditMetaDataId"))
+				.map(data -> data.get(METADATA_DBID_FIELD_NAME))
+				.map(PromptoDbId::of)
 				.collect(PromptoList.collector());
 	}
 
-	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
-		// TODO Auto-generated method stub
-		return null;
+	public PromptoList<PromptoDbId> fetchDbIdsAffectedByAuditMetadataId(PromptoDbId dbId) {
+		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
+				.find(Filters.eq(METADATA_DBID_FIELD_NAME, dbId.getValue()))
+				.projection(Projections.include(INSTANCE_DBID_FIELD_NAME))
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME)))
+				.spliterator(), false)
+				.map(data -> data.get(INSTANCE_DBID_FIELD_NAME))
+				.map(PromptoDbId::of)
+				.collect(PromptoList.collector());
 	}
 
-	public AuditRecord fetchLatestAuditRecord(Object dbId) {
+	public AuditRecord fetchLatestAuditRecord(PromptoDbId dbId) {
 		Document data = store.db.getCollection(AUDIT_RECORDS_COLLECTION)
-				.find(Filters.eq("instanceId", dbId))
-				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp")))
+				.find(Filters.eq(INSTANCE_DBID_FIELD_NAME, dbId.getValue()))
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME)))
 				.limit(1)
 				.first();
 		return new AuditRecord(store, data);
 	}
 
-	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
+	public PromptoList<AuditRecord> fetchAllAuditRecords(PromptoDbId dbId) {
 		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
-				.find(Filters.eq("instanceId", dbId))
-				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp"))).spliterator(), false)
+				.find(Filters.eq(INSTANCE_DBID_FIELD_NAME, dbId.getValue()))
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME))).spliterator(), false)
 				.map(data -> new AuditRecord(store, data))
 				.collect(PromptoList.collector());
 	}
@@ -437,7 +448,7 @@ public class MongoAuditor {
 		Bson filter = filters.size() > 1 ? Filters.and(filters) : filters.get(0);
 		return StreamSupport.stream(store.db.getCollection(AUDIT_RECORDS_COLLECTION)
 				.find(filter)
-				.sort(Sorts.orderBy(Sorts.descending("utcTimestamp"))).spliterator(), false)
+				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME))).spliterator(), false)
 				.map(data -> new AuditRecord(store, data))
 				.collect(PromptoList.collector());
 				

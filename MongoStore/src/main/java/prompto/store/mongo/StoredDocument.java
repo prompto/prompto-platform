@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.bson.Document;
 
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.IStored;
 
 public class StoredDocument extends BaseDocument implements IStored {
@@ -21,14 +22,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 
 	
 	@Override
-	public UUID getDbId() {
+	public PromptoDbId getDbId() {
 		Object dbId = document.get("_id");
-		if(dbId==null)
-			return null;
-		else if(dbId instanceof UUID)
-			return (UUID)dbId;
-		else
-			return UUID.fromString(dbId.toString());
+		if(dbId!=null && !(dbId instanceof UUID))
+			dbId = UUID.fromString(dbId.toString());
+		return PromptoDbId.of(dbId);
 	}
 	
 	@SuppressWarnings("unchecked")

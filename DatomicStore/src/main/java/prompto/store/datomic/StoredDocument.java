@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.Family;
 import prompto.store.IStored;
 import datomic.Entity;
@@ -18,8 +19,8 @@ public class StoredDocument implements IStored {
 	}
 
 	@Override
-	public Object getDbId() {
-		return entity.get(Constants.Db.ID.dbName());
+	public PromptoDbId getDbId() {
+		return PromptoDbId.of(entity.get(Constants.Db.ID.dbName()));
 	}
 	
 	@SuppressWarnings("unchecked")

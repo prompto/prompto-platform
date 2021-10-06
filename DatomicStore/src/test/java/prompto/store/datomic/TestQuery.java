@@ -14,6 +14,7 @@ import prompto.declaration.AttributeDeclaration;
 import prompto.error.SyntaxError;
 import prompto.expression.FetchOneExpression;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoDbId;
 import prompto.parser.ECleverParser;
 import prompto.parser.EPromptoBuilder;
 import prompto.runtime.Context;
@@ -109,7 +110,7 @@ public class TestQuery extends BaseDatomicTest {
 		store.storeFacts(facts);
 		store.flush();
 		// Test the basics
-		store.delete(facts.getDbId());
+		store.delete(PromptoDbId.of(facts.getDbId()));
 		store.flush();
 		String query = "fetch one where name = \"John\"";
 		IStored result = fetchOne(query);

@@ -12,6 +12,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import prompto.code.ICodeStore;
+import prompto.intrinsic.PromptoDbId;
 import prompto.parser.Dialect;
 import prompto.runtime.ApplicationContext;
 import prompto.server.HeadlessTests;
@@ -39,7 +40,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		builder.verify(info, MatchOp.EQUALS, "John");
 		IStored stored = DataStore.getInstance().fetchOne(builder.build());
 		assertNotNull(stored);
-		Object metadataId = DataStore.getInstance().fetchLatestAuditMetadataId(stored.getDbId());
+		PromptoDbId metadataId = DataStore.getInstance().fetchLatestAuditMetadataId(stored.getDbId());
 		assertNotNull(metadataId);
 		IAuditMetadata metadata = DataStore.getInstance().fetchAuditMetadata(metadataId);
 		assertEquals("Hello", metadata.get("message"));
@@ -59,7 +60,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		builder.verify(info, MatchOp.EQUALS, "John");
 		IStored stored = DataStore.getInstance().fetchOne(builder.build());
 		assertNotNull(stored);
-		Object metadataId = DataStore.getInstance().fetchLatestAuditMetadataId(stored.getDbId());
+		PromptoDbId metadataId = DataStore.getInstance().fetchLatestAuditMetadataId(stored.getDbId());
 		assertNotNull(metadataId);
 		IAuditMetadata metadata = DataStore.getInstance().fetchAuditMetadata(metadataId);
 		assertEquals("Hello", metadata.get("message"));
@@ -77,7 +78,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		assertEquals(1, records.size());
 		IAuditRecord record = records.get(0);
 		assertEquals(Operation.DELETE, record.getOperation());
-		IAuditMetadata metadata = DataStore.getInstance().fetchAuditMetadata(record.getAuditMetadataId());
+		IAuditMetadata metadata = DataStore.getInstance().fetchAuditMetadata(record.getMetadataDbId());
 		assertEquals("Hello", metadata.get("message"));
 	}
 

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.store.AttributeInfo;
@@ -121,7 +122,7 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	private Map<Long, Object> deleteAndStoreJson(JsonNode toDelete, JsonNode toStore, Map<String, byte[]> parts, JsonNode withMeta) {
-		Collection<?> deletables = collectDeletables(toDelete);
+		Collection<PromptoDbId> deletables = collectDeletables(toDelete);
 		Map<Long, Object> updatedDbIds = new HashMap<>();
 		List<IStorable> storables = collectStorables(toStore, parts, updatedDbIds);
 		IAuditMetadata metadata = collectMetadata(withMeta, parts);
@@ -129,7 +130,7 @@ public class StoreServlet extends CleverServlet {
 		return updatedDbIds;
 	}
 
-	private Collection<?> collectDeletables(JsonNode toDelete) {
+	private Collection<PromptoDbId> collectDeletables(JsonNode toDelete) {
 		if(toDelete==null)
 			return null;
 		else
@@ -137,31 +138,26 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	
-	private Collection<?> jsonToDbIdsCollection(JsonNode node) {
+	@SuppressWarnings("unchecked")
+	private Collection<PromptoDbId> jsonToDbIdsCollection(JsonNode node) {
 		Object converted = convertJsonToDbIds(node);
 		if(converted==null)
 			return Collections.emptyList();
 		else if(converted instanceof Collection)
-			return (Collection<?>)converted;
+			return (Collection<PromptoDbId>)converted;
+		else if(converted instanceof PromptoDbId)
+			return Collections.singletonList((PromptoDbId)converted);
 		else
-			return Collections.singletonList(converted);
+			throw new UnsupportedOperationException(converted.getClass().getName());
 	}
 	
 	
 	private Object convertJsonToDbIds(JsonNode node) {
-		if(node.isNumber()) {
-			Object dbId = node.asLong();
-			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
-				return dbId;
-			else
-				return DataStore.getInstance().convertToDbId(dbId);
-		} else if(node.isTextual()) {
-			Object dbId = node.asText();
-			if(dbId.getClass()==DataStore.getInstance().getDbIdClass())
-				return dbId;
-			else
-				return DataStore.getInstance().convertToDbId(dbId);
-		} else if(node.isArray()) {
+		if(node.isNumber())
+			return convertJsonToDbId(node.asLong());
+		else if(node.isTextual())
+			return convertJsonToDbId(node.asText());
+		else if(node.isArray()) {
 			return StreamSupport.stream(node.spliterator(), false)
 					.map(this::convertJsonToDbIds)
 					.collect(Collectors.toList());
@@ -170,6 +166,13 @@ public class StoreServlet extends CleverServlet {
 			return null;
 		}
 		
+	}
+
+	private Object convertJsonToDbId(Object dbId) {
+		if(dbId.getClass()==DataStore.getInstance().getNativeDbIdClass())
+			return PromptoDbId.of(dbId);
+		else
+			return PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(dbId));
 	}
 
 	private List<IStorable> collectStorables(JsonNode toStore, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
@@ -202,11 +205,11 @@ public class StoreServlet extends CleverServlet {
 	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		// use dbId received from client
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
-		Object dbId = DataStore.getInstance().convertToDbId(rawDbId);
+		PromptoDbId dbId = PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(rawDbId));
 		// dbId factory
 		IDbIdFactory dbIdFactory = new IDbIdFactory() {
-			@Override public void accept(Object dbId) { throw new IllegalStateException(); }
-			@Override public Object get() { return dbId; }
+			@Override public void accept(PromptoDbId dbId) { throw new IllegalStateException(); }
+			@Override public PromptoDbId get() { return dbId; }
 			@Override public boolean isUpdate() { return true; }
 		};
 		// populate storable
@@ -226,11 +229,11 @@ public class StoreServlet extends CleverServlet {
 	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		// use potentially existing dbId allocated by a dbRef in another storable
 		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
-		Object dbId = updatedDbIds.getOrDefault(tempDbId, null);
+		PromptoDbId dbId = PromptoDbId.of(updatedDbIds.getOrDefault(tempDbId, null));
 		// dbId factory
 		IDbIdFactory dbIdFactory = new IDbIdFactory() {
-			@Override public void accept(Object newDbId) { updatedDbIds.put(tempDbId, newDbId); }
-			@Override public Object get() { return dbId; }
+			@Override public void accept(PromptoDbId newDbId) { updatedDbIds.put(tempDbId, newDbId); }
+			@Override public PromptoDbId get() { return dbId; }
 			@Override public boolean isUpdate() { return false; }
 		};
 		// populate storable
@@ -251,7 +254,7 @@ public class StoreServlet extends CleverServlet {
 
 	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
 		if(fieldValue.has("tempDbId"))
-			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->DataStore.getInstance().newDbId());
+			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->DataStore.getInstance().newNativeDbId());
 		else if(fieldValue.isDouble() || fieldValue.isFloat())
 			return fieldValue.asDouble();
 		else if(fieldValue.isLong() || fieldValue.isInt())
@@ -291,7 +294,7 @@ public class StoreServlet extends CleverServlet {
 		case "Image":
 			return BinaryType.readJSONValue(fieldValue, parts);
 		case "%dbRef%":
-			return DataStore.getInstance().convertToDbId(readJsonValue(fieldValue, parts, updatedDbIds));
+			return DataStore.getInstance().convertToNativeDbId(readJsonValue(fieldValue, parts, updatedDbIds));
 		default:
 			throw new UnsupportedOperationException(type);
 		}
@@ -463,10 +466,10 @@ public class StoreServlet extends CleverServlet {
 		if(IStore.dbIdName.equals(name) && value!=null) {
 			if(value instanceof Collection)
 				value = ((Collection<Object>)value).stream()
-						.map(DataStore.getInstance()::convertToDbId)
+						.map(DataStore.getInstance()::convertToNativeDbId)
 						.collect(Collectors.toList());
 			else
-				value = DataStore.getInstance().convertToDbId(value);
+				value = DataStore.getInstance().convertToNativeDbId(value);
 		}
 		builder.verify(info, matchOp, value);
 	}

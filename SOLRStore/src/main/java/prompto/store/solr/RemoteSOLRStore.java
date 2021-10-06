@@ -23,6 +23,7 @@ import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 
 import prompto.error.InternalError;
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.IStore;
 
 
@@ -79,10 +80,10 @@ public class RemoteSOLRStore extends BaseSOLRStore {
 	}
 
 	@Override
-	public void delete(Collection<?> dbIds) throws PromptoError {
+	public void delete(Collection<PromptoDbId> dbIds) throws PromptoError {
 		try {
-			for(Object dbId : dbIds)
-				client.deleteById(coreName, String.valueOf(dbId), commitDelay);
+			for(PromptoDbId dbId : dbIds)
+				client.deleteById(coreName, String.valueOf(dbId.getValue()), commitDelay);
 		} catch(IOException | SolrServerException e) {
 			throw new InternalError(e);
 		}

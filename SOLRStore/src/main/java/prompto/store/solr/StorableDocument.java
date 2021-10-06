@@ -10,6 +10,7 @@ import org.apache.solr.common.SolrInputField;
 import prompto.error.PromptoError;
 import prompto.error.ReadWriteError;
 import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.IStorable;
 import prompto.store.IStore;
 
@@ -36,16 +37,16 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	}
 	
 	@Override
-	public void setDbId(Object dbId) {
+	public void setDbId(PromptoDbId dbId) {
 		ensureDocument(null);
 		document.setField(IStore.dbIdName, dbId);
 	}
 	
 	@Override
-	public UUID getOrCreateDbId() {
+	public PromptoDbId getOrCreateDbId() {
 		ensureDocument(null);
 		SolrInputField dbIdField = document.getField(IStore.dbIdName);
-		return (UUID)dbIdField.getValue();
+		return PromptoDbId.of(dbIdField.getValue());
 	}
 	
 	@Override
@@ -60,7 +61,7 @@ public class StorableDocument extends BaseDocument implements IStorable {
 	
 	private void ensureDocument(IDbIdProvider provider) {
 		if(document==null) {
-			UUID dbId = provider==null ? null : (UUID)provider.get();
+			UUID dbId = provider==null ? null : (UUID)provider.get().getValue();
 			// the scenario where we get an existing dbId is when  
 			// an instance passes a provider when calling setData
 			// in such a case, the scenario is an update scenario

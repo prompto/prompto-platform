@@ -24,6 +24,7 @@ import prompto.error.ReadWriteError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoList;
 import prompto.intrinsic.PromptoPeriod;
 import prompto.intrinsic.PromptoTime;
@@ -152,18 +153,18 @@ abstract class BaseSOLRStore implements IStore {
 	}
 	
 	@Override
-	public Class<?> getDbIdClass() {
+	public Class<?> getNativeDbIdClass() {
 		return UUID.class;
 	}
 	
 	
 	@Override
-	public Object newDbId() {
+	public Object newNativeDbId() {
 		return UUID.randomUUID();
 	}
 	
 	@Override
-	public UUID convertToDbId(Object dbId) {
+	public UUID convertToNativeDbId(Object dbId) {
 		if(dbId instanceof UUID)
 			return (UUID)dbId;
 		else
@@ -233,7 +234,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
+	public void deleteAndStore(Collection<PromptoDbId> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		List<String> dbIdsToDrop = null;
 		if(deletables!=null && deletables.size()>0) {
 			dbIdsToDrop = new ArrayList<>();
@@ -263,7 +264,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(Object dbId, String attr) throws PromptoError {
+	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr) throws PromptoError {
 		SolrQuery query = new SolrQuery();
 		query.setQuery("dbId:" + dbId);
 		query.setFields(attr);
@@ -287,7 +288,7 @@ abstract class BaseSOLRStore implements IStore {
 	
 	
 	@Override
-	public IStored fetchUnique(Object dbId) throws PromptoError {
+	public IStored fetchUnique(PromptoDbId dbId) throws PromptoError {
 		SOLRQueryBuilder builder = new SOLRQueryBuilder();
 		builder.verify(new SOLRAttributeInfo(IStore.dbIdName, Family.UUID, false, null), MatchOp.EQUALS, dbId);
 		try {

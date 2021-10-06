@@ -63,6 +63,7 @@ import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoList;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
@@ -88,13 +89,14 @@ public class MongoStore implements IStore {
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 		    CodecRegistries.fromCodecs(
-			    		new PromptoDateCodec(),
-			    		new PromptoTimeCodec(),
-			    		new PromptoDateTimeCodec(),
-			    		new PromptoVersionCodec(),
-			    		new UuidCodec(UuidRepresentation.STANDARD),
-			    		new StringArrayCodec()
-		    		), MongoClientSettings.getDefaultCodecRegistry()
+				   	new PromptoDbIdCodec(),
+		 			new PromptoDateCodec(),
+		    		new PromptoTimeCodec(),
+		    		new PromptoDateTimeCodec(),
+		    		new PromptoVersionCodec(),
+		    		new UuidCodec(UuidRepresentation.STANDARD),
+		    		new StringArrayCodec()
+	    		), MongoClientSettings.getDefaultCodecRegistry()
 		);
 		 
 
@@ -329,18 +331,18 @@ public class MongoStore implements IStore {
 	}
 	
 	@Override
-	public Class<?> getDbIdClass() {
+	public Class<?> getNativeDbIdClass() {
 		return UUID.class;
 	}
 
 	
 	@Override
-	public Object newDbId() {
+	public Object newNativeDbId() {
 		return UUID.randomUUID();
 	}
 	
 	@Override
-	public Object convertToDbId(Object dbId) {
+	public Object convertToNativeDbId(Object dbId) {
 		if(dbId instanceof UUID)
 			return dbId;
 		else if(dbId instanceof ObjectId)
@@ -519,7 +521,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata auditMetadata) throws PromptoError {
+	public void deleteAndStore(Collection<PromptoDbId> deletables, Collection<IStorable> storables, IAuditMetadata auditMetadata) throws PromptoError {
 		List<WriteModel<Document>> operations = buildWriteModels(deletables, storables);
 		if(!operations.isEmpty())
 			writeOperations((AuditMetadata)auditMetadata, operations);
@@ -556,12 +558,12 @@ public class MongoStore implements IStore {
 		getInstancesCollection().bulkWrite(operations);
 	}
 
-	private List<WriteModel<Document>> buildWriteModels(Collection<?> deletables, Collection<IStorable> storables) {
+	private List<WriteModel<Document>> buildWriteModels(Collection<PromptoDbId> deletables, Collection<IStorable> storables) {
 		Stream<WriteModel<Document>> deletes = null;
 		Stream<WriteModel<Document>> upserts = null;
 		if(deletables!=null)
 			deletes = deletables.stream()
-				.map((d)->new DeleteOneModel<>(Filters.eq("_id", (Object)d)));
+				.map( d -> new DeleteOneModel<>(Filters.eq("_id", d.getValue())));
 		if(storables!=null)
 			upserts = storables.stream()
 				.map((s)->((StorableDocument)s).toWriteModel());
@@ -584,7 +586,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(Object dbId, String attr) throws PromptoError {
+	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
 		Iterator<Document> found = getInstancesCollection().find(filter)
 			.limit(1)
@@ -603,7 +605,7 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public IStored fetchUnique(Object dbId) throws PromptoError {
+	public IStored fetchUnique(PromptoDbId dbId) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
 		return fetchOne(filter);
 	}
@@ -817,37 +819,37 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public Object fetchLatestAuditMetadataId(Object dbId) {
+	public PromptoDbId fetchLatestAuditMetadataId(PromptoDbId dbId) {
 		checkAuditEnabled();
 		return auditor.fetchLatestAuditMetadataId(dbId);
 	}
 
 	@Override
-	public PromptoList<Object> fetchAllAuditMetadataIds(Object dbId) {
+	public PromptoList<PromptoDbId> fetchAllAuditMetadataIds(PromptoDbId dbId) {
 		checkAuditEnabled();
 		return auditor.fetchAllAuditMetadataIds(dbId);
 	}
 
 	@Override
-	public IAuditMetadata fetchAuditMetadata(Object metaId) {
+	public IAuditMetadata fetchAuditMetadata(PromptoDbId metaId) {
 		checkAuditEnabled();
 		return auditor.newAuditMetadata();
 	}
 
 	@Override
-	public PromptoList<Object> fetchDbIdsAffectedByAuditMetadataId(Object auditId) {
+	public PromptoList<PromptoDbId> fetchDbIdsAffectedByAuditMetadataId(PromptoDbId auditId) {
 		checkAuditEnabled();
 		return auditor.fetchDbIdsAffectedByAuditMetadataId(auditId);
 	}
 
 	@Override
-	public AuditRecord fetchLatestAuditRecord(Object dbId) {
+	public AuditRecord fetchLatestAuditRecord(PromptoDbId dbId) {
 		checkAuditEnabled();
 		return auditor.fetchLatestAuditRecord(dbId);
 	}
 
 	@Override
-	public PromptoList<AuditRecord> fetchAllAuditRecords(Object dbId) {
+	public PromptoList<AuditRecord> fetchAllAuditRecords(PromptoDbId dbId) {
 		checkAuditEnabled();
 		return auditor.fetchAllAuditRecords(dbId);
 	}

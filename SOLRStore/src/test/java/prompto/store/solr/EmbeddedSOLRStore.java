@@ -23,6 +23,7 @@ import org.apache.solr.schema.SchemaField;
 
 import prompto.error.InternalError;
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoDbId;
 
 public class EmbeddedSOLRStore extends BaseSOLRStore {
 
@@ -141,10 +142,10 @@ public class EmbeddedSOLRStore extends BaseSOLRStore {
 	}
 	
 	@Override
-	public void delete(Collection<?> dbIds) throws PromptoError {
+	public void delete(Collection<PromptoDbId> dbIds) throws PromptoError {
 		try {
-			for(Object dbId : dbIds)
-				server.deleteById(String.valueOf(dbId), commitDelay);
+			for(PromptoDbId dbId : dbIds)
+				server.deleteById(String.valueOf(dbId.getValue()), commitDelay);
 		} catch(IOException | SolrServerException e) {
 			throw new InternalError(e);
 		}

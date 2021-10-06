@@ -17,6 +17,7 @@ import org.eclipse.jetty.util.security.Credential;
 
 import prompto.config.IStoreConfiguration;
 import prompto.config.auth.source.IStoredAuthenticationSourceConfiguration;
+import prompto.intrinsic.PromptoDbId;
 import prompto.security.auth.method.DigestMethod;
 import prompto.store.AttributeInfo;
 import prompto.store.Family;
@@ -184,8 +185,8 @@ public class StoredUserInfoCache {
 			return;
 		String salt = DigestMethod.newSalt();
 		IStorable storable = store.newStorable(Arrays.asList("User"), new IDbIdFactory() {
-			@Override public void accept(Object t) { }
-			@Override public Object get() { return stored.getDbId(); }
+			@Override public void accept(PromptoDbId t) { }
+			@Override public PromptoDbId get() { return stored.getDbId(); }
 			@Override public boolean isUpdate() { return true; }
 		});
 		storable.setData("login", login);

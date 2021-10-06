@@ -10,6 +10,7 @@ import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoTime;
 import prompto.store.Family;
 import prompto.store.IStorable;
@@ -38,15 +39,15 @@ public class StorableDocument implements IStorable  {
 	}
 	
 	@Override
-	public void setDbId(Object dbId) {
+	public void setDbId(PromptoDbId dbId) {
 		ensureFacts(null);
 		facts.setDbId(dbId);
 	}
 
 	@Override
-	public Object getOrCreateDbId() {
+	public PromptoDbId getOrCreateDbId() {
 		ensureFacts(null);
-		return facts.getDbId();
+		return PromptoDbId.of(facts.getDbId());
 	}
 
 	@Override

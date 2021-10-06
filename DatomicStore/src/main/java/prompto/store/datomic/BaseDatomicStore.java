@@ -25,6 +25,7 @@ import datomic.query.EntityMap;
 import prompto.error.InternalError;
 import prompto.error.PromptoError;
 import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.AttributeInfo;
 import prompto.store.IAuditMetadata;
 import prompto.store.IQuery;
@@ -60,17 +61,17 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public Class<?> getDbIdClass() {
+	public Class<?> getNativeDbIdClass() {
 		return Object.class;
 	}
 
 	@Override
-	public Object newDbId() {
+	public Object newNativeDbId() {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public Object convertToDbId(Object dbId) {
+	public Object convertToNativeDbId(Object dbId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -180,7 +181,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public void deleteAndStore(Collection<?> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
+	public void deleteAndStore(Collection<PromptoDbId> deletables, Collection<IStorable> storables, IAuditMetadata audit) throws PromptoError {
 		Stream<Object> retractions = null;
 		Stream<Object> additions = null;
 		if(deletables!=null)
@@ -207,8 +208,10 @@ public abstract class BaseDatomicStore implements IStore {
 			if(storables!=null) {
 				Database dbAfter = (Database)result.get(Connection.DB_AFTER);
 				Object tempids = result.get(Connection.TEMPIDS);
-				for(IStorable storable : storables)
-					storable.setDbId(Peer.resolveTempid(dbAfter, tempids, storable.getOrCreateDbId()));
+				for(IStorable storable : storables) {
+					Object dbId = Peer.resolveTempid(dbAfter, tempids, storable.getOrCreateDbId().getValue());
+					storable.setDbId(PromptoDbId.of(dbId));
+				}
 			}
 		} catch(Exception e) {
 			throw new InternalError(e);
@@ -238,16 +241,17 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(Object dbId, String attr)
+	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr)
 			throws PromptoError {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public IStored fetchUnique(Object dbId) throws PromptoError {
-		if(dbId instanceof EntityMap)
-			dbId = ((EntityMap)dbId).valAt(Constants.Db.ID.dbName());
-		Entity entity = cnx.db().entity(dbId);
+	public IStored fetchUnique(PromptoDbId dbId) throws PromptoError {
+		Object id = dbId.getValue();
+		if(id instanceof EntityMap)
+			id = ((EntityMap)id).valAt(Constants.Db.ID.dbName());
+		Entity entity = cnx.db().entity(id);
 		return new StoredDocument(entity);
 	}
 

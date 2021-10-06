@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.apache.solr.common.SolrDocument;
 
 import prompto.error.PromptoError;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.IStore;
 import prompto.store.IStored;
 
@@ -22,12 +23,11 @@ public class StoredDocument extends BaseDocument implements IStored {
 
 	
 	@Override
-	public UUID getDbId() {
+	public PromptoDbId getDbId() {
 		Object dbId = document.getFieldValue(IStore.dbIdName);
-		if(dbId==null)
-			return null;
-		else
-			return UUID.fromString(dbId.toString());
+		if(dbId!=null && !(dbId instanceof UUID))
+			dbId = UUID.fromString(dbId.toString());
+		return PromptoDbId.of(dbId);
 	}
 	
 	@SuppressWarnings("unchecked")

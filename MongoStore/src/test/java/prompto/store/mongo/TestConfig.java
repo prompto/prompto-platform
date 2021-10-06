@@ -92,7 +92,7 @@ public class TestConfig {
 		String expected = "mongodb://ping:ping@seed-shard-00-00-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-01-cp8j5.mongodb.net:27017,"
 				+ "seed-shard-00-02-cp8j5.mongodb.net:27017/"
-				+ "PING?ssl=true&replicaSet=Seed-shard-0&authSource=admin";
+				+ "PING?replicaSet=Seed-shard-0&ssl=true&authSource=admin";
 		assertEquals(expected, uri);
 	}
 
@@ -147,7 +147,7 @@ public class TestConfig {
 
 	@Ignore
 	@Test
-	public void testCanReadYamlReplicaSetConfig() throws Exception {
+	public void readsYamlReplicaSetConfig() throws Exception {
 		try(InputStream input = new FileInputStream("/Users/ericvergnaud/Development/prompto/prompto-deploy/aws/deploy-prompto-seed.yml")) {
 			IConfigurationReader reader = new YamlConfigurationReader(input);
 			reader = reader.getObject("codeStore");

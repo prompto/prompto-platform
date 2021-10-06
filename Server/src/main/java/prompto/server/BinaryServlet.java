@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDbId;
 import prompto.store.DataStore;
 import prompto.store.IStore;
 
@@ -26,7 +27,7 @@ public class BinaryServlet extends CleverServlet {
 			String dbIdString = req.getParameter(IStore.dbIdName);
 			String attr = req.getParameter("attribute");
 			IStore store = DataStore.getInstance();
-			Object dbId = store.convertToDbId(dbIdString);
+			PromptoDbId dbId = PromptoDbId.of(store.convertToNativeDbId(dbIdString));
 			PromptoBinary binary = store.fetchBinary(dbId, attr);
 			if(binary!=null) {
 				resp.setContentType(binary.getMimeType());

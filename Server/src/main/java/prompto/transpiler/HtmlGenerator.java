@@ -186,7 +186,7 @@ public class HtmlGenerator {
 		declaration.declare(transpiler);
 		if(transpiler.requires("DataStore")) {
 			transpiler.require("RemoteStore");
-			if(DataStore.getInstance().getDbIdClass()==UUID.class)
+			if(DataStore.getInstance().getNativeDbIdClass()==UUID.class)
 				transpiler.require("UUID");
 		}
 		printer.println("<script id='transpiled'>");

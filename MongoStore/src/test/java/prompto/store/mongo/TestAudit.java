@@ -22,6 +22,7 @@ import com.mongodb.client.MongoCollection;
 import prompto.declaration.AttributeDeclaration;
 import prompto.declaration.ConcreteCategoryDeclaration;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoDbId;
 import prompto.runtime.Context;
 import prompto.store.AttributeInfo;
 import prompto.store.DataStore;
@@ -93,7 +94,7 @@ public class TestAudit {
 		assertEquals(1L, coll.estimatedDocumentCount());
 		coll = store.db.getCollection(MongoAuditor.AUDIT_RECORDS_COLLECTION);
 		assertEquals(3L, coll.estimatedDocumentCount());
-		Object metaId = store.fetchLatestAuditMetadataId(instances.get(0).getOrCreateDbId());
+		PromptoDbId metaId = store.fetchLatestAuditMetadataId(instances.get(0).getOrCreateDbId());
 		assertNotNull(metaId);
 		IAuditMetadata meta = store.fetchAuditMetadata(metaId);
 		assertNotNull(meta);
@@ -128,7 +129,7 @@ public class TestAudit {
 		assertEquals("bye", audit.getInstance().getData("name"));
 		audit = iter.next();
 		assertEquals("hello", audit.getInstance().getData("name"));
-		Collection<Object> metaIds = store.fetchAllAuditMetadataIds(stored.getDbId());
+		Collection<PromptoDbId> metaIds = store.fetchAllAuditMetadataIds(stored.getDbId());
 		assertEquals(2L, metaIds.size());
 		metaIds.forEach(metaId -> assertNotNull(store.fetchAuditMetadata(metaId)));
 	}

@@ -84,7 +84,7 @@ public class TestInstance extends BaseMongoTest {
 		MongoCollection<Document> coll = db.getCollection("instances");
 		coll.insertOne(storable);
 		ObjectId dbId = storable.getObjectId("_id");
-		store.convertToDbId(dbId);
+		store.convertToNativeDbId(dbId);
 	}
 	
 	@Test

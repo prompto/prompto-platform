@@ -31,6 +31,7 @@ import prompto.type.TextType;
 
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 
 public class TestQuery extends BaseMongoTest {
 
@@ -115,7 +116,7 @@ public class TestQuery extends BaseMongoTest {
 		store.insertDocuments(doc);
 		store.flush();
 		// Test the basics
-		store.delete(uuid);
+		store.delete(PromptoDbId.of(uuid));
 		store.flush();
 		String query = "fetch one where name = \"John\"";
 		IStored result = fetchOne(query);

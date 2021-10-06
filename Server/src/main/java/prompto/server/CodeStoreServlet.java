@@ -46,7 +46,7 @@ public class CodeStoreServlet extends ResourceServlet {
 			String resourceName = request.getParameter("resourceName");
 			IStore store = DataStore.getInstance();
 			IQueryBuilder builder = store.newQueryBuilder()
-					.verify(new AttributeInfo("module", Family.CATEGORY, false, null), MatchOp.EQUALS, store.convertToDbId(moduleId))
+					.verify(new AttributeInfo("module", Family.CATEGORY, false, null), MatchOp.EQUALS, store.convertToNativeDbId(moduleId))
 					.verify(new AttributeInfo("name", Family.TEXT, false, null), MatchOp.EQUALS, resourceName)
 					.and();
 			IStored stored = store.fetchOne(builder.build());

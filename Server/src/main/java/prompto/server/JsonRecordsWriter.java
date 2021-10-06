@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
+import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.store.AttributeInfo;
@@ -223,7 +224,7 @@ public class JsonRecordsWriter {
 	
 
 	private void writeChild(JsonGenerator generator, Object value) throws IOException {
-		IStored stored = store.fetchUnique(value);
+		IStored stored = store.fetchUnique(PromptoDbId.of(value));
 		if(stored==null)
 			generator.writeNull();
 		else
