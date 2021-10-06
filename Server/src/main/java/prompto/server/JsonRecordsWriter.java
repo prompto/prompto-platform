@@ -183,6 +183,7 @@ public class JsonRecordsWriter {
 			newEntry(Family.DECIMAL, (g,o)->g.writeNumber(((Number)o).doubleValue())),
 			newEntry(Family.TEXT, (g,o)->g.writeString((String)o)),
 			newEntry(Family.UUID, JsonRecordsWriter::writeUuid),
+			newEntry(Family.DBID, JsonRecordsWriter::writePromptoDbId),
 			newEntry(Family.DATE, JsonRecordsWriter::writePromptoDate),
 			newEntry(Family.TIME, JsonRecordsWriter::writePromptoTime),
 			newEntry(Family.DATETIME, JsonRecordsWriter::writePromptoDateTime),
@@ -199,6 +200,7 @@ public class JsonRecordsWriter {
 			newEntry(Double.class, (g,o)->g.writeNumber(((Number)o).doubleValue())),
 			newEntry(String.class, (g,o)->g.writeString((String)o)),
 			newEntry(UUID.class, JsonRecordsWriter::writeUuid),
+			newEntry(PromptoDbId.class, JsonRecordsWriter::writePromptoDbId),
 			newEntry(PromptoDate.class, JsonRecordsWriter::writePromptoDate),
 			newEntry(PromptoTime.class, JsonRecordsWriter::writePromptoTime),
 			newEntry(PromptoDateTime.class, JsonRecordsWriter::writePromptoDateTime),
@@ -245,6 +247,12 @@ public class JsonRecordsWriter {
 		generator.writeFieldName("name");
 		generator.writeString(value.toString());
 		generator.writeEndObject();
+	}
+
+	private static void writePromptoDbId(JsonGenerator generator, Object value) throws IOException {
+		Object dbId = ((PromptoDbId)value).getValue();
+		JsonWriter writer = writerForValue(dbId);
+		writer.accept(generator, dbId);
 	}
 
 	private static void writePromptoDate(JsonGenerator generator, Object value) throws IOException {

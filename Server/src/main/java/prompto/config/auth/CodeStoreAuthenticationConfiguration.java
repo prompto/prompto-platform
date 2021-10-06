@@ -77,7 +77,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 			logger.error(()->"No dbId to fetch config!");
 			return false;
 		}
-		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, PromptoDbId.of(dbId));
+		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, PromptoDbId.of(store.convertToNativeDbId(dbId)));
 		reader = app.getObject("authenticationSettings");
 		return reader!=null;
 	}

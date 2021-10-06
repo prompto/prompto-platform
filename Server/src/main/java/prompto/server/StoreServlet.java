@@ -108,7 +108,7 @@ public class StoreServlet extends CleverServlet {
 	}
 	
 	private void deleteAndStoreJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		Map<Long, Object> updatedDbIds = new HashMap<>();
+		Map<Long, PromptoDbId> updatedDbIds = new HashMap<>();
 		JsonNode json = readJsonStream(req);
 		JsonNode toDelete = null;
 		JsonNode toStore = null;
@@ -121,9 +121,9 @@ public class StoreServlet extends CleverServlet {
 		writeJSONResult(updatedDbIds, resp.getOutputStream());
 	}
 
-	private Map<Long, Object> deleteAndStoreJson(JsonNode toDelete, JsonNode toStore, Map<String, byte[]> parts, JsonNode withMeta) {
+	private Map<Long, PromptoDbId> deleteAndStoreJson(JsonNode toDelete, JsonNode toStore, Map<String, byte[]> parts, JsonNode withMeta) {
 		Collection<PromptoDbId> deletables = collectDeletables(toDelete);
-		Map<Long, Object> updatedDbIds = new HashMap<>();
+		Map<Long, PromptoDbId> updatedDbIds = new HashMap<>();
 		List<IStorable> storables = collectStorables(toStore, parts, updatedDbIds);
 		IAuditMetadata metadata = collectMetadata(withMeta, parts);
 		DataStore.getInstance().deleteAndStore(deletables, storables, metadata);
@@ -175,7 +175,7 @@ public class StoreServlet extends CleverServlet {
 			return PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(dbId));
 	}
 
-	private List<IStorable> collectStorables(JsonNode toStore, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private List<IStorable> collectStorables(JsonNode toStore, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		if(toStore==null)
 			return null;
 		else if(toStore.isArray())
@@ -189,7 +189,7 @@ public class StoreServlet extends CleverServlet {
 	}
 
 
-	private IStorable jsonToStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private IStorable jsonToStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		if(isRecordUpdate(record))
 			return populateExistingStorable(record, parts, updatedDbIds);
 		else
@@ -202,7 +202,7 @@ public class StoreServlet extends CleverServlet {
 	}
 
 
-	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		// use dbId received from client
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
 		PromptoDbId dbId = PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(rawDbId));
@@ -226,7 +226,7 @@ public class StoreServlet extends CleverServlet {
 		return storable;
 	}
 	
-	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		// use potentially existing dbId allocated by a dbRef in another storable
 		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
 		PromptoDbId dbId = PromptoDbId.of(updatedDbIds.getOrDefault(tempDbId, null));
@@ -252,9 +252,9 @@ public class StoreServlet extends CleverServlet {
 		return storable;
 	}
 
-	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		if(fieldValue.has("tempDbId"))
-			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->DataStore.getInstance().newNativeDbId());
+			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->PromptoDbId.of(DataStore.getInstance().newNativeDbId()));
 		else if(fieldValue.isDouble() || fieldValue.isFloat())
 			return fieldValue.asDouble();
 		else if(fieldValue.isLong() || fieldValue.isInt())
@@ -278,7 +278,7 @@ public class StoreServlet extends CleverServlet {
 			throw new UnsupportedOperationException(fieldValue.getNodeType().name());
 	}
 
-	private Object readJsonValue(String type, JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, Object> updatedDbIds) {
+	private Object readJsonValue(String type, JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		switch(type) {
 		case "Uuid":
 			return UUID.fromString(fieldValue.asText());
@@ -293,6 +293,7 @@ public class StoreServlet extends CleverServlet {
 		case "Blob":
 		case "Image":
 			return BinaryType.readJSONValue(fieldValue, parts);
+		case "DbId":
 		case "%dbRef%":
 			return DataStore.getInstance().convertToNativeDbId(readJsonValue(fieldValue, parts, updatedDbIds));
 		default:
@@ -325,7 +326,7 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Map<Long, Object> updatedDbIds = new HashMap<>();
+		Map<Long, Object> result = new HashMap<>();
 		Map<String, byte[]> parts = readPartsAsBytes(req);
 		JsonNode toDelete = null;
 		JsonNode toStore = null;
@@ -337,9 +338,10 @@ public class StoreServlet extends CleverServlet {
 		if(toDelete!=null || toStore!=null) {
 			if(parts.containsKey("withMeta"))
 				withMeta = new ObjectMapper().readTree(parts.get("withMeta"));
-			updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, withMeta);
+			Map<Long, PromptoDbId> updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, withMeta);
+			updatedDbIds.forEach((k,v)->result.put(k, v.getValue()));
 		}
-		writeJSONResult(updatedDbIds, resp.getOutputStream());
+		writeJSONResult(result, resp.getOutputStream());
 	}
 	
 	private void deleteAndStoreUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
