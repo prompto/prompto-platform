@@ -12,6 +12,7 @@ import com.mongodb.client.MongoDatabase;
 import prompto.config.TempDirectories;
 import prompto.runtime.Mode;
 import prompto.store.AttributeInfo;
+import prompto.store.DataStore;
 import prompto.store.Family;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
@@ -68,6 +69,7 @@ public abstract class BaseMongoTest {
 
 	protected MongoStore createStore(String name) {
 		store = new MongoStore("localhost", mongoPort, name, false);
+		DataStore.setInstance(store);
 		db = store.db;
 		return store;
 	}
