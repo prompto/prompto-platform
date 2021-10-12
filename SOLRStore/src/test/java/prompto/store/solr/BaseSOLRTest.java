@@ -10,6 +10,7 @@ import org.junit.Before;
 import prompto.config.TempDirectories;
 import prompto.runtime.Mode;
 import prompto.store.AttributeInfo;
+import prompto.store.DataStore;
 import prompto.store.Family;
 
 public abstract class BaseSOLRTest {
@@ -20,6 +21,7 @@ public abstract class BaseSOLRTest {
 	protected void createStore(String coreName) {
 		store = new EmbeddedSOLRStore(root, coreName);
 		store.startContainer();
+		DataStore.setInstance(store);
 	}
 	
 	@Before
