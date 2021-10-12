@@ -86,6 +86,7 @@ public class MongoStore implements IStore {
 	
 	static final Logger logger = new Logger();
 	static final String AUTH_DB_NAME = "admin";
+	static final char[] EMPTY_PASSWORD = "<empty>".toCharArray();
 	
 	static final CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 		    CodecRegistries.fromCodecs(
@@ -139,7 +140,7 @@ public class MongoStore implements IStore {
 		IMongoReplicaSetConfiguration replicaConfig = config.getReplicaSetConfiguration();
 		StringBuilder sb = new StringBuilder();
 		sb.append("mongodb://");
-		if(password!=null) {
+		if(password!=null && password!=EMPTY_PASSWORD) {
 			sb.append(config.getUser())
 				.append(":")
 				.append(password)
@@ -232,7 +233,7 @@ public class MongoStore implements IStore {
 	}
 
 	private void connectWithReplicaSetConfig(IMongoStoreConfiguration config, char[] password) {
-		String uri = uriFromReplicaSetConfig(config, null);
+		String uri = uriFromReplicaSetConfig(config, password==null ? null : EMPTY_PASSWORD);
 		connectWithURI(config.withReplicaSetURI(uri), password);
 		
 	}

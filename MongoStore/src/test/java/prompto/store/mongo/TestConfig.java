@@ -167,5 +167,18 @@ public class TestConfig {
 			assertEquals(3, count.get());
 		}
 	}
+	
+	@Ignore
+	@Test
+	public void connectsToAtlas() throws Exception {
+		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("config/atlas-seed.yml")) {
+			IConfigurationReader reader = new YamlConfigurationReader(input);
+			MongoStoreConfiguration config = new MongoStoreConfiguration(reader);
+			MongoStore store = new MongoStore(config);
+			store.client.getDatabase("PING").listCollectionNames();
+			store.close();
+		}
+	}
+
 
 }
