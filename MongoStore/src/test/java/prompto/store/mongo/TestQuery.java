@@ -39,7 +39,7 @@ public class TestQuery extends BaseMongoTest {
 	
 	@Before
 	public void before() throws Exception {
-		createStore("TestQuery");
+		createStore("TestQuery_" + System.currentTimeMillis());
 		context = Context.newGlobalsContext();
 		registerDbIdAttribute();
 		registerNameAttribute();

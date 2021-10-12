@@ -41,6 +41,7 @@ public class TestScheduler extends BaseUITest {
 	public void before() throws Exception {
 		ApplicationContext.reset();
 		DataStore.setGlobal(new MemStore());
+		DataStore.useGlobal();
 		Standalone.synchronizeSchema(ICodeStore.getInstance(), DataStore.getInstance());
 	}
 

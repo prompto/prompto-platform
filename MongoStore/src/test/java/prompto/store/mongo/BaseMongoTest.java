@@ -2,9 +2,13 @@ package prompto.store.mongo;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.client.MongoDatabase;
@@ -28,20 +32,27 @@ import de.flapdoodle.embed.process.runtime.Network;
 
 public abstract class BaseMongoTest {
 	
-	protected int mongoPort;
-	MongodExecutable mongo;
+	static protected MongodExecutable mongo = null;
+	static protected int mongoPort = 0;
+	static protected Timer mongoStopper = null;
 	protected MongoStore store;
 	protected MongoDatabase db;
 	
-	@Before
-	public void __before__() throws IOException {
+	
+	@BeforeClass
+	public static synchronized void __before_class__() throws IOException {
 		if(mongoPort==0)
 			mongoPort = Network.getFreeServerPort();
-		mongo = startMongo(mongoPort);
-		TempDirectories.create();
-		Mode.set(Mode.UNITTEST);
+		if(mongo==null)
+			mongo = startMongo(mongoPort);
 	}
 	
+
+	@AfterClass
+	public static synchronized void __after_class__() throws IOException {
+		
+	}
+
 	public static MongodExecutable startMongo(int mongoPort) throws IOException {
 		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
 			.defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(BaseMongoTest.class.getName()))
@@ -57,19 +68,47 @@ public abstract class BaseMongoTest {
 		return mongo;
 	}
 
-	@After
-	public void __after__() throws IOException {
-		if (mongo != null)
-			stopMongo(mongo);
-	}
-	
 	public static void stopMongo(MongodExecutable mongo) {
-		mongo.stop();
+		if (mongo != null) {
+			System.out.println("Stopping shared Mongo instance");
+			mongo.stop();
+		}
 	}
 
+	@Before
+	public synchronized void __before__() throws IOException {
+		if(mongoStopper!=null) {
+			mongoStopper.cancel();
+			mongoStopper = null;
+		}
+		TempDirectories.create();
+		Mode.set(Mode.UNITTEST);
+	}
+	
+	@After
+	public synchronized void __after__() throws IOException {
+		if(mongoStopper==null) {
+			mongoStopper = new Timer("Stop Mongo");
+			mongoStopper.schedule(new TimerTask() {
+
+				@Override
+				public void run() {
+					stopMongo(mongo);
+					mongo = null;
+					mongoPort = 0;
+					mongoStopper.cancel();
+					mongoStopper = null;
+				}
+
+			}, 5000);
+		}
+	}
+	
 	protected MongoStore createStore(String name) {
+		System.out.println("Creating new store from shared Mongo instance");
 		store = new MongoStore("localhost", mongoPort, name, false);
-		DataStore.setInstance(store);
+		DataStore.setGlobal(store);
+		DataStore.useGlobal();
 		db = store.db;
 		return store;
 	}

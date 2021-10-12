@@ -2,18 +2,29 @@ package prompto.store;
 
 import java.io.IOException;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.experimental.categories.Category;
 
 import prompto.server.HeadlessTests;
 import prompto.store.mongo.BaseMongoTest;
+import prompto.store.mongo.MongoStore;
 
 @Category(HeadlessTests.class)
 public class TestRemoteMongoStore extends TestRemoteStoreBase {
 
 	static class MongoTest extends BaseMongoTest {
+
+		public static void beforeClass() throws IOException {
+			__before_class__();
+		}
+		
+		public static void afterClass() throws IOException {
+			__after_class__();
+		}
 
 		public void before() throws IOException {
 			__before__();
@@ -23,8 +34,8 @@ public class TestRemoteMongoStore extends TestRemoteStoreBase {
 			__after__();
 		}
 		
-		public IStore newStore(String name) {
-			return createStore(name);
+		public MongoStore createStore(String name) {
+			return super.createStore(name);
 		}
 		
 	}
@@ -33,19 +44,29 @@ public class TestRemoteMongoStore extends TestRemoteStoreBase {
 	
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		mongo.before();
+		MongoTest.beforeClass();
 	}
 	
 	@AfterClass
-	public static void after() throws IOException {
-		mongo.after();
+	public static void afterClass() throws Exception {
+		MongoTest.afterClass();
 	}
 	
+	@Before
+	public void before() throws Exception {
+		mongo.before();
+	}
+
+	@After
+	public void after() throws Exception {
+		mongo.after();
+	}
+
 	static int counter = 0;
 	
 	@Override
 	protected IStore getDataStore() {
-		return mongo.newStore("STUFF_" + counter++);
+		return mongo.createStore("STUFF_" + counter++);
 	}
 
 	@Ignore
