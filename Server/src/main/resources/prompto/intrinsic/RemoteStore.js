@@ -212,7 +212,8 @@ function RemoteStore() {
 	this.deleteAndStore = function(toDel, toStore, withMeta) {
 		var formData = this.prepareStore(toDel, toStore, withMeta);
 		var response = this.fetchSync("/ws/store/deleteAndStore", formData);
-		toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+		if(toStore)
+			toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
 	};
 	this.deleteAndStoreAsync = function(toDel, toStore, withMeta, andThen) {
 		var formData = this.prepareStore(toDel, toStore, withMeta);
@@ -246,23 +247,40 @@ function RemoteStore() {
 		});
 	};
 	this.nextSequenceValue = function(name) {
-		var response = null;
-		var request  = new XMLHttpRequest();
-		request.open("GET", "/ws/store/nextSequenceValue?name=" + name, false); // must be synchronous
-		request.onload = function() { 
-			if (this.status == 200)
-				response = JSON.parse(this.responseText); 
-			else
-				throw new Error(this.statusText);
-		};
-		request.send();
-		if(response)
-			return response;
-		else
-			return -1;
-	
+		return RemoteRunner.runSync("nextSequenceValue", [{type: "Text", name: "name", value: name}]);
 	};
-	return this; 
+	this.isAuditEnabled = function() {
+		return RemoteRunner.runSync("isAuditEnabled", []);
+	};
+	this.fetchLatestAuditMetadataId = function(dbId) {
+		return RemoteRunner.runSync("fetchLatestAuditMetadataId", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchAllAuditMetadataIds = function(dbId) {
+		return RemoteRunner.runSync("fetchAllAuditMetadataIds", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchAuditMetadataAsDocument = function(dbId) {
+		return RemoteRunner.runSync("fetchAuditMetadata", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchDbIdsAffectedByAuditMetadataId = function(dbId) {
+		return RemoteRunner.runSync("fetchDbIdsAffectedByAuditMetadataId", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchLatestAuditRecordAsDocument = function(dbId) {
+		return RemoteRunner.runSync("fetchLatestAuditRecord", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchAllAuditRecordsAsDocuments = function(dbId) {
+		return RemoteRunner.runSync("fetchAllAuditRecords", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.deleteAuditRecord = function(dbId) {
+		return RemoteRunner.runSync("deleteAuditRecord", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.deleteAuditMetadata = function(dbId) {
+		return RemoteRunner.runSync("deleteAuditMetadata", [{type: "DbId", name: "dbId", value: dbId}]);
+	};
+	this.fetchAuditRecordsMatchingAsDocuments = function(auditPredicates, instancePredicates) {
+		return RemoteRunner.runSync("fetchAuditRecordsMatching", [{type: "Document", name: "auditPredicates", value: auditPredicates},
+			{type: "Document", name: "instancePredicates", value: instancePredicates}]);
+	};
+	
 }
 
 function RemoteQueryBuilder() {
