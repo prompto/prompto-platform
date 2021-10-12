@@ -1,0 +1,12 @@
+widget FetchesAuditRecordsMatchingPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "John");
+		store (e1) with metadata ({ "login": "Albert" });
+		delete (e1) with metadata ({ "login": "Mary" });
+		audits = fetchAuditRecordsMatching(instancePredicates={name: "John"});
+		return <div id="root">{"/" + (audits[1].operation)}</div>;
+	}
+}
+
+storable category Entity(name);

@@ -1,0 +1,13 @@
+widget FetchesAllAuditRecordsPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "Albert");
+		store (e1) with metadata ({ "login": "Albert" });
+		e1.name = "Jennifer";
+		store (e1) with metadata ({ "login": "Jennifer" });
+		records = fetchAllAuditRecords(e1.dbId);
+		return <div id="root">{"" + records[1].operation + "/" + records[2].operation}</div>;
+	}
+}
+
+storable category Entity(name);

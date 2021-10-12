@@ -1,0 +1,13 @@
+widget DeletesAuditRecordPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "Albert");
+		store (e1) with metadata ({ "login": "Albert" });
+		r1 = fetchLatestAuditRecord(e1.dbId);
+		deleteAuditRecord(r1.dbId);
+		r2 = fetchLatestAuditRecord(e1.dbId);
+		return <div id="root">{"/" + (r1 is null) + "/" + (r2 is null)}</div>;
+	}
+}
+
+storable category Entity(name);

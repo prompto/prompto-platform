@@ -1,0 +1,13 @@
+widget FetchesDbIdsAffectedByAuditMetadataIdPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = Entity(name = "John");
+		e2 = Entity(name = "Kelly");
+		store (e1, e2) with metadata ({ "login": "albert" });
+		id = fetchLatestAuditMetadataId(e1.dbId);
+		ids = fetchDbIdsAffectedByAuditMetadataId(id);
+		return <div id="root">{"/e1:" + (e1.dbId in ids) + "/e2:" + (e2.dbId in ids)}</div>;
+	}
+}
+
+storable category Entity(name);

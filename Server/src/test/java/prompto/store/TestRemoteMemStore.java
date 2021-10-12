@@ -82,4 +82,86 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		assertEquals("Hello", metadata.get("message"));
 	}
 
+	@Test
+	public void auditIsEnabled() throws Exception {
+		linkResourcesAndLoadPage("AuditIsEnabled", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("true", elem.getText());
+	}
+	
+	@Test
+	public void FetchesLatestAuditMetadataId() throws Exception {
+		linkResourcesAndLoadPage("FetchesLatestAuditMetadataId", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("true", elem.getText());
+	}
+
+
+	@Test
+	public void allAuditMetadataIdsAreFetched() throws Exception {
+		linkResourcesAndLoadPage("AllAuditMetadataIdsAreFetched", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("3", elem.getText());
+	}
+	
+	@Test
+	public void fetchesAuditMetadata() throws Exception {
+		linkResourcesAndLoadPage("FetchesAuditMetadata", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Albert", elem.getText());
+	}
+
+	@Test
+	public void fetchesDbIdsAffectedByAuditMetadataId() throws Exception {
+		linkResourcesAndLoadPage("FetchesDbIdsAffectedByAuditMetadataId", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("/e1:true/e2:true", elem.getText());
+	}
+	
+	@Test
+	public void fetchesLatestAuditRecord() throws Exception {
+		linkResourcesAndLoadPage("FetchesLatestAuditRecord", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("INSERT", elem.getText());
+	}
+
+	@Test
+	public void fetchesAllAuditRecords() throws Exception {
+		linkResourcesAndLoadPage("FetchesAllAuditRecords", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("UPDATE/INSERT", elem.getText());
+	}
+	
+	@Test
+	public void deletesAuditRecord() throws Exception {
+		linkResourcesAndLoadPage("DeletesAuditRecord", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("/false/true", elem.getText());
+	}
+
+	@Test
+	public void deletesAuditMetadata() throws Exception {
+		linkResourcesAndLoadPage("DeletesAuditMetadata", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("/INSERT", elem.getText());
+	}
+
+
+	@Test
+	public void fetchesAuditRecordsMatching() throws Exception {
+		linkResourcesAndLoadPage("FetchesAuditRecordsMatching", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("/false/true", elem.getText());
+	}
+
 }

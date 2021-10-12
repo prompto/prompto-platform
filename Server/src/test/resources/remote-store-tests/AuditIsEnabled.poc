@@ -1,0 +1,7 @@
+widget AuditIsEnabledPage extends ReactWidget {
+	
+	Html method render() {
+		enabled = isAuditEnabled();
+		return <div id="root">{enabled ? "true" : "false"}</div>;
+	}
+}

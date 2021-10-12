@@ -1,0 +1,12 @@
+widget FetchesAuditMetadataPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "John");
+		store (e1) with metadata ({ "login": "Albert" });
+		id = fetchLatestAuditMetadataId(e1.dbId);
+		meta = fetchAuditMetadata(id);
+		return <div id="root">{"" + meta.login}</div>;
+	}
+}
+
+storable category Entity(name);

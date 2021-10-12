@@ -1,0 +1,11 @@
+widget FetchesLatestAuditMetadataIdPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = Entity(name = "John");
+		store (e1) with metadata ({ "login": "albert" });
+		id = fetchLatestAuditMetadataId(e1.dbId);
+		return <div id="root">{id is null ? "false" : "true"}</div>;
+	}
+}
+
+storable category Entity(name);

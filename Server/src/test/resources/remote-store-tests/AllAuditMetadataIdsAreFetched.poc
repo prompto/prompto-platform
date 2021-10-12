@@ -1,0 +1,15 @@
+widget AllAuditMetadataIdsAreFetchedPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "John");
+		store (e1) with metadata ({ "login": "albert" });
+		e1.name = "Jerry";
+		store (e1) with metadata ({ "login": "Jessica" });
+		e1.name = "Sylvie";
+		store (e1) with metadata ({ "login": "buuuuh" });
+		ids = fetchAllAuditMetadataIds(e1.dbId);
+		return <div id="root">{"" + ids.count}</div>;
+	}
+}
+
+storable category Entity(name);

@@ -1,0 +1,11 @@
+widget FetchesLatestAuditRecordPage extends ReactWidget {
+	
+	Html method render() {
+		e1 = mutable Entity(name = "John");
+		store (e1) with metadata ({ "login": "Albert" });
+		record = fetchLatestAuditRecord(e1.dbId);
+		return <div id="root">{"" + record.operation}</div>;
+	}
+}
+
+storable category Entity(name);
