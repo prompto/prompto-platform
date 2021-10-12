@@ -152,7 +152,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		linkResourcesAndLoadPage("DeletesAuditMetadata", Dialect.O);
 		Thread.sleep(100);
 		WebElement elem = waitElement(By.id("root"), 3);
-		assertEquals("/INSERT", elem.getText());
+		assertEquals("/false/true", elem.getText());
 	}
 
 
@@ -161,7 +161,7 @@ public class TestRemoteMemStore extends TestRemoteStoreBase {
 		linkResourcesAndLoadPage("FetchesAuditRecordsMatching", Dialect.O);
 		Thread.sleep(100);
 		WebElement elem = waitElement(By.id("root"), 3);
-		assertEquals("/false/true", elem.getText());
+		assertEquals("/INSERT", elem.getText());
 	}
 
 }

@@ -165,8 +165,12 @@ abstract class BaseSOLRStore implements IStore {
 	
 	@Override
 	public UUID convertToNativeDbId(Object dbId) {
-		if(dbId instanceof UUID)
+		if(dbId == null)
+			return null;
+		else if(dbId instanceof UUID)
 			return (UUID)dbId;
+		else if(dbId instanceof String)
+			return UUID.fromString((String)dbId);
 		else
 			return UUID.fromString(String.valueOf(dbId));
 	}

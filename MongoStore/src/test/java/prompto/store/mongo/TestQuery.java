@@ -1,6 +1,8 @@
 package prompto.store.mongo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -15,6 +17,8 @@ import prompto.declaration.AttributeDeclaration;
 import prompto.error.SyntaxError;
 import prompto.expression.FetchOneExpression;
 import prompto.grammar.Identifier;
+import prompto.intrinsic.PromptoDate;
+import prompto.intrinsic.PromptoDateTime;
 import prompto.parser.ECleverParser;
 import prompto.parser.EPromptoBuilder;
 import prompto.runtime.Context;
@@ -28,10 +32,6 @@ import prompto.type.AnyType;
 import prompto.type.IntegerType;
 import prompto.type.ListType;
 import prompto.type.TextType;
-
-import prompto.intrinsic.PromptoDate;
-import prompto.intrinsic.PromptoDateTime;
-import prompto.intrinsic.PromptoDbId;
 
 public class TestQuery extends BaseMongoTest {
 
@@ -116,7 +116,7 @@ public class TestQuery extends BaseMongoTest {
 		store.insertDocuments(doc);
 		store.flush();
 		// Test the basics
-		store.delete(PromptoDbId.of(uuid));
+		store.delete(store.convertToDbId(uuid));
 		store.flush();
 		String query = "fetch one where name = \"John\"";
 		IStored result = fetchOne(query);

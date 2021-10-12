@@ -210,7 +210,7 @@ public abstract class BaseDatomicStore implements IStore {
 				Object tempids = result.get(Connection.TEMPIDS);
 				for(IStorable storable : storables) {
 					Object dbId = Peer.resolveTempid(dbAfter, tempids, storable.getOrCreateDbId().getValue());
-					storable.setDbId(PromptoDbId.of(dbId));
+					storable.setDbId(this.convertToDbId(dbId));
 				}
 			}
 		} catch(Exception e) {

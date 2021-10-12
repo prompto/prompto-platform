@@ -12,7 +12,6 @@ import prompto.config.IConfigurationReader;
 import prompto.config.StoredRecordConfigurationReader;
 import prompto.config.auth.method.IAuthenticationMethodConfiguration;
 import prompto.config.auth.source.IAuthenticationSourceConfiguration;
-import prompto.intrinsic.PromptoDbId;
 import prompto.runtime.Mode;
 import prompto.security.auth.method.BasicAuthenticationMethodFactory;
 import prompto.security.auth.method.FormAuthenticationMethodFactory;
@@ -77,7 +76,7 @@ public class CodeStoreAuthenticationConfiguration extends IAuthenticationConfigu
 			logger.error(()->"No dbId to fetch config!");
 			return false;
 		}
-		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, PromptoDbId.of(store.convertToNativeDbId(dbId)));
+		StoredRecordConfigurationReader app = new StoredRecordConfigurationReader(store, store.convertToDbId(dbId));
 		reader = app.getObject("authenticationSettings");
 		return reader!=null;
 	}

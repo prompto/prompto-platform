@@ -226,7 +226,7 @@ public class JsonRecordsWriter {
 	
 
 	private void writeChild(JsonGenerator generator, Object value) throws IOException {
-		IStored stored = store.fetchUnique(PromptoDbId.of(value));
+		IStored stored = store.fetchUnique(store.convertToDbId(value));
 		if(stored==null)
 			generator.writeNull();
 		else

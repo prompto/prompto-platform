@@ -169,7 +169,7 @@ public class MongoAuditor {
 
 	private void storeInsertRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord insert = newAuditRecord();
-		insert.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
+		insert.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		insert.setOperation(Operation.INSERT);
 		insert.setInstance(new StoredDocument(store, change.getFullDocument()));
 		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(session, insert);
@@ -177,7 +177,7 @@ public class MongoAuditor {
 
 	private void storeUpdateRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord update = newAuditRecord();
-		update.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
+		update.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		update.setOperation(Operation.UPDATE);
 		update.setInstance(new StoredDocument(store, change.getFullDocument()));
 		update.put("removedFields", change.getUpdateDescription().getRemovedFields());
@@ -187,16 +187,16 @@ public class MongoAuditor {
 
 	private void storeDeleteRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord delete = newAuditRecord();
-		delete.setInstanceDbId(PromptoDbId.of(change.getDocumentKey().get("_id")));
+		delete.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		delete.setOperation(Operation.DELETE);
 		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(delete);
 	}
 	
 	private AuditRecord newAuditRecord() {
 		AuditRecord audit = new AuditRecord(store);
-		audit.setDbId(PromptoDbId.of(UUID.randomUUID()));
+		audit.setDbId(store.convertToDbId(UUID.randomUUID()));
 		if(metadata!=null) {
-			audit.setMetadataDbId(metadata.getAuditMetadataId());
+			audit.setMetadataDbId(metadata.getAuditMetadataId(store));
 			audit.setUTCTimestamp(metadata.getUTCTimestamp());
 		} else {
 			audit.setMetadataDbId(null);
@@ -275,7 +275,7 @@ public class MongoAuditor {
 
 		@Override
 		public PromptoDbId getDbId() {
-			return PromptoDbId.of(get("_id"));
+			return store.convertToDbId(get("_id"));
 		}
 
 		@Override
@@ -285,7 +285,7 @@ public class MongoAuditor {
 
 		@Override
 		public PromptoDbId getMetadataDbId() {
-			return PromptoDbId.of(get(METADATA_DBID_FIELD_NAME));
+			return store.convertToDbId(get(METADATA_DBID_FIELD_NAME));
 		}
 
 		@Override
@@ -311,7 +311,7 @@ public class MongoAuditor {
 
 		@Override
 		public PromptoDbId getInstanceDbId() {
-			return PromptoDbId.of(get(INSTANCE_DBID_FIELD_NAME));
+			return store.convertToDbId(get(INSTANCE_DBID_FIELD_NAME));
 		}
 
 		@Override
@@ -373,7 +373,7 @@ public class MongoAuditor {
 
 	public AuditMetadata newAuditMetadata() {
 		AuditMetadata meta = new AuditMetadata();
-		meta.setAuditMetadataId(PromptoDbId.of(UUID.randomUUID()));
+		meta.setAuditMetadataId(store.convertToDbId(UUID.randomUUID()));
 		return meta;
 	}
 
@@ -393,7 +393,7 @@ public class MongoAuditor {
 				.sort(Sorts.orderBy(Sorts.descending(UTC_TIMESTAMP_FIELD_NAME)))
 				.limit(1)
 				.first();
-		return data==null ? null : PromptoDbId.of(data.get(METADATA_DBID_FIELD_NAME));
+		return data==null ? null : store.convertToDbId(data.get(METADATA_DBID_FIELD_NAME));
 	}
 
 	public PromptoList<PromptoDbId> fetchAllAuditMetadataIds(PromptoDbId dbId) {

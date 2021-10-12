@@ -22,8 +22,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
+import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.esotericsoftware.yamlbeans.document.YamlDocument;
 import com.esotericsoftware.yamlbeans.document.YamlDocumentReader;
 
@@ -33,7 +33,6 @@ import prompto.code.ImmutableCodeStore;
 import prompto.code.ModuleType;
 import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
-import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoTime;
 import prompto.intrinsic.PromptoVersion;
 import prompto.parser.Dialect;
@@ -296,7 +295,7 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 		assertNotNull(stored);
 		Object child = stored.getRawData("child");
 		assertNotNull(child);
-		stored = DataStore.getInstance().fetchUnique(PromptoDbId.of(child));
+		stored = DataStore.getInstance().fetchUnique(DataStore.getInstance().convertToDbId(child));
 		assertNotNull(stored);
 		assertEquals("John", stored.getRawData("value"));
 	}
@@ -311,10 +310,10 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 		assertNotNull(stored);
 		Object children = stored.getRawData("children");
 		assertTrue(children instanceof List);
-		stored = DataStore.getInstance().fetchUnique(PromptoDbId.of(((List<Object>)children).get(0)));
+		stored = DataStore.getInstance().fetchUnique(DataStore.getInstance().convertToDbId(((List<Object>)children).get(0)));
 		assertNotNull(stored);
 		assertEquals("John", stored.getRawData("value"));
-		stored = DataStore.getInstance().fetchUnique(PromptoDbId.of(((List<Object>)children).get(1)));
+		stored = DataStore.getInstance().fetchUnique(DataStore.getInstance().convertToDbId(((List<Object>)children).get(1)));
 		assertNotNull(stored);
 		assertEquals("Jane", stored.getRawData("value"));
 	}

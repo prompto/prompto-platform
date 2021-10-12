@@ -343,7 +343,9 @@ public class MongoStore implements IStore {
 	
 	@Override
 	public Object convertToNativeDbId(Object dbId) {
-		if(dbId instanceof UUID)
+		if(dbId == null)
+			return null;
+		else if(dbId instanceof UUID)
 			return dbId;
 		else if(dbId instanceof ObjectId)
 			return ((ObjectId) dbId).toHexString(); // NOT a UUID!

@@ -160,10 +160,7 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	private Object convertJsonToDbId(Object dbId) {
-		if(dbId.getClass()==DataStore.getInstance().getNativeDbIdClass())
-			return PromptoDbId.of(dbId);
-		else
-			return PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(dbId));
+		return DataStore.getInstance().convertToDbId(dbId);
 	}
 
 	private List<IStorable> collectStorables(JsonNode toStore, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
@@ -196,7 +193,7 @@ public class StoreServlet extends CleverServlet {
 	private IStorable populateExistingStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		// use dbId received from client
 		Object rawDbId = readJsonValue(record.get(IStore.dbIdName), parts, updatedDbIds);
-		PromptoDbId dbId = PromptoDbId.of(DataStore.getInstance().convertToNativeDbId(rawDbId));
+		PromptoDbId dbId = DataStore.getInstance().convertToDbId(rawDbId);
 		// dbId factory
 		IDbIdFactory dbIdFactory = new IDbIdFactory() {
 			@Override public void accept(PromptoDbId dbId) { throw new IllegalStateException(); }
@@ -220,7 +217,7 @@ public class StoreServlet extends CleverServlet {
 	private IStorable populateNewStorable(JsonNode record, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		// use potentially existing dbId allocated by a dbRef in another storable
 		Long tempDbId = record.get(IStore.dbIdName).get("tempDbId").asLong();
-		PromptoDbId dbId = PromptoDbId.of(updatedDbIds.getOrDefault(tempDbId, null));
+		PromptoDbId dbId = DataStore.getInstance().convertToDbId(updatedDbIds.getOrDefault(tempDbId, null));
 		// dbId factory
 		IDbIdFactory dbIdFactory = new IDbIdFactory() {
 			@Override public void accept(PromptoDbId newDbId) { updatedDbIds.put(tempDbId, newDbId); }
@@ -245,7 +242,7 @@ public class StoreServlet extends CleverServlet {
 
 	private Object readJsonValue(JsonNode fieldValue, Map<String, byte[]> parts, Map<Long, PromptoDbId> updatedDbIds) {
 		if(fieldValue.has("tempDbId"))
-			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->PromptoDbId.of(DataStore.getInstance().newNativeDbId()));
+			return updatedDbIds.computeIfAbsent(fieldValue.get("tempDbId").asLong(), k->DataStore.getInstance().newDbId());
 		else if(fieldValue.isDouble() || fieldValue.isFloat())
 			return fieldValue.asDouble();
 		else if(fieldValue.isLong() || fieldValue.isInt())
