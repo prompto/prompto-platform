@@ -9,6 +9,7 @@ import prompto.runtime.ApplicationContext;
 import prompto.runtime.Context;
 import prompto.type.IType;
 import prompto.value.IValue;
+import prompto.value.ListValue;
 import prompto.value.NullValue;
 
 public class GraphQLMethodFetcher implements DataFetcher<Object> {
@@ -23,7 +24,10 @@ public class GraphQLMethodFetcher implements DataFetcher<Object> {
 	public Object get(DataFetchingEnvironment environment) throws Exception {
 		Context context = ApplicationContext.get().newLocalContext();
 		method.getParameters().forEach(param->populateArgument(context, param, environment));
-		return method.interpret(context);
+		Object result = method.interpret(context);
+		if(result instanceof ListValue)
+			result = ((ListValue)result).getItems();
+		return result;
 	}
 
 	private void populateArgument(Context context, IParameter param, DataFetchingEnvironment environment) {
