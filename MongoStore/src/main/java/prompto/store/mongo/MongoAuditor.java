@@ -87,13 +87,15 @@ public class MongoAuditor {
 
 	private void watchInstancesChanges() {
 		List<Bson> filters = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "delete"))));
-		BsonTimestamp resumeTimestamp = fetchLastAuditTimestamp();
-		if(resumeTimestamp==null) 
-			resumeTimestamp = computeResumeTimestamp();
 		ChangeStreamIterable<Document> stream = store.getInstancesCollection()
 				.watch(filters)
-				.startAtOperationTime(resumeTimestamp)
 				.fullDocument(FullDocument.UPDATE_LOOKUP);
+		BsonTimestamp resumeTimestamp = fetchLastAuditTimestamp();
+		if(resumeTimestamp!=null) {
+			logger.info(()->"Resuming audit from " + LocalDateTime.ofEpochSecond(resumeTimestamp.getTime(), 0, ZoneOffset.UTC));
+			stream = stream.startAtOperationTime(resumeTimestamp);
+		} else
+			logger.warn(()->"Starting audit without a resume timestamp");
 		try (MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor = stream.cursor()) {
 			while(!isTerminated.get()) {
 				consumeChanges(cursor);
@@ -113,12 +115,6 @@ public class MongoAuditor {
 				return;
 			auditInstanceChange(change);	
 		}
-	}
-
-	private BsonTimestamp computeResumeTimestamp() {
-		LocalDateTime dt = LocalDateTime.now().minusYears(1);
-		long seconds = dt.toEpochSecond(ZoneOffset.UTC);
-		return new BsonTimestamp((int)seconds, 0);
 	}
 
 	private BsonTimestamp fetchLastAuditTimestamp() {
