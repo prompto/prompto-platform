@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.UuidCodec;
@@ -352,6 +353,8 @@ public class MongoStore implements IStore {
 			return ((ObjectId) dbId).toHexString(); // NOT a UUID!
 		else if(dbId instanceof String)
 			return UUID.fromString((String)dbId);
+		else if(dbId instanceof BsonBinary)
+			return ((BsonBinary)dbId).asUuid();
 		else
 			return UUID.fromString(String.valueOf(dbId));
 	}
