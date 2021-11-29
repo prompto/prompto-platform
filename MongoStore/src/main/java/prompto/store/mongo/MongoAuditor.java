@@ -86,7 +86,7 @@ public class MongoAuditor {
 	}
 
 	private void watchInstancesChanges() {
-		List<Bson> filters = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "delete"))));
+		List<Bson> filters = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "replace", "delete"))));
 		ChangeStreamIterable<Document> stream = store.getInstancesCollection()
 				.watch(filters)
 				.fullDocument(FullDocument.UPDATE_LOOKUP);
@@ -150,6 +150,7 @@ public class MongoAuditor {
 				storeInsertRecord(session, change);
 				break;
 			case UPDATE:
+			case REPLACE:
 				storeUpdateRecord(session, change);
 				break;
 			case DELETE:
