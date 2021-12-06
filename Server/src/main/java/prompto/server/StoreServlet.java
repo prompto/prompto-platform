@@ -326,7 +326,7 @@ public class StoreServlet extends CleverServlet {
 		if(toDelete!=null || toStore!=null) {
 			if(parts.containsKey("withMeta"))
 				withMeta = new ObjectMapper().readTree(parts.get("withMeta"));
-			Map<Long, PromptoDbId> updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, withMeta);
+			Map<Long, PromptoDbId> updatedDbIds = deleteAndStoreJson(toDelete, toStore, parts, withMeta);
 			updatedDbIds.forEach((k,v)->result.put(k, v.getValue()));
 		}
 		writeJSONResult(result, resp.getOutputStream());
