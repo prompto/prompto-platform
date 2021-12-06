@@ -299,9 +299,12 @@ public class StoreServlet extends CleverServlet {
 	private IAuditMetadata collectMetadata(JsonNode withMeta, Map<String, byte[]> parts) {
 		if(withMeta!=null) {
 			if(withMeta.isObject()) {
-				IAuditMetadata metadata = DataStore.getInstance().newAuditMetadata();
-				withMeta.fields().forEachRemaining(e -> collectMetadata(metadata, e, parts));
-				return metadata;
+				if(DataStore.getInstance().isAuditEnabled()) {
+					IAuditMetadata metadata = DataStore.getInstance().newAuditMetadata();
+					withMeta.fields().forEachRemaining(e -> collectMetadata(metadata, e, parts));
+					return metadata;
+				} else
+					logger.error(()->"Could not store metadata because audit is disabled.");
 			} else
 				logger.error(()->"Could not convert: " + withMeta.toString());
 		} 
