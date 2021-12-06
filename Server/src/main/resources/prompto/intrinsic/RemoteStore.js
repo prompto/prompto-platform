@@ -186,7 +186,6 @@ function RemoteStore() {
 					if (value.binaryFile) {
 						value.partName = '@' + value.binaryFile.name;
 						formData.append(value.partName, value.binaryFile);
-						delete value.binaryFile;
 					} else if (value.url)
 						delete doc[key]; // the binary was not modified
 				}
@@ -194,6 +193,16 @@ function RemoteStore() {
 		});
 	 	return doc;
 	};
+	this.cleanupStorable = function(storable) {
+		var doc = storable.document; 
+		Object.getOwnPropertyNames(doc).forEach(function(key) {
+			var data = doc[key];
+			if(data && (data.type==="Image" || data.type==="Blob")) {
+				if(data.value && data.value.binaryFile)
+					delete data.value.binaryFile;
+			}
+		});
+	}
 	this.prepareStore = function(toDel, toStore, withMeta) {
 		var formData = new FormData();
 		if(toDel)
@@ -213,15 +222,21 @@ function RemoteStore() {
 		var formData = this.prepareStore(toDel, toStore, withMeta);
 		var response = this.fetchSync("/ws/store/deleteAndStore", formData);
 		if(toStore)
-			toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+			toStore.forEach(function(storable) { 
+				this.cleanupStorable(storable);
+				storable.updateDbIds(response.data); 
+			}, this);
 	};
 	this.deleteAndStoreAsync = function(toDel, toStore, withMeta, andThen) {
 		var formData = this.prepareStore(toDel, toStore, withMeta);
 		this.fetchAsync("/ws/store/deleteAndStore", formData, function(response) {
 			if(toStore)
-				toStore.forEach(function(storable) { storable.updateDbIds(response.data); });
+				toStore.forEach(function(storable) { 
+					this.cleanupStorable(storable);
+					storable.updateDbIds(response.data); 
+				}, this);
 			andThen();
-		});
+		}.bind(this));
 	};
 	this.fetchOne = function(query) {
 		var response = this.fetchSync("/ws/store/fetchOne", JSON.stringify(query));
