@@ -227,20 +227,12 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
-		-->
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>AwsClient</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-core</artifactId>
 			<version>${solr.version}</version>
 			<scope>test</scope>
 			<exclusions>
-				<!-- SOLR core uses older versions, so need to exclude them -->
 				<exclusion>
 					<groupId>org.eclipse.jetty</groupId>
 					<artifactId>*</artifactId>
@@ -262,6 +254,13 @@
 					<artifactId>antlr4-runtime</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+			-->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>AwsClient</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty.websocket</groupId>
