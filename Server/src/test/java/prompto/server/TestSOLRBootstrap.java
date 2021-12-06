@@ -1,5 +1,6 @@
 package prompto.server;
 
+/*
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -77,3 +78,4 @@ public class TestSOLRBootstrap {
 		assertNull(ApplicationContext.get().findAttribute("prototype"));
 	}
 }
+*/

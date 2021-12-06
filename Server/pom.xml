@@ -208,6 +208,7 @@
 			<version>2.2.0</version>
 			<scope>test</scope>
 		</dependency>
+		<!--  
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>SOLRStore</artifactId>
@@ -226,6 +227,7 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>AwsClient</artifactId>
