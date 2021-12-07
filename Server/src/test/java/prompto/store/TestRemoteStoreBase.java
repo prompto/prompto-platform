@@ -288,6 +288,24 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 
 	
 	@Test
+	public void enumIsStored() throws Exception {
+		linkResourcesAndLoadPage("EnumIsStored", Dialect.O);
+		waitElement(By.id("root"), 3);
+		IStored stored = DataStore.getInstance().fetchMany(null).iterator().next();
+		assertNotNull(stored);
+		assertEquals("THING", stored.getRawData("value"));
+	}
+	
+	
+	@Test
+	public void enumIsFetched() throws Exception {
+		linkResourcesAndLoadPage("EnumIsFetched", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("thing", elem.getText());
+	}
+
+	
+	@Test
 	public void childIsStored() throws Exception {
 		linkResourcesAndLoadPage("ChildIsStored", Dialect.O);
 		waitElement(By.id("root"), 3);

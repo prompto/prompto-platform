@@ -1,0 +1,23 @@
+enumerated Role(Text) {
+	THING = "thing";
+}
+
+storable attribute value: Role;
+storable category Stuff(value);
+
+widget EnumIsFetchedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		stuff = Stuff(value=THING);
+		store(stuff);
+		forceRender();
+	}
+	
+	Html method render() {
+		stuff = fetch one( Stuff ) where ( value is THING );
+		if(stuff is null)
+			return <div>null!</div>;
+		else
+			return <div id="root">{stuff.value.value}</div>;
+	}
+}

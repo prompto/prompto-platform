@@ -246,6 +246,8 @@ public class JsonRecordsWriter {
 		generator.writeStartObject();
 		generator.writeFieldName("name");
 		generator.writeString(value.toString());
+		generator.writeFieldName("value");
+		generator.writeString("<symbol>");
 		generator.writeEndObject();
 	}
 

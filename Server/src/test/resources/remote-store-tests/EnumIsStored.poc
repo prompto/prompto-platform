@@ -1,0 +1,18 @@
+enumerated Role(Text) {
+	THING = "thing";
+}
+
+storable attribute value: Role;
+storable category Stuff(value);
+
+widget EnumIsStoredPage extends ReactWidget {
+	
+	method componentDidMount() {
+		user = Stuff(value=THING);
+		store(user);
+	}
+	
+	Html method render() {
+		return <div id="root">Hello</div>;
+	}
+}
