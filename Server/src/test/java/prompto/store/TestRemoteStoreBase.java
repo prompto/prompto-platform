@@ -521,5 +521,12 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 		assertEquals("John", elem.getText());
 	}
 
+	@Test
+	public void includeIsSupported() throws Exception {
+		linkResourcesAndLoadPage("IncludeIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("{value:DeMurga}", elem.getText());
+	}
 
 }

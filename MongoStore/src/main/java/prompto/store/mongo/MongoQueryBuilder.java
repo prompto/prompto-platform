@@ -4,8 +4,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 
 import prompto.store.AttributeInfo;
@@ -103,6 +106,7 @@ public class MongoQueryBuilder implements IQueryBuilder {
 
 
 	Stack<Bson> predicates = new Stack<>();
+	Bson projection = null;
 	List<Bson> orderBys = null;
 	Long first;
 	Long last;
@@ -170,6 +174,17 @@ public class MongoQueryBuilder implements IQueryBuilder {
 		this.last = last;
 		return this;
 	}
+	
+	
+	@Override
+	public IQueryBuilder project(List<String> projection) {
+		Set<String> unique = new HashSet<>(projection);
+		unique.remove("dbId");
+		unique.add("_id");
+		unique.add("category");
+		this.projection = Projections.include(new ArrayList<String>(unique));
+		return this;
+	}
 
 	@Override
 	public MongoQueryBuilder orderBy(AttributeInfo attribute, boolean descending) {
@@ -185,7 +200,7 @@ public class MongoQueryBuilder implements IQueryBuilder {
 		Bson predicate = predicates.empty() ? null : predicates.pop();
 		if(!predicates.empty())
 			throw new IllegalStateException("Unused query predicates!");
-		return new MongoQuery(predicate, first, last, orderBys);
+		return new MongoQuery(predicate, first, last, projection, orderBys);
 	}
 
 }

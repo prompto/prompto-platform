@@ -416,10 +416,17 @@ public class StoreServlet extends CleverServlet {
 		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
 		if(json.has("predicate") && !json.get("predicate").isNull())
 			readPredicateJson(builder, json.get("predicate"));
+		if(json.has("projection") && json.get("projection").isArray())
+			readProjectionJson(builder, json.get("projection"));
 		resp.setContentType("application/json");
 		IStored fetched = DataStore.getInstance().fetchOne(builder.build());
 		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), this::fetchAttributeInfo, DataStore.getInstance(), true);
 		writer.writeRecord(fetched);
+	}
+
+	private void readProjectionJson(IQueryBuilder builder, JsonNode jsonNode) {
+		List<String> projection = StreamSupport.stream(jsonNode.spliterator(), false).map(node -> node.asText()).collect(Collectors.toList());
+		builder.project(projection);
 	}
 
 	private void readOrderBysJson(IQueryBuilder builder, JsonNode orderBys) {

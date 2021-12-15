@@ -299,10 +299,11 @@ function RemoteStore() {
 }
 
 function RemoteQueryBuilder() {
-    this.orderBys = null;
     this.predicates = null;
     this.first = null;
     this.last = null;
+    this.projection = null;
+    this.orderBys = null;
 	return this;
 }
 
@@ -344,8 +345,13 @@ RemoteQueryBuilder.prototype.build = function() {
         predicate: this.predicates==null ? null : this.predicates.pop(),
         first: this.first,
         last: this.last,
+        projection : this.projection,
         orderBys : this.orderBys
     };
+};
+
+RemoteQueryBuilder.prototype.project = function(projection) {
+    this.projection = projection;
 };
 
 RemoteQueryBuilder.prototype.addOrderByClause = function(info, descending) {

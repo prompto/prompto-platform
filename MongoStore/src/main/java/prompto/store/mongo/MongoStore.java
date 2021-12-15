@@ -613,7 +613,7 @@ public class MongoStore implements IStore {
 	@Override
 	public IStored fetchUnique(PromptoDbId dbId) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
-		return fetchOne(filter);
+		return fetchOne(filter, null);
 	}
 
 	@Override
@@ -623,13 +623,16 @@ public class MongoStore implements IStore {
 
 	@Override
 	public IStored fetchOne(IQuery query) throws PromptoError {
-		return fetchOne(((MongoQuery)query).predicate);
+		MongoQuery q = (MongoQuery)query;
+		return fetchOne(q.predicate, q.projection);
 	}
 	
-	private IStored fetchOne(Bson filter) throws PromptoError {
-		Iterator<Document> found = getInstancesCollection().find(filter)
-			.limit(1)
-			.iterator();
+	private IStored fetchOne(Bson filter, Bson projection) throws PromptoError {
+		FindIterable<Document> iterable = getInstancesCollection().find(filter)
+			.limit(1);
+		if(projection != null)
+			iterable = iterable.projection(projection);
+		Iterator<Document> found = iterable.iterator();
 		if(found.hasNext())
 			return new StoredDocument(this, found.next());
 		else

@@ -243,7 +243,8 @@ public class TestInstance extends BaseSOLRTest {
 	private IStored fetchOne(String field, IExpression value) throws Exception {
 		FetchOneExpression expression = new FetchOneExpression(
 				new CategoryType(new Identifier("Test")), 
-				new EqualsExpression(new UnresolvedIdentifier(new Identifier(field)), EqOp.EQUALS, value));
+				new EqualsExpression(new UnresolvedIdentifier(new Identifier(field)), EqOp.EQUALS, value),
+				null);
 		IQuery query = expression.buildFetchOneQuery(context, store);
 		return store.fetchOne(query);
 	}

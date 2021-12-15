@@ -236,6 +236,13 @@ public class DatomicQueryBuilder implements IQueryBuilder {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	
+	@Override
+	public IQueryBuilder project(List<String> attributeNames) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public IQuery build() {

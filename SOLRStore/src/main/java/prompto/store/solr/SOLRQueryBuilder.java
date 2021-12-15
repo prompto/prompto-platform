@@ -1,5 +1,7 @@
 package prompto.store.solr;
 
+import java.util.List;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 
@@ -78,6 +80,14 @@ public class SOLRQueryBuilder implements IQueryBuilder {
 		query.setRows(rows);
 	}
 	
+	
+	
+	@Override
+	public IQueryBuilder project(List<String> attributeNames) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@Override
 	public SOLRQueryBuilder orderBy(AttributeInfo attribute, boolean descending) {
 		SOLRAttributeInfo solrAttribute = new SOLRAttributeInfo(attribute);
