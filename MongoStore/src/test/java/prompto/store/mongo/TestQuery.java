@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -124,7 +125,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextEquals() throws Exception {
+	public void fetchesTextEquals() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -138,7 +139,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextNotEquals() throws Exception {
+	public void fetchesTextNotEquals() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -152,7 +153,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextEqualsWithSpace() throws Exception {
+	public void fetchesTextEqualsWithSpace() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John Smith");
@@ -166,7 +167,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextRoughly() throws Exception {
+	public void fetchesTextRoughly() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -180,7 +181,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextContains() throws Exception {
+	public void fetchesTextContains() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -194,7 +195,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchTextNotContains() throws Exception {
+	public void fetchesTextNotContains() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -211,7 +212,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchListHas() throws Exception {
+	public void fetchesListHas() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -231,7 +232,7 @@ public class TestQuery extends BaseMongoTest {
 
 
 	@Test
-	public void testFetchListNotHas() throws Exception {
+	public void fetchesListNotHas() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -250,7 +251,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextLesser() throws Exception {
+	public void fetchesTextLesser() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -267,7 +268,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextLesserEqual() throws Exception {
+	public void fetchesTextLesserEqual() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -285,7 +286,7 @@ public class TestQuery extends BaseMongoTest {
 
 
 	@Test
-	public void testFetchTextGreater() throws Exception {
+	public void fetchesTextGreater() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -303,7 +304,7 @@ public class TestQuery extends BaseMongoTest {
 	
 
 	@Test
-	public void testFetchTextGreaterEqual() throws Exception {
+	public void fetchesTextGreaterEqual() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -320,7 +321,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchContains() throws Exception {
+	public void fetchesContains() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -334,7 +335,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchNotContains() throws Exception {
+	public void fetchesNotContains() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -348,7 +349,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchTextInCollection() throws Exception {
+	public void fetchesTextInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -362,7 +363,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchTextNotInCollection() throws Exception {
+	public void fetchesTextNotInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -376,7 +377,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerEquals() throws Exception {
+	public void fetchesIntegerEquals() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -392,7 +393,7 @@ public class TestQuery extends BaseMongoTest {
 
 
 	@Test
-	public void testFetchIntegerLesser() throws Exception {
+	public void fetchesIntegerLesser() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -411,7 +412,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerLesserEqual() throws Exception {
+	public void fetchesIntegerLesserEqual() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -430,7 +431,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerGreater() throws Exception {
+	public void fetchesIntegerGreater() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -449,7 +450,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchIntegerGreaterEqual() throws Exception {
+	public void fetchesIntegerGreaterEqual() throws Exception {
 		Document doc1 = new Document();
 		doc1.put(IStore.dbIdName, UUID.randomUUID());
 		doc1.put("name", "John");
@@ -468,7 +469,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerInCollection() throws Exception {
+	public void fetchesIntegerInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -483,7 +484,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerNotInCollection() throws Exception {
+	public void fetchesIntegerNotInCollection() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -498,7 +499,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
-	public void testFetchIntegerListHas() throws Exception {
+	public void fetchesIntegerListHas() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -513,7 +514,7 @@ public class TestQuery extends BaseMongoTest {
 	}
 	
 	@Test
-	public void testFetchIntegerListNotHas() throws Exception {
+	public void fetchesIntegerListNotHas() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());
 		doc.put("name", "John");
@@ -613,6 +614,20 @@ public class TestQuery extends BaseMongoTest {
 		result = fetchOne(query);
 		assertEquals("John", result.getData("name"));
 	}
-
-
+	
+	
+	@Test
+	public void fetchesOnlyIncludedFields() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("category", Collections.singletonList("Person"));
+		doc.put("name", "John");
+		doc.put("value", "Other");
+		store.insertDocuments(doc);
+		store.flush();
+		String query = "fetch one Person where name = \"John\" include name";
+		IStored result = fetchOne(query);
+		assertEquals("John", result.getData("name"));
+		assertNull(result.getData("value"));
+	}
 }

@@ -274,8 +274,7 @@ public class TestInstance extends BaseMongoTest {
 		instance.getStorable().removeData(fieldName);
 		store.store(instance.getStorable());
 		stored = store.fetchUnique(instance.getStorable().getOrCreateDbId());
-		assertFalse(stored.hasData(fieldName));
-			
+		assertFalse(stored.hasData(fieldName));			
 	}
 
 	private static boolean isDump() {
