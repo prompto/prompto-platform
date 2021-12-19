@@ -375,6 +375,8 @@ public class StoreServlet extends CleverServlet {
 			builder = builder.first(json.get("first").asLong());
 		if(json.has("last") && !json.get("last").isNull())
 			builder = builder.last(json.get("last").asLong());
+		if(json.has("projection") && json.get("projection").isArray())
+			readProjectionJson(builder, json.get("projection"));
 		if(json.has("orderBys") && !json.get("orderBys").isNull())
 			readOrderBysJson(builder, json.get("orderBys"));
 		resp.setContentType("application/json");
