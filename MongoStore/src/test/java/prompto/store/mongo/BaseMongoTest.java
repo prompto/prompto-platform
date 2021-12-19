@@ -35,21 +35,24 @@ public abstract class BaseMongoTest {
 	static protected MongodExecutable mongo = null;
 	static protected int mongoPort = 0;
 	static protected Timer mongoStopper = null;
+	static protected Object lock = new Object();
 	protected MongoStore store;
 	protected MongoDatabase db;
 	
 	
 	@BeforeClass
-	public static synchronized void __before_class__() throws IOException {
-		if(mongoPort==0)
+	public static void __before_class__() throws IOException {
+		synchronized(lock) {
+			if(mongoPort==0)
 			mongoPort = Network.getFreeServerPort();
-		if(mongo==null)
-			mongo = startMongo(mongoPort);
+			if(mongo==null)
+				mongo = startMongo(mongoPort);
+		}
 	}
 	
 
 	@AfterClass
-	public static synchronized void __after_class__() throws IOException {
+	public static  void __after_class__() throws IOException {
 		
 	}
 
@@ -76,41 +79,48 @@ public abstract class BaseMongoTest {
 	}
 
 	@Before
-	public synchronized void __before__() throws IOException {
-		if(mongoStopper!=null) {
-			mongoStopper.cancel();
-			mongoStopper = null;
+	public void __before__() throws IOException {
+		synchronized(lock) {
+				if(mongoStopper!=null) {
+				mongoStopper.cancel();
+				mongoStopper = null;
+			}
+			TempDirectories.create();
+			Mode.set(Mode.UNITTEST);
 		}
-		TempDirectories.create();
-		Mode.set(Mode.UNITTEST);
 	}
 	
 	@After
-	public synchronized void __after__() throws IOException {
-		if(mongoStopper==null) {
-			mongoStopper = new Timer("Stop Mongo");
-			mongoStopper.schedule(new TimerTask() {
-
-				@Override
-				public void run() {
-					stopMongo(mongo);
-					mongo = null;
-					mongoPort = 0;
-					mongoStopper.cancel();
-					mongoStopper = null;
-				}
-
-			}, 5000);
+	public void __after__() throws IOException {
+		synchronized(lock) {
+			if(mongoStopper==null) {
+				mongoStopper = new Timer("Stop Mongo");
+				mongoStopper.schedule(new TimerTask() {
+	
+					@Override
+					public void run() {
+						stopMongo(mongo);
+						mongo = null;
+						mongoPort = 0;
+						
+						mongoStopper.cancel();
+						mongoStopper = null;
+					}
+	
+				}, 5000);
+			}
 		}
 	}
 	
 	protected MongoStore createStore(String name) {
-		System.out.println("Creating new store from shared Mongo instance");
-		store = new MongoStore("localhost", mongoPort, name, false);
-		DataStore.setGlobal(store);
-		DataStore.useGlobal();
-		db = store.db;
-		return store;
+		synchronized(lock) {
+			System.out.println("Creating new store from shared Mongo instance");
+			store = new MongoStore("localhost", mongoPort, name, false);
+			DataStore.setGlobal(store);
+			DataStore.useGlobal();
+			db = store.db;
+			return store;
+		}
 	}
 
 
