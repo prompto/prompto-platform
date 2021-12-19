@@ -662,6 +662,8 @@ public class MongoStore implements IStore {
 						find = find.skip(query.first.intValue() - 1);
 					find = find.limit((int)(1 + query.last - query.first));
 				}
+				if(query.projection!=null)
+					find = find.projection(query.projection);
 				if(query.orderBys!=null)
 					find = find.sort(Sorts.orderBy(query.orderBys));
 			}
