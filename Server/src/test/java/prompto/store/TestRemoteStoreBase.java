@@ -522,8 +522,16 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 	}
 
 	@Test
-	public void includeIsSupported() throws Exception {
-		linkResourcesAndLoadPage("IncludeIsSupported", Dialect.O);
+	public void includeInFetchOneIsSupported() throws Exception {
+		linkResourcesAndLoadPage("IncludeInFetchOneIsSupported", Dialect.O);
+		Thread.sleep(100);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("{value:DeMurga}", elem.getText());
+	}
+	
+	@Test
+	public void includeInFetchManyIsSupported() throws Exception {
+		linkResourcesAndLoadPage("IncludeInFetchManyIsSupported", Dialect.O);
 		Thread.sleep(100);
 		WebElement elem = waitElement(By.id("root"), 3);
 		assertEquals("{value:DeMurga}", elem.getText());

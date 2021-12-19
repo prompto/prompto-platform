@@ -1,7 +1,7 @@
 storable attribute value: Text;
 storable category Stuff(name, value);
 
-widget IncludeIsSupportedPage extends ReactWidget {
+widget IncludeInFetchOneIsSupportedPage extends ReactWidget {
 	
 	method componentDidMount() {
 		s = Stuff(name="John", value="DeMurga");

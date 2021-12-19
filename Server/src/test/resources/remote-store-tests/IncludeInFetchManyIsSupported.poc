@@ -1,0 +1,19 @@
+storable attribute value: Text;
+storable category Stuff(name, value);
+
+widget IncludeInFetchManyIsSupportedPage extends ReactWidget {
+	
+	method componentDidMount() {
+		s = Stuff(name="John", value="DeMurga");
+		store(s);
+		forceRender();
+	}
+	
+	Html method render() {
+		stuffs = fetch all ( Stuff ) where ( name == "John" ) include ( value );
+		if(stuffs.count == 0)
+			return null;
+		stuff = stuffs.toList()[1];
+		return <div id="root">{stuff.text}</div>;
+	}
+}
