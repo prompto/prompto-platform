@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.UuidCodec;
@@ -24,7 +23,6 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;
-import org.bson.types.ObjectId;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -345,18 +343,7 @@ public class MongoStore implements IStore {
 	
 	@Override
 	public Object convertToNativeDbId(Object dbId) {
-		if(dbId == null)
-			return null;
-		else if(dbId instanceof UUID)
-			return dbId;
-		else if(dbId instanceof ObjectId)
-			return ((ObjectId) dbId).toHexString(); // NOT a UUID!
-		else if(dbId instanceof String)
-			return UUID.fromString((String)dbId);
-		else if(dbId instanceof BsonBinary)
-			return ((BsonBinary)dbId).asUuid();
-		else
-			return UUID.fromString(String.valueOf(dbId));
+		return MongoDbIdConverter.toNative(dbId);
 	}
 
 	@Override
@@ -597,18 +584,29 @@ public class MongoStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr) throws PromptoError {
+	public PromptoBinary fetchBinary(String table, PromptoDbId dbId, String attr) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
-		Iterator<Document> found = getInstancesCollection().find(filter)
+		MongoCollection<Document> collection = table == null ? getInstancesCollection() : db.getCollection(table);
+		Iterator<Document> found = collection.find(filter)
 			.limit(1)
 			.projection(Projections.include(attr))
 			.iterator();
 		if(!found.hasNext())
 			return null;
-		Object data = found.next().get(attr);
-		if(data==null)
-			return null;
-		data = readFieldData(attr, data);
+		Document doc = found.next();
+		String[] attrs = attr.split("\\.");
+		Object data = null;
+		for(int i = 0; i < attrs.length; i++) {
+			data = doc.get(attrs[i]);
+			if(data == null)
+				return null;
+			if(data instanceof Document)
+				doc = (Document)data;
+		}
+		if(table==null)
+			data = readFieldData(attr, data);
+		else
+			data = readFieldData(new AttributeInfo(attrs[attrs.length-1], Family.BLOB, false, null), data);
 		if(data instanceof PromptoBinary)
 			return (PromptoBinary)data;
 		else
@@ -750,7 +748,7 @@ public class MongoStore implements IStore {
 		readers.put(Family.VERSION, (o)->PromptoVersion.parseInt((int)o));
 	}
 	
-	static Object binaryToPromptoBinary(Object o) {
+	static PromptoBinary binaryToPromptoBinary(Object o) {
 		try {
 			BinaryData bin = new BinaryData(((Binary)o).getData());
 			return new PromptoBinary(bin.getMimeType(), bin.getData());
@@ -759,7 +757,6 @@ public class MongoStore implements IStore {
 		}		
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Object readFieldData(String fieldName, Object data) {
 		AttributeInfo info = attributes.get(fieldName);
 		if(info==null) {
@@ -770,6 +767,12 @@ public class MongoStore implements IStore {
 			logger.error(()->"Missing AttributeInfo for: " + fieldName);
 			return null;
 		}
+		return readFieldData(info, data);
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public Object readFieldData(AttributeInfo info, Object data) {
 		if(info.isCollection() && data instanceof Collection)
 			return readCollectionData(info, (Collection<Object>)data);
 		else

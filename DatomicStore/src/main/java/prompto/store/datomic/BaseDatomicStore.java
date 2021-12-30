@@ -241,7 +241,7 @@ public abstract class BaseDatomicStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr)
+	public PromptoBinary fetchBinary(String table, PromptoDbId dbId, String attr)
 			throws PromptoError {
 		throw new UnsupportedOperationException();
 	}

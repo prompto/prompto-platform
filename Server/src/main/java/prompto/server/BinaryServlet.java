@@ -26,9 +26,10 @@ public class BinaryServlet extends CleverServlet {
 		try {
 			String dbIdString = req.getParameter(IStore.dbIdName);
 			String attr = req.getParameter("attribute");
+			String table = req.getParameter("table");
 			IStore store = DataStore.getInstance();
 			PromptoDbId dbId = store.convertToDbId(dbIdString);
-			PromptoBinary binary = store.fetchBinary(dbId, attr);
+			PromptoBinary binary = store.fetchBinary(table, dbId, attr);
 			if(binary!=null) {
 				resp.setContentType(binary.getMimeType());
 				resp.getOutputStream().write(binary.getBytes());

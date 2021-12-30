@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +29,9 @@ import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
 import org.bson.internal.UuidHelper;
+import org.bson.types.Binary;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
@@ -43,6 +47,8 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
+import prompto.intrinsic.PromptoBinary;
+import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoDbId;
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
@@ -224,7 +230,11 @@ public class MongoAuditor {
 		Object dbId = record.remove("_id");
 		Document update = new Document("$set", record);
 		update.put("$setOnInsert", new Document("_id", dbId));
-		Bson filter = Filters.and(Filters.eq(METADATA_DBID_FIELD_NAME, record.getMetadataDbId().getValue()), Filters.eq(INSTANCE_DBID_FIELD_NAME, record.getInstanceDbId().getValue()));
+		// records updated from a Mongo client don't have metadata
+		PromptoDbId metaId = record.getMetadataDbId();
+		if(metaId == null)
+			metaId = store.newDbId();
+		Bson filter = Filters.and(Filters.eq(METADATA_DBID_FIELD_NAME, metaId.getValue()), Filters.eq(INSTANCE_DBID_FIELD_NAME, record.getInstanceDbId().getValue()));
 		store.db.getCollection(AUDIT_RECORDS_COLLECTION).updateOne(filter, update, new UpdateOptions().upsert(true).hintString(AUDIT_RECORDS_PRIMARY_KEY_INDEX_NAME));
 		record.put("_id", dbId);
 	}
@@ -373,10 +383,12 @@ public class MongoAuditor {
 			return instance instanceof Document ? new StoredDocument(store, (Document)instance) : null;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public PromptoDocument<String, Object> toDocument() {
-			return new PromptoDocument<>(this);
+			return (PromptoDocument<String, Object>)new MongoToPromptoConverter(AUDIT_RECORDS_COLLECTION, this.getDbId()).convert(this);
 		}
+
 
 	}
 
@@ -401,9 +413,11 @@ public class MongoAuditor {
 			return super.get(fieldName, resultClass);
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public PromptoDocument<String, Object> toDocument() {
-			return new PromptoDocument<String, Object>(this);
+			PromptoDbId dbId = PromptoDbId.of(MongoDbIdConverter.toNative(this.get("auditMetadataId")));
+			return (PromptoDocument<String, Object>)new MongoToPromptoConverter(AUDIT_METADATAS_COLLECTION, dbId).convert(this);
 		}		
 		
 	}
@@ -476,10 +490,10 @@ public class MongoAuditor {
 		if((auditPredicates==null ? 0 : auditPredicates.size()) + (instancePredicates==null ? 0 : instancePredicates.size())==0)
 			return new PromptoList<>(false);
 		List<Bson> auditFilters = auditPredicates==null ? Collections.emptyList() : auditPredicates.entrySet().stream()
-				.map(e -> Filters.eq(e.getKey(), convertQueryValue(e.getValue())))
+				.map(e -> Filters.eq(e.getKey(), PromptoToMongoConverter.convert(e.getValue())))
 				.collect(Collectors.toList());
 		List<Bson> instanceFilters = instancePredicates==null ? Collections.emptyList() : instancePredicates.entrySet().stream()
-				.map(e -> Filters.eq("instance." + e.getKey(), convertQueryValue(e.getValue())))
+				.map(e -> Filters.eq("instance." + e.getKey(), PromptoToMongoConverter.convert(e.getValue())))
 				.collect(Collectors.toList());
 		List<Bson> filters = Stream.concat(auditFilters.stream(), instanceFilters.stream()).collect(Collectors.toList());
 		Bson filter = filters.size() > 1 ? Filters.and(filters) : filters.get(0);
@@ -491,11 +505,59 @@ public class MongoAuditor {
 				
 	}
 	
-	static Object convertQueryValue(Object value) {
-		if(value instanceof Enum)
-			return ((Enum<?>)value).name();
-		else
-			return value;
+	static class PromptoToMongoConverter {
+
+		public static Object convert(Object value) {
+			if(value instanceof Enum)
+				return ((Enum<?>)value).name();
+			else
+				return value;
+		}
+		
+
+		
+	}
+
+	static class MongoToPromptoConverter {
+
+		String table;
+		PromptoDbId dbId;
+		Stack<String> attributes = new Stack<>();
+				
+		MongoToPromptoConverter(String table, PromptoDbId dbId) {
+			this.table = table;
+			this.dbId = dbId;
+		}
+		
+		public Object convert(Object value) {
+			if(value instanceof Document)
+				return toPromptoDocument((Document)value);
+			else if(value instanceof Date)
+				return toPromptoDateTime((Date)value);
+			else if(value instanceof Binary) {
+				PromptoBinary binary = MongoStore.binaryToPromptoBinary(value);
+				String attribute = StreamSupport.stream(attributes.spliterator(), false).collect(Collectors.joining("."));
+				binary.setSource(table, dbId, attribute);
+				return binary;
+			}
+			else
+				return value;
+		}
+
+		private static PromptoDateTime toPromptoDateTime(Date value) {
+			return new PromptoDateTime(new DateTime(value, DateTimeZone.UTC));
+		}
+
+		private PromptoDocument<String, Object> toPromptoDocument(Document value) {
+			PromptoDocument<String, Object> doc = new PromptoDocument<>(value);
+			for(String key : doc.keySet()) {
+				attributes.push(key);
+				doc.put(key, convert(doc.get(key)));
+				attributes.pop();
+			}
+			return doc;
+		}
+
 	}
 
 

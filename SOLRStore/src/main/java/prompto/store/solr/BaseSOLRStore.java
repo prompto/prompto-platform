@@ -268,7 +268,7 @@ abstract class BaseSOLRStore implements IStore {
 	}
 
 	@Override
-	public PromptoBinary fetchBinary(PromptoDbId dbId, String attr) throws PromptoError {
+	public PromptoBinary fetchBinary(String table, PromptoDbId dbId, String attr) throws PromptoError {
 		SolrQuery query = new SolrQuery();
 		query.setQuery("dbId:" + dbId);
 		query.setFields(attr);
