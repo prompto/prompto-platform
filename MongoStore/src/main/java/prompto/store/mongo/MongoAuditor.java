@@ -8,8 +8,11 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,8 +32,11 @@ import org.bson.internal.UuidHelper;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoChangeStreamCursor;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOptions;
@@ -49,6 +55,7 @@ import prompto.utils.Logger;
 public class MongoAuditor {
 
 	static final Logger logger = new Logger();
+	static final String AUDIT_RECORDS_PRIMARY_KEY_INDEX_NAME = "primary_key";
 	static final String AUDIT_RECORDS_COLLECTION = "auditRecords";
 	static final String AUDIT_METADATAS_COLLECTION = "auditMetadatas";
 	static final String AUDIT_CONFIGS_COLLECTION = "auditConfigs";
@@ -67,8 +74,32 @@ public class MongoAuditor {
 	}
 	
 	public void start() {
+		createUniqueIndexIfRequired();
 		createThread();
 		startThread();
+	}
+
+	private void createUniqueIndexIfRequired() {
+		if(!MongoStore.indexExists(store.db.getCollection(AUDIT_RECORDS_COLLECTION), AUDIT_RECORDS_PRIMARY_KEY_INDEX_NAME)) {
+			clearDuplicateAuditRecords();
+			IndexOptions options = new IndexOptions()
+					.unique(true)
+					.name(AUDIT_RECORDS_PRIMARY_KEY_INDEX_NAME);
+			Bson keys = Indexes.descending(METADATA_DBID_FIELD_NAME, INSTANCE_DBID_FIELD_NAME);
+			store.db.getCollection(AUDIT_RECORDS_COLLECTION).createIndex(keys, options);
+		}		
+		
+	}
+
+	private void clearDuplicateAuditRecords() {
+		Map<UUID, Set<UUID>> uniqueIds = new HashMap<>();
+		MongoCollection<Document> collection = store.db.getCollection(AUDIT_RECORDS_COLLECTION);
+		collection.find().forEach(doc-> {
+			Set<UUID> instanceIds = uniqueIds.computeIfAbsent(doc.get(METADATA_DBID_FIELD_NAME, UUID.class), key -> new HashSet<>());
+			UUID uuid = doc.get(INSTANCE_DBID_FIELD_NAME, UUID.class);
+			if(!instanceIds.add(uuid))
+				collection.deleteOne(Filters.eq("_id", doc.get("_id")));
+		});
 	}
 
 	private void createThread() {
@@ -143,7 +174,7 @@ public class MongoAuditor {
 
 	private void storeAuditRecord(ChangeStreamDocument<Document> change) {
 		try(ClientSession session = store.client.startSession()) {
-			logger.debug(()->"Auditing change for record " + change.getDocumentKey().get("_id"));
+			logger.debug(()->"Auditing change for record " + store.convertToDbId(change.getDocumentKey().get("_id")));
 			session.startTransaction();
 			switch(change.getOperationType()) {
 			case INSERT:
@@ -169,7 +200,7 @@ public class MongoAuditor {
 		insert.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		insert.setOperation(Operation.INSERT);
 		insert.setInstance(new StoredDocument(store, change.getFullDocument()));
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(session, insert);
+		storeAuditRecord(session, insert);
 	}
 
 	private void storeUpdateRecord(ClientSession session, ChangeStreamDocument<Document> change) {
@@ -179,16 +210,25 @@ public class MongoAuditor {
 		update.setInstance(new StoredDocument(store, change.getFullDocument()));
 		update.put("removedFields", change.getUpdateDescription().getRemovedFields());
 		update.put("updatedFields", change.getUpdateDescription().getUpdatedFields());
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(update);
+		storeAuditRecord(session, update);
 	}
 
 	private void storeDeleteRecord(ClientSession session, ChangeStreamDocument<Document> change) {
 		AuditRecord delete = newAuditRecord();
 		delete.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		delete.setOperation(Operation.DELETE);
-		store.db.getCollection(AUDIT_RECORDS_COLLECTION).insertOne(delete);
+		storeAuditRecord(session, delete);
 	}
 	
+	private void storeAuditRecord(ClientSession session, AuditRecord record) {
+		Object dbId = record.remove("_id");
+		Document update = new Document("$set", record);
+		update.put("$setOnInsert", new Document("_id", dbId));
+		Bson filter = Filters.and(Filters.eq(METADATA_DBID_FIELD_NAME, record.getMetadataDbId().getValue()), Filters.eq(INSTANCE_DBID_FIELD_NAME, record.getInstanceDbId().getValue()));
+		store.db.getCollection(AUDIT_RECORDS_COLLECTION).updateOne(filter, update, new UpdateOptions().upsert(true).hintString(AUDIT_RECORDS_PRIMARY_KEY_INDEX_NAME));
+		record.put("_id", dbId);
+	}
+
 	private AuditRecord newAuditRecord() {
 		AuditRecord audit = new AuditRecord(store);
 		audit.setDbId(store.convertToDbId(UUID.randomUUID()));

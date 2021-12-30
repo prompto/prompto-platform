@@ -436,7 +436,12 @@ public class MongoStore implements IStore {
 	*/
 	
 	private boolean indexExists(String indexName) {
-		ListIndexesIterable<Document> indices = getInstancesCollection().listIndexes();
+		return indexExists(getInstancesCollection(), indexName);
+	}
+	
+	
+	static boolean indexExists(MongoCollection<Document> collection, String indexName) {
+		ListIndexesIterable<Document> indices = collection.listIndexes();
 		return StreamSupport.stream(indices.spliterator(), false)
 				.map(doc->doc.get("key"))
 				.map(o->(Document)o)
