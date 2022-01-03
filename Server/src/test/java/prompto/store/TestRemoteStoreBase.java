@@ -351,6 +351,13 @@ public abstract class TestRemoteStoreBase extends BaseUITest {
 	}
 
 	@Test
+	public void parentIsFiltered() throws Exception {
+		linkResourcesAndLoadPage("ParentIsFiltered", Dialect.O);
+		WebElement elem = waitElement(By.id("root"), 3);
+		assertEquals("Tommy, Bernard", elem.getText());
+	}
+
+	@Test
 	public void dbIdIsPopulated() throws Exception {
 		linkResourcesAndLoadPage("DbIdIsPopulated", Dialect.O);
 		WebElement elem = waitElement(By.id("root"), 3);

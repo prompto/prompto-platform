@@ -1,0 +1,34 @@
+storable attribute value: Text;
+storable attribute parent: Parent;
+storable category Child(parent, value);
+storable category Parent(value);
+
+widget ParentIsFilteredPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { children: null };
+	}
+	
+	method componentDidMount() {
+		john = Parent(value="John");
+		jane = Parent(value="Jane");
+		jennifer = Child(value="Jennifer", parent = john);
+		tommy = Child(value="Tommy", parent = jane);
+		bernard = Child(value="Bernard", parent = jane);
+		store(john, jane, jennifer, tommy, bernard) then {
+			fetch all(Child) where (parent == jane) then with cursor {
+				setState({children: cursor.toList()});
+			}
+		}
+	}
+	
+	Html method render() {
+		children = (Child[])state.children;
+		if(children is null)
+			return <div>null!</div>;
+		else {
+			values = child.value for each (child in children);
+			return <div id="root">{values.text}</div>;
+		}
+	}
+}
