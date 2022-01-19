@@ -13,8 +13,8 @@ jobs:
           name: checkout git submodules
           command: |
             git submodule update --init --recursive
-     - browser-tools/install-chrome
-     - run:
+      - browser-tools/install-chrome
+      - run:
           name: Build Core
           command: mvn -B -q install -f prompto-java/pom.xml -DskipTests=true
       - run:
