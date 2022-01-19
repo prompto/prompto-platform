@@ -97,5 +97,13 @@ public class TestRemoteExec extends BaseUITest {
 		assertEquals("RETURNED", root.getText());
 	}
 
+	@Test
+	public void dbIdIsAccepted() throws Exception {
+		linkResourcesAndLoadPage("DbIdIsAccepted", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("ACCEPTED", root.getText());
+	}
+
 
 }

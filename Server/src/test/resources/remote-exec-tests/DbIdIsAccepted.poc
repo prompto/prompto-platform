@@ -1,0 +1,29 @@
+method acceptDbId(DbId thingId) {
+	return "ACCEPTED";
+}
+
+storable category Thing(name);
+
+widget DbIdIsAcceptedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { status: "INITIAL" };
+	}
+	
+	method componentDidMount() {
+		thing = Thing(name = "stuff");
+		store (thing) then {
+			acceptDbId(thing.dbId) then with result {
+				setState({ status: result });
+			}
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		if(state.status=="INITIAL")
+			return <div>INITIAL</div>;
+		else
+			return <div id="root">{state.status}</div>;
+	}
+}
