@@ -105,5 +105,14 @@ public class TestRemoteExec extends BaseUITest {
 		assertEquals("ACCEPTED", root.getText());
 	}
 
+	@Test
+	public void clientEntityIsNotDuplicated() throws Exception {
+		assertEquals(0, DataStore.getInstance().fetchMany(null).count());
+		linkResourcesAndLoadPage("ClientEntityIsNotDuplicated", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("EXECUTED", root.getText());
+		assertEquals(1, DataStore.getInstance().fetchMany(null).count());
+	}
 
 }

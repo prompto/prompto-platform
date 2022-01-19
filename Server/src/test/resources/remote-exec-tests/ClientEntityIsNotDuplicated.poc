@@ -1,0 +1,30 @@
+method serverMethod(Entity e) {
+	store (e);
+	return "EXECUTED";
+}
+
+storable category Entity(name);
+
+widget ClientEntityIsNotDuplicatedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { status: "INITIAL" };
+	}
+	
+	method componentDidMount() {
+		e = Entity(name = "John");
+		store (e) then {
+			serverMethod (e) then with status {
+				setState({ status: status });
+			}
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		if(state.status=="INITIAL")
+			return <div>INITIAL</div>;
+		else
+			return <div id="root">{state.status}</div>;
+	}
+}
