@@ -25,6 +25,6 @@ jobs:
           command: mvn -B -q test
 
 workflows:
-  standard:
+  regular:
     jobs:
       - build-and-test
