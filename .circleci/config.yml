@@ -1,19 +1,15 @@
 version: 2.1
 
-orbs:
-  browser-tools: circleci/browser-tools@1.2.4
-
 jobs:
   build-and-test:
     docker:
-      - image: cimg/openjdk:8.0
+      - image: circleci/openjdk:8-jdk-buster-node-browsers-legacy
     steps:
       - checkout
       - run:
           name: checkout git submodules
           command: |
             git submodule update --init --recursive
-      - browser-tools/install-chrome
       - run:
           name: Build Core
           command: mvn -B -q install -f prompto-java/pom.xml -DskipTests=true
