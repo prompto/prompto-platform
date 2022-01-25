@@ -11,3 +11,4 @@ travis.yml
 /password.txt
 release.json
 /token.txt
+amalthea.yml
