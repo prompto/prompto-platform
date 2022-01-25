@@ -90,7 +90,7 @@ public class TestStoredRecordAuthenticationConfiguration extends BaseMongoTest {
 
 	private Object storeSettings() throws IOException {
 		MongoCollection<Document> collection = db.getCollection("instances");
-		Document root = MongoUtils.readResource("config/app.json");
+		Document root = MongoUtils.readResource("configs/app.json");
 		String ref = (String)root.get("authenticationSettings");
 		Document settings = MongoUtils.readResource(ref);
 		ref = (String)settings.get("authenticationMethod");

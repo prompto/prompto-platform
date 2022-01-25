@@ -34,7 +34,7 @@ public class TestConfig {
 
 	@Test
 	public void testFullYamlConfig() throws IOException {
-		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("config/test-config.yml")) {
+		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("configs/test-config.yml")) {
 			assertNotNull(input);
 			IConfigurationReader reader = new YamlConfigurationReader(input);
 			IHttpConfiguration httpConfig = new HttpConfiguration(reader.getObject("http"));

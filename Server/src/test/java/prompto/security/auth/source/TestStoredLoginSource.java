@@ -179,7 +179,7 @@ public class TestStoredLoginSource extends BaseServerTest {
 		URL codeResourceURL = Thread.currentThread().getContextClassLoader().getResource("login-factory-tests/config-login-factory.poc");
 		ImmutableCodeStore codeResource = new ImmutableCodeStore(null, ModuleType.LIBRARY, codeResourceURL, PromptoVersion.LATEST);
 		tail.setNext(codeResource);	
-		String config = ResourceUtils.getResourceAsString("config/auth-config.yml");
+		String config = ResourceUtils.getResourceAsString("configs/auth-config.yml");
 		JsonNode node = runRemotely("checkHasLogin", param("config", "Text", config), param("login", "login", "john"));
 		assertFalse(node.get("data").asBoolean());
 		node = runRemotely("createAndCheckUserLogin", param("config", "Text", config), param("login", "login", "john"), param("password", "password", "password"));

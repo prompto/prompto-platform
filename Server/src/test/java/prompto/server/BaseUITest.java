@@ -24,7 +24,7 @@ public abstract class BaseUITest extends BaseWebTest {
 	public static void startAppServer() throws Throwable {
 		String[] args = {
 				"-yamlConfigFile",
-				"config/test-local.yml"
+				"configs/test-local.yml"
 		};
 		TestServer.main(args);
 		HTTP_PORT = (int)AppServer.getHttpPort();
