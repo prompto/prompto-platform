@@ -8,5 +8,5 @@
     "description" : "Test", 
     "serverAboutToStartMethod" : "", 
     "homePage" : "", 
-    "authenticationSettings" : "config/auth-settings.json"
+    "authenticationSettings" : "configs/auth-settings.json"
 }

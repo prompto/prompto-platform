@@ -2,8 +2,8 @@
     "category" : [
         "AuthenticationSettings"
     ], 
-    "authenticationMethod" : "config/auth-method.json", 
-    "authenticationSource" : "config/auth-source.json", 
+    "authenticationMethod" : "configs/auth-method.json", 
+    "authenticationSource" : "configs/auth-source.json", 
     "skipAuthInDev" : false, 
     "useTestSourceInDev" : true
 }
