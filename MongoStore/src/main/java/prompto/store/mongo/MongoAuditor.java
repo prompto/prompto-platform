@@ -46,6 +46,7 @@ import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.client.model.changestream.UpdateDescription;
 
 import prompto.intrinsic.PromptoBinary;
 import prompto.intrinsic.PromptoDateTime;
@@ -214,8 +215,9 @@ public class MongoAuditor {
 		update.setInstanceDbId(store.convertToDbId(change.getDocumentKey().get("_id")));
 		update.setOperation(Operation.UPDATE);
 		update.setInstance(new StoredDocument(store, change.getFullDocument()));
-		update.put("removedFields", change.getUpdateDescription().getRemovedFields());
-		update.put("updatedFields", change.getUpdateDescription().getUpdatedFields());
+		UpdateDescription description = change.getUpdateDescription();
+		update.put("removedFields", description==null ? null : description.getRemovedFields());
+		update.put("updatedFields", description==null ? null : description.getUpdatedFields());
 		storeAuditRecord(session, update);
 	}
 
@@ -255,8 +257,8 @@ public class MongoAuditor {
 	private void loadMetadataRecordIfRequired(ChangeStreamDocument<Document> change) {
 		BsonDocument lsId = change.getLsid();
 		// if document was stored outside a session there is no associated metadata
-		if(lsId==null)
-			metadata = null;
+		if(lsId==null) 
+			metadata = createMetadata();
 		else {
 			Object sessionId = null;
 			if(lsId.get("id").getBsonType()==BsonType.BINARY) {
@@ -276,6 +278,14 @@ public class MongoAuditor {
 					metadata = createMetadata(sessionId, txnNumber, change.getClusterTime());
 			}
 		}
+	}
+
+	private AuditMetadata createMetadata() {
+		AuditMetadata metadata = newAuditMetadata();
+		metadata.put("description", "<undocumented-changes>");
+		metadata.setUTCTimestamp(LocalDateTime.now(ZoneOffset.UTC));
+		store.db.getCollection(AUDIT_METADATAS_COLLECTION).insertOne(metadata);
+		return metadata;
 	}
 
 	private AuditMetadata createMetadata(Object sessionId, Object txnNumber, BsonTimestamp timestamp) {
