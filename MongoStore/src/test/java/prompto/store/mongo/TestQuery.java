@@ -181,6 +181,20 @@ public class TestQuery extends BaseMongoTest {
 	}
 
 	@Test
+	public void fetchesTextRoughlyWithParenthesis() throws Exception {
+		Document doc = new Document();
+		doc.put(IStore.dbIdName, UUID.randomUUID());
+		doc.put("name", "John (Doe)");
+		store.insertDocuments(doc);
+		store.flush();
+		// Test the basics
+		String query = "fetch one where name ~ \"joHn (doe)\"";
+		IStored result = fetchOne(query);
+		assertNotNull(result);
+		assertEquals("John (Doe)", result.getData("name"));
+	}
+
+	@Test
 	public void fetchesTextContains() throws Exception {
 		Document doc = new Document();
 		doc.put(IStore.dbIdName, UUID.randomUUID());

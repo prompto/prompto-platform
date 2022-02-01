@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiFunction;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.bson.conversions.Bson;
@@ -45,9 +46,14 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	}
 	
 	static Bson verify_ROUGHLY(AttributeInfo info, Object value) {
-		if(info.getFamily()==Family.TEXT)
-			return Filters.regex(info.getName(), value.toString(), "i");
-		else
+		if(info.getFamily()==Family.TEXT) {
+			String regex = value.toString();
+			for(char c : "[]()*?^.|&".toCharArray()) {
+				String s = "\\" + c;
+				regex = regex.replaceAll(s, Matcher.quoteReplacement(s));
+			}
+			return Filters.regex(info.getName(), regex, "i");
+		} else
 			return Filters.eq(getAttributeName(info), value);
 	}
 
