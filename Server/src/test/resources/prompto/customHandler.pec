@@ -1,6 +1,6 @@
-define serviceHandler as abstract method receiving Document doc
+define ServiceHandler as abstract method receiving Document doc
 
-define installServiceHandler as native method receiving Text path and serviceHandler doing:
+define installServiceHandler as native method receiving Text path and ServiceHandler serviceHandler doing:
     Java: $server.installHandler(path, serviceHandler);
 
 define gitHandler as method receiving Document doc doing:
