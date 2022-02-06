@@ -524,8 +524,6 @@ public class MongoAuditor {
 				return value;
 		}
 		
-
-		
 	}
 
 	static class MongoToPromptoConverter {
