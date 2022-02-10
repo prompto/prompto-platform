@@ -212,6 +212,7 @@ public class MongoStore implements IStore {
 		Runtime.getRuntime().addShutdownHook(new Thread(()->close()));
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
