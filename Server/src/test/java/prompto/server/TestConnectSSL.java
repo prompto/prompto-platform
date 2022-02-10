@@ -1,17 +1,10 @@
 package prompto.server;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
+import java.net.URI;
+import java.net.http.HttpRequest;
 
 import org.junit.Test;
 
@@ -35,20 +28,10 @@ public class TestConnectSSL extends BaseServerTest {
 
 	@Test
 	public void testResource() throws Exception {
-		URL url = new URL("https://localhost:" + port + "/ws/control/version");
-		HttpsURLConnection cnx = (HttpsURLConnection)url.openConnection();
-		SSLUtils.trustAllCertificates(cnx);
-		InputStream input = cnx.getInputStream();
-		try(Reader reader = new InputStreamReader(input)) {
-			try(BufferedReader buffered = new BufferedReader(reader)) {
-				assertEquals("1.0.0", buffered.readLine());
-			}
-		} catch (Throwable t) {
-			t.printStackTrace();
-			fail();
-		} finally {
-			cnx.disconnect();
-		}
+		HttpRequest request = HttpRequest.newBuilder(new URI("https://localhost:" + port + "/ws/control/version")).build();
+		assertTrue(SSLUtils.trustingAllCertificates(request, s -> {
+			return "1.0.0".equals(s);
+		}));
 	}
 
 }
