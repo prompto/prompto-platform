@@ -12,7 +12,7 @@ public interface IAuthenticationSourceFactory {
 		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
 		if(!(IAuthenticationSourceFactory.class.isAssignableFrom(klass)))
 			throw new RuntimeException("Not an authentication source factory: " + factoryName);
-		return (IAuthenticationSourceFactory)klass.newInstance();
+		return (IAuthenticationSourceFactory)klass.getDeclaredConstructor().newInstance();
 	}
 
 	IAuthenticationSourceConfiguration newConfiguration(IConfigurationReader reader);

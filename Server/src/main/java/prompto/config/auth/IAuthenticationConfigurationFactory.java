@@ -8,7 +8,7 @@ public interface IAuthenticationConfigurationFactory {
 		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
 		if(!(IAuthenticationConfigurationFactory.class.isAssignableFrom(klass)))
 			throw new RuntimeException("Not an authentication configuration factory: " + factoryName);
-		return (IAuthenticationConfigurationFactory)klass.newInstance();
+		return (IAuthenticationConfigurationFactory)klass.getDeclaredConstructor().newInstance();
 	}
 
 	IAuthenticationConfiguration newConfiguration(IConfigurationReader child);

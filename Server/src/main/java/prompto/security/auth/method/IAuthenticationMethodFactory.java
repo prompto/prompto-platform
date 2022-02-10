@@ -14,7 +14,7 @@ public interface IAuthenticationMethodFactory {
 		Class<?> klass = Class.forName(factoryName, true, Thread.currentThread().getContextClassLoader());
 		if(!(IAuthenticationMethodFactory.class.isAssignableFrom(klass)))
 			throw new RuntimeException("Not an authentication method factory: " + factoryName);
-		return (IAuthenticationMethodFactory)klass.newInstance();
+		return (IAuthenticationMethodFactory)klass.getDeclaredConstructor().newInstance();
 	}
 
 	IAuthenticationMethodConfiguration newConfiguration(IConfigurationReader reader);

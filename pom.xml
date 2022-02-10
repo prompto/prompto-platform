@@ -53,13 +53,21 @@
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jackson.version>2.13.1</jackson.version>
-		<jetty.version>9.3.3.v20150827</jetty.version>
+		<jetty.version>9.3.10.v20160621</jetty.version>
 		<solr.version>5.4.0</solr.version>
 		<mongo.version>4.2.3</mongo.version>
   	</properties>
   
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>11</source>
+					<target>11</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.0.2</version>

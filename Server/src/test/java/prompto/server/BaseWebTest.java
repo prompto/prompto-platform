@@ -42,7 +42,7 @@ public abstract class BaseWebTest {
 	static void loadWebDriver() throws Exception {
 		String className = properties.getProperty("web-driver-factory");
 		Class<? extends WebDriverFactory> klass = (Class<? extends WebDriverFactory>)Class.forName(className);
-		webDriver = klass.newInstance().newDriver(properties);
+		webDriver = klass.getDeclaredConstructor().newInstance().newDriver(properties);
 		webDriver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
 		webDriver.manage().window().setSize(new Dimension(1300, 900));
 	}
