@@ -227,6 +227,7 @@ class JettyServer extends Server {
 	private SslConnectionFactory createSSLFactory() throws Exception {
 		SslContextFactory context = new SslContextFactory();
 		context.setSslSessionTimeout(180000);
+		context.setIncludeProtocols("TLSv1.2");
 		IKeyStoreConfiguration ksc = config.getHttpConfiguration().getKeyStoreConfiguration();
 		IKeyStoreFactoryConfiguration ksfc = ksc.getKeyStoreFactoryConfiguration();
 		IKeyStoreFactory factory = ksfc.getKeyStoreFactory();
