@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
-      - image: circleci/openjdk:11.0.13-browsers
+      - image: circleci/openjdk:11.0-browsers
     steps:
       - checkout
       - run:
