@@ -3,18 +3,12 @@ package prompto.server;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,6 +39,7 @@ import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
 import prompto.security.auth.source.IAuthenticationSource;
 import prompto.server.JettyServer.WebSiteContext;
+import prompto.utils.JarLoader;
 import prompto.utils.CmdLineParser;
 import prompto.utils.ErrorLogger;
 import prompto.utils.Logger;
@@ -84,31 +79,12 @@ public class AppServer {
 	}
 	
 	public static void installCloudJARs(Cloud cloud) throws Exception {
-		Collection<URL> jars = cloud.getJarURLs();
-		if(jars==null)
+		Collection<URL> urls = cloud.getJarURLs();
+		if(urls==null)
 			return;
-		jars = filterOutAlreadyLoadedJars(jars);
-		addJarsToSystemClassLoader(jars);
+		JarLoader.addURLs(urls);
 	}
 	
-	private static Collection<URL> filterOutAlreadyLoadedJars(Collection<URL> jars) {
-		URLClassLoader loader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-		Set<URL> alreadyLoaded = new HashSet<>(Arrays.asList(loader.getURLs()));
-		return jars.stream()
-				.filter(u->!alreadyLoaded.contains(u))
-				.collect(Collectors.toList());
-	}
-
-	 private static void addJarsToSystemClassLoader(Collection<URL> jars) throws Exception {
-		URLClassLoader loader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-        method.setAccessible(true); /*promote the method to public access*/
-        for(URL url : jars) {
-        	logger.debug(()->"Adding JAR " + url.toString() + " to system class loader...");
-        	method.invoke(loader, new Object[] { url });
-        }
-    }
-
 	public static void initialize(IServerConfiguration config) throws Throwable {
 		ServerIdentifierProcessor.register();
 		Standalone.initialize(config);

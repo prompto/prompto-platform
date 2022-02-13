@@ -188,6 +188,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>JarLoader</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>MongoStore</artifactId>
 			<version>${project.version}</version>
 			<type>test-jar</type>
