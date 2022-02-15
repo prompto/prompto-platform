@@ -47,12 +47,12 @@ public class MongoQueryBuilder implements IQueryBuilder {
 	
 	static Bson verify_ROUGHLY(AttributeInfo info, Object value) {
 		if(info.getFamily()==Family.TEXT) {
-			String regex = value.toString();
+			 String regex = value.toString();
 			for(char c : "[]()*?^.|&".toCharArray()) {
 				String s = "\\" + c;
 				regex = regex.replaceAll(s, Matcher.quoteReplacement(s));
 			}
-			return Filters.regex(info.getName(), regex, "i");
+			return Filters.regex(getAttributeName(info), "^" + regex + '$', "i"); 
 		} else
 			return Filters.eq(getAttributeName(info), value);
 	}
