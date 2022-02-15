@@ -34,11 +34,11 @@ public class KMS {
 				.region(Region.of(awsRegion));
 		login = verifyLogin(login);
 		if(login!=null && password!=null) {
-			log("Connecting to " + awsRegion + " with login "  + login);
+			logger.info("Connecting to " + awsRegion + " with login "  + login);
 			AwsCredentials credentials = AwsBasicCredentials.create(login, password);
 			builder = builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 		} else {
-			log("Connecting to " + awsRegion + " through IAM");
+			logger.info("Connecting to " + awsRegion + " through IAM");
 		}
 		return new KMS(builder.build());
 	}
@@ -46,19 +46,13 @@ public class KMS {
 	private static String verifyLogin(String login) {
 		if(login!=null) {
 			if(login.trim().isEmpty() || "null".equals(login)) {
-				log("Invalid login: " + login);
+				logger.warn("Invalid login: " + login);
 				return null;
 			}
 		}
 		return login;
 	}
 	
-	private static void log(String msg) {
-		logger.info(msg);
-		// logger may not be connected yet, so also copy to err
-		System.err.println(msg);
-	}
-
 	KmsClient kms;
 
 	public KMS(KmsClient kms) {
@@ -110,13 +104,13 @@ public class KMS {
 				.findFirst()
 				.orElse(null);
 		if(entry==null) {
-			log("No ARN found for " + alias);
+			logger.warn("No ARN found for " + alias);
 			return null;
 		}
 		String prefix = entry.aliasArn();
 		prefix = prefix.substring(0, prefix.indexOf(":" + fullAlias));
 		String result = prefix + ":key/" + entry.targetKeyId(); 
-		log("Found ARN: " + result);
+		logger.info("Found ARN: " + result);
 		return result;
 	}
 	
@@ -128,12 +122,12 @@ public class KMS {
 			.build();
 		EncryptResponse res = kms.encrypt(req);
 		String result = Base64.getEncoder().encodeToString(res.ciphertextBlob().asByteArray());
-		log("Encrypted " + result);
+		logger.info("Encrypted " + result);
 		return result;
 	}
 	
 	public String decrypt(String dataToDecrypt) {
-		log("Decrypting " + dataToDecrypt);
+		logger.info("Decrypting " + dataToDecrypt);
 		ByteBuffer bytes = ByteBuffer.wrap(Base64.getDecoder().decode(dataToDecrypt));
 		DecryptRequest req = DecryptRequest.builder()
 			.ciphertextBlob(SdkBytes.fromByteBuffer(bytes))
