@@ -54,13 +54,17 @@ public class AppServer {
 	
 	static JettyServer jettyServer;
 
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) {
 		main(args, null);
 	}
 	
-	public static void main(String[] args, Consumer<IServerConfiguration> afterStart) throws Throwable {
-		IServerConfiguration config = loadConfiguration(args);
-		main(config, null, null, null, afterStart);
+	public static void main(String[] args, Consumer<IServerConfiguration> afterStart) {
+		try {
+			IServerConfiguration config = loadConfiguration(args);
+			main(config, null, null, null, afterStart);
+		} catch(Throwable t) {
+			logger.error(()->"Uncaught exception!", t);
+		}
 	}
 
 	public static <T extends IServerConfiguration> void main(T config, Runnable serverPrepared, Runnable serverStarted, Runnable serverStopped, Consumer<T> afterStart) throws Throwable {
@@ -175,6 +179,8 @@ public class AppServer {
 			Interpreter.interpretMethod(context, new Identifier(serverAboutToStartMethod), Standalone.argsToArgValue(config.getArguments()));
 		} catch(TerminatedError e) {
 			// not an error
+		} catch(Throwable t) {
+			logger.error(()->"While calling startUp method " + serverAboutToStartMethod + "'", t);
 		} finally {
 			context.notifyCompleted();
 		}
