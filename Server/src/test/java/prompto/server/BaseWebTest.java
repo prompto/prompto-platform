@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +43,7 @@ public abstract class BaseWebTest {
 		String className = properties.getProperty("web-driver-factory");
 		Class<? extends WebDriverFactory> klass = (Class<? extends WebDriverFactory>)Class.forName(className);
 		webDriver = klass.getDeclaredConstructor().newInstance().newDriver(properties);
-		webDriver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
+		webDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
 		webDriver.manage().window().setSize(new Dimension(1300, 900));
 	}
 	
@@ -82,7 +82,7 @@ public abstract class BaseWebTest {
 	
 	protected WebElement waitElement(By by, int seconds) {
 		try {
-			WebDriverWait wait = new WebDriverWait(webDriver, seconds);
+			WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(seconds));
 			return wait.until( new ExpectedCondition<WebElement>() {
 	
 				@Override public WebElement apply(WebDriver input) {
@@ -100,7 +100,7 @@ public abstract class BaseWebTest {
 
 	protected WebElement waitElement(WebElement start, By by, int seconds) {
 		try {
-			WebDriverWait wait = new WebDriverWait(webDriver, seconds);
+			WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(seconds));
 			return wait.until( new ExpectedCondition<WebElement>() {
 	
 				@Override public WebElement apply(WebDriver input) {
