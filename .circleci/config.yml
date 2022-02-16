@@ -12,10 +12,6 @@ jobs:
       - browser-tools/install-chrome
       - browser-tools/install-chromedriver
       - run:
-          name: Install libnss3
-          command: |
-            cd Server/src/test/resources/selenium/drivers/linux/ && chmod 777 install_libnss3.sh && ./install_libnss3.sh
-      - run:
           name: Checkout git submodules
           command: |
             git submodule update --init --recursive
