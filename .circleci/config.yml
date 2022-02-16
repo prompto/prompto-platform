@@ -7,6 +7,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install libnss3
+          command: |
+            cd src/test/resources/selenium/drivers/linux && chmod 777 install_libnss3.sh && ./install_libnss3.sh
+      - run:
           name: Checkout git submodules
           command: |
             git submodule update --init --recursive
