@@ -6,10 +6,11 @@ orbs:
 jobs:
   build-and-test:
     docker:
-      - image: cimg/openjdk:16.0
+      - image: cimg/openjdk:16.0-browsers
     steps:
       - checkout
       - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
       - run:
           name: Install libnss3
           command: |

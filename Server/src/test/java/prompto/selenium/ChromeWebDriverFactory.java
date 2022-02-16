@@ -40,6 +40,10 @@ public class ChromeWebDriverFactory implements WebDriverFactory {
 	}
 
 	private static File locateChromeDriver(String osName) {
+		// if already installed, return installed location
+		File file = new File("/usr/local/bin/chromedriver");
+		if(file.exists())
+			return file;
 		String resourceName = "selenium/drivers/" + osName + "/chromedriver";
 		URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
 		if(url==null)
