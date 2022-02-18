@@ -31,14 +31,17 @@ import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeSubnetsResponse;
 import software.amazon.awssdk.services.ec2.model.DisassociateAddressRequest;
+import software.amazon.awssdk.services.ec2.model.EbsInstanceBlockDeviceSpecification;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 import software.amazon.awssdk.services.ec2.model.Filter;
 import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import software.amazon.awssdk.services.ec2.model.ImageState;
+import software.amazon.awssdk.services.ec2.model.InstanceBlockDeviceMappingSpecification;
 import software.amazon.awssdk.services.ec2.model.InstanceState;
 import software.amazon.awssdk.services.ec2.model.LaunchPermission;
 import software.amazon.awssdk.services.ec2.model.LaunchPermissionModifications;
 import software.amazon.awssdk.services.ec2.model.ModifyImageAttributeRequest;
+import software.amazon.awssdk.services.ec2.model.ModifyInstanceAttributeRequest;
 import software.amazon.awssdk.services.ec2.model.PermissionGroup;
 import software.amazon.awssdk.services.ec2.model.ReleaseAddressRequest;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
@@ -124,6 +127,18 @@ public class EC2 {
 			.resources(instanceId)
 			.tags(Tag.builder().key("Name").value(name).build());
 		ec2.createTags(tagsRequestBuilder.build());
+	}
+	
+	public void setInstanceAutoDeleteVolume(String instanceId, String deviceName, boolean autoDelete) {
+		ModifyInstanceAttributeRequest modifyRequest = ModifyInstanceAttributeRequest.builder()
+				.blockDeviceMappings(InstanceBlockDeviceMappingSpecification.builder()
+						.deviceName(deviceName)
+						.ebs(EbsInstanceBlockDeviceSpecification.builder()
+								.deleteOnTermination(autoDelete)
+								.build())
+						.build())
+				.build();
+		ec2.modifyInstanceAttribute(modifyRequest);
 	}
 	
 	public void startInstance(String instanceId) {

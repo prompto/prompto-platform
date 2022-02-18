@@ -14,6 +14,9 @@ and methods:
 	define setInstanceName as method receiving Text instanceId and name doing:
 		Java: this.setInstanceName(instanceId, name);
 
+	define setInstanceAutoDeleteVolume as method receiving Text instanceId, Text deviceName and Boolean autoDelete doing:
+		Java: this.setInstanceAutoDeleteVolume(instanceId, deviceName, autoDelete);
+
 	define startInstance as method receiving Text instanceId doing:
 		Java: this.startInstance(instanceId);
 
