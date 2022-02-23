@@ -466,7 +466,7 @@ public class StoreServlet extends CleverServlet {
 		
 	}
 	
-	@SuppressWarnings({ "unchecked", "resource" })
+	@SuppressWarnings({ "unchecked" })
 	private void readMatchPredicateJson(IQueryBuilder builder, JsonNode jsonNode) {
 		String name = jsonNode.get("info").get("name").asText();
 		AttributeInfo info = fetchAttributeInfo(name);
