@@ -234,7 +234,8 @@ class JettyServer extends Server {
 		IKeyStoreFactory factory = ksfc.getKeyStoreFactory();
 		context.setKeyStore(factory.newInstance(ksfc));
 		ISecretKeyConfiguration secret = ksc.getSecretKeyConfiguration();
-		context.setKeyStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
+		if(secret!=null)
+			context.setKeyStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
 		ksc = config.getHttpConfiguration().getTrustStoreConfiguration();
 		// trust store is optional
 		if(ksc!=null) {
@@ -242,7 +243,8 @@ class JettyServer extends Server {
 			factory = ksfc.getKeyStoreFactory();
 			context.setTrustStore(factory.newInstance(ksfc));
 			secret = ksc.getSecretKeyConfiguration();
-			context.setTrustStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
+			if(secret!=null)
+				context.setTrustStorePassword(ISecretKeyFactory.plainPasswordFromConfig(secret));
 		}
 		return new SslConnectionFactory(context, "http/1.1");
 	}
