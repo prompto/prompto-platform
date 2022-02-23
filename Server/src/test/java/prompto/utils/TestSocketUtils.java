@@ -47,7 +47,7 @@ public class TestSocketUtils {
 				public void run() {
 					try { 
 						System.out.println("accepting");
-						s.accept(); 
+						try(var k = s.accept()) {} 
 					} catch (IOException e) {
 					}
 				}

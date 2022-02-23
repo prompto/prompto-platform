@@ -27,6 +27,7 @@ import software.amazon.awssdk.services.route53.model.ResourceRecordSet;
 
 public class Route53 {
 
+	@SuppressWarnings("resource")
 	public static Route53 newInstance(String login, String password) {
 		Route53ClientBuilder builder = Route53Client.builder()
 				.region(Region.AWS_GLOBAL);
@@ -41,6 +42,11 @@ public class Route53 {
 
 	public Route53(Route53Client route53) {
 		this.route53 = route53;
+	}
+	
+	@Override
+	public void finalize() {
+		this.route53.close();
 	}
 	
 	public List<PromptoDocument<String, Object>> listHostedZones() {

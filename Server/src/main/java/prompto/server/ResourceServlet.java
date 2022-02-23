@@ -78,16 +78,16 @@ public abstract class ResourceServlet extends CleverServlet {
 		
 		boolean tryGzip = writeBody && acceptsGzip(request);
 
-		Resource resource = getResource(request, tryGzip);
-               	
-        if (resource==null || !resource.exists()) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-        response.setStatus(HttpServletResponse.SC_OK);
-        writeHeaders(response, resource);
-        if(writeBody)
-        	writeBody(request, response, resource);
+		try(Resource resource = getResource(request, tryGzip)) {
+	        if (resource==null || !resource.exists()) {
+	            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+	            return;
+	        }
+	        response.setStatus(HttpServletResponse.SC_OK);
+	        writeHeaders(response, resource);
+	        if(writeBody)
+	        	writeBody(request, response, resource);
+		}
 	}
 	
 	private boolean acceptsGzip(HttpServletRequest request) {
@@ -136,14 +136,13 @@ public abstract class ResourceServlet extends CleverServlet {
 
         
 	private void writeBody(HttpServletRequest request, HttpServletResponse response, Resource resource) throws IOException {
-        OutputStream out = response.getOutputStream();
-    	if(out instanceof HttpOutput)
-    		writeBody(request, response, (HttpOutput)out, resource);
-    	else {
-    		resource.writeTo(out,0,resource.length());
-    		out.close();
+        try(OutputStream out = response.getOutputStream()) {
+	    	if(out instanceof HttpOutput)
+	    		writeBody(request, response, (HttpOutput)out, resource);
+	    	else
+	    		resource.writeTo(out, 0, resource.length());
         }
-	}
+    }
 	
 	
 	private void writeBody(HttpServletRequest request, HttpServletResponse response, HttpOutput out, Resource resource) throws IOException {
@@ -156,6 +155,7 @@ public abstract class ResourceServlet extends CleverServlet {
         }
 	}
 	
+	@SuppressWarnings("resource")
 	private void writeBodyAsync(HttpServletRequest request, HttpOutput out, Resource resource, int minAsyncSize) throws IOException {
         final AsyncContext async = request.startAsync();
         async.setTimeout(0);
@@ -197,6 +197,7 @@ public abstract class ResourceServlet extends CleverServlet {
 				&& (!limitToMaxInt || length<Integer.MAX_VALUE);
 	}
 
+	@SuppressWarnings("resource")
 	private void writeBodySync(HttpServletRequest request, HttpOutput out, Resource resource) throws IOException {
         if (canUseMemoryMappedFile(resource, false)) {
             ByteBuffer buffer = BufferUtil.toMappedBuffer(resource.getFile());

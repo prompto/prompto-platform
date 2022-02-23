@@ -77,7 +77,7 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 	}
 	
 	@Override
-	public void close() {
+	public void finalize() {
 		try {
 			cache.close();
 		} catch(Throwable t) {

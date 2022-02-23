@@ -3,7 +3,6 @@ package prompto.code;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,10 +82,11 @@ public class TestCodeStore extends BaseMongoTest {
 	}
 
 	public DeclarationList parseEResource(String resourceName) throws Exception {
-		InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
-		assertNotNull("resource not found:" + resourceName, input);
-		ECleverParser parser = new ECleverParser(input);
-		return parser.parse_declaration_list();
+		try(var input = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName)) {
+			assertNotNull("resource not found:" + resourceName, input);
+			ECleverParser parser = new ECleverParser(input);
+			return parser.parse_declaration_list();
+		}
 	}
 
 	private IRuntimeConfiguration newRuntimeConfig(String testResourcePath) {

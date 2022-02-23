@@ -27,22 +27,23 @@ public class ControlServlet extends CleverServlet {
 		Thread.currentThread().setName(this.getClass().getSimpleName());
 		try {
 			resp.setContentType("text/plain");
-			PrintWriter writer = resp.getWriter();
-			String verb = req.getPathInfo();
-			logger.info(()->"Executing control verb " + verb);
-			switch(verb) {
-				case "/exit":
-					exitServer(writer);
-					break;
-				case "/clear-context":
-					clearContext(writer);
-					break;
-				case "/version":
-					version(writer);
-					break;
-				default:
-					logger.error(()->"Invalid control verb: " + verb);
-					resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+			try(var writer = resp.getWriter()) {
+				String verb = req.getPathInfo();
+				logger.info(()->"Executing control verb " + verb);
+				switch(verb) {
+					case "/exit":
+						exitServer(writer);
+						break;
+					case "/clear-context":
+						clearContext(writer);
+						break;
+					case "/version":
+						version(writer);
+						break;
+					default:
+						logger.error(()->"Invalid control verb: " + verb);
+						resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+				}
 			}
 		} catch(Throwable t) {
 			t.printStackTrace(System.err);

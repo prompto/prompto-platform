@@ -27,6 +27,7 @@ import software.amazon.awssdk.services.efs.model.Tag;
 
 public class EFS {
 
+	@SuppressWarnings("resource")
 	public static EFS newInstance(String awsRegion, String login, String password) {
 		EfsClientBuilder builder = EfsClient.builder()
 				.region(Region.of(awsRegion));
@@ -43,6 +44,11 @@ public class EFS {
 		this.efs = efs;
 	}
 	
+	@Override
+	public void finalize() {
+		this.efs.close();
+	}
+
 	public List<PromptoDocument<String, Object>> listFileSystems() {
 		DescribeFileSystemsResponse result = efs.describeFileSystems();
 		return result.fileSystems().stream()

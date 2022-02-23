@@ -1,6 +1,5 @@
 package prompto.security.auth.source;
 
-import java.io.IOException;
 import java.util.Collections;
 
 import org.eclipse.jetty.jaas.spi.UserInfo;
@@ -50,10 +49,6 @@ public class PasswordIsUserNameAuthenticationSource extends JettyLoginModuleBase
 	public void updateLogin(String login, String password) {
 		// nothing to do
 	}
-	
-	@Override
-	public void close() throws IOException {
-		// nothing to do
-	}
+
 
 }

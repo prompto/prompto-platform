@@ -9,7 +9,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 
 import prompto.debug.ProcessDebugger;
 import prompto.debug.WorkerDebugger;
@@ -82,8 +81,8 @@ public class RequestRouter {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(bytes));
 		Context context = prepareContext("Test: " + testName);
-		try {
-			Executor.executeTest(Standalone.getClassLoader(), testName.toString());
+		try(var loader = Standalone.getClassLoader()) {
+			Executor.executeTest(loader, testName.toString());
 			bytes.flush();
 			String[] lines = new String(bytes.toByteArray()).split("\n");
 			writeJsonResponse(lines, response);
@@ -127,15 +126,15 @@ public class RequestRouter {
 	public void executeMethod(Identifier methodName, String jsonParams, Map<String, byte[]> parts, boolean main, HttpServletResponse response) throws Exception {
 		logger.debug(()->"Executing method: " + methodName);
 		Context context = prepareContext("Method: " + methodName);
-		try {
+		try(var loader = Standalone.getClassLoader()) {
 			RemoteArgumentList params = RemoteArgumentList.read(context, jsonParams, parts);
-			Class<?>[] argTypes = params.toJavaTypes(context, Standalone.getClassLoader());
+			Class<?>[] argTypes = params.toJavaTypes(context, loader);
 			Object[] args = params.toJavaValues(context);
 			if(params.isEmpty() && main) {
 				argTypes = new Class<?>[] { PromptoDict.class };
 				args = new Object[] { null };
 			}
-			Object result = Executor.executeGlobalMethod(Standalone.getClassLoader(), methodName, argTypes, args);
+			Object result = Executor.executeGlobalMethod(loader, methodName, argTypes, args);
 			// TODO JSON output
 			TextValue text = new TextValue(result==null ? "success!" : result.toString());
 			writeJsonResponse(context, text, response);
@@ -182,53 +181,60 @@ public class RequestRouter {
 	}
 
 	private void writeBinaryResponse(BinaryValue value, HttpServletResponse response) throws IOException {
-		response.setContentType(value.getMimeType());
-		response.setStatus(HttpServletResponse.SC_OK);
-		response.getOutputStream().write(value.getBytes());
+		try(var output = response.getOutputStream()) {
+			response.setContentType(value.getMimeType());
+			response.setStatus(HttpServletResponse.SC_OK);
+			output.write(value.getBytes());
+		}
 	}
 
 	private void writeJsonResponse(Context context, IValue value, HttpServletResponse response) throws IOException, PromptoError {
-		response.setContentType("text/json");
-		response.setStatus(HttpServletResponse.SC_OK);
-		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
-		generator.writeStartObject();
-		generator.writeNullField("error");
-		if(value==null)
-			generator.writeNullField("data");
-		else {
-			generator.writeFieldName("data");
-			value.toJsonStream(context, generator, true, null);
+		try(var output = response.getOutputStream()) {
+			response.setContentType("text/json");
+			response.setStatus(HttpServletResponse.SC_OK);
+			try(var generator = new JsonFactory().createGenerator(output)) {
+				generator.writeStartObject();
+				generator.writeNullField("error");
+				if(value==null)
+					generator.writeNullField("data");
+				else {
+					generator.writeFieldName("data");
+					value.toJsonStream(context, generator, true, null);
+				}
+				generator.writeEndObject();
+				generator.flush();
+			}
 		}
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
 	}
 	
 	private void writeJsonResponse(String[] lines, HttpServletResponse response) throws IOException, PromptoError {
-		response.setContentType("text/json");
-		response.setStatus(HttpServletResponse.SC_OK);
-		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
-		generator.writeStartObject();
-		generator.writeNullField("error");
-		generator.writeArrayFieldStart("data");
-		for(String line : lines)
-			generator.writeString(line);
-		generator.writeEndArray();
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
+		try(var output = response.getOutputStream()) {
+			response.setContentType("text/json");
+			response.setStatus(HttpServletResponse.SC_OK);
+			try(var generator = new JsonFactory().createGenerator(output)) {
+				generator.writeStartObject();
+				generator.writeNullField("error");
+				generator.writeArrayFieldStart("data");
+				for(String line : lines)
+					generator.writeString(line);
+				generator.writeEndArray();
+				generator.writeEndObject();
+				generator.flush();
+			}
+		}
 	}
 
 	private void writeJsonErrorResponse(Context context, PromptoError error, HttpServletResponse response) throws IOException {
-		response.setContentType("text/json");
-		response.setStatus(HttpServletResponse.SC_OK);
-		JsonGenerator generator = new JsonFactory().createGenerator(response.getOutputStream());
-		generator.writeStartObject();
-		generator.writeStringField("error",getErrorMessage(context, error));
-		generator.writeNullField("data");
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
+		try(var output = response.getOutputStream()) {
+			response.setContentType("text/json");
+			response.setStatus(HttpServletResponse.SC_OK);
+			try(var generator = new JsonFactory().createGenerator(output)) {
+				generator.writeStringField("error",getErrorMessage(context, error));
+				generator.writeNullField("data");
+				generator.writeEndObject();
+				generator.flush();
+			}
+		}
 	}
 
 	private String getErrorMessage(Context context, PromptoError error) {

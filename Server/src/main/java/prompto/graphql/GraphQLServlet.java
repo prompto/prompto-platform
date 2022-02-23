@@ -66,11 +66,15 @@ public class GraphQLServlet extends CleverServlet {
 	}
 
 	void unsafeDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		GraphQLRequest gql = readRequest(request);
-		ExecutionResult result = executeRequest(gql);
-		String json = JsonUtils.objectToJson(result.toSpecification());
-		response.setContentType("application/json");
-		response.getWriter().print(json);
+		try(var input = request.getInputStream()) {
+			GraphQLRequest gql = readRequest(request, input);
+			ExecutionResult result = executeRequest(gql);
+			String json = JsonUtils.objectToJson(result.toSpecification());
+			try(var writer = response.getWriter()) {
+				response.setContentType("application/json");
+				writer.print(json);
+			}
+		}
 	}
 
 	private ExecutionResult executeRequest(GraphQLRequest request) {
@@ -90,14 +94,14 @@ public class GraphQLServlet extends CleverServlet {
 		return graphQL;
 	}
 
-	private GraphQLRequest readRequest(HttpServletRequest request) throws IOException, ServletException {
+	private GraphQLRequest readRequest(HttpServletRequest request, InputStream input) throws IOException, ServletException {
 		String[] contentParts = request.getContentType().split(";");
 		String contentType = contentParts[0];
 		switch (contentType) {
 		case "application/graphql":
-			return readRequestFromGraphQL(request);
+			return readRequestFromGraphQL(input);
 		case "application/json":
-			return readRequestFromJSON(request);
+			return readRequestFromJSON(input);
 		case "multipart/form-data":
 			return readRequestFromMultipart(request);
 		default:
@@ -158,8 +162,8 @@ public class GraphQLServlet extends CleverServlet {
 		}
 	}
 
-	private GraphQLRequest readRequestFromJSON(HttpServletRequest req) throws IOException {
-		String query = StreamUtils.readString(req.getInputStream());
+	private GraphQLRequest readRequestFromJSON(InputStream input) throws IOException {
+		String query = StreamUtils.readString(input);
 		return readRequestFromJSON(query);
 	}
 
@@ -182,12 +186,9 @@ public class GraphQLServlet extends CleverServlet {
 			throw new UnsupportedOperationException("Missing 'query' field: " + json.toString());
 	}
 
-	private GraphQLRequest readRequestFromGraphQL(HttpServletRequest req) throws IOException {
+	private GraphQLRequest readRequestFromGraphQL(InputStream input) throws IOException {
 		GraphQLRequest request = new GraphQLRequest();
-		request.query = StreamUtils.readString(req.getInputStream()); // don't
-																		// close
-																		// this
-																		// stream
+		request.query = StreamUtils.readString(input);
 		request.variables = Collections.emptyMap();
 		return request;
 	}

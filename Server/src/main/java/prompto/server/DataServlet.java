@@ -51,47 +51,49 @@ public class DataServlet extends CleverServlet {
 		}
 	}
 	protected void doFetch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
-			String store = req.getParameter("store");
-			if(store==null || store.trim().isEmpty()) {
-				writeJsonResponseError("No store specified!", resp.getOutputStream());
-				return;
+		try(var stream = resp.getOutputStream()) {
+			try {
+				String store = req.getParameter("store");
+				if(store==null || store.trim().isEmpty()) {
+					writeJsonResponseError("No store specified!", stream);
+					return;
+				}
+				IStore dataStore = stores.get(store);
+				if(dataStore==null) {
+					writeJsonResponseError("Invalid store: " + store, stream);
+					return;
+				}
+				String query = req.getParameter("query");
+				if(query==null || query.trim().isEmpty()) {
+					writeJsonResponseError("Empty query!", stream);
+					return;
+				}
+				String first = req.getParameter("first");
+				String last = req.getParameter("last");
+				String format = req.getParameter("format");
+				if(format==null)
+					format = "list";
+				ECleverParser parser = new ECleverParser(query);
+				IFetchExpression fetch = parser.parse_fetch_expression();
+				if(fetch==null) {
+					writeJsonResponseError("Invalid query: " + query, stream);
+					return;
+				}
+				adjustQueryRange(fetch, first, last);
+				logger.info(()->"Running query: " + fetch.toString());
+				if("list".equals(format.toLowerCase())) {
+					resp.setContentType("application/json");
+					Object fetched = fetch.fetchRaw(dataStore);
+					JsonRecordsWriter writer = new JsonRecordsWriter(stream, dataStore::getAttributeInfo, dataStore, false);
+					writer.writeRecords(fetched);
+				} else
+					writeJsonResponseError("Invalid query!", stream);
+			} catch(PromptoError e) {
+				writeJsonResponseError("Invalid query!", stream);
+			} catch(Throwable t) {
+				t.printStackTrace(System.err);
+				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
-			IStore dataStore = stores.get(store);
-			if(dataStore==null) {
-				writeJsonResponseError("Invalid store: " + store, resp.getOutputStream());
-				return;
-			}
-			String query = req.getParameter("query");
-			if(query==null || query.trim().isEmpty()) {
-				writeJsonResponseError("Empty query!", resp.getOutputStream());
-				return;
-			}
-			String first = req.getParameter("first");
-			String last = req.getParameter("last");
-			String format = req.getParameter("format");
-			if(format==null)
-				format = "list";
-			ECleverParser parser = new ECleverParser(query);
-			IFetchExpression fetch = parser.parse_fetch_expression();
-			if(fetch==null) {
-				writeJsonResponseError("Invalid query: " + query, resp.getOutputStream());
-				return;
-			}
-			adjustQueryRange(fetch, first, last);
-			logger.info(()->"Running query: " + fetch.toString());
-			if("list".equals(format.toLowerCase())) {
-				resp.setContentType("application/json");
-				Object fetched = fetch.fetchRaw(dataStore);
-				JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), dataStore::getAttributeInfo, dataStore, false);
-				writer.writeRecords(fetched);
-			} else
-				writeJsonResponseError("Invalid query!", resp.getOutputStream());
-		} catch(PromptoError e) {
-			writeJsonResponseError("Invalid query!", resp.getOutputStream());
-		} catch(Throwable t) {
-			t.printStackTrace(System.err);
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 	

@@ -29,6 +29,7 @@ public class KMS {
 	
 	static Logger logger = LoggerFactory.getLogger(KMS.class);
 	
+	@SuppressWarnings("resource")
 	public static KMS newInstance(String awsRegion, String login, String password) {
 		KmsClientBuilder builder = KmsClient.builder()
 				.region(Region.of(awsRegion));
@@ -59,7 +60,11 @@ public class KMS {
 		this.kms = kms;
 	}
 	
-	
+	@Override
+	public void finalize() {
+		this.kms.close();
+	}
+
 	public String newKeyARNWithAlias(String alias) {
 		CreateKeyResponse res = kms.createKey();
 		String arn = res.keyMetadata().arn();

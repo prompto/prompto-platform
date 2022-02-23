@@ -46,6 +46,7 @@ public class WebSocketDebugEventAdapter extends DebugEventAdapterBase {
 	
 	
 
+	@SuppressWarnings("resource")
 	@Override
 	protected IAcknowledgement send(IDebugEvent event) {
 		logger.debug(()->"Sending " + event.getClass().getName());

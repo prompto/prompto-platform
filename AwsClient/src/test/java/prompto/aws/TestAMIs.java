@@ -26,17 +26,18 @@ public class TestAMIs extends AWSTestBase {
 	
 	@Test
 	public void listsAMIsWithOwnerAndName() throws Exception {
-		Ec2Client client = Ec2Client.builder()
+		try(Ec2Client client = Ec2Client.builder()
 			.region(Region.AP_SOUTHEAST_1)
 			.credentialsProvider(StaticCredentialsProvider.create(credentials))
-			.build();
-		EC2 awsEc2 = new EC2(client);
-		PromptoList<PromptoDocument<String, Object>> result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
-		result.forEach(System.out::println);
-		assertFalse(result.isEmpty());
-		result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
-		result.forEach(System.out::println);
-		assertFalse(result.isEmpty());
+			.build()) {
+			EC2 awsEc2 = new EC2(client);
+			PromptoList<PromptoDocument<String, Object>> result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
+			result.forEach(System.out::println);
+			assertFalse(result.isEmpty());
+			result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
+			result.forEach(System.out::println);
+			assertFalse(result.isEmpty());
+		}
 	}
 	
 	@Test

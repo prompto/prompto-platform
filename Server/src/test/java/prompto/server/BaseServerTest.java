@@ -115,8 +115,10 @@ public abstract class BaseServerTest {
 											URL url = Thread.currentThread().getContextClassLoader().getResource("security/keystore_test.jks");
 											Resource resource = URLResource.newResource(url);
 											KeyStore ks = KeyStore.getInstance("JKS");
-											ks.load(resource.getInputStream(), null);
-											return ks;
+											try(var stream = resource.getInputStream()) {
+												ks.load(stream, null);
+												return ks;
+											}
 										} catch(Exception e) {
 											throw new RuntimeException(e);
 										}
@@ -163,8 +165,10 @@ public abstract class BaseServerTest {
 											URL url = Thread.currentThread().getContextClassLoader().getResource("security/truststore_test.jks");
 											Resource resource = URLResource.newResource(url);
 											KeyStore ks = KeyStore.getInstance("JKS");
-											ks.load(resource.getInputStream(), null);
-											return ks;
+											try(var stream = resource.getInputStream()) {
+												ks.load(stream, null);
+												return ks;
+											}
 										} catch(Exception e) {
 											throw new RuntimeException(e);
 										}

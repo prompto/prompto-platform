@@ -72,6 +72,7 @@ public class TestServerCertificates {
 		while(!server.isStarted())
 			Thread.sleep(10);
 		server.join();
+		connector.close();
 	}
 
 	private ServerConnector createConnector(Server server) throws Exception {
@@ -85,6 +86,7 @@ public class TestServerCertificates {
 	private Handler createHandler() {
 		return new AbstractHandler() {
 
+			@SuppressWarnings("resource")
 			@Override
 			public void handle(String target, Request baseRequest,
 					HttpServletRequest request, HttpServletResponse response)

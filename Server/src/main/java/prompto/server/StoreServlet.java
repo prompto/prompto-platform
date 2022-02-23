@@ -2,6 +2,7 @@ package prompto.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,24 +82,26 @@ public class StoreServlet extends CleverServlet {
 	}
 
 	protected void deleteAndStore(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
-			String contentType = req.getContentType();
-			if(contentType.startsWith("application/json"))
-				deleteAndStoreJson(req, resp);
-			else if(contentType.startsWith("application/x-www-form-urlencoded"))
-				deleteAndStoreUrlEncoded(req, resp);
-			else if(contentType.startsWith("multipart/form-data"))
-				deleteAndStoreMultipart(req, resp);
-			else
-				resp.sendError(415);
-		} catch(Throwable t) {
-			t.printStackTrace();
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			writeJSONError(t.getMessage(), resp.getOutputStream());
+		try(var output = resp.getOutputStream()) {
+			try {
+				String contentType = req.getContentType();
+				if(contentType.startsWith("application/json"))
+					deleteAndStoreJson(req, resp, output);
+				else if(contentType.startsWith("application/x-www-form-urlencoded"))
+					deleteAndStoreUrlEncoded(req, resp, output);
+				else if(contentType.startsWith("multipart/form-data"))
+					deleteAndStoreMultipart(req, resp, output);
+				else
+					resp.sendError(415);
+			} catch(Throwable t) {
+				t.printStackTrace();
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				writeJSONError(t.getMessage(), output);
+			}
 		}
 	}
 	
-	private void deleteAndStoreJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void deleteAndStoreJson(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		Map<Long, PromptoDbId> updatedDbIds = new HashMap<>();
 		JsonNode json = readJsonStream(req);
 		JsonNode toDelete = null;
@@ -109,7 +112,7 @@ public class StoreServlet extends CleverServlet {
 			toStore = json.get("toStore");
 		if(toDelete!=null || toStore!=null)
 			updatedDbIds = deleteAndStoreJson(toDelete, toStore, null, json.get("withMeta"));
-		writeJSONResult(updatedDbIds, resp.getOutputStream());
+		writeJSONResult(updatedDbIds, output);
 	}
 
 	private Map<Long, PromptoDbId> deleteAndStoreJson(JsonNode toDelete, JsonNode toStore, Map<String, byte[]> parts, JsonNode withMeta) {
@@ -316,7 +319,7 @@ public class StoreServlet extends CleverServlet {
 		metadata.put(entry.getKey(), readJsonValue(entry.getValue(), parts, Collections.emptyMap()));
 	}
 
-	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	private void deleteAndStoreMultipart(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws ServletException, IOException {
 		Map<Long, Object> result = new HashMap<>();
 		Map<String, byte[]> parts = readPartsAsBytes(req);
 		JsonNode toDelete = null;
@@ -332,41 +335,43 @@ public class StoreServlet extends CleverServlet {
 			Map<Long, PromptoDbId> updatedDbIds = deleteAndStoreJson(toDelete, toStore, parts, withMeta);
 			updatedDbIds.forEach((k,v)->result.put(k, v.getValue()));
 		}
-		writeJSONResult(result, resp.getOutputStream());
+		writeJSONResult(result, output);
 	}
 	
-	private void deleteAndStoreUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void deleteAndStoreUrlEncoded(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		resp.sendError(415);
 	}
 	
 
 	protected void fetchMany(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
-			String contentType = req.getContentType();
-			if(contentType.startsWith("application/json"))
-				fetchManyJson(req, resp);
-			else if(contentType.startsWith("application/x-www-form-urlencoded"))
-				fetchManyUrlEncoded(req, resp);
-			else if(contentType.startsWith("multipart/form-data"))
-				fetchManyMultipart(req, resp);
-			else
-				resp.sendError(415);
-		} catch(Throwable t) {
-			t.printStackTrace();
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			writeJSONError(t.getMessage(), resp.getOutputStream());
+		try(var output = resp.getOutputStream()) { 
+			try {
+				String contentType = req.getContentType();
+				if(contentType.startsWith("application/json"))
+					fetchManyJson(req, resp, output);
+				else if(contentType.startsWith("application/x-www-form-urlencoded"))
+					fetchManyUrlEncoded(req, resp, output);
+				else if(contentType.startsWith("multipart/form-data"))
+					fetchManyMultipart(req, resp, output);
+				else
+					resp.sendError(415);
+			} catch(Throwable t) {
+				t.printStackTrace();
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				writeJSONError(t.getMessage(), output);
+			}
 		}
 	}
 	
-	private void fetchManyMultipart(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	private void fetchManyMultipart(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws ServletException, IOException {
 		resp.sendError(415);
 	}
 	
-	private void fetchManyUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchManyUrlEncoded(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		resp.sendError(415);
 	}
 	
-	private void fetchManyJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchManyJson(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		JsonNode json = readJsonStream(req);
 		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
 		if(json.has("predicate") && !json.get("predicate").isNull())
@@ -381,39 +386,41 @@ public class StoreServlet extends CleverServlet {
 			readOrderBysJson(builder, json.get("orderBys"));
 		resp.setContentType("application/json");
 		IStoredIterable fetched = DataStore.getInstance().fetchMany(builder.build());
-		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), this::fetchAttributeInfo, DataStore.getInstance(), true);
+		JsonRecordsWriter writer = new JsonRecordsWriter(output, this::fetchAttributeInfo, DataStore.getInstance(), true);
 		writer.writeRecords(fetched);
 	}
 	
 	
 	protected void fetchOne(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
-			String contentType = req.getContentType();
-			if(contentType.startsWith("application/json"))
-				fetchOneJson(req, resp);
-			else if(contentType.startsWith("application/x-www-form-urlencoded"))
-				fetchOneUrlEncoded(req, resp);
-			else if(contentType.startsWith("multipart/form-data"))
-				fetchOneMultipart(req, resp);
-			else
-				resp.sendError(415);
-		} catch(Throwable t) {
-			t.printStackTrace();
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			writeJSONError(t.getMessage(), resp.getOutputStream());
+		try(var output = resp.getOutputStream()) {
+			try {
+				String contentType = req.getContentType();
+				if(contentType.startsWith("application/json"))
+					fetchOneJson(req, resp, output);
+				else if(contentType.startsWith("application/x-www-form-urlencoded"))
+					fetchOneUrlEncoded(req, resp, output);
+				else if(contentType.startsWith("multipart/form-data"))
+					fetchOneMultipart(req, resp, output);
+				else
+					resp.sendError(415);
+			} catch(Throwable t) {
+				t.printStackTrace();
+				resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				writeJSONError(t.getMessage(), output);
+			}
 		}
 	}
 	
-	private void fetchOneMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchOneMultipart(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		resp.sendError(415);
 	}
 	
-	private void fetchOneUrlEncoded(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchOneUrlEncoded(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		resp.sendError(415);
 	}
 	
 	
-	private void fetchOneJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void fetchOneJson(HttpServletRequest req, HttpServletResponse resp, OutputStream output) throws IOException {
 		JsonNode json = readJsonStream(req);
 		IQueryBuilder builder = DataStore.getInstance().newQueryBuilder();
 		if(json.has("predicate") && !json.get("predicate").isNull())
@@ -422,7 +429,7 @@ public class StoreServlet extends CleverServlet {
 			readProjectionJson(builder, json.get("projection"));
 		resp.setContentType("application/json");
 		IStored fetched = DataStore.getInstance().fetchOne(builder.build());
-		JsonRecordsWriter writer = new JsonRecordsWriter(resp.getOutputStream(), this::fetchAttributeInfo, DataStore.getInstance(), true);
+		JsonRecordsWriter writer = new JsonRecordsWriter(output, this::fetchAttributeInfo, DataStore.getInstance(), true);
 		writer.writeRecord(fetched);
 	}
 

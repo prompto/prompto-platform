@@ -53,6 +53,7 @@ import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 
 public class EC2 {
 	
+	@SuppressWarnings("resource")
 	public static EC2 newInstance(String awsRegion, String login, String password) {
 		Ec2ClientBuilder builder = Ec2Client.builder()
 				.region(Region.of(awsRegion));
@@ -67,6 +68,11 @@ public class EC2 {
 	
 	public EC2(Ec2Client ec2) {
 		this.ec2 = ec2;
+	}
+	
+	@Override
+	public void finalize() {
+		this.ec2.close();
 	}
 	
 	public String runInstance(String imageId, String instanceType, String keyName, String iamRoleName, List<String> securityGroups, String userData) {

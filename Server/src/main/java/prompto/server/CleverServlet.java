@@ -100,15 +100,16 @@ public class CleverServlet extends HttpServlet {
 		generator.close();
 	}
 
-	protected void writeJSONResult(Object result, ServletOutputStream output) throws IOException {
-		JsonGenerator generator = new JsonFactory().createGenerator(output);
-		generator.setCodec(new ObjectMapper());
-		generator.writeStartObject();
-		generator.writeNullField("error");
-		generator.writeObjectField("data", result);
-		generator.writeEndObject();
-		generator.flush();
-		generator.close();
+	protected void writeJSONResult(Object result, OutputStream output) throws IOException {
+		try(JsonGenerator json = new JsonFactory().createGenerator(output)) {
+			try(JsonGenerator generator = json.setCodec(new ObjectMapper())) {
+				generator.writeStartObject();
+				generator.writeNullField("error");
+				generator.writeObjectField("data", result);
+				generator.writeEndObject();
+				generator.flush();
+			}
+		}
 	}
 
 	protected Map<String, Object> readPartsAsObjects(HttpServletRequest req) throws ServletException, IOException {

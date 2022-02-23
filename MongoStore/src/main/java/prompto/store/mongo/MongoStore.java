@@ -38,6 +38,7 @@ import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationStrength;
@@ -588,30 +589,31 @@ public class MongoStore implements IStore {
 	public PromptoBinary fetchBinary(String table, PromptoDbId dbId, String attr) throws PromptoError {
 		Bson filter = Filters.eq("_id", dbId);
 		MongoCollection<Document> collection = table == null ? getInstancesCollection() : db.getCollection(table);
-		Iterator<Document> found = collection.find(filter)
-			.limit(1)
-			.projection(Projections.include(attr))
-			.iterator();
-		if(!found.hasNext())
-			return null;
-		Document doc = found.next();
-		String[] attrs = attr.split("\\.");
-		Object data = null;
-		for(int i = 0; i < attrs.length; i++) {
-			data = doc.get(attrs[i]);
-			if(data == null)
+		try(var found = collection.find(filter)
+					.limit(1)
+					.projection(Projections.include(attr))
+					.iterator()) {
+			if(!found.hasNext())
 				return null;
-			if(data instanceof Document)
-				doc = (Document)data;
+			Document doc = found.next();
+			String[] attrs = attr.split("\\.");
+			Object data = null;
+			for(int i = 0; i < attrs.length; i++) {
+				data = doc.get(attrs[i]);
+				if(data == null)
+					return null;
+				if(data instanceof Document)
+					doc = (Document)data;
+			}
+			if(table==null)
+				data = readFieldData(attr, data);
+			else
+				data = readFieldData(new AttributeInfo(attrs[attrs.length-1], Family.BLOB, false, null), data);
+			if(data instanceof PromptoBinary)
+				return (PromptoBinary)data;
+			else
+				return null; // TODO warning
 		}
-		if(table==null)
-			data = readFieldData(attr, data);
-		else
-			data = readFieldData(new AttributeInfo(attrs[attrs.length-1], Family.BLOB, false, null), data);
-		if(data instanceof PromptoBinary)
-			return (PromptoBinary)data;
-		else
-			return null; // TODO warning
 	}
 
 	@Override
@@ -636,11 +638,12 @@ public class MongoStore implements IStore {
 			.limit(1);
 		if(projection != null)
 			iterable = iterable.projection(projection);
-		Iterator<Document> found = iterable.iterator();
-		if(found.hasNext())
-			return new StoredDocument(this, found.next());
-		else
-			return null;
+		try(var found = iterable.iterator()) {
+			if(found.hasNext())
+				return new StoredDocument(this, found.next());
+			else
+				return null;
+		}
 	}
 	
 	class StoredIterable implements IStoredIterable {
@@ -655,6 +658,7 @@ public class MongoStore implements IStore {
 			this.query = query;
 		}
 		
+		@SuppressWarnings("resource")
 		@Override
 		public Iterator<IStored> iterator() {
 			FindIterable<Document> find = collection.find();
@@ -671,9 +675,11 @@ public class MongoStore implements IStore {
 				if(query.orderBys!=null)
 					find = find.sort(Sorts.orderBy(query.orderBys));
 			}
-			Iterator<Document> iter = find.iterator();
-
+			
+			MongoCursor<Document> iter = find.iterator();
+			
 			return new Iterator<IStored>() {
+				
 				@Override
 				public boolean hasNext() {
 					return iter.hasNext();
@@ -682,6 +688,11 @@ public class MongoStore implements IStore {
 				@Override
 				public IStored next() {
 					return new StoredDocument(MongoStore.this, iter.next());
+				}
+				
+				@Override
+				public void finalize() {
+					iter.close();
 				}
 			};
 		}
@@ -799,11 +810,12 @@ public class MongoStore implements IStore {
 		FindIterable<Document> find = configs.find()
 				.filter(Filters.eq("_id", name))
 				.limit(1);
-		Iterator<Document> iter = find.iterator();
-		if(iter.hasNext())
-			return iter.next();
-		else
-			return null;
+		try(var iter = find.iterator()) {
+			if(iter.hasNext())
+				return iter.next();
+			else
+				return null;
+		}
 	}
 	
 	@Override

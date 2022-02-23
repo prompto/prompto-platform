@@ -189,6 +189,7 @@ class JettyServer extends Server {
 			setConnectors(new Connector[] { mainConnector, redirectConnector });
 	}
 
+	@SuppressWarnings("resource")
 	private ServerConnector prepareMainConnector() throws Exception {
 		ServerConnector sc = "http".equalsIgnoreCase(config.getHttpConfiguration().getProtocol()) ?
 				prepareHttpConnector() :

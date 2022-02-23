@@ -127,15 +127,20 @@ public class UserServlet extends CleverServlet {
 		if(value==null || value==VoidResult.instance())
 			return;
 		if(value instanceof TextValue) {
-			resp.setContentType("text/plain");
-			resp.getWriter().write(((TextValue)value).getStorableData());
-			return;
+			try(var writer = resp.getWriter()) {
+				resp.setContentType("text/plain");
+				writer.write(((TextValue)value).getStorableData());
+				return;
+			}
 		}
 		if(value instanceof BinaryValue) {
-			PromptoBinary binary = ((BinaryValue)value).getData();
-			resp.setContentType(binary.getMimeType());
-			resp.getOutputStream().write(binary.getBytes());
-			return;
+			try(var output = resp.getOutputStream()) {
+				PromptoBinary binary = ((BinaryValue)value).getData();
+				resp.setContentType(binary.getMimeType());
+				output.write(binary.getBytes());
+				return;
+			}
+					
 		} 
 		if(value instanceof TupleValue) {
 			TupleValue tuple = (TupleValue)value;
@@ -143,13 +148,17 @@ public class UserServlet extends CleverServlet {
 				IValue content = tuple.getItem(0);
 				IValue mimeType = tuple.getItem(1);
 				if(content.getType()==TextType.instance() && mimeType.getType()==TextType.instance()) {
-					resp.setContentType(((TextValue)mimeType).getStorableData());
-					resp.getWriter().write(((TextValue)content).getStorableData());
-					return;
+					try(var writer = resp.getWriter()) {
+						resp.setContentType(((TextValue)mimeType).getStorableData());
+						writer.write(((TextValue)content).getStorableData());
+						return;
+					}
 				}
 			}
 		}
-		resp.getWriter().write("Unsupported result: " + value.getType().getTypeName());
+		try(var writer = resp.getWriter()) {
+			writer.write("Unsupported result: " + value.getType().getTypeName());
+		}
 	}
 
 	private IValue doPostMultipart(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -167,14 +176,16 @@ public class UserServlet extends CleverServlet {
 	}
 
 	private IValue doPostJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		Object object = JSONReader.read(req.getInputStream());
-		if(object instanceof PromptoDocument) {
-			Context context = getWorkerContext();
-			DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object, true);
-			return interpret(context, document);
-		} else {
-			resp.sendError(415);
-			return null;
+		try(var input = req.getInputStream()) {
+			Object object = JSONReader.read(input);
+			if(object instanceof PromptoDocument) {
+				Context context = getWorkerContext();
+				DocumentValue document = new DocumentValue(context, (PromptoDocument<?,?>)object, true);
+				return interpret(context, document);
+			} else {
+				resp.sendError(415);
+				return null;
+			}
 		}
 	}
 	

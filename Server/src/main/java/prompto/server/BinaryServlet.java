@@ -23,7 +23,7 @@ public class BinaryServlet extends CleverServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		Thread.currentThread().setName(this.getClass().getSimpleName());
-		try {
+		try(var stream = resp.getOutputStream()) {
 			String dbIdString = req.getParameter(IStore.dbIdName);
 			String attr = req.getParameter("attribute");
 			String table = req.getParameter("table");
@@ -32,7 +32,7 @@ public class BinaryServlet extends CleverServlet {
 			PromptoBinary binary = store.fetchBinary(table, dbId, attr);
 			if(binary!=null) {
 				resp.setContentType(binary.getMimeType());
-				resp.getOutputStream().write(binary.getBytes());
+				stream.write(binary.getBytes());
 			} else
 				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		} catch(Throwable t) {

@@ -1,6 +1,8 @@
 package prompto.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +11,9 @@ import java.net.URLConnection;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import prompto.error.PromptoError;
 import prompto.remoting.RemoteArgument;
@@ -19,10 +24,6 @@ import prompto.type.IType;
 import prompto.type.TextType;
 import prompto.value.IValue;
 import prompto.value.TextValue;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestConnect extends BaseServerTest {
 	
@@ -109,8 +110,9 @@ public class TestConnect extends BaseServerTest {
 	}
 
 	private JsonNode parseJSON(InputStream input) throws Exception {
-		JsonParser parser = new ObjectMapper().getFactory().createParser(input);
-		return parser.readValueAsTree();
+		try(var parser = new ObjectMapper().getFactory().createParser(input)) {
+			return parser.readValueAsTree();
+		}
 	}
 
 }
