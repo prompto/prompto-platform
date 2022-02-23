@@ -141,7 +141,9 @@ public class StoredUserInfoCache {
 			// compute value from credentials
 			String computedDigest = method.apply(credentials.toString(), storedSalt.toString());
 			boolean equal = Objects.equals(storedDigest, computedDigest);
-			if(!equal)
+			if(equal)
+				logger.info(()->"Successfully authenticated user: " + this.userName);
+			else
 				logger.info(()->"Invalid password for user: " + this.userName);
 			return equal;
 		}
