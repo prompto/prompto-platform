@@ -135,13 +135,13 @@ public abstract class ResourceServlet extends CleverServlet {
 	}
 
         
+    @SuppressWarnings("resource")
 	private void writeBody(HttpServletRequest request, HttpServletResponse response, Resource resource) throws IOException {
-        try(OutputStream out = response.getOutputStream()) {
-	    	if(out instanceof HttpOutput)
-	    		writeBody(request, response, (HttpOutput)out, resource);
-	    	else
-	    		resource.writeTo(out, 0, resource.length());
-        }
+ 		OutputStream out = response.getOutputStream();
+    	if(out instanceof HttpOutput)
+    		writeBody(request, response, (HttpOutput)out, resource);
+    	else
+    		resource.writeTo(out, 0, resource.length());
     }
 	
 	
@@ -165,6 +165,7 @@ public abstract class ResourceServlet extends CleverServlet {
             public void succeeded()
             {
                 async.complete();
+                out.close();
             }
 
             @Override
@@ -173,6 +174,7 @@ public abstract class ResourceServlet extends CleverServlet {
                 logger.warn(()->x.toString());
                 logger.debug(()->x.toString(), x);
                 async.complete();
+                out.close();
             }   
         };
         if(canUseMemoryMappedFile(resource, true)) {
