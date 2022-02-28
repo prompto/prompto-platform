@@ -535,22 +535,24 @@ public class MongoStore implements IStore {
 	}
 
 	private void writeTransaction(AuditMetadata auditMetadata, List<WriteModel<Document>> operations) {
-		TransactionOptions txnOptions = TransactionOptions.builder()
+		synchronized(session) {
+			TransactionOptions txnOptions = TransactionOptions.builder()
 		        .readPreference(ReadPreference.primary())
 		        .readConcern(ReadConcern.LOCAL)
 		        .writeConcern(WriteConcern.MAJORITY)
 		        .build();
-		session.startTransaction(txnOptions);
-		try {
-			if(auditor!=null) {
-				auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
-				db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+			session.startTransaction(txnOptions);
+			try {
+				if(auditor!=null) {
+					auditMetadata = auditor.populateAuditMetadata(session, auditMetadata);
+					db.getCollection(MongoAuditor.AUDIT_METADATAS_COLLECTION).insertOne(auditMetadata);
+				}
+				getInstancesCollection().bulkWrite(session, operations);
+				session.commitTransaction();
+			} catch (Throwable t) {
+				session.abortTransaction();
+				logger.error(()->"While writing transaction...", t);
 			}
-			getInstancesCollection().bulkWrite(session, operations);
-			session.commitTransaction();
-		} catch (Throwable t) {
-			session.abortTransaction();
-			logger.error(()->"While writing transaction...", t);
 		}
 	}
 
