@@ -1,0 +1,28 @@
+enumerated Role(Text) {
+	LENDER = "Lender";
+}
+
+method acceptEnum(Role role) {
+	return "ACCEPTED";
+}
+
+widget EnumIsAcceptedPage extends ReactWidget {
+	
+	method getInitialState() {
+		return { status: "INITIAL" };
+	}
+	
+	method componentDidMount() {
+		acceptEnum(LENDER) then with result {
+			setState({ status: result });
+		}
+	}
+	
+	Html method render() {
+		state = getState();
+		if(state.status=="INITIAL")
+			return <div>INITIAL</div>;
+		else
+			return <div id="root">{state.status}</div>;
+	}
+}

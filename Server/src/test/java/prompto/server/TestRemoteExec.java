@@ -115,4 +115,21 @@ public class TestRemoteExec extends BaseUITest {
 		assertEquals(1, DataStore.getInstance().fetchMany(null).count());
 	}
 
+	@Test
+	public void enumIsAccepted() throws Exception {
+		linkResourcesAndLoadPage("EnumIsAccepted", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("ACCEPTED", root.getText());
+	}
+	
+	@Test
+	public void enumListIsAccepted() throws Exception {
+		linkResourcesAndLoadPage("EnumListIsAccepted", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("ACCEPTED", root.getText());
+	}
+
+
 }
