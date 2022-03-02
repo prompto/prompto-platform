@@ -207,7 +207,7 @@
 		<dependency>
 			<groupId>org.prompto</groupId>
 			<artifactId>Selenium</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 			<scope>test</scope>
 		</dependency>
 		<!--  
