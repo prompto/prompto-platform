@@ -78,16 +78,15 @@ public abstract class ResourceServlet extends CleverServlet {
 		
 		boolean tryGzip = writeBody && acceptsGzip(request);
 
-		try(Resource resource = getResource(request, tryGzip)) {
-	        if (resource==null || !resource.exists()) {
-	            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-	            return;
-	        }
-	        response.setStatus(HttpServletResponse.SC_OK);
-	        writeHeaders(response, resource);
-	        if(writeBody)
-	        	writeBody(request, response, resource);
-		}
+		Resource resource = getResource(request, tryGzip);
+        if (resource==null || !resource.exists()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        response.setStatus(HttpServletResponse.SC_OK);
+        writeHeaders(response, resource);
+        if(writeBody)
+        	writeBody(request, response, resource);
 	}
 	
 	private boolean acceptsGzip(HttpServletRequest request) {
@@ -122,6 +121,7 @@ public abstract class ResourceServlet extends CleverServlet {
         	else
         		pathInContext = welcomePage;
         }
+        // don't auto close resource since it may be used asynchronously
         Resource resource = null;
         if(tryGzip)
         	resource = getClassPathResource(pathInContext + ".gz");
@@ -151,6 +151,7 @@ public abstract class ResourceServlet extends CleverServlet {
         	writeBodyAsync(request, out, resource, minAsyncSize);
         else {
            	writeBodySync(request, out, resource);
+           	resource.close();
            	out.close();
         }
 	}
@@ -165,6 +166,7 @@ public abstract class ResourceServlet extends CleverServlet {
             public void succeeded()
             {
                 async.complete();
+                resource.close();
                 out.close();
             }
 
@@ -174,8 +176,9 @@ public abstract class ResourceServlet extends CleverServlet {
                 logger.warn(()->x.toString());
                 logger.debug(()->x.toString(), x);
                 async.complete();
+                resource.close();
                 out.close();
-            }   
+             }   
         };
         if(canUseMemoryMappedFile(resource, true)) {
             ByteBuffer buffer = BufferUtil.toMappedBuffer(resource.getFile());
