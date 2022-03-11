@@ -4,7 +4,7 @@ define installServiceHandler as native method receiving Text path and ServiceHan
     Java: $server.installHandler(path, serviceHandler);
 
 define getLoginFactory as native method receiving Text config = nothing returning LoginFactory doing:
-    Java: $server.getLoginFactory(config);
+    Java: return $server.getLoginFactory(config);
 
 define getHttpUser as native method returning Text doing:
 	Java: return $server.getHttpUser();
