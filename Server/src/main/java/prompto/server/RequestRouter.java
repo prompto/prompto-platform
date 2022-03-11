@@ -229,6 +229,7 @@ public class RequestRouter {
 			response.setContentType("text/json");
 			response.setStatus(HttpServletResponse.SC_OK);
 			try(var generator = new JsonFactory().createGenerator(output)) {
+				generator.writeStartObject();
 				generator.writeStringField("error",getErrorMessage(context, error));
 				generator.writeNullField("data");
 				generator.writeEndObject();
