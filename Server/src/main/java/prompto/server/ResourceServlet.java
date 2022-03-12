@@ -151,8 +151,8 @@ public abstract class ResourceServlet extends CleverServlet {
         	writeBodyAsync(request, out, resource, minAsyncSize);
         else {
            	writeBodySync(request, out, resource);
-           	resource.close();
-           	out.close();
+           	// resource.close();
+           	// out.close();
         }
 	}
 	
@@ -166,8 +166,8 @@ public abstract class ResourceServlet extends CleverServlet {
             public void succeeded()
             {
                 async.complete();
-                resource.close();
-                out.close();
+                // resource.close();
+                // out.close();
             }
 
             @Override
@@ -176,8 +176,8 @@ public abstract class ResourceServlet extends CleverServlet {
                 logger.warn(()->x.toString());
                 logger.debug(()->x.toString(), x);
                 async.complete();
-                resource.close();
-                out.close();
+                // resource.close();
+                // out.close();
              }   
         };
         if(canUseMemoryMappedFile(resource, true)) {
