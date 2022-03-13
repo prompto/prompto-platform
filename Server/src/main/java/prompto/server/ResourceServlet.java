@@ -58,6 +58,7 @@ public abstract class ResourceServlet extends CleverServlet {
 	}
 	
 	
+	@SuppressWarnings("resource")
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
