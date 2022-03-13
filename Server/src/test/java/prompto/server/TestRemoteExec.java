@@ -131,5 +131,12 @@ public class TestRemoteExec extends BaseUITest {
 		assertEquals("ACCEPTED", root.getText());
 	}
 
+	@Test
+	public void entityWithNullEnumIsAccepted() throws Exception {
+		linkResourcesAndLoadPage("EntityWithNullEnumIsAccepted", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("ACCEPTED", root.getText());
+	}
 
 }

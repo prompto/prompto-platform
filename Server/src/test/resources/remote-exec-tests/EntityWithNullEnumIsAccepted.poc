@@ -3,18 +3,23 @@ enumerated Role(Text) {
 	BORROWER = "Borrower";
 }
 
-method acceptEnumList(Role[] roles) {
+attribute role: Role;
+
+category Entity(role);
+
+method acceptEntity(Entity entity) {
 	return "ACCEPTED";
 }
 
-widget EnumListIsAcceptedPage extends ReactWidget {
+widget EntityWithNullEnumIsAcceptedPage extends ReactWidget {
 	
 	method getInitialState() {
 		return { status: "INITIAL" };
 	}
 	
 	method componentDidMount() {
-		acceptEnumList([LENDER, BORROWER, null]) then with result {
+		entity = Entity(role = null);
+		acceptEntity(entity) then with result {
 			setState({ status: result });
 		}
 	}
