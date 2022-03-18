@@ -11,7 +11,7 @@ and methods:
 	define listObjects as method receiving Text bucketName, Text prefix = Nothing, Text delimiter = Nothing, Text continuationToken = Nothing and Integer maxCount = Nothing returning Document doing:
 		Java: return this.listObjects(bucketName, prefix, delimiter, continuationToken, maxCount);
 		
-	define fetchObjectText as method receiving Text bucketName, Text objectKey and Text encoding = "utf-8" doing:
+	define fetchObjectText as method receiving Text bucketName, Text objectKey and Text encoding = "utf-8" returning Text doing:
 		Java: return this.fetchObjectText(bucketName, objectKey, encoding);
 
 
