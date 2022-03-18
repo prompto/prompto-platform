@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 
 import prompto.intrinsic.PromptoDocument;
 import prompto.intrinsic.PromptoList;
+import prompto.utils.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -17,6 +18,8 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 public class S3 {
+
+	static final Logger logger = new Logger();
 
 	@SuppressWarnings("resource")
 	public static S3 newInstance(String awsRegion, String login, String password) {
@@ -41,25 +44,35 @@ public class S3 {
 	}
 
 	public PromptoList<String> listBucketNames() {
-		var response = s3.listBuckets();
-		return response.buckets().stream()
-				.map(Bucket::name)
-				.collect(PromptoList.collector());
+		try {
+			var response = s3.listBuckets();
+			return response.buckets().stream()
+					.map(Bucket::name)
+					.collect(PromptoList.collector());
+		} catch(Throwable t) {
+			logger.error(()->"While listing buckets", t);
+			return null;
+		}
 	}
 
 	public PromptoDocument<String, Object> listObjects(String bucketName, String prefix, String delimiter, String continuationToken, Long maxCount) {
-		var builder = ListObjectsV2Request.builder()
-				.bucket(bucketName);
-		if(prefix != null && prefix.length() > 0)
-			builder = builder.prefix(prefix);
-		if(delimiter != null && delimiter.length() > 0)
-			builder = builder.delimiter(delimiter);
-		if(continuationToken != null && continuationToken.length() > 0)
-			builder = builder.continuationToken(continuationToken);
-		if(maxCount != null && maxCount > 0)
-			builder = builder.maxKeys(maxCount.intValue());
-		var response = s3.listObjectsV2(builder.build());
-		return Converter.convertPojo(response);
+		try {
+			var builder = ListObjectsV2Request.builder()
+					.bucket(bucketName);
+			if(prefix != null && prefix.length() > 0)
+				builder = builder.prefix(prefix);
+			if(delimiter != null && delimiter.length() > 0)
+				builder = builder.delimiter(delimiter);
+			if(continuationToken != null && continuationToken.length() > 0)
+				builder = builder.continuationToken(continuationToken);
+			if(maxCount != null && maxCount > 0)
+				builder = builder.maxKeys(maxCount.intValue());
+			var response = s3.listObjectsV2(builder.build());
+			return Converter.convertPojo(response);
+		} catch(Throwable t) {
+			logger.error(()->"While listing objects in bucket " + bucketName, t);
+			return null;
+		}
 	}
 
 	public String fetchObjectText(String bucketName, String key, String charset) {
@@ -67,6 +80,7 @@ public class S3 {
 			var bytes = fetchObject(bucketName, key);
 			return bytes.asString(Charset.forName(charset));
 		} catch(Throwable t) {
+			logger.error(()->"While fetching object " + key + " in bucket " + bucketName, t);
 			return null;
 		}
 	}
