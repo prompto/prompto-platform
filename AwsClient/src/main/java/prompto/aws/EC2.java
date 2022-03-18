@@ -2,7 +2,9 @@ package prompto.aws;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoDocument;
@@ -44,6 +46,7 @@ import software.amazon.awssdk.services.ec2.model.ModifyImageAttributeRequest;
 import software.amazon.awssdk.services.ec2.model.ModifyInstanceAttributeRequest;
 import software.amazon.awssdk.services.ec2.model.PermissionGroup;
 import software.amazon.awssdk.services.ec2.model.ReleaseAddressRequest;
+import software.amazon.awssdk.services.ec2.model.Reservation;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
 import software.amazon.awssdk.services.ec2.model.StartInstancesRequest;
@@ -169,27 +172,26 @@ public class EC2 {
 
 	
 	public PromptoList<PromptoDocument<String, Object>> listInstances() {
-		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		DescribeInstancesResponse result = ec2.describeInstances();
-		result.reservations().forEach((r)->{
-			r.instances().forEach((i)->{
-				PromptoDocument<String, Object> doc = Converter.convertPojo(i);
-				promoteNameTag(i.tags(), doc);
-				list.add(doc); 
-			});
-		});
-		return list;
+		DescribeInstancesResponse response = ec2.describeInstances();
+		return response.reservations().stream()
+				.map(Reservation::instances)
+				.map(Collection::stream)
+				.flatMap(Function.identity())
+				.map(instance -> {
+					PromptoDocument<String, Object> doc = Converter.convertPojo(instance);
+					promoteNameTag(instance.tags(), doc);
+					return doc;
+				}).collect(PromptoList.collector());
 	}
 
 	public PromptoList<PromptoDocument<String, Object>> listIpAddresses() {
-		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
-		DescribeAddressesResponse result = ec2.describeAddresses();
-		result.addresses().forEach((a)->{
-			PromptoDocument<String, Object> doc = Converter.convertPojo(a);
-			promoteNameTag(a.tags(), doc);
-			list.add(doc); 
-		});
-		return list;
+		DescribeAddressesResponse response = ec2.describeAddresses();
+		return response.addresses().stream()
+			.map(address->{
+				PromptoDocument<String, Object> doc = Converter.convertPojo(address);
+				promoteNameTag(address.tags(), doc);
+				return doc; 
+			}).collect(PromptoList.collector());
 	}
 	
 	public String getAddressIdForIpAddress(String ipAddress) {
@@ -251,21 +253,19 @@ public class EC2 {
 	}
 	
 	public PromptoList<PromptoDocument<String, Object>> listOwnedAMIs() {
-		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
 		DescribeImagesRequest request = DescribeImagesRequest.builder()
-		.owners("self")
-		.build();
-		DescribeImagesResponse result = ec2.describeImages(request);
-		result.images().forEach(i->{
-			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
-			promoteNameTag(i.tags(), doc);
-			list.add(doc); 
-		});
-		return list;
+			.owners("self")
+			.build();
+		DescribeImagesResponse response = ec2.describeImages(request);
+		return response.images().stream()
+				.map(image -> {
+					PromptoDocument<String, Object> doc = Converter.convertPojo(image);
+					promoteNameTag(image.tags(), doc);
+					return doc;
+				}).collect(PromptoList.collector());
 	}
 	
 	public PromptoList<PromptoDocument<String, Object>> listAMIsWithOwnerAndName(String owner, String name) {
-		PromptoList<PromptoDocument<String, Object>> list = new PromptoList<PromptoDocument<String,Object>>(true);
 		DescribeImagesRequest.Builder builder = DescribeImagesRequest.builder();
 		if(owner!=null || name!=null) {
 			List<Filter> filters = new ArrayList<>();
@@ -275,13 +275,13 @@ public class EC2 {
 				filters.add(Filter.builder().name("name").values(name).build());
 			builder = builder.filters(filters);
 		}
-		DescribeImagesResponse result = ec2.describeImages(builder.build());
-		result.images().forEach((i)->{
-			PromptoDocument<String, Object> doc = Converter.convertPojo(i);
-			promoteNameTag(i.tags(), doc);
-			list.add(doc); 
-		});
-		return list;
+		DescribeImagesResponse response = ec2.describeImages(builder.build());
+		return response.images().stream()
+				.map(image -> {
+					PromptoDocument<String, Object> doc = Converter.convertPojo(image);
+					promoteNameTag(image.tags(), doc);
+					return doc;
+				}).collect(PromptoList.collector());
 	}
 	
 	

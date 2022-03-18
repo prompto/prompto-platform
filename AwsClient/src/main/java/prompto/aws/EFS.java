@@ -1,9 +1,9 @@
 package prompto.aws;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoDocument;
+import prompto.intrinsic.PromptoList;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -49,7 +49,7 @@ public class EFS {
 		this.efs.close();
 	}
 
-	public List<PromptoDocument<String, Object>> listFileSystems() {
+	public PromptoList<PromptoDocument<String, Object>> listFileSystems() {
 		DescribeFileSystemsResponse result = efs.describeFileSystems();
 		return result.fileSystems().stream()
 				.map(fs -> {
@@ -57,7 +57,7 @@ public class EFS {
 					promoteNameTag(fs.tags(), doc);
 					return doc;
 				})
-				.collect(Collectors.toList());
+				.collect(PromptoList.collector());
 	}
 	
 	
@@ -104,14 +104,14 @@ public class EFS {
 	}
 	
 	
-	public List<PromptoDocument<String, Object>> listMountTargets(String fileSystemId) {
+	public PromptoList<PromptoDocument<String, Object>> listMountTargets(String fileSystemId) {
 		DescribeMountTargetsRequest request = DescribeMountTargetsRequest.builder()
 				.fileSystemId(fileSystemId)
 				.build();
 		DescribeMountTargetsResponse response = efs.describeMountTargets(request);
 		return response.mountTargets().stream()
 				.map(Converter::convertPojo)
-				.collect(Collectors.toList());
+				.collect(PromptoList.collector());
 	}
 
 	public String createMountTarget(String fileSystemId, String subnetId, List<String> securityGroups, Boolean waitForAvailability) {

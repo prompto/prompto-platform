@@ -31,10 +31,7 @@ public class TestAMIs extends AWSTestBase {
 			.credentialsProvider(StaticCredentialsProvider.create(credentials))
 			.build()) {
 			EC2 awsEc2 = new EC2(client);
-			PromptoList<PromptoDocument<String, Object>> result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
-			result.forEach(System.out::println);
-			assertFalse(result.isEmpty());
-			result = awsEc2.listAMIsWithOwnerAndName("838901125615", "centos-prompto-*");
+			var result = awsEc2.listAMIsWithOwnerAndName("838901125615", "prompto-*");
 			result.forEach(System.out::println);
 			assertFalse(result.isEmpty());
 		}

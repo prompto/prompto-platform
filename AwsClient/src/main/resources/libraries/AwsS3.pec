@@ -1,0 +1,56 @@
+define AwsS3 as native category with bindings:
+	
+	define category bindings as:
+		Java: prompto.aws.S3
+	
+and methods:
+	
+	define listBucketNames as method returning Text[] doing:
+		Java: return this.listBucketNames();
+		
+	define listObjects as method receiving Text bucketName, Text prefix = Nothing, Text delimiter = Nothing, Text continuationToken = Nothing and Integer maxCount = Nothing returning Document doing:
+		Java: return this.listObjects(bucketName, prefix, delimiter, continuationToken, maxCount);
+		
+	define fetchObjectText as method receiving Text bucketName, Text objectKey and Text encoding = "utf-8" doing:
+		Java: return this.fetchObjectText(bucketName, objectKey, encoding);
+
+
+define newAwsS3 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsS3 doing:
+	Java: prompto.aws.S3.newInstance(awsRegion, login, password);
+
+
+define newAwsS3WithLocalCredentials as method receiving Text awsRegion returning AwsS3 doing:
+	text = read all from Url with "file:/Users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.json" as path
+	keys = (readJson with text as text) as Document
+	login = keys.accessKey as Text
+	password = keys.secretKey as Text
+	return newAwsS3 with awsRegion as awsRegion, login as login and password as password
+
+
+define "S3 client is created" as test method doing:
+	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
+and verifying:
+	s3 is not Nothing
+
+
+define "S3 bucket names are listed" as test method doing:
+	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
+	names = s3.listBucketNames 
+and verifying:
+	names.count >= 0
+	
+define "S3 bucket objects are listed" as test method doing:
+	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
+	doc = s3.listObjects with "amalthea-greenbook" as bucketName and 10 as maxCount
+and verifying:
+	doc.contents.count >= 0
+
+
+define "S3 object text is fetched" as test method doing:
+	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
+	text = s3.fetchObjectText with "amalthea-greenbook" as bucketName and "LEIs/json/001G/PB6A/9XPE/001GPB6A9XPE8XJICC14.json" as objectKey
+and verifying:
+	text.startsWith "{\"LEIRecord\":"
+	
+
+ 	

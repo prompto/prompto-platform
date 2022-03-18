@@ -2,10 +2,9 @@ package prompto.aws;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import prompto.intrinsic.PromptoDocument;
-
+import prompto.intrinsic.PromptoList;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -49,9 +48,9 @@ public class Route53 {
 		this.route53.close();
 	}
 	
-	public List<PromptoDocument<String, Object>> listHostedZones() {
+	public PromptoList<PromptoDocument<String, Object>> listHostedZones() {
 		ListHostedZonesResponse zones = route53.listHostedZones();
-		return zones.hostedZones().stream().map(Converter::convertPojo).collect(Collectors.toList());
+		return zones.hostedZones().stream().map(Converter::convertPojo).collect(PromptoList.collector());
 	}
 	
 	public String createARecord(String domainName, String domainPrefix, String ipAddress, Long ttl) {

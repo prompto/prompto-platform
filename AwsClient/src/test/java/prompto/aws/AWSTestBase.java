@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.efs.EfsClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.route53.Route53Client;
+import software.amazon.awssdk.services.s3.S3Client;
 
 public abstract class AWSTestBase {
 
@@ -22,6 +23,7 @@ public abstract class AWSTestBase {
 	KmsClient kms;
 	EfsClient efs;
 	Route53Client route53;
+	S3Client s3;
 	Properties props = new Properties();
 	
 	@Before
@@ -48,7 +50,10 @@ public abstract class AWSTestBase {
 				.region(Region.AWS_GLOBAL)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
-				
+		s3 = S3Client.builder()
+				.region(Region.US_EAST_1)
+				.credentialsProvider(StaticCredentialsProvider.create(credentials))
+				.build();
 	}
 	
 
