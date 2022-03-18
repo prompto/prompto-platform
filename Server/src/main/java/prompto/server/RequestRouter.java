@@ -26,6 +26,7 @@ import prompto.runtime.Context;
 import prompto.runtime.Executor;
 import prompto.runtime.Interpreter;
 import prompto.runtime.Standalone;
+import prompto.runtime.VoidResult;
 import prompto.statement.MethodCall;
 import prompto.store.DataStore;
 import prompto.store.IStore;
@@ -195,7 +196,7 @@ public class RequestRouter {
 			try(var generator = new JsonFactory().createGenerator(output)) {
 				generator.writeStartObject();
 				generator.writeNullField("error");
-				if(value==null)
+				if(value==null || value==VoidResult.instance())
 					generator.writeNullField("data");
 				else {
 					generator.writeFieldName("data");
