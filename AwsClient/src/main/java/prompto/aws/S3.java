@@ -9,13 +9,16 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 public class S3 {
 
@@ -91,6 +94,34 @@ public class S3 {
 				.key(key)
 				.build();
 		return s3.getObjectAsBytes(request);
+	}
+
+	public boolean storeObjectText(String bucketName, String key, String text, String charset) {
+		try {
+			var request = PutObjectRequest.builder()
+					.bucket(bucketName)
+					.key(key)
+					.build();
+			s3.putObject(request, RequestBody.fromString(text, Charset.forName(charset)));
+			return true;
+		} catch(Throwable t) {
+			logger.error(()->"While putting object " + key + " in bucket " + bucketName, t);
+			throw t;
+		}
+	}
+
+	public boolean deleteObject(String bucketName, String key) {
+		try {
+			var request = DeleteObjectRequest.builder()
+					.bucket(bucketName)
+					.key(key)
+					.build();
+			s3.deleteObject(request);
+			return true;
+		} catch(Throwable t) {
+			logger.error(()->"While deleting object " + key + " in bucket " + bucketName, t);
+			return false;
+		}
 	}
 
 }

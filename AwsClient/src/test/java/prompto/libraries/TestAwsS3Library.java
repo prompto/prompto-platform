@@ -32,7 +32,11 @@ public class TestAwsS3Library {
 		runTest("S3 object text is fetched");
 	}
 	
-	
+	@Test
+	public void S3ObjectIsStoredAndDeleted() throws Throwable {
+		runTest("S3 test object text is stored and deleted");
+	}
+
 	private void runTest(String testName) throws Throwable {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("libraries/AwsS3.pec"); 
 		String[] args = new String[] { "-testMethod", "\"" + testName + "\"", "-resourceURLs", url.toString(), "-runtimeMode", Mode.UNITTEST.name() };

@@ -14,6 +14,11 @@ and methods:
 	define fetchObjectText as method receiving Text bucketName, Text objectKey and Text encoding = "utf-8" returning Text doing:
 		Java: return this.fetchObjectText(bucketName, objectKey, encoding);
 
+	define storeObjectText as method receiving Text bucketName, Text objectKey, Text data and Text encoding = "utf-8" returning Boolean doing:
+		Java: return this.storeObjectText(bucketName, objectKey, data, encoding);
+
+	define deleteObject as method receiving Text bucketName and Text objectKey returning Boolean doing:
+		Java: return this.deleteObject(bucketName, objectKey);
 
 define newAwsS3 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsS3 doing:
 	Java: prompto.aws.S3.newInstance(awsRegion, login, password);
@@ -41,16 +46,26 @@ and verifying:
 	
 define "S3 bucket objects are listed" as test method doing:
 	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
-	doc = s3.listObjects with "amalthea-greenbook" as bucketName and 10 as maxCount
+	doc = s3.listObjects with "prompto-test" as bucketName and 10 as maxCount
 and verifying:
 	doc.contents.count >= 0
 
 
 define "S3 object text is fetched" as test method doing:
 	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
-	text = s3.fetchObjectText with "amalthea-greenbook" as bucketName and "LEIs/json/001G/PB6A/9XPE/001GPB6A9XPE8XJICC14.json" as objectKey
+	text = s3.fetchObjectText with "prompto-test" as bucketName and "0A6MFVCO7B244F0UGO76.json" as objectKey
 and verifying:
 	text.startsWith "{\"LEIRecord\":"
+
+define "S3 test object text is stored and deleted" as test method doing:
+	s3 = newAwsS3WithLocalCredentials with "us-east-1" as awsRegion
+	text1 = "Hi there!"
+	s3.storeObjectText with "prompto-test" as bucketName, "test-key" as objectKey and text1 as data
+	text2 = s3.fetchObjectText with "prompto-test" as bucketName and "test-key" as objectKey
+	deleted = s3.deleteObject with "prompto-test" as bucketName and "test-key" as objectKey
+and verifying:
+	text1 = text2
+	deleted is true
 	
 
  	
