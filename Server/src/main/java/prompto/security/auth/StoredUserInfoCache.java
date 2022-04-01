@@ -120,24 +120,31 @@ public class StoredUserInfoCache {
 		
 		private boolean checkNow(Object credentials) {
 			logger.info(()->"Authenticating user: " + userName);
-			if (isNullCredentials(credentials))
+			if (isNullCredentials(credentials)) {
+				logger.info(()->"Null credentials for user: " + this.userName);
 				return false;
-			IQueryBuilder query = store.newQueryBuilder();
-			query.verify(LOGIN, MatchOp.EQUALS, this.userName);
-			IStored authRecord = store.fetchOne(query.build());
-			if (authRecord == null) {
-				logger.info(()->"Unkown user: " + this.userName);
-				return false; // unregistered user
 			}
-			DigestMethod method = DigestMethod.forName((String)authRecord.getData(METHOD.getName()));
-			if (method == null)
-				return false; // unknown digest method
+			IStored authRecord = fetchStoredAuthRecord();
+			if (authRecord == null) {
+				logger.info(()->"Unknown user: " + this.userName);
+				return false;
+			}
+			String methodName = (String)authRecord.getData(METHOD.getName());
+			DigestMethod method = DigestMethod.forName(methodName);
+			if (method == null) {
+				logger.info(()->"Unknown digest method: " + methodName + " for user: " + this.userName);
+				return false; 
+			}
 			Object storedDigest = authRecord.getData(DIGEST.getName());
-			if (storedDigest == null)
-				return false; // no digest stored
+			if (storedDigest == null) {
+				logger.info(()->"No digest stored for user: " + this.userName);
+				return false;
+			}
 			Object storedSalt = authRecord.getData(SALT.getName());
-			if (storedSalt == null)
-				return false; // no digest stored
+			if (storedSalt == null) {
+				logger.info(()->"No salt stored for user: " + this.userName);
+				return false;
+			}
 			// compute value from credentials
 			String computedDigest = method.apply(credentials.toString(), storedSalt.toString());
 			boolean equal = Objects.equals(storedDigest, computedDigest);
@@ -146,6 +153,17 @@ public class StoredUserInfoCache {
 			else
 				logger.info(()->"Invalid password for user: " + this.userName);
 			return equal;
+		}
+
+		private IStored fetchStoredAuthRecord() {
+			try {
+				IQueryBuilder query = store.newQueryBuilder();
+				query.verify(LOGIN, MatchOp.EQUALS, this.userName);
+				return store.fetchOne(query.build());
+			} catch(Throwable t) {
+				logger.error(()->"While authenticating user: " + this.userName, t);
+				return null;
+			}
 		}
 
 		private boolean wasCheckedRecently(Object credentials) {
