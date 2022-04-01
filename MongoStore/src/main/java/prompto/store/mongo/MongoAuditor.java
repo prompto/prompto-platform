@@ -33,6 +33,7 @@ import org.bson.types.Binary;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.mongodb.MongoCommandException;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoChangeStreamCursor;
@@ -124,11 +125,15 @@ public class MongoAuditor {
 	}
 
 	private void watchInstancesChanges() {
+		watchInstancesChanges(true);
+	}
+	
+	private void watchInstancesChanges(boolean resuming) {
 		List<Bson> filters = Collections.singletonList(Aggregates.match(Filters.in("operationType", Arrays.asList("insert", "update", "replace", "delete"))));
 		ChangeStreamIterable<Document> stream = store.getInstancesCollection()
 				.watch(filters)
 				.fullDocument(FullDocument.UPDATE_LOOKUP);
-		BsonTimestamp resumeTimestamp = fetchLastAuditTimestamp();
+		BsonTimestamp resumeTimestamp = resuming ? fetchLastAuditTimestamp() : null;
 		if(resumeTimestamp!=null) {
 			logger.info(()->"Resuming audit from " + LocalDateTime.ofEpochSecond(resumeTimestamp.getTime(), 0, ZoneOffset.UTC));
 			stream = stream.startAtOperationTime(resumeTimestamp);
@@ -143,9 +148,19 @@ public class MongoAuditor {
 					
 				}
 			}
+		} catch(MongoCommandException e) {
+			logger.error(()->"While starting auditor", e);
+			if(resumeTimestamp != null && isResumingException(e))
+				watchInstancesChanges(false);
+			else
+				throw e;
 		}
 	}
 	
+	private boolean isResumingException(MongoCommandException e) {
+		return e.getErrorCode() == 236 && "ChangeStreamHistoryLost".equals(e.getErrorCodeName());
+	}
+
 	private void consumeChanges(MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor) {
 		for(;;) {
 			ChangeStreamDocument<Document> change = cursor.tryNext();
