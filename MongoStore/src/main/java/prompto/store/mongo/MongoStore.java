@@ -223,14 +223,23 @@ public class MongoStore implements IStore {
 	
 	@Override
 	public synchronized void close() {
-		stopAuditor();
+		stopAuditorIfStarted();
+		closeSessionIfOpened();
+		closeClientIfOpened();
+	}
+
+	private void closeClientIfOpened() {
+		if(client!=null) {
+			logger.warn(()->"Closing Mongo client: " + client.getClusterDescription().getShortDescription() + " for database: " + db.getName(), new Throwable());
+			client.close();
+			client = null;
+		}
+	}
+
+	private void closeSessionIfOpened() {
 		if(session!=null) {
 			session.close();
 			session = null;
-		}
-		if(client!=null) {
-			client.close();
-			client = null;
 		}
 	}
 
@@ -484,7 +493,7 @@ public class MongoStore implements IStore {
 	}
 
 
-	void stopAuditor() {
+	void stopAuditorIfStarted() {
 		if(auditor!=null) {
 			auditor.stop();
 			auditor = null;

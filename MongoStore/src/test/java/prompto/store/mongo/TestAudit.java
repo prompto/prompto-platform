@@ -188,7 +188,7 @@ public class TestAudit {
 
 	@Test
 	public void recoversIfInterrupted() throws Exception {
-		store.stopAuditor();
+		store.stopAuditorIfStarted();
 		createAttribute("name", TextType.instance());
 		ConcreteCategoryDeclaration cat = createCategory("Test", "name");
 		IInstance instance = new ConcreteInstance(context, cat);
