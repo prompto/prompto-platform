@@ -15,7 +15,7 @@ public class TestStoreLoginSource_Mongo extends BaseMongoTest {
 	@Before
 	public void before() {
 		createStore("LOGIN_" + System.currentTimeMillis());
-		StoredUserInfoCache cache = new StoredUserInfoCache(store);
+		StoredUserInfoCache cache = new StoredUserInfoCache(store, false);
 		source = new StoredPasswordDigestAuthenticationSource(cache);
 	}
 	

@@ -43,7 +43,7 @@ public class StoredUserInfoCache {
 		if(StoredUserInfoCache.instance==null) {
 			synchronized(StoredUserInfoCache.class) {
 				if(StoredUserInfoCache.instance==null) {
-					StoredUserInfoCache.instance = new StoredUserInfoCache(config);// ensure the cache doesn't grow out of control
+					StoredUserInfoCache.instance = new StoredUserInfoCache(config, true);// ensure the cache doesn't grow out of control
 					TimerTask task = new TimerTask() { @Override public void run() { instance.evictOldEntriesFromCache(); }};
 					timer.scheduleAtFixedRate(task, 30_000L, 30_000L);
 				}
@@ -63,8 +63,10 @@ public class StoredUserInfoCache {
 
 	Map<String, StoredPasswordDigestCredential> cache = new ConcurrentHashMap<>(new HashMap<>());
 	IStore store;
+	boolean shared;
 	
-	public StoredUserInfoCache(IStoredAuthenticationSourceConfiguration config) {
+	public StoredUserInfoCache(IStoredAuthenticationSourceConfiguration config, boolean shared) {
+		this.shared = shared;
 		IStoreConfiguration storeConfig = config.getStoreConfiguration();
 		try {
 			store = IStoreFactory.newStoreFromConfig(storeConfig);
@@ -74,11 +76,17 @@ public class StoredUserInfoCache {
 		}
 	}
 	
-	public StoredUserInfoCache(IStore store) {
+	public StoredUserInfoCache(IStore store, boolean shared) {
 		this.store = store;
+		this.shared = shared;
 		store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
 	}
 	
+	
+	public boolean isShared() {
+		return shared;
+	}
+
 	void evictOldEntriesFromCache() {
 		final long now = System.currentTimeMillis();
 		cache.values().stream()
