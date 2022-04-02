@@ -158,7 +158,9 @@ public class MongoAuditor {
 	}
 	
 	private boolean isResumingException(MongoCommandException e) {
-		return e.getErrorCode() == 236 && "ChangeStreamHistoryLost".equals(e.getErrorCodeName());
+		return (e.getErrorCode() == 236 && "ChangeStreamHistoryLost".equals(e.getErrorCodeName())) 
+				|| (e.getErrorCode() == 286 && "NonResumableChangeStreamError".equals(e.getErrorCodeName()));
+		
 	}
 
 	private void consumeChanges(MongoChangeStreamCursor<ChangeStreamDocument<Document>> cursor) {
