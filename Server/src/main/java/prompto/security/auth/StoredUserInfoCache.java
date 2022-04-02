@@ -34,24 +34,41 @@ import prompto.utils.Logger;
 public class StoredUserInfoCache {
 
 	static Logger logger = new Logger();
-	
+
 	static StoredUserInfoCache instance = null;
 	static Timer timer = new Timer();
 	static long KEEP_ALIVE_DELAY = 30_000;
-	
+
 	public static StoredUserInfoCache initialize(IStoredAuthenticationSourceConfiguration config) {
-		if(StoredUserInfoCache.instance==null) {
-			synchronized(StoredUserInfoCache.class) {
-				if(StoredUserInfoCache.instance==null) {
-					StoredUserInfoCache.instance = new StoredUserInfoCache(config, true);// ensure the cache doesn't grow out of control
-					TimerTask task = new TimerTask() { @Override public void run() { instance.evictOldEntriesFromCache(); }};
+		if (StoredUserInfoCache.instance == null) {
+			synchronized (StoredUserInfoCache.class) {
+				if (StoredUserInfoCache.instance == null) {
+					StoredUserInfoCache.instance = StoredUserInfoCache.fromConfig(config);
+					// ensure the cache doesn't grow out of control
+					TimerTask task = new TimerTask() {
+						@Override
+						public void run() {
+							instance.evictOldEntriesFromCache();
+						}
+					};
 					timer.scheduleAtFixedRate(task, 30_000L, 30_000L);
 				}
 			}
 		}
 		return StoredUserInfoCache.instance;
 	}
-	
+
+	public static StoredUserInfoCache fromConfig(IStoredAuthenticationSourceConfiguration config) {
+		try {
+			IStoreConfiguration storeConfig = config.getStoreConfiguration();
+			IStore store = IStoreFactory.newStoreFromConfig(storeConfig);
+			store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
+			return new StoredUserInfoCache(store);
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
+		}
+	}
+
 	static final AttributeInfo LOGIN = new AttributeInfo("login", Family.TEXT, false, Arrays.asList("key"));
 	static final AttributeInfo SALT = new AttributeInfo("salt", Family.TEXT, false, null);
 	static final AttributeInfo METHOD = new AttributeInfo("method", Family.TEXT, false, null);
@@ -60,45 +77,35 @@ public class StoredUserInfoCache {
 	static final AttributeInfo QUESTION = new AttributeInfo("question", Family.TEXT, false, null);
 	static final AttributeInfo ANSWER = new AttributeInfo("answer", Family.TEXT, false, null);
 
-
 	Map<String, StoredPasswordDigestCredential> cache = new ConcurrentHashMap<>(new HashMap<>());
 	IStore store;
-	boolean shared;
-	
-	public StoredUserInfoCache(IStoredAuthenticationSourceConfiguration config, boolean shared) {
-		this.shared = shared;
-		IStoreConfiguration storeConfig = config.getStoreConfiguration();
-		try {
-			store = IStoreFactory.newStoreFromConfig(storeConfig);
-			store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public StoredUserInfoCache(IStore store, boolean shared) {
+
+	public StoredUserInfoCache(IStore store) {
 		this.store = store;
-		this.shared = shared;
 		store.createOrUpdateAttributes(Arrays.asList(LOGIN, SALT, METHOD, DIGEST, QUESTIONS, QUESTION, ANSWER));
 	}
-	
-	
+
 	public boolean isShared() {
-		return shared;
+		return this == instance;
 	}
 
 	void evictOldEntriesFromCache() {
 		final long now = System.currentTimeMillis();
-		cache.values().stream()
-			.filter(c->((now - c.lastChecked) > KEEP_ALIVE_DELAY))
-			.collect(Collectors.toList()) // need an intermediate list to avoid modifying while traversing
-			.forEach(c->cache.remove(c.userName));
-		
+		cache.values().stream().filter(c -> ((now - c.lastChecked) > KEEP_ALIVE_DELAY)).collect(Collectors.toList()) // need
+																														// an
+																														// intermediate
+																														// list
+																														// to
+																														// avoid
+																														// modifying
+																														// while
+																														// traversing
+				.forEach(c -> cache.remove(c.userName));
+
 	}
 
-
 	public UserInfo getUserInfo(String username) {
-		StoredPasswordDigestCredential credential = cache.computeIfAbsent(username, u->new StoredPasswordDigestCredential(u));
+		StoredPasswordDigestCredential credential = cache.computeIfAbsent(username, u -> new StoredPasswordDigestCredential(u));
 		return new UserInfo(username, credential, Collections.singletonList("*"));
 	}
 
@@ -108,7 +115,7 @@ public class StoredUserInfoCache {
 		String userName;
 		long lastChecked;
 		int hashed;
-		
+
 		public StoredPasswordDigestCredential(String userName) {
 			this.userName = userName;
 			lastChecked = 0;
@@ -117,49 +124,49 @@ public class StoredUserInfoCache {
 
 		@Override
 		public boolean check(Object credentials) {
-			if(wasCheckedRecently(credentials))
+			if (wasCheckedRecently(credentials))
 				return true;
-			if(!checkNow(credentials))
+			if (!checkNow(credentials))
 				return false;
 			lastChecked = System.currentTimeMillis();
 			hashed = String.valueOf(credentials).hashCode();
 			return true;
 		}
-		
+
 		private boolean checkNow(Object credentials) {
-			logger.info(()->"Authenticating user: " + userName);
+			logger.info(() -> "Authenticating user: " + userName);
 			if (isNullCredentials(credentials)) {
-				logger.info(()->"Null credentials for user: " + this.userName);
+				logger.info(() -> "Null credentials for user: " + this.userName);
 				return false;
 			}
 			IStored authRecord = fetchStoredAuthRecord();
 			if (authRecord == null) {
-				logger.info(()->"Unknown user: " + this.userName);
+				logger.info(() -> "Unknown user: " + this.userName);
 				return false;
 			}
-			String methodName = (String)authRecord.getData(METHOD.getName());
+			String methodName = (String) authRecord.getData(METHOD.getName());
 			DigestMethod method = DigestMethod.forName(methodName);
 			if (method == null) {
-				logger.info(()->"Unknown digest method: " + methodName + " for user: " + this.userName);
-				return false; 
+				logger.info(() -> "Unknown digest method: " + methodName + " for user: " + this.userName);
+				return false;
 			}
 			Object storedDigest = authRecord.getData(DIGEST.getName());
 			if (storedDigest == null) {
-				logger.info(()->"No digest stored for user: " + this.userName);
+				logger.info(() -> "No digest stored for user: " + this.userName);
 				return false;
 			}
 			Object storedSalt = authRecord.getData(SALT.getName());
 			if (storedSalt == null) {
-				logger.info(()->"No salt stored for user: " + this.userName);
+				logger.info(() -> "No salt stored for user: " + this.userName);
 				return false;
 			}
 			// compute value from credentials
 			String computedDigest = method.apply(credentials.toString(), storedSalt.toString());
 			boolean equal = Objects.equals(storedDigest, computedDigest);
-			if(equal)
-				logger.info(()->"Successfully authenticated user: " + this.userName);
+			if (equal)
+				logger.info(() -> "Successfully authenticated user: " + this.userName);
 			else
-				logger.info(()->"Invalid password for user: " + this.userName);
+				logger.info(() -> "Invalid password for user: " + this.userName);
 			return equal;
 		}
 
@@ -168,15 +175,15 @@ public class StoredUserInfoCache {
 				IQueryBuilder query = store.newQueryBuilder();
 				query.verify(LOGIN, MatchOp.EQUALS, this.userName);
 				return store.fetchOne(query.build());
-			} catch(Throwable t) {
-				logger.error(()->"While authenticating user: " + this.userName, t);
+			} catch (Throwable t) {
+				logger.error(() -> "While authenticating user: " + this.userName, t);
 				return null;
 			}
 		}
 
 		private boolean wasCheckedRecently(Object credentials) {
-			long delay = System.currentTimeMillis() - lastChecked; 
-			if(delay > KEEP_ALIVE_DELAY)
+			long delay = System.currentTimeMillis() - lastChecked;
+			if (delay > KEEP_ALIVE_DELAY)
 				return false;
 			else
 				return hashed == String.valueOf(credentials).hashCode();
@@ -187,8 +194,7 @@ public class StoredUserInfoCache {
 		}
 
 	}
-	
-	
+
 	public boolean hasLogin(String login) {
 		IQueryBuilder query = store.newQueryBuilder();
 		query.verify(LOGIN, MatchOp.EQUALS, login);
@@ -204,18 +210,28 @@ public class StoredUserInfoCache {
 	public void createLogin(String login, String password) throws NoSuchAlgorithmException {
 		createLogin(store, login, password);
 	}
-	
+
 	public void updateLogin(String login, String password) throws NoSuchAlgorithmException {
 		IQueryBuilder query = store.newQueryBuilder();
 		query.verify(LOGIN, MatchOp.EQUALS, login);
 		IStored stored = store.fetchOne(query.build());
-		if(stored==null)
+		if (stored == null)
 			return;
 		String salt = DigestMethod.newSalt();
 		IStorable storable = store.newStorable(Arrays.asList("User"), new IDbIdFactory() {
-			@Override public void accept(PromptoDbId t) { }
-			@Override public PromptoDbId get() { return stored.getDbId(); }
-			@Override public boolean isUpdate() { return true; }
+			@Override
+			public void accept(PromptoDbId t) {
+			}
+
+			@Override
+			public PromptoDbId get() {
+				return stored.getDbId();
+			}
+
+			@Override
+			public boolean isUpdate() {
+				return true;
+			}
 		});
 		storable.setData("login", login);
 		storable.setData("salt", salt);
@@ -225,11 +241,11 @@ public class StoredUserInfoCache {
 		store.store(storable);
 		cache.remove(login);
 	}
-	
+
 	public void close() throws IOException {
 		store.close();
 	}
-	
+
 	public static void createLogin(IStore store, String login, String password) throws NoSuchAlgorithmException {
 		String salt = DigestMethod.newSalt();
 		IStorable storable = store.newStorable(Arrays.asList("User"), null);
@@ -241,6 +257,5 @@ public class StoredUserInfoCache {
 		storable.setDbId(store.newDbId());
 		store.store(storable);
 	}
-
 
 }

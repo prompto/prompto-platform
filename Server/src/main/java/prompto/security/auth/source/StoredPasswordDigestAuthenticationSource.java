@@ -27,7 +27,7 @@ public class StoredPasswordDigestAuthenticationSource extends JettyLoginModuleBa
 
 	// handy constructor for offline operations, not using shared cache
 	public StoredPasswordDigestAuthenticationSource(IStoredAuthenticationSourceConfiguration config) {
-		cache = new StoredUserInfoCache(config, false);
+		cache = StoredUserInfoCache.fromConfig(config);
 	}
 
 	// handy constructor for testing, not using shared cache
