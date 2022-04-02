@@ -26,6 +26,7 @@ import org.bson.types.Binary;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -240,90 +241,65 @@ public class MongoStore implements IStore {
 	}
 
 	private void connectWithURI(IMongoStoreConfiguration config, char[] password) {
+		Builder builder = defaultBuilder();
 		ConnectionString conn = new ConnectionString(config.getReplicaSetURI());
-		MongoClientSettings.Builder builder = MongoClientSettings.builder()
-				.applyConnectionString(conn)
-                .codecRegistry(codecRegistry)
-                .uuidRepresentation(UuidRepresentation.STANDARD)
-                .applyToSocketSettings(socketBuilder -> socketBuilder
-                		.readTimeout(6, TimeUnit.MINUTES)
-                		.connectTimeout(6, TimeUnit.MINUTES));
- 		if(password != null) {
- 			MongoCredential credential = MongoCredential.createCredential(config.getUser(), AUTH_DB_NAME, password);
- 			builder = builder.credential(credential);
-		}
- 		MongoClientSettings settings = builder.build();
- 		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
+		builder = builder.applyConnectionString(conn);
 		// we use 'admin' for default connection when no dbname is specified
 		final String dbName = config.getDbName()!=null ? config.getDbName() : conn.getDatabase()!=null ? conn.getDatabase() : "admin";
- 		logger.info(()->"Connecting " + (config.getUser()==null ? "anonymously" : "user '" + config.getUser() + "'") + " to '" + dbName+ "' database @" + replicaSet);
- 		client = MongoClients.create(settings);
-		if(replicaSet != null)
-			session = client.startSession();
-		db = client.getDatabase(dbName);
-		if(!"admin".equals(dbName))
-			loadAttributes();
-		logger.info(()->"Connected to database @" + replicaSet);
+		connect(builder, dbName, config.getUser(), password);
 	}
 	
 	private void connectWithURI(String uri, String user, char[] password) {
+		MongoClientSettings.Builder builder = defaultBuilder();
 		ConnectionString conn = new ConnectionString(uri);
-		MongoClientSettings.Builder builder = MongoClientSettings.builder()
-				.applyConnectionString(conn)
+		builder = builder.applyConnectionString(conn);
+		// we use 'admin' for default connection when no dbname is specified
+		final String dbName = conn.getDatabase()!=null ? conn.getDatabase() : "admin";
+		connect(builder, dbName, user, password);
+	}
+	
+	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
+		connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
+	}
+	
+	private void connectWithParams(String host, int port, String database, String user, char[] password) {
+		MongoClientSettings.Builder builder = defaultBuilder();
+		builder = builder.applyToClusterSettings(clusterBuilder -> clusterBuilder
+        		.hosts(Collections.singletonList(new ServerAddress(host, port))));
+		// we use 'admin' for default connection
+		final String dbName = database==null ? "admin" : database;
+		connect(builder, dbName, user, password);
+	}
+
+	private Builder defaultBuilder() {
+		return MongoClientSettings.builder()
                 .codecRegistry(codecRegistry)
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .applyToSocketSettings(socketBuilder -> socketBuilder
                 		.readTimeout(6, TimeUnit.MINUTES)
                 		.connectTimeout(6, TimeUnit.MINUTES));
+	}
+
+ 	@SuppressWarnings("resource")
+	private void connect(Builder builder, String dbName, String user, char[] password) {
  		if(user != null && password != null) {
  			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
  			builder = builder.credential(credential);
 		}
  		MongoClientSettings settings = builder.build();
  		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
-		// we use 'admin' for default connection when no dbname is specified
-		final String dbName = conn.getDatabase()!=null ? conn.getDatabase() : "admin";
- 		logger.info(()->"Connecting " + (user==null ? "anonymously " : "user '" + user + "'") + " to '" + dbName+ "' database @" + settings.getClusterSettings().getRequiredReplicaSetName());
+ 		String dbServer = replicaSet != null ? replicaSet : settings.getClusterSettings().getHosts().get(0).getHost();
+ 		logger.info(()->"Connecting " + (user==null ? "anonymously" : "user '" + user + "'") + " to '" + dbName+ "' database @" + dbServer);
  		client = MongoClients.create(settings);
-		if(replicaSet != null)
-			session = client.startSession();
+ 		session = replicaSet == null ? null : client.startSession();
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
 		logger.info(()->"Connected to database @" + replicaSet);
 	}
-		
-	private void connectWithParams(IMongoStoreConfiguration config, char[] password) {
-		connectWithParams(config.getHost(), config.getPort(), config.getDbName(), config.getUser(), password);
-	}
 	
-	private void connectWithParams(String host, int port, String database, String user, char[] password) {
-		// we use 'admin' for default connection
-		final String dbName = database==null ? "admin" : database;
-		MongoClientSettings.Builder builder = MongoClientSettings.builder()
-		                .codecRegistry(codecRegistry)
-		                .uuidRepresentation(UuidRepresentation.STANDARD)
-		                .applyToClusterSettings(clusterBuilder -> clusterBuilder
-		                		.hosts(Collections.singletonList(new ServerAddress(host, port))))
-		                .applyToSocketSettings(socketBuilder -> socketBuilder
-		                		.readTimeout(6, TimeUnit.MINUTES)
-		                		.connectTimeout(6, TimeUnit.MINUTES));
-		if(user!=null && password!=null) {
-			logger.info(()->"Connecting user '" + user + "' to '" + dbName + "' database");
-			MongoCredential credential = MongoCredential.createCredential(user, AUTH_DB_NAME, password);
-			builder = builder.credential(credential);
-		} else 
-			logger.info(()->"Connecting anonymously to '" + dbName + "' database");
-		MongoClientSettings settings = builder.build();
-		client = MongoClients.create(settings);
-		session = null; // unnecessary but explicit, transactions require a replicaSet
-		db = client.getDatabase(dbName);
-		if(!"admin".equals(dbName))
-			loadAttributes();
-		logger.info(()->"Connected to '" + dbName + "' database");
-	}
 
-	@Override
+ 	@Override
 	public boolean checkConnection() {
 		try {
 			return client.getDatabase("admin")!=null;
