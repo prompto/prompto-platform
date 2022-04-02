@@ -298,13 +298,13 @@ public class MongoStore implements IStore {
  		MongoClientSettings settings = builder.build();
  		String replicaSet = settings.getClusterSettings().getRequiredReplicaSetName();
  		String dbServer = replicaSet != null ? replicaSet : settings.getClusterSettings().getHosts().get(0).getHost();
- 		logger.info(()->"Connecting " + (user==null ? "anonymously" : "user '" + user + "'") + " to '" + dbName+ "' database @" + dbServer);
+ 		logger.info(()->"Connecting " + (user==null ? "anonymously" : "user '" + user + "'") + " to '" + dbName + "' database @" + dbServer);
  		client = MongoClients.create(settings);
  		session = replicaSet == null ? null : client.startSession();
 		db = client.getDatabase(dbName);
 		if(!"admin".equals(dbName))
 			loadAttributes();
-		logger.info(()->"Connected to database @" + replicaSet);
+		logger.info(()->"Connected to '" + dbName + "' database @" + dbServer);
 	}
 	
 
