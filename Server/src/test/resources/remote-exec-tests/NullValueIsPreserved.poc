@@ -1,6 +1,6 @@
 
 method acceptList(Text[] values) {
-	return values is null ? "PRESERVED" : "DAMAGED;
+	return values is null ? "PRESERVED" : "DAMAGED";
 }
 
 widget NullValueIsPreservedPage extends ReactWidget {
