@@ -139,4 +139,12 @@ public class TestRemoteExec extends BaseUITest {
 		assertEquals("ACCEPTED", root.getText());
 	}
 
+	@Test
+	public void nullValueIsPreserved() throws Exception {
+		linkResourcesAndLoadPage("NullValueIsPreserved", Dialect.O);
+		Thread.sleep(1000);
+		WebElement root = waitElement(By.id("body"), 3);
+		assertEquals("PRESERVED", root.getText());
+	}
+
 }
