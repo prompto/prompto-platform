@@ -17,6 +17,3 @@ and methods:
 	define hasLogin as method receiving login returning Boolean doing:
 		Java: return this.hasLogin(login);
 
-	define close as method doing:
-		Java: this.close();
-
