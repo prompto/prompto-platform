@@ -230,7 +230,9 @@ public class MongoStore implements IStore {
 
 	private void closeClientIfOpened() {
 		if(client!=null) {
-			logger.warn(()->"Closing Mongo client: " + client.getClusterDescription().getShortDescription() + " for database: " + db.getName(), new Throwable());
+			String description = client.getClusterDescription() == null ? "<unknown>" : client.getClusterDescription().getShortDescription();
+			String dbName = db == null ? "<unknown>" : db.getName();
+			logger.warn(()->"Closing Mongo client: " + description + " for database: " + dbName, new Throwable());
 			client.close();
 			client = null;
 		}
