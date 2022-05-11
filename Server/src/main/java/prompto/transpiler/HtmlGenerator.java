@@ -82,6 +82,7 @@ public class HtmlGenerator {
 	private Consumer<PrintWriter> generateHeader(Context context, PrintWriter printer) throws IOException {
 		printer.println("<head>");
 		generateMetas(printer);
+		generateManifest(printer);
 		generateTitle(printer);
 		generateIcon(printer);
 		generateName(printer);
@@ -96,6 +97,20 @@ public class HtmlGenerator {
 		}
 	}
 	
+	private void generateManifest(PrintWriter printer) {
+		Map<String, Object> config = getHeaderConfig();
+		Object value = config.get("manifest");
+		if(value==null)
+			return;
+		else if(value instanceof String) {
+			String manifest = "<link href='" + value + "' rel='manifest' />";
+			writeHeaderEntry(printer, manifest);
+		} else {
+			logger.warn(()->"Expected a String, got " + value.getClass().getName());
+		}
+		
+	}
+
 	@SuppressWarnings("unchecked")
 	private void generateMetas(PrintWriter printer) {
 		writeHeaderEntry(printer, "<meta charset='utf-8'>");
