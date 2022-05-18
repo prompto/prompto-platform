@@ -209,5 +209,6 @@ public abstract class GraphQLScalars {
 	public static GraphQLScalarType get(IType type) {
 		return ALL.get(type);
 	}
+	
 
 }

@@ -32,8 +32,11 @@ import prompto.utils.StreamUtils;
 public class GraphQLServlet extends CleverServlet {
 
 	static Instance<GraphQLServlet> instance = new Instance<>();
+	static boolean FORCE_ENABLED = false;
 	
 	public static boolean isEnabled() {
+		if(FORCE_ENABLED)
+			return true;
 		Iterable<IDeclaration> decls = ICodeStore.getInstance().fetchDeclarationsWithAnnotations(new HashSet<>(Arrays.asList("@GraphQLQuery", "@GraphQLMutation")));
 		return decls.iterator().hasNext();
 	}
@@ -86,7 +89,7 @@ public class GraphQLServlet extends CleverServlet {
 		return gql.execute(input);
 	}
 
-	private GraphQL getGraphQL() {
+	GraphQL getGraphQL() {
 		if(graphQL==null) synchronized(this) {
 			GraphQLSchema schema = new GraphQLSchemaBuilder().build();
 			graphQL = GraphQL.newGraphQL(schema).build();

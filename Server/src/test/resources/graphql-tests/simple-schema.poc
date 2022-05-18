@@ -1,0 +1,25 @@
+@GraphQLQuery
+Text method returnsText() {
+	return "Hello";
+}
+
+@GraphQLQuery
+Integer method returnsInteger() {
+	return 123;
+}
+
+attribute firstName: Text;
+attribute lastName: Text;
+attribute birthDate: Date;
+attribute age: Integer;
+category Person(firstName, lastName, birthDate, age);
+
+@GraphQLQuery
+Person method returnsInstance() {
+	return Person(firstName = "Eric", lastName = "Clapton", birthDate = '1960-01-01', age = 62);
+}
+
+@GraphQLQuery
+Person[] method returnsInstances() {
+	return [ Person(firstName = "Eric", lastName = "Clapton", birthDate = '1960-01-01', age = 62) ];
+}
