@@ -92,4 +92,17 @@ public class TestGraphQLServlet extends BaseServerTest {
 		assertEquals(62L, i.get("age"));
 	}
 
+	@Test
+	public void returnsCursor() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("cursor", Dialect.O, "{ fetchPersons { count, items { firstName, lastName } } }");
+		Map<String, Object> i = (Map<String, Object>) s.get("fetchPersons");
+		assertEquals(2, i.get("count"));
+		var list = i.get("items");
+		assertTrue(list instanceof List);
+		i = ((List<Map<String, Object>>)list).get(0);
+		assertEquals("Eric", i.get("firstName"));
+		assertEquals("Clapton", i.get("lastName"));
+	}
+	
+
 }

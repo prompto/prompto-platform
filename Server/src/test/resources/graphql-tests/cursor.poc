@@ -1,0 +1,19 @@
+storable attribute firstName: Text;
+storable attribute lastName: Text;
+storable category Person(firstName, lastName);
+
+@GraphQLQuery
+method fetchPersons() {
+	cursor = fetch all (Person);
+	if(cursor.count == 0) {
+		createPersons();
+		cursor = fetch all (Person);
+	}
+	return cursor;
+}
+
+method createPersons() {
+	p1 = Person(firstName = "Eric", lastName = "Clapton");
+	p2 = Person(firstName = "Sylvie", lastName = "Joly");
+	store(p1, p2);
+}
