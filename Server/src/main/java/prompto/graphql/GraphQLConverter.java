@@ -11,6 +11,7 @@ import prompto.value.DecimalValue;
 import prompto.value.IValue;
 import prompto.value.IntegerValue;
 import prompto.value.ListValue;
+import prompto.value.NullValue;
 import prompto.value.SetValue;
 import prompto.value.TextValue;
 
@@ -18,7 +19,9 @@ public abstract class GraphQLConverter {
 
 	public static Object convertValue(IValue value) {
 		// convert scalar values for which we don't provide a custom scalar
-		if(value instanceof BooleanValue)
+		if(value==null || value==NullValue.instance())
+			return null;
+		else if(value instanceof BooleanValue)
 			return ((BooleanValue)value).getValue();
 		else if(value instanceof IntegerValue)
 			return ((IntegerValue)value).longValue();
@@ -33,7 +36,7 @@ public abstract class GraphQLConverter {
 		else if(GraphQLScalars.get(value.getType())!=null || value instanceof ConcreteInstance || value instanceof Symbol
 				|| value instanceof CursorValue || value instanceof BinaryValue )
 			return value;
-		else
+		else 
 			return value.toString();
 	}
 
