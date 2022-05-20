@@ -16,6 +16,8 @@ import prompto.intrinsic.PromptoDate;
 import prompto.intrinsic.PromptoDateTime;
 import prompto.intrinsic.PromptoPeriod;
 import prompto.intrinsic.PromptoTime;
+import prompto.type.BinaryType;
+import prompto.type.BlobType;
 import prompto.type.BooleanType;
 import prompto.type.DateTimeType;
 import prompto.type.DateType;
@@ -27,9 +29,9 @@ import prompto.type.PeriodType;
 import prompto.type.TextType;
 import prompto.type.TimeType;
 import prompto.type.UuidType;
+import prompto.value.BinaryValue;
 import prompto.value.DateTimeValue;
 import prompto.value.DateValue;
-import prompto.value.ImageValue;
 import prompto.value.PeriodValue;
 import prompto.value.TimeValue;
 import prompto.value.UuidValue;
@@ -49,32 +51,33 @@ public abstract class GraphQLScalars {
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(TimeType.instance(), timeScalar()),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(DateTimeType.instance(), dateTimeScalar()),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(PeriodType.instance(), periodScalar()),
-				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(ImageType.instance(), imageScalar()),
+				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(BlobType.instance(), binaryScalar(BlobType.instance())),
+				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(ImageType.instance(), binaryScalar(ImageType.instance())),
 				new AbstractMap.SimpleEntry<IType, GraphQLScalarType>(UuidType.instance(), uuidScalar()))
 		.stream()
 				.collect(Collectors.toMap(e->e.getKey(), e->e.getValue()));
 	}
 	
-	private static GraphQLScalarType imageScalar() {
+	private static GraphQLScalarType binaryScalar(BinaryType type) {
 		return GraphQLScalarType.newScalar()
-				.name(ImageType.instance().getTypeName())
-				.coercing(new Coercing<ImageValue, String>() {
+				.name(type.getTypeName())
+				.coercing(new Coercing<BinaryValue, String>() {
 
 					@Override
 					public String serialize(Object value) throws CoercingSerializeException {
-						if(value instanceof ImageValue)
-							return ((ImageValue)value).getSourceUrl();
+						if(value instanceof BinaryValue)
+							return ((BinaryValue)value).getSourceUrl();
 						else
 							return null;
 					}
 
 					@Override
-					public ImageValue parseValue(Object input) throws CoercingParseValueException {
+					public BinaryValue parseValue(Object input) throws CoercingParseValueException {
 						return null; // unsupported
 					}
 
 					@Override
-					public ImageValue parseLiteral(Object input) throws CoercingParseLiteralException {
+					public BinaryValue parseLiteral(Object input) throws CoercingParseLiteralException {
 						return null; // unsupported
 					}
 				}).build();
