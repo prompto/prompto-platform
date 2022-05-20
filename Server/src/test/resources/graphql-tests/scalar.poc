@@ -1,0 +1,28 @@
+@GraphQLQuery
+method returnsText() {
+	return "Hello";
+}
+
+@GraphQLQuery
+method returnsInteger() {
+	return 123;
+}
+
+enumerated NativeEnum(Text) {
+	NATIVE = "Native";
+}
+
+@GraphQLQuery
+method returnsNativeEnum() {
+	return NATIVE;
+}
+
+@GraphQLQuery
+method returnsBlob() {
+	return fetchBinaryResource("xyz");
+}
+
+@GraphQLQuery
+method returnsImage() {
+	return (Image)(Any)fetchBinaryResource("xyz");
+}

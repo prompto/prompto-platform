@@ -60,19 +60,25 @@ public class TestGraphQLServlet extends BaseServerTest {
 	
 	@Test
 	public void returnsText() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("simple-schema", Dialect.O, "{ returnsText }");
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsText }");
 		assertEquals("Hello", s.get("returnsText"));
 	}
 	
 	@Test
 	public void returnsInteger() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("simple-schema", Dialect.O, "{ returnsInteger }");
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsInteger }");
 		assertEquals(123L, s.get("returnsInteger"));
 	}
 
 	@Test
+	public void returnsNativeEnum() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsNativeEnum }");
+		assertEquals("NATIVE", s.get("returnsNativeEnum"));
+	}
+
+	@Test
 	public void returnsInstance() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("simple-schema", Dialect.O, "{ returnsInstance { firstName, lastName, birthDate, age } }");
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsInstance { firstName, lastName, birthDate, age } }");
 		Map<String, Object> i = (Map<String, Object>) s.get("returnsInstance");
 		assertEquals("Eric", i.get("firstName"));
 		assertEquals("Clapton", i.get("lastName"));
@@ -82,7 +88,7 @@ public class TestGraphQLServlet extends BaseServerTest {
 	
 	@Test
 	public void returnsInstances() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("simple-schema", Dialect.O, "{ returnsInstances { firstName, lastName, birthDate, age } }");
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsInstances { firstName, lastName, birthDate, age } }");
 		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("returnsInstances");
 		assertEquals(1, l.size());
 		Map<String, Object> i = l.get(0);
@@ -93,10 +99,28 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 
 	@Test
+	public void returnsAbstractChild() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChild { __typename ... on Child1 { name } ... on Child2 { name } } }");
+		Map<String, Object> i = (Map<String, Object>) s.get("returnsAbstractChild");
+		assertEquals("Child1", i.get("name"));
+	}
+
+	@Test
+	public void returnsAbstractChildren() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChildren { __typename ... on Child1 { name } ... on Child2 { name } } }");
+		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("returnsAbstractChildren");
+		assertEquals(2, l.size());
+		Map<String, Object> i = l.get(0);
+		assertEquals("Child1", i.get("name"));
+		i = l.get(01);
+		assertEquals("Child2", i.get("name"));
+	}
+
+	@Test
 	public void returnsCursor() throws Exception {
 		Map<String, Object> s = linkResourceAndRunQuery("cursor", Dialect.O, "{ fetchPersons { count, items { firstName, lastName } } }");
 		Map<String, Object> i = (Map<String, Object>) s.get("fetchPersons");
-		assertEquals(2, i.get("count"));
+		assertEquals(2L, i.get("count"));
 		var list = i.get("items");
 		assertTrue(list instanceof List);
 		i = ((List<Map<String, Object>>)list).get(0);
