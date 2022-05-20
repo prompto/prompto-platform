@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import graphql.Scalars;
 import graphql.schema.FieldCoordinates;
 import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLCodeRegistry.Builder;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLEnumValueDefinition;
 import graphql.schema.GraphQLFieldDefinition;
@@ -18,6 +19,7 @@ import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLUnionType;
 import prompto.declaration.AttributeDeclaration;
 import prompto.declaration.CategoryDeclaration;
 import prompto.declaration.IDeclaration;
@@ -27,8 +29,10 @@ import prompto.grammar.Identifier;
 import prompto.runtime.ApplicationContext;
 import prompto.type.CategoryType;
 import prompto.type.CursorType;
+import prompto.type.IEnumeratedType;
 import prompto.type.IType;
 import prompto.type.ListType;
+import prompto.value.ConcreteInstance;
 
 public interface GraphQLType {
 
@@ -65,7 +69,6 @@ public interface GraphQLType {
 	}
 
 	static GraphQLType doBuild(IType type, GraphQLCodeRegistry.Builder registry) {
-		// TODO Auto-generated method stub
 		return new GraphQLType() {
 			
 			GraphQLInputType _input;
@@ -102,14 +105,13 @@ public interface GraphQLType {
 				else if(type instanceof ListType) {
 					GraphQLOutputType itemType = buildOutputType(((ListType)type).getItemType(), registry);
 					return GraphQLList.list(itemType);
-				}
+				} else if(type instanceof IEnumeratedType)
+					return _buildOutputEnumeratedType((IEnumeratedType)type, registry);
 				else
 					throw new UnsupportedOperationException("yet!");
 			}
 			
-			
 			private GraphQLOutputType _buildOutputCursorType(CursorType type, GraphQLCodeRegistry.Builder registry) {
-				// TODO data fetcher
 				GraphQLOutputType itemType = buildOutputType(type.getItemType(), registry);
 				return GraphQLObjectType.newObject()
 						.name(type.getItemType().getTypeName() + "Cursor")
@@ -131,12 +133,51 @@ public interface GraphQLType {
 			}
 
 			private GraphQLOutputType _buildOutputCategoryType(CategoryDeclaration decl, GraphQLCodeRegistry.Builder registry) {
+				var derived = ApplicationContext.get().fetchDerivedCategoryDeclarations(decl.getId());
+				if(derived.isEmpty())
+					return _buildOutputSimpleCategoryType(decl, registry);
+				else {
+					/* we need to support concrete parent classes
+					 * but this is complex because it requires creating a GraphQLUnionType for when the class is referenced
+					 * and a GraphQLObjectType for when an instance of the class is returned
+					 * so for now we restrict ourselves to abstract parent classes (that cannot be instantiated thus avoiding the above scenario)
+					 */
+					var types = derived.stream() // TODO Stream.concat(derived.stream(), Collections.singleton(decl).stream())
+							.map(IDeclaration::getId)
+							.map(id -> new CategoryType(id))
+							.collect(Collectors.toList());
+					return _buildOutputUnionCategoryType(decl, types, registry);
+				}
+			}
+			
+			private GraphQLUnionType _buildOutputUnionCategoryType(CategoryDeclaration decl, List<CategoryType> derived, Builder registry) {
+				var builder = GraphQLUnionType.newUnionType()
+						.name(decl.getName()); // TODO see concrete class support: decl.getName() + "Union");
+				derived.forEach(type -> {
+					var outputType = build(type, registry).outputType();
+					if(outputType instanceof GraphQLObjectType)
+						builder.possibleType((GraphQLObjectType)outputType);
+				});
+				GraphQLUnionType unionType = builder.build();
+				registry.typeResolver(unionType, env -> {
+					Object o = env.getObject();
+					IType type = ((ConcreteInstance)o).getType();
+					return env.getSchema().getObjectType(type.getTypeName());
+				});
+				return unionType;
+			}
+
+			private GraphQLObjectType _buildOutputSimpleCategoryType(CategoryDeclaration decl, GraphQLCodeRegistry.Builder registry) {
 				return GraphQLObjectType.newObject()
 						.name(type.getTypeName())
 						.fields(_buildOutputFields(decl, registry))
 						.build();
 			}
 
+			private GraphQLOutputType _buildOutputEnumeratedType(IEnumeratedType type, GraphQLCodeRegistry.Builder registry) {
+				return _buildOutputCategoryType(new CategoryType(type.getTypeNameId()), registry);
+			}
+			
 			private GraphQLOutputType _buildOutputEnumeratedType(IEnumeratedDeclaration<?> decl, GraphQLCodeRegistry.Builder registry) {
 				return GraphQLEnumType.newEnum()
 						.name(type.getTypeName())
