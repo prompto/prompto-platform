@@ -20,7 +20,7 @@ public class GraphQLAttributeFetcher implements DataFetcher<Object> {
 		Object instance = environment.getSource();
 		if(instance instanceof ConcreteInstance) {
 			IValue value = ((ConcreteInstance)instance).getMember(ApplicationContext.get(), attribute, false);
-			return value==null ? null : GraphQLConverter.convertValue(value);
+			return GraphQLConverter.convertValue(value);
 		} else
 			return null;
 	}
