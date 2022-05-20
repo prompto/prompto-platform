@@ -55,6 +55,7 @@ public class TestGraphQLServlet extends BaseServerTest {
 		GraphQL graphQL = servlet.getGraphQL();
 		ExecutionResult result = graphQL.execute(query);
 		assertNotNull(result);
+		assertTrue(result.getErrors().isEmpty());
 		return result.getData();
 	}
 	
@@ -100,20 +101,22 @@ public class TestGraphQLServlet extends BaseServerTest {
 
 	@Test
 	public void returnsAbstractChild() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChild { __typename ... on Child1 { name } ... on Child2 { name } } }");
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChild { __typename ... on Child1 { name, persons { firstName } } ... on Child2 { name, persons { firstName } } } }");
 		Map<String, Object> i = (Map<String, Object>) s.get("returnsAbstractChild");
 		assertEquals("Child1", i.get("name"));
 	}
 
 	@Test
 	public void returnsAbstractChildren() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChildren { __typename ... on Child1 { name } ... on Child2 { name } } }");
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChildren { __typename ... on Parent { name } ... on Child1 { name, persons { firstName } } ... on Child2 { name, persons { firstName } } } }");
 		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("returnsAbstractChildren");
-		assertEquals(2, l.size());
+		assertEquals(3, l.size());
 		Map<String, Object> i = l.get(0);
 		assertEquals("Child1", i.get("name"));
-		i = l.get(01);
+		i = l.get(1);
 		assertEquals("Child2", i.get("name"));
+		i = l.get(2);
+		assertEquals("Parent", i.get("name"));
 	}
 
 	@Test

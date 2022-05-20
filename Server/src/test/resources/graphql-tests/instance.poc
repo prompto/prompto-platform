@@ -14,16 +14,17 @@ Person[] method returnsInstances() {
 	return [ Person(firstName = "Eric", lastName = "Clapton", birthDate = '1960-01-01', age = 62) ];
 }
 
-category Parent(name);
+attribute persons: Person[];
+category Parent(name, persons);
 category Child1 extends Parent;
 category Child2 extends Parent;
 
 @GraphQLQuery
 Parent method returnsAbstractChild() {
-	return (Parent)Child1(name = "Child1");
+	return (Parent)Child1(name = "Child1", persons = [Person(firstName = "Eric")]);
 }
 
 @GraphQLQuery
 Parent[] method returnsAbstractChildren() {
-	return [Child1(name = "Child1"), Child2(name = "Child2")];
+	return [Child1(name = "Child1", persons= [Person(firstName = "Eric")]), Child2(name = "Child2"), Parent(name = "Parent")];
 }
