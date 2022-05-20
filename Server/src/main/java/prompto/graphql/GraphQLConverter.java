@@ -2,8 +2,11 @@ package prompto.graphql;
 
 import java.util.stream.Collectors;
 
+import prompto.expression.Symbol;
+import prompto.value.BinaryValue;
 import prompto.value.BooleanValue;
 import prompto.value.ConcreteInstance;
+import prompto.value.CursorValue;
 import prompto.value.DecimalValue;
 import prompto.value.IValue;
 import prompto.value.IntegerValue;
@@ -27,9 +30,8 @@ public abstract class GraphQLConverter {
 			return ((ListValue)value).getItems().stream().map(GraphQLConverter::convertValue).collect(Collectors.toList());
 		else if(value instanceof SetValue)
 			return ((SetValue)value).getItems().stream().map(GraphQLConverter::convertValue).collect(Collectors.toList());
-		else if(value instanceof ConcreteInstance)
-			return value;
-		else if(GraphQLScalars.get(value.getType())!=null)
+		else if(GraphQLScalars.get(value.getType())!=null || value instanceof ConcreteInstance || value instanceof Symbol
+				|| value instanceof CursorValue || value instanceof BinaryValue )
 			return value;
 		else
 			return value.toString();
