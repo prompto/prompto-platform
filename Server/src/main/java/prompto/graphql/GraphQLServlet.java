@@ -42,8 +42,10 @@ public class GraphQLServlet extends CleverServlet {
 	}
 
 	public static void reset() {
-		if(instance.get()!=null)
+		if(instance.get()!=null) {
+			instance.get().schema = null;
 			instance.get().graphQL = null;
+		}
 		GraphQLType.TYPE_BY_NAME_MAP.clear();
 	}
 
@@ -52,6 +54,7 @@ public class GraphQLServlet extends CleverServlet {
 		Map<String, Object> variables;
 	}
 
+	GraphQLSchema schema;
 	GraphQL graphQL;
 
 	public GraphQLServlet() {
@@ -88,11 +91,17 @@ public class GraphQLServlet extends CleverServlet {
 		GraphQL gql = getGraphQL();
 		return gql.execute(input);
 	}
+	
+	GraphQLSchema getGraphQLSchema() {
+		if(schema==null) synchronized(this) {
+			schema = new GraphQLSchemaBuilder().build();
+		}
+		return schema;
+	}
 
 	GraphQL getGraphQL() {
 		if(graphQL==null) synchronized(this) {
-			GraphQLSchema schema = new GraphQLSchemaBuilder().build();
-			graphQL = GraphQL.newGraphQL(schema).build();
+			graphQL = GraphQL.newGraphQL(getGraphQLSchema()).build();
 		}
 		return graphQL;
 	}
