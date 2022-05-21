@@ -148,12 +148,15 @@ public interface GraphQLType {
 			private GraphQLUnionType _buildOutputUnionCategoryType(CategoryDeclaration decl, List<CategoryType> derived, Builder registry) {
 				var builder = GraphQLUnionType.newUnionType()
 						.name(decl.getName() + "Union");
-				builder.possibleType(_buildOutputSimpleCategoryType(decl, registry));
-				derived.forEach(type -> {
+				if(!decl.isAbstract())
+					builder = builder.possibleType(_buildOutputSimpleCategoryType(decl, registry));
+				for(var type : derived) {
 					var outputType = build(type, registry).outputType();
 					if(outputType instanceof GraphQLObjectType)
-						builder.possibleType((GraphQLObjectType)outputType);
-				});
+						builder = builder.possibleType((GraphQLObjectType)outputType);
+					else if(outputType instanceof GraphQLUnionType)
+						builder = builder.possibleTypes(((GraphQLUnionType)outputType).getTypes().toArray(new GraphQLObjectType[0]));
+				};
 				GraphQLUnionType unionType = builder.build();
 				registry.typeResolver(unionType, env -> {
 					Object o = env.getObject();

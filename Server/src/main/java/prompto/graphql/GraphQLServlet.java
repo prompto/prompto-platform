@@ -21,6 +21,8 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.idl.SchemaPrinter;
+import graphql.schema.idl.SchemaPrinter.Options;
 import prompto.code.ICodeStore;
 import prompto.declaration.IDeclaration;
 import prompto.server.CleverServlet;
@@ -92,16 +94,21 @@ public class GraphQLServlet extends CleverServlet {
 		return gql.execute(input);
 	}
 	
-	GraphQLSchema getGraphQLSchema() {
+	GraphQLSchema getSchema() {
 		if(schema==null) synchronized(this) {
 			schema = new GraphQLSchemaBuilder().build();
 		}
 		return schema;
 	}
 
+	public String getSDL() {
+		var options = Options.defaultOptions().includeDirectives(false);
+		return new SchemaPrinter(options).print(getSchema());
+	}
+
 	GraphQL getGraphQL() {
 		if(graphQL==null) synchronized(this) {
-			graphQL = GraphQL.newGraphQL(getGraphQLSchema()).build();
+			graphQL = GraphQL.newGraphQL(getSchema()).build();
 		}
 		return graphQL;
 	}
