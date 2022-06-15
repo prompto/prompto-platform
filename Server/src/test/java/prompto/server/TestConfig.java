@@ -7,6 +7,7 @@ import java.io.InputStream;
 
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import prompto.config.HttpConfiguration;
@@ -23,6 +24,7 @@ import prompto.runtime.Mode;
 import prompto.security.IKeyStoreFactory;
 import prompto.security.auth.source.IAuthenticationSource;
 import prompto.security.auth.source.IAuthenticationSourceFactory;
+import prompto.utils.ResourceUtils;
 
 public class TestConfig {
 	
@@ -33,7 +35,7 @@ public class TestConfig {
 	}
 
 	@Test
-	public void testFullYamlConfig() throws IOException {
+	public void yamlConfigIsRead() throws IOException {
 		try(InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream("configs/test-config.yml")) {
 			assertNotNull(input);
 			IConfigurationReader reader = new YamlConfigurationReader(input);
@@ -43,10 +45,10 @@ public class TestConfig {
 			assertEquals("somewhere", httpConfig.getAllowedOrigins());
 			// keystore
 			IKeyStoreConfiguration keyStoreConfig = httpConfig.getKeyStoreConfiguration();
-			checkKeyStoreConfiguration(keyStoreConfig);
+			keyStoreConfigIsRead(keyStoreConfig);
 			// truststore
 			keyStoreConfig = httpConfig.getTrustStoreConfiguration();
-			checkKeyStoreConfiguration(keyStoreConfig);
+			keyStoreConfigIsRead(keyStoreConfig);
 			// authentication
 			IAuthenticationConfiguration authConfig = httpConfig.getAuthenticationConfiguration();
 			IAuthenticationSourceConfiguration sourceConfig = authConfig.getAuthenticationSourceConfiguration();
@@ -57,7 +59,7 @@ public class TestConfig {
 		
 	}
 
-	private void checkKeyStoreConfiguration(IKeyStoreConfiguration ksc) {
+	private void keyStoreConfigIsRead(IKeyStoreConfiguration ksc) {
 		assertNotNull(ksc);
 		SslContextFactory ssl = new SslContextFactory();
 		IKeyStoreFactoryConfiguration ksfc = ksc.getKeyStoreFactoryConfiguration();
@@ -69,6 +71,14 @@ public class TestConfig {
 		assertNotNull(skf);
 		char[] secretKey = skf.getSecret();
 		ssl.setKeyStorePassword(new String(secretKey));
+	}
+	
+	@Ignore("Uses confidential data")
+	@Test
+	public void loginFactoryInRemoteAccountIsRead() throws IOException {
+		String config = ResourceUtils.getResourceAsString("configs/config-with-account.yml");
+		IAuthenticationSource source = AppServer.getLoginFactory(config);
+		assertNotNull(source);
 	}
 
 }
