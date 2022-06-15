@@ -1,0 +1,254 @@
+define onServerStart as method receiving Text<:> args doing:
+    installServiceHandler with "/git/released/*" as path and stuffReleased as serviceHandler
+    installServiceHandler with "/ec2/installed/*" as path and stuffInstalled as serviceHandler
+    installServiceHandler with "/ec2/prepared/*" as path and amiPrepared as serviceHandler
+    printLine "Start healthcheck..."
+    ec2 = invoke: getAwsEC2
+    printLine "Able to connect to ec2!"
+
+
+define stuffReleased as method receiving Document doc doing:
+    printLine "stuffReleased"
+    action = doc.action as Text
+    if action = "published":
+        repoDoc = doc.repository as Document
+        repoName = repoDoc.name as Text
+        if repoName = "prompto-platform":
+            prepareAmi doc
+        else if repoName in <"prompto-docs", "prompto-deploy", "prompto-factory">:
+            deployStuff doc
+        else:
+            printLine "Non-managed release of " + repoName
+    else:
+        printLine "Non-managed action: " + action
+
+
+define prepareAmi as method receiving Document doc doing:
+    printLine "prepareAmi"
+    repoDoc = doc.repository as Document
+    repoName = repoDoc.name as Text
+    releaseTag = getReleaseTag doc
+    printLine "repo: " + repoName + " released with releaseTag: " + releaseTag
+    ec2 = invoke: getAwsEC2
+    amiName = "prompto-platform-" + releaseTag
+    printLine "AMI name: " + amiName
+    script = getBashScript repoName
+    script = updateBashScript with script and releaseTag
+    path = "https://raw.githubusercontent.com/prompto/prompto-deploy/master/aws/prompto-platform/ami-seed.txt"
+    imageId = read all from Url with path
+    iamRole = ""
+    securityGroups = ["default"]
+    newInstanceId = ec2.runInstance with imageId, "t2.micro" as instanceType,
+        "prompto-admin" as keyName, iamRole as roleName, securityGroups as securityGroupNames and script as userData
+    sleep 1000
+    ec2.setInstanceName with newInstanceId as instanceId and amiName as name
+    printLine "instance created with name: " + amiName + " and id: " + newInstanceId
+
+
+define getAmiVersion as method receiving Document value returning Version doing:
+    name = value["Name"] as Text
+    parts = name.split "\\-"
+    return parseVersion parts[3]
+
+
+define getLatestAmiImageId as method doing:
+    printLine "getLatestAmiImageId"
+    ec2 = invoke: getAwsEC2
+    amis = ec2.listOwnedAMIs
+    relevant = amis filtered with ami where ami["Name"].text[1:17] = "prompto-platform-"
+    amis = sorted descending relevant with getAmiVersion as key
+    ami = amis[1]
+    return ami["imageId"] as Text
+
+
+define deployStuff as method receiving Document doc doing:
+    printLine "deployStuff"
+    repoDoc = doc.repository as Document
+    repoName = repoDoc.name as Text
+    releaseTag = getReleaseTag doc
+    printLine "repo: " + repoName + " released with releaseTag: " + releaseTag
+    ec2 = invoke: getAwsEC2
+    prefix = repoName + "-"
+    nextName = getNextInstanceWithName with ec2 as ec2 and prefix as prefix
+    printLine "nextName: " + nextName
+    script = getBashScript repoName
+    script = updateBashScript with script and releaseTag
+    imageId = invoke: getLatestAmiImageId
+    instanceType = "t2.micro"
+    keyName = "prompto-admin"
+    roleName = ""
+    if repoName in <"prompto-deploy", "prompto-factory">:
+        roleName = "deployer"
+    else if repoName = "prompto-docs":
+        roleName = "server"
+    securityGroupNames = ["default"]
+    if repoName = "prompto-factory":
+        securityGroupNames = ["prompto-factory"]
+        instanceType = "t2.small"
+    printLine "amiId: " + imageId + ", instanceType: " + instanceType
+    newInstanceId = ec2.runInstance with imageId, instanceType, keyName, roleName, securityGroupNames and script as userData
+    sleep 1000
+    ec2.setInstanceName with newInstanceId as instanceId and nextName as name
+    printLine "instance created with name: " + nextName + " and id: " + newInstanceId
+
+
+define stuffInstalled as method receiving Document doc doing:
+    printLine "stuffInstalled " + doc
+    component = doc.component as Text
+    if component in <"prompto-docs", "prompto-deploy", "prompto-factory">:
+        redirectAndDropInstances doc
+    else:
+        printLine "Non-managed install of " + component
+
+define amiPrepared as method receiving Document doc doing:
+    printLine "amiPrepared " + doc
+    component = doc.component as Text
+    if component = "prompto-platform":
+        createAmiAndDropInstance doc
+    else:
+        printLine "Non-managed install of " + component
+
+
+define createAmiAndDropInstance as method receiving Document doc doing:
+    printLine "createAmiAndDropInstance " + doc
+	ec2 = invoke: getAwsEC2
+	instanceId = doc.instanceId as Text
+	version = doc.version as Text
+	name = "prompto-platform-" + version
+	imageId = ec2.createAMI with instanceId, name and true as waitForAvailability
+	printLine "AMI created: " + imageId
+	printLine "dropping instance " + instanceId
+    ec2.dropInstance instanceId
+	printLine "setAMIPublic: " + imageId
+    ec2.setAMIPublic imageId
+ 	printLine "copy to Paris for Amalthea, Singapore for Zubin and Frankurt for Baiya"
+ 	// for each awsRegion in [ "ap-southeast-1", "eu-central-1" ]:
+ 	for each awsRegion in [ "eu-west-3" ]:
+        copyAmi with imageId as srcImageId, name, "us-east-1" as fromAwsRegion and awsRegion as toAwsRegion
+
+
+define copyAmi as method receiving Text srcImageId, name, Text fromAwsRegion and Text toAwsRegion doing:
+	printLine "copyAmi: " + srcImageId + " from " + fromAwsRegion + " to " + toAwsRegion
+	ec2 = newAwsEC2 with toAwsRegion as awsRegion
+	dstImageId = ec2.copyAMI with srcImageId as imageId, fromAwsRegion as awsRegion, name and true as waitForAvailability
+  	printLine "AMI copied: " + dstImageId
+	printLine "setAMIPublic: " + dstImageId
+    ec2.setAMIPublic with dstImageId as imageId
+
+
+define redirectAndDropInstances as method receiving Document doc doing:
+    printLine "redirectAndDropInstances " + doc
+    component = doc.component as Text
+    instanceId = doc.instanceId as Text
+    addressId = doc.addressId as Text
+    ec2 = invoke: getAwsEC2
+    printLine "associateIPAddress " + addressId + " with " + instanceId
+    assoc = ec2.associateIPAddress with instanceId and addressId
+    printLine "address associated! "
+    prefix = component + "-"
+    docs = getInstancesWithName with ec2 and prefix
+    for each item in docs:
+        someId = item.instanceId as Text
+        if instanceId <> someId:
+            printLine "dropping instance " + someId
+            ec2.dropInstance with someId as instanceId
+
+
+define isRunningOnEC2 as method doing:
+    switch on error doing:
+        path = "file:/sys/devices/virtual/dmi/id/bios_version"
+        data = read all from Url with path as path
+        return "amazon" in data
+    when READ_WRITE:
+        return false
+
+
+define getAwsEC2 as method returning AwsEC2 doing:
+    awsRegion = "us-east-1"
+    isEc2 = invoke: isRunningOnEC2
+    if isEc2:
+        return newAwsEC2 awsRegion
+    else:
+        return Nothing
+
+
+define updateBashScript as method receiving Text script and Text releaseTag doing:
+    return script.replaceAll with "$version$" as toReplace and releaseTag as replaceWith
+
+
+define getReleaseTag as method receiving Document doc doing:
+    releaseDoc = doc.release as Document
+    return releaseDoc.tag_name as Text
+
+
+define getInstancesWithName as method receiving AwsEC2 ec2 and Text prefix doing:
+    return ec2.listInstances filtered with doc where prefix in doc.Name as Text
+
+
+define getFirstInstanceWithName as method receiving AwsEC2 ec2 and Text prefix doing:
+    instances = getInstancesWithName with ec2 as ec2 and prefix as prefix
+    if instances.count = 0:
+        return prefix + "000"
+    else:
+        name = ""
+        for each instance in instances:
+            temp = instance["Name"] as Text
+            if temp > name:
+                name = temp
+        return name
+
+
+define getNextInstanceWithName as method receiving AwsEC2 ec2 and Text prefix doing:
+    name = getFirstInstanceWithName with ec2 and prefix
+    num = parseInteger name[prefix.count + 1:]
+    num = num + 1
+    if num > 999:
+        num = 1
+    return prefix + num.format with "000" as format
+
+
+define getBashScript as method receiving Text component returning Text doing:
+    path = "https://raw.githubusercontent.com/prompto/prompto-deploy/master/aws/" + component + "/deploy.sh"
+    return read all from Url with path
+
+
+define "get next prompto-docs instance name returns prompto-docs-003" as test method doing:
+    ec2 = invoke: getAwsEC2
+    nextName = getNextInstanceWithName with ec2 and "prompto-docs-" as prefix
+and verifying:
+    nextName = "prompto-docs-006"
+
+
+define "get current prompto-docs instances returns 1 instance" as test method doing:
+    ec2 = invoke: getAwsEC2
+    current = getInstancesWithName with ec2 and "prompto-docs-" as prefix
+and verifying:
+    current.count = 1    
+
+
+define "is not running on EC2" as test method doing:
+    isEC2 = invoke: isRunningOnEC2
+    // need previous line to not be the last
+and verifying READ_WRITE
+
+
+define "fetches latest release from GitHub" as test method doing:
+    version = getLatestRelease with "prompto-deploy" as component
+and verifying:
+    "v" in version    
+
+
+define "fetches bash script from GitHub" as test method doing:
+    script = getBashScript with "prompto-docs" as component
+and verifying:
+    "v0.0.3" in script    
+
+
+define "GitHub release payload can be parsed" as test method doing:
+    json = "{\"action\": \"published\", \"release\": {\"url\": \"https://api.github.com/repos/baxterthehacker/public-repo/releases/1261438\"}}"
+    payload = readJson json
+and verifying:
+    payload is a Document
+    payload.action = "published"
+    payload.release is a Document
+    payload.release.url is a Text
