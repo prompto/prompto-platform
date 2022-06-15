@@ -31,6 +31,7 @@ import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeSecurityGroupsResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeSubnetsResponse;
 import software.amazon.awssdk.services.ec2.model.DisassociateAddressRequest;
 import software.amazon.awssdk.services.ec2.model.EbsInstanceBlockDeviceSpecification;
@@ -49,6 +50,7 @@ import software.amazon.awssdk.services.ec2.model.ReleaseAddressRequest;
 import software.amazon.awssdk.services.ec2.model.Reservation;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.SecurityGroup;
 import software.amazon.awssdk.services.ec2.model.StartInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.StopInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.Tag;
@@ -88,8 +90,8 @@ public class EC2 {
 	            .keyName(keyName);
 			if(userData!=null)
 				builder = builder.userData(Base64.getEncoder().encodeToString(userData.getBytes()));
-			if(securityGroups!=null && !securityGroups.isEmpty())	
-				builder = builder.securityGroups(securityGroups);
+			if(securityGroups!=null && !securityGroups.isEmpty())
+				builder = builder.securityGroups(convertToSecurityGroupIds(securityGroups));
 	        if(iamRoleName!=null && !iamRoleName.isEmpty()) {
 				IamInstanceProfileSpecification iamProfile = null;
 				if(iamRoleName!=null && !iamRoleName.isEmpty())
@@ -105,6 +107,18 @@ public class EC2 {
 	}
 	
 	
+	private Collection<String> convertToSecurityGroupIds(List<String> securityGroups) {
+		DescribeSecurityGroupsResponse result = ec2.describeSecurityGroups();
+		return securityGroups.stream()
+					.map(name -> convertToSecurityGroupId(result.securityGroups(), name))
+					.collect(Collectors.toList());
+				
+	}
+	
+	private String convertToSecurityGroupId(List<SecurityGroup> groups, String name) {
+		return groups.stream().filter(group -> name.equals(group.groupName())).findFirst().map(SecurityGroup::groupId).orElse(name);
+	}
+
 	public void waitForInstanceState(String instanceId, String stateName, int timeOutInSecs) {
 		DescribeInstanceStatusRequest statusRequest = DescribeInstanceStatusRequest.builder()
 				.instanceIds(instanceId)
