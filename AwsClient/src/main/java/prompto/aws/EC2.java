@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -91,7 +92,7 @@ public class EC2 {
 			if(userData!=null)
 				builder = builder.userData(Base64.getEncoder().encodeToString(userData.getBytes()));
 			if(securityGroups!=null && !securityGroups.isEmpty())
-				builder = builder.securityGroups(convertToSecurityGroupIds(securityGroups));
+				builder = builder.securityGroupIds(convertToSecurityGroupIds(securityGroups));
 	        if(iamRoleName!=null && !iamRoleName.isEmpty()) {
 				IamInstanceProfileSpecification iamProfile = null;
 				if(iamRoleName!=null && !iamRoleName.isEmpty())
@@ -111,12 +112,13 @@ public class EC2 {
 		DescribeSecurityGroupsResponse result = ec2.describeSecurityGroups();
 		return securityGroups.stream()
 					.map(name -> convertToSecurityGroupId(result.securityGroups(), name))
+					.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 				
 	}
 	
 	private String convertToSecurityGroupId(List<SecurityGroup> groups, String name) {
-		return groups.stream().filter(group -> name.equals(group.groupName())).findFirst().map(SecurityGroup::groupId).orElse(name);
+		return groups.stream().filter(group -> name.equals(group.groupName())).findFirst().map(SecurityGroup::groupId).orElse(null);
 	}
 
 	public void waitForInstanceState(String instanceId, String stateName, int timeOutInSecs) {
