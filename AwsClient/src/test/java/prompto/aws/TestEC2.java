@@ -44,6 +44,15 @@ public class TestEC2 extends AWSTestBase {
 		assertNotNull(docs.get(0).get("subnetId"));
 	}
 
+	@Test
+	public void listsSecurityGroups() {
+		EC2 awsEc2 = new EC2(ec2);
+		List<PromptoDocument<String, Object>> docs = awsEc2.listSecurityGroups();
+		assertTrue(docs.size()>=2);
+		assertNotNull(docs.get(0).get("groupName"));
+		assertNotNull(docs.get(0).get("groupId"));
+	}
+
 	/*
 	@Test
 	public void listsEBSVolumesWithTag() throws Exception {

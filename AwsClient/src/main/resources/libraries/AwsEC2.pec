@@ -67,6 +67,9 @@ and methods:
 
 	define listSubnets as method returning Document[] doing:
 		Java: return this.listSubnets(); 	
+		
+	define listSecurityGroups as method returning Document[] doing:
+		Java: return this.listSecurityGroups();
 
 
 define newAwsEC2 as native method receiving Text awsRegion, login = Nothing and password = Nothing returning AwsEC2 doing:

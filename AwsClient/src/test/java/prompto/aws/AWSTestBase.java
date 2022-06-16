@@ -18,6 +18,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 public abstract class AWSTestBase {
 
+	public static final Region DEFAULT_AWS_REGION = Region.US_EAST_1;
+	public static final String CREDENTIALS_FILE_PATH = "/users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.properties";
+	
 	AwsCredentials credentials;
 	Ec2Client ec2;
 	KmsClient kms;
@@ -28,22 +31,22 @@ public abstract class AWSTestBase {
 	
 	@Before
 	public void before() throws Exception {
-		try (InputStream input = new FileInputStream("/users/ericvergnaud/Documents/Technical/Certificates/prompto-keys/aws/us-east-1/keys.properties")) {
+		try (InputStream input = new FileInputStream(CREDENTIALS_FILE_PATH)) {
 			props.load(input);
 		}
 		credentials = AwsBasicCredentials.create(
 				props.getProperty("accessKey"), 
 				props.getProperty("secretKey"));
 		ec2 = Ec2Client.builder()
-				.region(Region.US_EAST_1)
+				.region(DEFAULT_AWS_REGION)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
 		kms = KmsClient.builder()
-				.region(Region.US_EAST_1)
+				.region(DEFAULT_AWS_REGION)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
 		efs = EfsClient.builder()
-				.region(Region.US_EAST_1)
+				.region(DEFAULT_AWS_REGION)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
 		route53 = Route53Client.builder()
@@ -51,7 +54,7 @@ public abstract class AWSTestBase {
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
 		s3 = S3Client.builder()
-				.region(Region.US_EAST_1)
+				.region(DEFAULT_AWS_REGION)
 				.credentialsProvider(StaticCredentialsProvider.create(credentials))
 				.build();
 	}

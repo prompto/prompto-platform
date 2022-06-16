@@ -351,6 +351,14 @@ public class EC2 {
 				.collect(Collectors.toList());
 	}
 
+	public List<PromptoDocument<String,Object>> listSecurityGroups() {
+		DescribeSecurityGroupsResponse response = ec2.describeSecurityGroups();
+		return response.securityGroups().stream()
+				.map(Converter::convertPojo)
+				.collect(Collectors.toList());
+	}
+
+
 	private void waitForAMIState(String imageId, ImageState state) {
 		DescribeImagesRequest describeRequest = DescribeImagesRequest.builder()
 				.imageIds(imageId)
