@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import graphql.Scalars;
+import graphql.language.StringValue;
 import graphql.schema.Coercing;
 import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
@@ -195,14 +196,22 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public DateValue parseValue(Object input) throws CoercingParseValueException {
-						return new DateValue(PromptoDate.parse(String.valueOf(input)));
+						PromptoDate value = readDateInput(input);
+						return new DateValue(value);
 					}
 
-					@Override
+				@Override
 					public DateValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new DateValue(PromptoDate.parse(String.valueOf(input)));
+						PromptoDate value = readDateInput(input);
+						return new DateValue(value);
 					}
-				}).build();
+
+					private PromptoDate readDateInput(Object input) {
+						String value = input instanceof StringValue ? ((StringValue)input).getValue() : String.valueOf(input); 
+						return PromptoDate.parse(value);
+					}
+
+}).build();
 	}
 
 	public static boolean isScalar(IType type) {
