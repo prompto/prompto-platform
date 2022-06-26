@@ -5,12 +5,17 @@ attribute age: Integer;
 category Person(firstName, lastName, birthDate, age);
 
 @GraphQLQuery
-Person method returnsInstance() {
+Person method readsInstance() {
 	return Person(firstName = "Eric", lastName = "Clapton", birthDate = '1960-01-01', age = 62);
 }
 
+@GraphQLMutation
+Person method writesInstance(Person person) {
+	return person;
+}
+
 @GraphQLQuery
-Person[] method returnsInstances() {
+Person[] method readsInstances() {
 	return [ Person(firstName = "Eric", lastName = "Clapton", birthDate = '1960-01-01', age = 62) ];
 }
 
@@ -20,11 +25,11 @@ category Child extends Parent;
 category GrandChild extends Child;
 
 @GraphQLQuery
-Parent method returnsAbstractChild() {
+Parent method readsAbstractChild() {
 	return (Parent)Child(name = "Child", persons = [Person(firstName = "Eric")]);
 }
 
 @GraphQLQuery
-Parent[] method returnsAbstractChildren() {
+Parent[] method readsAbstractChildren() {
 	return [Child(name = "Child", persons= [Person(firstName = "Eric")]), GrandChild(name = "GrandChild"), Parent(name = "Parent")];
 }

@@ -62,27 +62,51 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 	
 	@Test
-	public void returnsText() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsText }");
-		assertEquals("Hello", s.get("returnsText"));
+	public void readsText() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ readsText }");
+		assertEquals("Hello", s.get("readsText"));
 	}
 	
 	@Test
-	public void returnsInteger() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsInteger }");
-		assertEquals(123L, s.get("returnsInteger"));
+	public void writesText() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "mutation { writesText ( text: \"Hello\" ) }");
+		assertEquals("Hello", s.get("writesText"));
 	}
 
 	@Test
-	public void returnsNativeEnum() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ returnsNativeEnum }");
-		assertEquals("NATIVE", s.get("returnsNativeEnum"));
+	public void readsInteger() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ readsInteger }");
+		assertEquals(123L, s.get("readsInteger"));
 	}
 
 	@Test
-	public void returnsInstance() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsInstance { firstName, lastName, birthDate, age } }");
-		Map<String, Object> i = (Map<String, Object>) s.get("returnsInstance");
+	public void writesInteger() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "mutation { writesInteger ( value: 1222 ) }");
+		assertEquals(1222L, s.get("writesInteger"));
+	}
+
+	@Test
+	public void readsDecimal() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ readsDecimal }");
+		assertEquals(123.45, s.get("readsDecimal"));
+	}
+
+	@Test
+	public void writesDecimal() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "mutation { writesDecimal ( value: 123.45 ) }");
+		assertEquals(123.45, s.get("writesDecimal"));
+	}
+
+	@Test
+	public void readsNativeEnum() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ readsNativeEnum }");
+		assertEquals("NATIVE", s.get("readsNativeEnum"));
+	}
+
+	@Test
+	public void readsInstance() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ readsInstance { firstName, lastName, birthDate, age } }");
+		Map<String, Object> i = (Map<String, Object>) s.get("readsInstance");
 		assertEquals("Eric", i.get("firstName"));
 		assertEquals("Clapton", i.get("lastName"));
 		assertEquals("1960-01-01", i.get("birthDate"));
@@ -90,9 +114,19 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 	
 	@Test
-	public void returnsInstances() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsInstances { firstName, lastName, birthDate, age } }");
-		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("returnsInstances");
+	public void writesInstance() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "mutation { writesInstance (person : { firstName: \"Eric\", lastName: \"Clapton\", birthDate: \"1960-01-01\", age: 62 }) { firstName, lastName, birthDate, age } }");
+		Map<String, Object> i = (Map<String, Object>) s.get("writesInstance");
+		assertEquals("Eric", i.get("firstName"));
+		assertEquals("Clapton", i.get("lastName"));
+		assertEquals("1960-01-01", i.get("birthDate"));
+		assertEquals(62L, i.get("age"));
+	}
+	
+	@Test
+	public void readsInstances() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ readsInstances { firstName, lastName, birthDate, age } }");
+		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("readsInstances");
 		assertEquals(1, l.size());
 		Map<String, Object> i = l.get(0);
 		assertEquals("Eric", i.get("firstName"));
@@ -102,16 +136,16 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 
 	@Test
-	public void returnsAbstractChild() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChild { __typename ... on Child { name, persons { firstName } } ... on GrandChild { name, persons { firstName } } } }");
-		Map<String, Object> i = (Map<String, Object>) s.get("returnsAbstractChild");
+	public void readsAbstractChild() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ readsAbstractChild { __typename ... on Child { name, persons { firstName } } ... on GrandChild { name, persons { firstName } } } }");
+		Map<String, Object> i = (Map<String, Object>) s.get("readsAbstractChild");
 		assertEquals("Child", i.get("name"));
 	}
 
 	@Test
-	public void returnsAbstractChildren() throws Exception {
-		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ returnsAbstractChildren { __typename ... on Parent { name } ... on Child { name, persons { firstName } } ... on GrandChild { name, persons { firstName } } } }");
-		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("returnsAbstractChildren");
+	public void readsAbstractChildren() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("instance", Dialect.O, "{ readsAbstractChildren { __typename ... on Parent { name } ... on Child { name, persons { firstName } } ... on GrandChild { name, persons { firstName } } } }");
+		List<Map<String, Object>> l = (List<Map<String, Object>>) s.get("readsAbstractChildren");
 		assertEquals(3, l.size());
 		Map<String, Object> i = l.get(0);
 		assertEquals("Child", i.get("name"));
@@ -122,7 +156,7 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 
 	@Test
-	public void returnsCursor() throws Exception {
+	public void readsCursor() throws Exception {
 		Map<String, Object> s = linkResourceAndRunQuery("cursor", Dialect.O, "{ fetchPersons { count, items { firstName, lastName } } }");
 		Map<String, Object> i = (Map<String, Object>) s.get("fetchPersons");
 		assertEquals(2L, i.get("count"));

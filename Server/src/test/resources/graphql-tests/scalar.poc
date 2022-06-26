@@ -1,11 +1,32 @@
 @GraphQLQuery
-method returnsText() {
+method readsText() {
 	return "Hello";
 }
 
+
+@GraphQLMutation
+method writesText(Text text) {
+	return text;
+}
+
 @GraphQLQuery
-method returnsInteger() {
+method readsInteger() {
 	return 123;
+}
+
+@GraphQLMutation
+method writesInteger(Integer value) {
+	return value;
+}
+
+@GraphQLQuery
+method readsDecimal() {
+	return 123.45;
+}
+
+@GraphQLMutation
+method writesDecimal(Decimal value) {
+	return value;
 }
 
 enumerated NativeEnum(Text) {
@@ -13,16 +34,17 @@ enumerated NativeEnum(Text) {
 }
 
 @GraphQLQuery
-method returnsNativeEnum() {
+method readsNativeEnum() {
 	return NATIVE;
 }
 
 @GraphQLQuery
-method returnsBlob() {
+method readsBlob() {
 	return fetchBinaryResource("xyz");
 }
 
 @GraphQLQuery
-method returnsImage() {
+method readsImage() {
 	return (Image)(Any)fetchBinaryResource("xyz");
 }
+
