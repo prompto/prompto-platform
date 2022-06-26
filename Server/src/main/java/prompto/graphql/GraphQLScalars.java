@@ -100,12 +100,12 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public UuidValue parseValue(Object input) throws CoercingParseValueException {
-						return new UuidValue(UUID.fromString(String.valueOf(input)));
+						return new UuidValue(UUID.fromString(readInputString(input)));
 					}
 
 					@Override
 					public UuidValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new UuidValue(UUID.fromString(String.valueOf(input)));
+						return new UuidValue(UUID.fromString(readInputString(input)));
 					}
 				}).build();
 	}
@@ -124,12 +124,12 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public PeriodValue parseValue(Object input) throws CoercingParseValueException {
-						return new PeriodValue(PromptoPeriod.parse(String.valueOf(input)));
+						return new PeriodValue(PromptoPeriod.parse(readInputString(input)));
 					}
 
 					@Override
 					public PeriodValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new PeriodValue(PromptoPeriod.parse(String.valueOf(input)));
+						return new PeriodValue(PromptoPeriod.parse(readInputString(input)));
 					}
 				}).build();
 	}
@@ -148,12 +148,12 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public DateTimeValue parseValue(Object input) throws CoercingParseValueException {
-						return new DateTimeValue(PromptoDateTime.parse(String.valueOf(input)));
+						return new DateTimeValue(PromptoDateTime.parse(readInputString(input)));
 					}
 
 					@Override
 					public DateTimeValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new DateTimeValue(PromptoDateTime.parse(String.valueOf(input)));
+						return new DateTimeValue(PromptoDateTime.parse(readInputString(input)));
 					}
 				}).build();
 	}
@@ -172,12 +172,12 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public TimeValue parseValue(Object input) throws CoercingParseValueException {
-						return new TimeValue(PromptoTime.parse(String.valueOf(input)));
+						return new TimeValue(PromptoTime.parse(readInputString(input)));
 					}
 
 					@Override
 					public TimeValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						return new TimeValue(PromptoTime.parse(String.valueOf(input)));
+						return new TimeValue(PromptoTime.parse(readInputString(input)));
 					}
 				}).build();
 	}
@@ -196,24 +196,22 @@ public abstract class GraphQLScalars {
 
 					@Override
 					public DateValue parseValue(Object input) throws CoercingParseValueException {
-						PromptoDate value = readDateInput(input);
-						return new DateValue(value);
+						return new DateValue(PromptoDate.parse(readInputString(input)));
 					}
 
 				@Override
 					public DateValue parseLiteral(Object input) throws CoercingParseLiteralException {
-						PromptoDate value = readDateInput(input);
-						return new DateValue(value);
+						return new DateValue(PromptoDate.parse(readInputString(input)));
 					}
 
-					private PromptoDate readDateInput(Object input) {
-						String value = input instanceof StringValue ? ((StringValue)input).getValue() : String.valueOf(input); 
-						return PromptoDate.parse(value);
-					}
 
-}).build();
+			}).build();
 	}
 
+	static String readInputString(Object input) {
+		return input instanceof StringValue ? ((StringValue)input).getValue() : String.valueOf(input); 
+	}
+	
 	public static boolean isScalar(IType type) {
 		return ALL.containsKey(type);
 	}
