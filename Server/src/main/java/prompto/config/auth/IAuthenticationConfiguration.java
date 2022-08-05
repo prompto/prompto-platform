@@ -58,8 +58,8 @@ public interface IAuthenticationConfiguration {
 	
 	}
 
-	static final Collection<String> DEFAULT_WHITE_LIST = Arrays.asList( "jpg", "jpeg", "ico", "png", "tif", "tiff", "js", "jsx", "css", "svg", "gif" )
-			.stream().map(s->"*." + s).collect(Collectors.toList());
+	static final Collection<String> DEFAULT_WHITE_LIST = Arrays.asList( "jpg", "jpeg", "ico", "png", "tif", "tiff", "js", "map", "jsx", "css", "svg", "gif" )
+			.stream().map(s->"*." + s).collect(Collectors.toSet());
 
 
 
