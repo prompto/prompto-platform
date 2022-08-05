@@ -5,6 +5,11 @@ method readsText() {
 
 
 @GraphQLMutation
+method writesVoid() {
+	return "Hello";
+}
+
+@GraphQLMutation
 method writesText(Text text) {
 	return text;
 }

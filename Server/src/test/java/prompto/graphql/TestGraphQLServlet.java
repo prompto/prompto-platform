@@ -62,6 +62,13 @@ public class TestGraphQLServlet extends BaseServerTest {
 	}
 	
 	@Test
+	public void writesVoid() throws Exception {
+		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "mutation { writesVoid }");
+		assertEquals("Hello", s.get("writesVoid"));
+	}
+
+
+	@Test
 	public void readsText() throws Exception {
 		Map<String, Object> s = linkResourceAndRunQuery("scalar", Dialect.O, "{ readsText }");
 		assertEquals("Hello", s.get("readsText"));
