@@ -12,3 +12,4 @@ travis.yml
 release.json
 /token.txt
 amalthea.yml
+factory.yml
