@@ -30,7 +30,7 @@ public class GraphQLMethodFetcher implements DataFetcher<Object> {
 	}
 
 	private void populateArgument(Context context, IParameter param, DataFetchingEnvironment environment) {
-		context.registerValue(param);
+		context.registerInstance(param);
 		Object data = environment.getArgument(param.getName());
 		IValue value = convertArgument(context, data, param.getType(context));
 		context.setValue(param.getId(), value);
